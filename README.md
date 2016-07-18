@@ -6,7 +6,7 @@ Extensions for Spring-Data that add primitives for handling BLOBs, in the same D
 
 Spring Content provides modules for JPA, MongoDB, S3 and the Filesystem.
 
-For more information [see our docs](emc-dojo/github.io/spring-content).
+For more information [see our docs](https://emc-dojo.github.io/spring-content/).
 
 
 
