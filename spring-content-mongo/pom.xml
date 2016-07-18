@@ -24,5 +24,13 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-mongodb</artifactId>
 		</dependency>
+		
+		<!-- Test Dependencies -->
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>ginkgo4j</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
 	</dependencies>
 </project>

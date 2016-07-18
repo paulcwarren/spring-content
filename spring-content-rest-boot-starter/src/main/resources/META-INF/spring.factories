@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-internal.org.springframework.boot.autoconfigure.content.rest.ContentRestAutoConfiguration
+internal.com.emc.spring.content.rest.boot.autoconfigure.ContentRestAutoConfiguration

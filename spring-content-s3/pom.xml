@@ -2,11 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>spring-content-s3</artifactId>
+	
 	<parent>
 		<groupId>com.emc.spring.content</groupId>
 		<artifactId>spring-content</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -22,6 +24,21 @@
  			<artifactId>spring-cloud-aws-context</artifactId>
  			<version>1.0.2.RELEASE</version>
  		</dependency>
+ 		
+ 				
+		<!-- Test Dependencies -->
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>ginkgo4j</artifactId>
+			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
  	</dependencies>
 
  	<repositories>

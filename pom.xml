@@ -34,18 +34,18 @@
 		<module>./spring-content-rest-boot-starter</module>
 		<module>./spring-content-s3</module>
 		<module>./spring-content-s3-boot-starter</module>
-<!-- 		<module>./spring-eg-content-commons</module>
+<!--  		<module>./spring-eg-content-commons</module>
 		<module>./spring-eg-content-fs</module>
 		<module>./spring-eg-content-mongo</module>
+		<module>./spring-eg-content-mongo-boot-starter</module>
 		<module>./spring-eg-content-jpa</module>
+		<module>./spring-eg-content-jpa-boot-starter</module>
 		<module>./spring-eg-content-s3</module>
 		<module>./spring-eg-content-renditions</module>
 		<module>./spring-eg-content-rest</module>
-		<module>./spring-eg-starter-content-jpa</module>
-		<module>./spring-eg-starter-content-mongo</module>
-		<module>./spring-gs-accessing-content-mongo/complete</module>
+ --><!-- 		<module>./spring-gs-accessing-content-mongo/complete</module>
 		<module>./spring-gs-content-quickclaim</module>
- -->	</modules>
+ --> 	</modules>
 
 	<!-- Every Spring Data NGIS project should compile with 1.7, target 1.7 -->
 	<!-- TODO: and attach and publish sources -->
