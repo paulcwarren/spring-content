@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+internal.com.emc.spring.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration
