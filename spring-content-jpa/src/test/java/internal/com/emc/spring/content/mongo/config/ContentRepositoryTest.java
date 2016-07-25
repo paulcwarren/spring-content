@@ -41,9 +41,11 @@ import com.emc.spring.content.commons.annotations.Content;
 import com.emc.spring.content.commons.annotations.ContentId;
 import com.emc.spring.content.commons.repository.ContentStore;
 import com.emc.spring.content.jpa.config.EnableJpaContentRepositories;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads=1)
 public class ContentRepositoryTest {
 
 	private AnnotationConfigApplicationContext context;
