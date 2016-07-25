@@ -26,6 +26,7 @@
 		<module>./spring-content-commons</module>
 		<module>./spring-content-docx4j</module>
 		<module>./spring-content-fs</module>
+		<module>./spring-content-fs-boot-starter</module>
 		<module>./spring-content-jpa</module>
 		<module>./spring-content-jpa-boot-starter</module>
 		<module>./spring-content-mongo</module>
