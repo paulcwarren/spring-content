@@ -1,9 +1,5 @@
 package internal.com.emc.spring.content.rest.mappings;
 
-import internal.com.emc.spring.content.rest.annotations.ContentRestController;
-import internal.com.emc.spring.content.rest.utils.PersistentEntityUtils;
-import internal.com.emc.spring.content.rest.utils.RepositoryUtils;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.Ordered;
@@ -17,6 +13,10 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.emc.spring.content.commons.annotations.Content;
+
+import internal.com.emc.spring.content.rest.annotations.ContentRestController;
+import internal.com.emc.spring.content.rest.utils.PersistentEntityUtils;
+import internal.com.emc.spring.content.rest.utils.RepositoryUtils;
 
 public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 
@@ -61,11 +61,14 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 			return null;
 		
 		PersistentProperty<?> prop = entity.getPersistentProperty(path[3]);
-		if (null == prop)
-			return null;
-		
-		if (prop.getField().isAnnotationPresent(Content.class))
-			return super.lookupHandlerMethod(lookupPath, request);
+		if (null != prop) {
+			if (prop.getField().isAnnotationPresent(Content.class))
+				return super.lookupHandlerMethod(lookupPath, request);
+		} else {
+			if (entity.getType().isAnnotationPresent(Content.class)) {
+				return super.lookupHandlerMethod(lookupPath, request);
+			}
+		}
 
 		return null;
 	}
