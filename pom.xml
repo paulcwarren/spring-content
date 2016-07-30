@@ -6,8 +6,41 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<properties>
-	</properties>
+	<name>Spring Content</name>
+	<url>https://emc-dojo.github.io/spring-content/</url>
+	<description>Extensions for Spring Data for managing BLOBs</description>
+	<organization>
+		<name>Paul Warren</name>
+		<url>www.emc.com</url>
+	</organization>
+	<issueManagement>
+		<system>Github</system>
+		<url>https://github.com/EMC-Dojo/spring-content/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/emc-dojo/spring-content</url>
+	</ciManagement>
+
+	<scm>
+		<url>https://github.com/EMC-Dojo/spring-content</url>
+		<developerConnection>Paul Warren</developerConnection>
+	</scm>
+	
+	<developers>
+		<developer>
+			<name>Paul Warren</name>
+			<email>paul.warren@emc.com</email>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<dependencyManagement>
 		<dependencies>
@@ -35,21 +68,8 @@
 		<module>./spring-content-rest-boot-starter</module>
 		<module>./spring-content-s3</module>
 		<module>./spring-content-s3-boot-starter</module>
-<!--  		<module>./spring-eg-content-commons</module>
-		<module>./spring-eg-content-fs</module>
-		<module>./spring-eg-content-mongo</module>
-		<module>./spring-eg-content-mongo-boot-starter</module>
-		<module>./spring-eg-content-jpa</module>
-		<module>./spring-eg-content-jpa-boot-starter</module>
-		<module>./spring-eg-content-s3</module>
-		<module>./spring-eg-content-renditions</module>
-		<module>./spring-eg-content-rest</module>
- --><!-- 		<module>./spring-gs-accessing-content-mongo/complete</module>
-		<module>./spring-gs-content-quickclaim</module>
- --> 	</modules>
+ 	</modules>
 
-	<!-- Every Spring Data NGIS project should compile with 1.7, target 1.7 -->
-	<!-- TODO: and attach and publish sources -->
 	<build>
 		<plugins>
 			<plugin>
@@ -61,7 +81,73 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>false</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>

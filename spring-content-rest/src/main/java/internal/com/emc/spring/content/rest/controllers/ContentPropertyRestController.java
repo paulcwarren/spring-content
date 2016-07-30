@@ -38,7 +38,6 @@ import internal.com.emc.spring.content.rest.utils.ContentStoreUtils;
 @ContentRestController
 public class ContentPropertyRestController extends AbstractContentPropertyController {
 
-	private static final String CONTENT_ENTITY_BASE_MAPPING = "/{repository}/{id}/{path}";
 	private static final String BASE_MAPPING = "/{repository}/{id}/{contentProperty}/{contentId}";
 
 	private ContentStoreService storeService;
@@ -49,11 +48,12 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		this.storeService = storeService;
 	}
 
-	@RequestMapping(value = CONTENT_ENTITY_BASE_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<InputStreamResource> contentEntityGet(final RootResourceInformation rootInfo,
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
+	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
 														  @PathVariable String repository, 
 														  @PathVariable String id, 
 														  @PathVariable String contentProperty,
+														  @PathVariable String contentId,
 														  @RequestHeader("Accept") String mimeType) 
 			throws HttpRequestMethodNotSupportedException {
 		
@@ -65,63 +65,12 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		if (domainObj.getClass().isAnnotationPresent(Content.class)) {
 			contentPropertyValue = domainObj;
 			contentEntityClass = domainObj.getClass();
-		} 
-		
-		// get content prop content-type
-		// if content-type == Accept header then usual getContent, 
-		// else getRendition
-		Object contentTypeObj = BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class);
-		String contentType = contentTypeObj != null ? contentTypeObj.toString() : null;
-		if (mimeType == null || mimeType.contains("*/*") || mimeType.equals(contentType)) {
-			final HttpHeaders headers = new HttpHeaders();
-			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
-				headers.add("Content-Type", BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class).toString());
-			}
-			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, ContentLength.class))
-				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
-			
-			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			InputStreamResource inputStreamResource = new InputStreamResource(info.getImpementation().getContent(contentPropertyValue));
-			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
 		} else {
-			final HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Type", mimeType);
-//			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, ContentLength.class))
-//				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
-			
-			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			ContentStore<Object,Serializable> impl = info.getImpementation();
-			
-			if (impl instanceof Renderable) {
-				InputStream is = ((Renderable)impl).getRendition(contentPropertyValue, mimeType);
-				if (is != null) {
-					InputStreamResource inputStreamResource = new InputStreamResource(is);
-					return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
-				} else {
-					return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.NOT_ACCEPTABLE);
-				}
-			}
-			
+			PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
+			contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
+			contentPropertyValue = getContentProperty(domainObj, property, contentId);
 		}
-		
-		return null;
-	}
-	
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
-														  @PathVariable String repository, 
-														  @PathVariable String id, 
-														  @PathVariable String contentProperty,
-														  @PathVariable String contentId,
-														  @RequestHeader("Accept") String mimeType) 
-			throws HttpRequestMethodNotSupportedException {
-		
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
-		
-		PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
-		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
-		Object contentPropertyValue = getContentProperty(domainObj, property, contentId);
-		
+
 		// get content prop content-type
 		// if content-type == Accept header then usual getContent, 
 		// else getRendition

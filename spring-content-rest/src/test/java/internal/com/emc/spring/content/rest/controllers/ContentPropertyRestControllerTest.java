@@ -67,7 +67,7 @@ public class ContentPropertyRestControllerTest {
 					InputStream in = new ByteArrayInputStream("Hello Spring Content Rest World!".getBytes());
 					when(contentRepo.getContent(anyObject())).thenReturn(in);
 					
-					resource = controller.contentEntityGet(rootResourceInfoMock, "files", "12345", "content", "*/*");
+					resource = controller.getContent(rootResourceInfoMock, "files", "12345", "content", "12345", "*/*");
 				});
 				
 				It("should return content", () -> {
