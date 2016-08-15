@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starters</artifactId>
-    <version>1.3.2.RELEASE</version>
+    <version>1.3.7.RELEASE</version>
   </parent>
   
   <artifactId>spring-content-rest-boot-starter</artifactId>
@@ -45,7 +45,7 @@
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-content-mongo-boot-starter</artifactId>
-        <version>1.3.2.RELEASE</version>
+        <version>1.3.7.RELEASE</version>
         <scope>test</scope>
     </dependency>
   	
