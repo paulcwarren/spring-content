@@ -7,30 +7,30 @@
 	<packaging>pom</packaging>
 
 	<name>Spring Content</name>
-	<url>https://emc-dojo.github.io/spring-content/</url>
+	<url>https://github.com/paulcwarren/spring-content/</url>
 	<description>Extensions for Spring Data for managing BLOBs</description>
 	<organization>
 		<name>Paul Warren</name>
-		<url>www.emc.com</url>
+		<url>https://github.com/paulcwarren</url>
 	</organization>
 	<issueManagement>
 		<system>Github</system>
-		<url>https://github.com/EMC-Dojo/spring-content/issues</url>
+		<url>https://github.com/paulcwarren/spring-content/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/emc-dojo/spring-content</url>
+		<url>https://travis-ci.org/paulcwarren/spring-content</url>
 	</ciManagement>
 
 	<scm>
-		<url>https://github.com/EMC-Dojo/spring-content</url>
+		<url>https://github.com/paulcwarren/spring-content</url>
 		<developerConnection>Paul Warren</developerConnection>
 	</scm>
 	
 	<developers>
 		<developer>
 			<name>Paul Warren</name>
-			<email>paul.warren@emc.com</email>
+			<email>paul_c_warren@yahoo.com</email>
 		</developer>
 	</developers>
 
