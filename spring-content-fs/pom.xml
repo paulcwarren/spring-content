@@ -4,7 +4,7 @@
 	<artifactId>spring-content-fs</artifactId>
 
 	<parent>
-		<groupId>com.emc.spring.content</groupId>
+		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -15,7 +15,7 @@
 			<artifactId>spring-context</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.emc.spring.content</groupId>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

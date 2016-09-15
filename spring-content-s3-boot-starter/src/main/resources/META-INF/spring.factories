@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-internal.com.emc.spring.content.s3.boot.autoconfigure.S3ContentAutoConfiguration
+internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration

@@ -12,7 +12,7 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.emc.spring.content</groupId>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-mongo</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -29,4 +29,6 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<groupId>com.github.paulcwarren</groupId>
+	<version>0.0.1-SNAPSHOT</version>
 </project>

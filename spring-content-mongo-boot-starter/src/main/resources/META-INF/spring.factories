@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-internal.com.emc.spring.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration
+internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration

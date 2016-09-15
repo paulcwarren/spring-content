@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>spring-content-commons</artifactId>
 	<parent>
-		<groupId>com.emc.spring.content</groupId>
+		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>ginkgo4j</artifactId>
-			<version>1.0.0</version>
+			<version>${ginkgo4j-version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

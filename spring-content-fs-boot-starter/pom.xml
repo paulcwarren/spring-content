@@ -8,13 +8,13 @@
 		<version>1.4.0.RELEASE</version>
 	</parent>
 
-	<groupId>com.emc.spring.content</groupId>
+	<groupId>com.github.paulcwarren</groupId>
 	<artifactId>spring-content-fs-boot-starter</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
-			<groupId>com.emc.spring.content</groupId>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

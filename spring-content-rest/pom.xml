@@ -4,7 +4,7 @@
 	<artifactId>spring-content-rest</artifactId>
 
 	<parent>
-		<groupId>com.emc.spring.content</groupId>
+		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -20,7 +20,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.emc.spring.content</groupId>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>ginkgo4j</artifactId>
-			<version>1.0.0</version>
+			<version>${ginkgo4j-version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -57,15 +57,42 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-jpa</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.emc.spring.content</groupId>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-mongo</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-fs</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>com.theoryinpractise</groupId>
+		    <artifactId>halbuilder-standard</artifactId>
+		    <version>4.0.1</version>
+		    <scope>test</scope>
 		</dependency>
 		
 	</dependencies>

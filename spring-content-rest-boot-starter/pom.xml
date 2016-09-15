@@ -12,7 +12,7 @@
   
   <dependencies>
   	<dependency>
-      <groupId>com.emc.spring.content</groupId>
+      <groupId>com.github.paulcwarren</groupId>
   		<artifactId>spring-content-rest</artifactId>
   		<version>0.0.1-SNAPSHOT</version>
   	</dependency>
@@ -43,11 +43,13 @@
         <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.springframework.boot</groupId>
+        <groupId>com.github.paulcwarren</groupId>
         <artifactId>spring-content-mongo-boot-starter</artifactId>
-        <version>1.4.0.RELEASE</version>
+        <version>0.0.1-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
   	
   </dependencies>
+  <groupId>com.github.paulcwarren</groupId>
+  <version>0.0.1-SNAPSHOT</version>
 </project>
