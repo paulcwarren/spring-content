@@ -145,7 +145,7 @@
 <p>To start from scratch, move on to Build with Maven.</p>
 <p>To skip the basics, do the following:</p>
 <ul>
-<li>Download and unzip the source repository for this guide, or clone it using Git: <code>git clone https://github.com/EMC-Dojo/spring-content-gettingstarted.git</code></li>
+<li>Download and unzip the source repository for this guide, or clone it using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></li>
 <li><code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/initial</code></li>
 <li>Jump ahead to <code>Define a simple entity</code>.
 When you’re finished, you can check your results against the code in <code>spring-content-gettingstarted/spring-content-fs/complete</code>.</li>
@@ -153,12 +153,11 @@ When you’re finished, you can check your results against the code in <code>spr
 <h2 id="build-with-maven">Build with Maven</h2>
 <p>First you set up a basic build script. You can use any build system you like when building apps with Spring, but the code you need to work with <a href="https://maven.apache.org/">Maven</a> is included here.  If you’re not familiar with Maven, refer to <a href="http://spring.io/guides/gs/maven">Building Java Projects with Maven</a>. </p>
 <h3 id="create-a-directory-structure">Create a directory structure</h3>
-<p>In a project directory of your choosing, create the following subdirectory structure; for example, with <code>mkdir -p src/main/java/gettingstarted/springcontentfs</code> on *nix systems:</p>
+<p>In a project directory of your choosing, create the following subdirectory structure; for example, with <code>mkdir -p src/main/java/gettingstarted</code> on *nix systems:</p>
 <pre><code>∟ src
    ∟ main
        ∟ java
            ∟ gettingstarted
-               ∟ springcontentfs
        ∟ resources
            ∟ static
 </code></pre>
@@ -169,9 +168,9 @@ When you’re finished, you can check your results against the code in <code>spr
     xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
     &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
 
-    &lt;groupId&gt;com.emc.spring.content&lt;/groupId&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
     &lt;artifactId&gt;gettingstarted-spring-content-fs&lt;/artifactId&gt;
-    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;version&gt;0.0.1&lt;/version&gt;
     &lt;packaging&gt;jar&lt;/packaging&gt;
 
     &lt;parent&gt;
@@ -193,17 +192,19 @@ When you’re finished, you can check your results against the code in <code>spr
         &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
             &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.h2database&lt;/groupId&gt;
             &lt;artifactId&gt;h2&lt;/artifactId&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.emc.spring.content&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+            &lt;version&gt;0.0.2&lt;/version&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
 
@@ -223,7 +224,7 @@ When you’re finished, you can check your results against the code in <code>spr
 <li>Spring Boot Starter Web provides the web server framework</li>
 <li>Spring Boot Starter Data JPA will provide a relational database to store metadata of our files.  In this case we are using the H2 in-memory database.</li>
 <li>Spring Boot Starter Data REST will provide REST endpoints for our File metadata</li>
-<li>Spring Boot Starter Content FS will provide a Filesystem-backed content repository for the content of each file.  Content will be automatically associated this with it's owning Entity by Spring Content.</li>
+<li>Spring Boot Starter Content FS will provide a Filesystem-based content repository for the content of each file.  Content will be automatically associated with it's owning Entity by Spring Content.</li>
 </ul>
 <h2 id="define-a-simple-entity">Define a simple Entity</h2>
 <p>Let's define a simple Entity to represent a File.</p>
@@ -246,10 +247,13 @@ public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    //metadata
     private String name;
     private Date created = new Date();
     private String summary;
 
+    // content metadata
     @ContentId private String contentId;
     @ContentLength private long contentLength;
     private String mimeType = &quot;text/plain&quot;;
@@ -315,11 +319,11 @@ public class File {
 <p>As you would expect we created a standard JPA Entity to capture some metadata about our file; <code>name</code> and <code>summary</code>.  In addition, because we will be serving these files over the web, we also record <code>mimeType</code> so that we can instruct the browser correctly.</p>
 <p>We then add two annotated Spring Content fields; <code>@ContentId</code> and <code>@ContentLength</code>.  <code>@ContentId</code> allows us to associate a stream of binary data with an Entity and <code>@ContentLength</code> records the length of that stream.  These will be automatically managed by Spring Content.</p>
 <h2 id="create-a-file-repository">Create a File Repository</h2>
-<p>Next, as you would also expect, we create a <code>CrudRepository</code> for handling File entities and we export it as a <code>@RepositoryRestResource</code> so, for the cost of writing just one interface (and annotating it), we get the ability to create, read, update and delete File entities using REST endpoints.</p>
+<p>Next, as you would also expect, we create a <code>CrudRepository</code> for handling File entities and we export it as a <code>@RepositoryRestResource</code> so, for the cost of writing just one interface and annotating it, we get the ability to create, read, update and delete File entities using REST endpoints.</p>
 <blockquote>
-<p>NB. For more information on Spring Data JPA and Spring Data REST see their respective spring.io Getting Started guides.</p>
+<p>NB. For more information on Spring Data JPA and Spring Data REST see their respective spring.io getting started guides.</p>
 </blockquote>
-<p><code>src/main/java/gettingstated/springcontentfs/FileRepoistory.java</code></p>
+<p><code>src/main/java/gettingstated/springcontentfs/FileRepository.java</code></p>
 <pre><code>package gettingstarted.springcontentfs;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -345,11 +349,11 @@ public interface FileContentRepository extends ContentStore&lt;File, String&gt; 
 <p>Let's investigate this interface:-</p>
 <ul>
 <li><code>ContentStore</code> provides several methods for handling content; setContent, getContent and unsetContent</li>
-<li>The dependency <code>com.emc.spring.content:spring-content-fs-boot-starter</code> provides a Filesystem-backed implementation of this interface and Spring Boot with Spring Content together ensure that this implementation will be used wherever the <code>FileContentRepository</code> is <code>@Autowired</code>.</li>
+<li>The dependency <code>com.emc.spring.content:spring-content-fs-boot-starter</code> provides a Filesystem-based implementation of this interface and Spring Content auto-configuration ensures that this implementation will be used wherever the <code>FileContentRepository</code> is <code>@Autowired</code>.</li>
 </ul>
+<p>However, unlike our <code>FileRepository</code> we haven't annotated this as a <code>ContentRestRepository</code> and therefore we don't automatically get REST endpoints for handling content.  This annotation does exist (and is the topic of our <a href="../(spring-content-rest-docs.md)">next tutorial</a>) but, for now, we have to roll our own REST endpoints.</p>
 <h2 id="create-a-file-controller">Create a File Controller</h2>
-<p>So now we have a way to create, read, update and delete File entities from our web UI using the <code>FileRepository</code> REST endpoints.  </p>
-<p>We also have a way to handle content but we unlike Spring Data we don't automtically get REST endpoints for managing this content so we need to create these endpoints, using the  <code>FileContentRepository</code> to help us.</p>
+<p>Let's create these endpoints with a simple Controller class.</p>
 <p><code>src/main/java/gettingstarted/springcontentfs/FileContentController.java</code></p>
 <pre><code>package gettingstarted.springcontentfs;
 
@@ -373,21 +377,22 @@ public class FileContentController {
     @Autowired private FileRepository filesRepo;
     @Autowired private FileContentRepository contentsRepo;
 
-    @RequestMapping(value=&quot;/files/{fileId}/content&quot;, method = RequestMethod.PUT)
+    @RequestMapping(value=&quot;/files/{fileId}&quot;, method = RequestMethod.PUT, headers=&quot;content-type!=application/hal+json&quot;)
     public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file) 
             throws IOException {
 
         File f = filesRepo.findOne(id);
         f.setMimeType(file.getContentType());
 
-        // save updated content-related info
         contentsRepo.setContent(f, file.getInputStream());
+
+        // save updated content-related info
         filesRepo.save(f);
 
         return new ResponseEntity&lt;Object&gt;(HttpStatus.OK);
     }
 
-    @RequestMapping(value=&quot;/files/{fileId}/content&quot;, method = RequestMethod.GET)
+    @RequestMapping(value=&quot;/files/{fileId}&quot;, method = RequestMethod.GET, headers=&quot;accept!=application/hal+json&quot;)
     public ResponseEntity&lt;?&gt; getContent(@PathVariable(&quot;fileId&quot;) Long id) {
 
         File f = filesRepo.findOne(id);
@@ -403,7 +408,7 @@ public class FileContentController {
 <p>Let's explain this class.  </p>
 <ul>
 <li>It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content. </li>
-<li>Both <code>setContent</code> and <code>getContent</code> methods inject themselves into the URI space of the <code>FileRepository</code>, namely <code>/files/{fileId}</code>, exporting an additional <code>/content</code> endpoint.</li>
+<li>Both <code>setContent</code> and <code>getContent</code> methods inject themselves into the URI space of the <code>FileRepository</code>, namely <code>/files/{fileId}</code>, but handle all GETs and PUTs that are aplication/hal+json based; i.e. content.</li>
 <li>We inject our <code>FileRepository</code> and our <code>FileContentRepository</code>.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path). </li>
 <li><code>setContent</code> uses the <code>FileRepository</code> to fetch the File entity  using the given <code>fileId</code> and then uses the <code>FileContentRepository</code> to save the given file input stream.  </li>
 <li>Similarly, <code>getContent</code> uses the <code>FileRepository</code> to fetch the File entity using the given <code>fileId</code> and again use the <code>FileContentRepository</code> to fetch the associated content and stream it back to the client as the response.  We also use previosuly saved metdata <code>contentLength</code> and <code>mimeType</code> to set http headers appropriately.  This will mean that browsers can handle the content correctly by launching the relevant desktop application.</li>
@@ -429,7 +434,7 @@ public class FileContentController {
             &lt;div style=&quot;display: table-cell;&quot;&gt;Summary&lt;/div&gt;
           &lt;/header&gt;
           &lt;div style=&quot;display: table-row;&quot; ng-repeat=&quot;file in filesList.files&quot;&gt;
-            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;a href=&quot;{{filesList.getHref(file)}}&quot; target=&quot;_new&quot;&gt;{{file.name}}&lt;/a&gt;&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;a href=&quot;{{filesList.getHref(file)}}&quot; type={{file.mimeType}} download={{file.name}}&gt;{{file.name}}&lt;/a&gt;&lt;/div&gt;
             &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.contentLength}}&lt;/label&gt;&lt;/div&gt;
             &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.created}}&lt;/label&gt;&lt;/div&gt;
             &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.summary}}&lt;/label&gt;&lt;/div&gt;
@@ -466,7 +471,7 @@ public class FileContentController {
     filesList.getFilesList(); 
 
     filesList.getHref = function(file) {
-        return file._links[&quot;self&quot;].href + &quot;/content/&quot;
+        return file._links[&quot;self&quot;].href
     };
 
     filesList.upload = function() {
@@ -477,7 +482,7 @@ public class FileContentController {
             then(function(response) {
                 var fd = new FormData();
                 fd.append('file', f);
-                return $http.put(response.headers(&quot;Location&quot;) + &quot;/content&quot;, fd, {
+                return $http.put(response.headers(&quot;Location&quot;), fd, {
                     transformRequest: angular.identity,
                     headers: {'Content-Type': undefined}
                 });
@@ -489,15 +494,14 @@ public class FileContentController {
                 document.getElementById('file').files[0] = undefined;
             });
     }
-
   });
 </code></pre>
 
 <p>This angular controller has the following functions:-</p>
 <ul>
-<li><code>getFilesList</code> queries our <code>FileRepository</code> via its REST endpoint <code>files/</code> and adds the list of files that are returned to <code>filesList.files</code> (presented by the <code>ng-repeat</code> directive in the HTML)</li>
-<li><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}/content/</code> (that ultimately calls <code>FileContentController.getContent</code>) </li>
-<li><code>upload</code> uploads a new File by first <code>POST</code>ing to the <code>FileRepository</code> REST endpoints <code>/files</code> and once created  <code>PUT</code>ing the actual content to the Files content REST endpoint <code>files/{fileId}/content/</code> (that ultimately calls <code>FileContentController.setContent</code>)   </li>
+<li><code>getFilesList</code> queries our <code>FileRepository</code> via its REST endpoint <code>files/</code> and populates <code>filesList.files</code> (presented by the <code>ng-repeat</code> directive in the HTML)</li>
+<li><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}</code> (that ultimately calls <code>FileContentController.getContent</code>) </li>
+<li><code>upload</code> uploads a new File by first <code>POST</code>ing to the <code>FileRepository</code> REST endpoints <code>/files</code> and once created  <code>PUT</code>ing the actual content to the Files content REST endpoint <code>files/{fileId}</code> (that ultimately calls <code>FileContentController.setContent</code>)   </li>
 </ul>
 <h2 id="create-an-application-class">Create an Application class</h2>
 <p>Our simple document list app is now complete.  All that remains is to add the usual Spring Boot Application class.</p>
@@ -518,15 +522,15 @@ public class SpringContentFsApplication {
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.  Or you can build the JAR file with <code>mvn clean package</code> and run the JAR by typing:</p>
-<p><code>java -jar target/gs-accessing-data-jpa-0.1.0.jar</code></p>
+<p><code>java -jar target/gettingstarted-spring-content-fs-0.0.1.jar</code></p>
 <p>And then point your browser at:-</p>
 <p><code>http://localhost:8080</code> </p>
 <p>and you should see something like this:-</p>
 <p><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></p>
-<p>Exercise the application by uploading a range of new files and viewing them.  You should see viewed files open in a new tab in their associated editor.</p>
+<p>Exercise the application by uploading a range of new files and viewing them.  Viewed files will be downloaded and open in the appropriate editor.</p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations! You’ve written a simple application that uses Spring Content to manage streams of binary data - all without writing a concrete implementation.</p>
-<p>Spring Content supports the following implementation modules:-</p>
+<p>Congratulations! You’ve written a simple application that uses Spring Content to manage streams of binary data - without writing any specific file access code.  What's more by just changing the type of the spring-content boot-starter project on the classpath you can switch from a file-based implementation to a different implementation altogether.    </p>
+<p>Spring Content supports the following implementations:-</p>
 <ul>
 <li>Spring Content Filesystem; stores content on the Filesystem (as used in this tutorial)</li>
 <li>Spring Content S3; stores content in Amazon S3</li>
