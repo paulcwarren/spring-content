@@ -1,5 +1,7 @@
 package internal.org.springframework.content.rest.mappings;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.content.commons.annotations.Content;
@@ -23,6 +25,8 @@ import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 public class ContentHandlerMapping extends RequestMappingHandlerMapping {
+	
+	private static MediaType halJson = MediaType.parseMediaType("application/hal+json");
 
 	private Repositories repositories = null;
 	private ResourceMappings repositoryMappings;
@@ -110,26 +114,34 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 	}
 
 	private boolean isHalRequest(HttpServletRequest request) {
-		String accept = request.getHeader("Accept");
-		if (accept != null) {
-			try {
-				MediaType mediaType = MediaType.parseMediaType(accept);
-				if (mediaType.getType().equals("application") && mediaType.getSubtype().equals("hal+json")) {
+		String method = request.getMethod();
+		if ("GET".equals(method)|| "DELETE".equals(method)) {
+			String accept = request.getHeader("Accept");
+			if (accept != null) {
+				try {
+					List<MediaType> mediaTypes = MediaType.parseMediaTypes(accept);
+					for (MediaType mediaType : mediaTypes) {
+						if (mediaType.includes(halJson)) {
+							return true;
+						}
+					}
+				} catch (InvalidMediaTypeException imte) {
 					return true;
 				}
-			} catch (InvalidMediaTypeException imte) {
-				return true;
 			}
-		}
-		String contentType = request.getHeader("Content-Type");
-		if (contentType != null) {
-			try {
-				MediaType mediaType = MediaType.parseMediaType(contentType);
-				if (mediaType.getType().equals("application") && mediaType.getSubtype().equals("hal+json")) {
+		} else if ("PUT".equals(method) || "POST".equals(method)) {
+			String contentType = request.getHeader("Content-Type");
+			if (contentType != null) {
+				try {
+					List<MediaType> mediaTypes = MediaType.parseMediaTypes(contentType);
+						for (MediaType mediaType : mediaTypes) {
+						if (mediaType.includes(halJson)) {
+							return true;
+						}
+					}
+				} catch (InvalidMediaTypeException imte) {
 					return true;
 				}
-			} catch (InvalidMediaTypeException imte) {
-				return true;
 			}
 		}
 		return false;

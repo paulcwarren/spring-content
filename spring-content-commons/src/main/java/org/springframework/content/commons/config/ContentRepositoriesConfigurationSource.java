@@ -20,7 +20,7 @@ public interface ContentRepositoriesConfigurationSource {
 	/**
 	 * Returns the name of the class of the {@link FactoryBean} to actually create repository instances.
 	 * 
-	 * @return
+	 * @return must not be {@literal null}.
 	 */
 	String getRepositoryFactoryBeanName();
 

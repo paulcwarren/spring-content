@@ -7,28 +7,28 @@ public interface ContentRepositoryConfiguration<T extends ContentRepositoriesCon
 	/**
 	 * Returns the name of the ContentStore bean.
 	 * 
-	 * @return
+	 * @return the name of the content store bean
 	 */
 	public String getRepositoryBeanName();
 
 	/**
-	 * Returns the name of the {@link FactoryBean} class to be used to create repository instances.
+	 * Returns the name of the {@link FactoryBean} class to be used to create content repository instances.
 	 * 
-	 * @return
+	 * @return the content repository factory bean class 
 	 */
 	public String getRepositoryFactoryBeanName();
 
 	/**
-	 * Returns the interface name of the repository.
+	 * Returns the interface name of the content repository.
 	 * 
-	 * @return
+	 * @return the content repository interface name
 	 */
 	public String getRepositoryInterface();
 	
 	/**
-	 * Returns the source of the {@link RepositoryConfiguration}.
+	 * Returns the source of the {@link ContentRepositoryConfiguration}.
 	 * 
-	 * @return
+	 * @return the source of the content repository configuration
 	 */
 	public Object getSource();
 	

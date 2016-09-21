@@ -22,6 +22,7 @@ import org.springframework.util.ClassUtils;
 
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
+import internal.org.springframework.content.commons.utils.AnnotationBasedContentRepositoryConfigurationSource;
 import internal.org.springframework.content.commons.utils.ContentRepositoryUtils;
 
 public abstract class AbstractContentStoreBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanFactoryAware {
@@ -126,22 +127,10 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 		return beanDef;
 	}
 
-//	private BeanDefinition createRenditionProviderBeanDefinition(Class<? extends RenditionProvider> providerClass) {
-//		GenericBeanDefinition beanDef = new GenericBeanDefinition();
-//		beanDef.setBeanClass(providerClass);
-//
-//		MutablePropertyValues values = new MutablePropertyValues();
-//		beanDef.setPropertyValues(values);
-//		
-//		return beanDef;
-//	}
-
 	/**
 	 * Return the annotation to obtain configuration information from. Will be wrappen into an
-	 * {@link AnnotationRepositoryConfigurationSource} so have a look at the constants in there for what annotation
+	 * {@link AnnotationBasedContentRepositoryConfigurationSource} so have a look at the constants in there for what annotation
 	 * attributes it expects.
-	 * 
-	 * @return
 	 */
 	protected abstract Class<? extends Annotation> getAnnotation();
 }

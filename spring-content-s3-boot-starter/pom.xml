@@ -3,9 +3,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.4.0.RELEASE</version>
+		<groupId>com.github.paulcwarren</groupId>
+		<artifactId>spring-content</artifactId>
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>spring-content-s3-boot-starter</artifactId>
@@ -14,7 +14,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-s3</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.2-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
@@ -45,6 +45,4 @@
 		</dependency>
 
 	</dependencies>
-	<groupId>com.github.paulcwarren</groupId>
-	<version>0.0.1-SNAPSHOT</version>
 </project>

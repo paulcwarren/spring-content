@@ -8,6 +8,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -104,8 +107,31 @@ public class ContentEntityRestControllerIntegrationTest {
 						assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is("Hello New Spring Content World!"));
 					});
 				});
+				Context("a DELETE to /{repsotiory}/{id} with a mime-type", () -> {
+					It("should return 404", () -> {
+						mvc.perform(delete("/testEntities/" + testEntity.id)
+						.accept("text/plain"))
+						.andExpect(status().isNotFound());
+					});
+				});
+				Context("a POST to /{repository}/{id} with a multi-part form-data request", () -> {
+					Ginkgo4jDSL.It("should set the content and return 200", () -> {
+
+						String content = "This is Spring Content!";
+						
+						mvc.perform(fileUpload("/testEntities/" + testEntity.id.toString())
+								.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
+						.andExpect(status().isOk());
+
+						TestEntity fetched = repository.findOne(testEntity.id);
+						assertThat(fetched.contentId, is(not(nullValue())));
+						assertThat(fetched.mimeType, is("text/plain"));
+						assertThat(fetched.len, is(new Long(content.length())));
+						assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is(content));
+					});
+				});
 				Context("a PUT to /{repository}/{id} with a json body", () -> {
-					Ginkgo4jDSL.FIt("should set Entities data", () -> {
+					It("should set Entities data and return 200", () -> {
 						mvc.perform(put("/testEntities/" + testEntity.id.toString())
 						.content("{\"name\":\"Spring Content\"}")
 						.contentType("application/hal+json"))
@@ -127,8 +153,8 @@ public class ContentEntityRestControllerIntegrationTest {
 						testEntity = repository.save(testEntity);
 					});
 					Context("a GET to /{repository}/{id}", () -> {
-						It("should return the content", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity.id)
+						Ginkgo4jDSL.It("should return the content and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
 									.accept("text/plain"))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
@@ -138,13 +164,38 @@ public class ContentEntityRestControllerIntegrationTest {
 						});
 					});
 					Context("a PUT to /{repository}/{id}", () -> {
-						It("should overwrite the content", () -> {
-							mvc.perform(put("/files/" + testEntity.id)
+						It("should overwrite the content and return 200", () -> {
+							mvc.perform(put("/testEntities/" + testEntity.id)
 									.content("Hello Modified Spring Content World!")
 									.contentType("text/plain"))
 									.andExpect(status().isOk());
 
 							assertThat(IOUtils.toString(contentRepository.getContent(testEntity)), is("Hello Modified Spring Content World!"));
+						});
+					});
+					Context("a POST to /{repository}/{id} with a multi-part request", () -> {
+						Ginkgo4jDSL.It("should overwrite the content and return 200", () -> {
+
+							String content = "This is Modified Spring Content!";
+							
+							mvc.perform(fileUpload("/testEntities/" + testEntity.id.toString())
+									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
+							.andExpect(status().isOk());
+
+							TestEntity fetched = repository.findOne(testEntity.id);
+							assertThat(fetched.contentId, is(not(nullValue())));
+							assertThat(fetched.mimeType, is("text/plain"));
+							assertThat(fetched.len, is(new Long(content.length())));
+							assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is(content));
+						});
+					});
+					Context("a DELETE to /{repository}/{id} with the mimetype", () -> {
+						It("should delete the content and return a 200 response", () -> {
+							mvc.perform(delete("/testEntities/" + testEntity.id)
+									.contentType("text/plain"))
+									.andExpect(status().isOk());
+
+							assertThat(contentRepository.getContent(testEntity), is(nullValue()));
 						});
 					});
 				});

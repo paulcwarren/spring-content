@@ -15,7 +15,7 @@ public class DefaultContentRepositoryConfiguration<T extends ContentRepositories
 	private final BeanDefinition definition;
 
 	/**
-	 * Creates a new {@link DefaultRepositoryConfiguration} from the given {@link RepositoryConfigurationSource} and
+	 * Creates a new {@link DefaultContentRepositoryConfiguration} from the given {@link AnnotationBasedContentRepositoryConfigurationSource} and
 	 * source {@link BeanDefinition}.
 	 * 
 	 * @param configurationSource must not be {@literal null}.

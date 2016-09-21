@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
@@ -48,7 +50,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
 														  @PathVariable String repository, 
 														  @PathVariable String id, 
-														  @RequestHeader("Accept") String mimeType) 
+														  @RequestHeader(value="Accept", required=false) String mimeType) 
 			throws HttpRequestMethodNotSupportedException {
 		
 		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
@@ -96,18 +98,9 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		return null;
 	}
 	
-	/**
-	 * Handles all PUTed requests 
-	 * 
-	 * This method is also called by modern browsers and IE >= 10
-	 * @throws IOException 
-	 * @throws HttpRequestMethodNotSupportedException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 */
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers="accept!=application/hal+json")
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers={"content-type!=multipart/form-data", "accept!=application/hal+json"})
 	@ResponseBody
-	public void setContent(final HttpServletRequest request,
+	public void putContent(final HttpServletRequest request,
 									final RootResourceInformation rootInfo,
 			        				@PathVariable String repository, 
 									@PathVariable String id) 
@@ -125,6 +118,72 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, request.getHeader("Content-Type"));
+		}
+		
+		invoker.invokeSave(domainObj);
+	}
+	
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
+	@ResponseBody
+	public void putMultipartContent(RootResourceInformation rootInfo,
+									 @PathVariable String repository, 
+									 @PathVariable String id, 
+									 @RequestParam("file") MultipartFile multiPart)
+											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
+		handleMultipart(rootInfo, id, multiPart);
+	}
+	
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
+	@ResponseBody
+	public void postMultipartContent(RootResourceInformation rootInfo,
+									 @PathVariable String repository, 
+									 @PathVariable String id, 
+									 @RequestParam("file") MultipartFile multiPart)
+											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
+		handleMultipart(rootInfo, id, multiPart);
+	}
+	
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers="accept!=application/hal+json")
+	public void deleteContent(final RootResourceInformation rootInfo,
+														  @PathVariable String repository, 
+														  @PathVariable String id) 
+			throws HttpRequestMethodNotSupportedException {
+
+		RepositoryInvoker invoker = rootInfo.getInvoker();
+		Object domainObj = getDomainObject(invoker, id);
+
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
+		if (info == null) {
+			throw new IllegalArgumentException("Entity not a content repository");
+		}
+
+		if (info.getImpementation().getContent(domainObj) == null) {
+			throw new ResourceNotFoundException();
+		}
+		
+		info.getImpementation().unsetContent(domainObj);
+		
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
+			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
+		}
+		
+		invoker.invokeSave(domainObj);
+	}
+
+	protected void handleMultipart(RootResourceInformation rootInfo, String id, MultipartFile multiPart)
+			throws HttpRequestMethodNotSupportedException, IOException {
+		RepositoryInvoker invoker = rootInfo.getInvoker();
+		Object domainObj = getDomainObject(invoker, id);
+
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
+		if (info == null) {
+			throw new IllegalArgumentException("Entity not a content repository");
+		}
+
+		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
+		
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
+			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
 		
 		invoker.invokeSave(domainObj);

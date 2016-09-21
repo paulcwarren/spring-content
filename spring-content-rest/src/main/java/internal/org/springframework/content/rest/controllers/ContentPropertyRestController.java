@@ -110,15 +110,6 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		return null;
 	}
 
-	/**
-	 * Handles all PUTed requests 
-	 * 
-	 * This method is also called by modern browsers and IE >= 10
-	 * @throws IOException 
-	 * @throws HttpRequestMethodNotSupportedException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 */
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT)
 	@ResponseBody
 	public void setContent(final HttpServletRequest request,
@@ -132,15 +123,6 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		this.replaceContentInternal(rootInfo, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
 	}	
 	
-	/**
-	 * Handles all POSTed requests that aren't multipart forms
-	 * 
-	 * This method is also called by modern browsers and IE >= 10
-	 * @throws IOException 
-	 * @throws HttpRequestMethodNotSupportedException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 */
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type!=multipart/form-data")
 	@ResponseBody
 	public void postContent(final HttpServletRequest request,
@@ -221,6 +203,4 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		
 		rootInfo.getInvoker().invokeSave(domainObj);
 	}
-
-
 }
