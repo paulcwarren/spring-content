@@ -29,6 +29,5 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<groupId>com.github.paulcwarren</groupId>
-	<version>0.0.2-SNAPSHOT</version>
+
 </project>

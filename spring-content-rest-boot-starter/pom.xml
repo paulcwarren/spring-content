@@ -45,7 +45,7 @@
     <dependency>
         <groupId>com.github.paulcwarren</groupId>
         <artifactId>spring-content-mongo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.2-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
   	
