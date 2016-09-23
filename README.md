@@ -1,4 +1,4 @@
-![Alt text](https://travis-ci.org/EMC-Dojo/spring-content.svg?branch=master)
+[![Build Status](https://travis-ci.org/paulcwarren/spring-content.svg?branch=master)](https://travis-ci.org/paulcwarren/spring-content)
 
 # Spring Content
 
