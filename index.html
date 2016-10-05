@@ -151,7 +151,7 @@ public class SopDocument {
 <p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and one Spring Content-managed; @ContentId.  </p>
 <p>The structured data fields are handled in the usual way through a <code>CrudRepository&lt;SopDocument,String&gt;</code> interface.  </p>
 <p>BLOB content is handled separately with a ContentRepository interface:-</p>
-<pre><code>public interface ContentRepository extends ContentRepository&lt;SopDocument, String&gt; {
+<pre><code>public interface ContentRepository extends ContentStore&lt;SopDocument, String&gt; {
 }
 </code></pre>
 
