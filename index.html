@@ -96,7 +96,11 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#spring-content">Spring-Content</a></li>
+        <li class="main active"><a href="#spring-content">Spring Content</a></li>
+        
+            <li><a href="#features">Features</a></li>
+        
+            <li><a href="#modules">Modules</a></li>
         
             <li><a href="#quick-start">Quick Start</a></li>
         
@@ -105,10 +109,25 @@
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="spring-content">Spring-Content</h1>
+<h1 id="spring-content">Spring Content</h1>
 <p>Extensions for Spring-Data that add primitives for handling BLOBs (unstructured data) in the same Developer-friendly way that you handle your structured data.</p>
-<p>Spring Content provides modules for JPA, MongoDB, S3 and the Filesystem.</p>
+<p>It makes it easy to create websites, content management systems and any other application that has to manage content such as images, documents and videos.</p>
+<h3 id="features">Features</h3>
+<ul>
+<li>Easily wrap content with metadata </li>
+<li>Transform content into different forms with its extensible Rendtion mechanism </li>
+<li>Fully integrated into Spring Data and Spring Data REST</li>
+</ul>
+<h3 id="modules">Modules</h3>
+<p>Spring Content provides modules for storing content in JPA, MongoDB, S3 and on the Filesystem.</p>
 <h2 id="quick-start">Quick Start</h2>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;0.0.2&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
 <p>For a quick taste, look at the following domain object:</p>
 <pre><code>@Entity
 public class SopDocument {
@@ -129,12 +148,14 @@ public class SopDocument {
 }
 </code></pre>
 
-<p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and one Spring Content-managed; @ContentId.  The structured data fields are handled in the usual way through a <code>CrudRepository&lt;SopDocument,String&gt;</code> interface.  BLOB Content is handled separately with a ContentRepository interface:-</p>
+<p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and one Spring Content-managed; @ContentId.  </p>
+<p>The structured data fields are handled in the usual way through a <code>CrudRepository&lt;SopDocument,String&gt;</code> interface.  </p>
+<p>BLOB content is handled separately with a ContentRepository interface:-</p>
 <pre><code>public interface ContentRepository extends ContentRepository&lt;SopDocument, String&gt; {
 }
 </code></pre>
 
-<p>This interface extends Spring Content’s ContentRepository and defines the type (SopDocument) and the id type (String).  Put this code inside a Spring Boot application with spring-boot-starter-data-jpa and spring-content-jpa-boot-starter like this:</p>
+<p>This interface extends Spring Content’s ContentRepository and defines the type (SopDocument) and the id type (String).  Put this code inside a Spring Boot application with spring-boot-starter-data-jpa and spring-content-fs-boot-starter like this:</p>
 <pre><code>@SpringBootApplication
 public class MyApp {
 
@@ -144,12 +165,13 @@ public class MyApp {
 }
 </code></pre>
 
-<p>Launch your app and Spring Content (having been autoconfigured by Boot) will automatically craft a concrete set of operations for handling content for this Entity:</p>
+<p>Launch your app and Spring Content (having been autoconfigured by Boot) will automatically craft a concrete set of operations for handling content associated with this Entity:</p>
 <ul>
 <li><code>setContent(S property, InputStream content)</code></li>
-<li><code>unsetContent(S property)</code></li>
 <li><code>InputStream getContent(S property)</code></li>
-</ul></div>
+<li><code>unsetContent(S property)</code></li>
+</ul>
+<p>To see more following out first <a href="spring-content-fs-docs/">Getting Started Guide</a>.</p></div>
         </div>
 
         <footer class="col-md-12">
