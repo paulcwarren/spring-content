@@ -56,7 +56,7 @@
 	</dependencyManagement>
 
 	<properties>
-		<ginkgo4j-version>1.0.3</ginkgo4j-version>
+		<ginkgo4j-version>1.0.5</ginkgo4j-version>
 	</properties>
 
 	<modules>
