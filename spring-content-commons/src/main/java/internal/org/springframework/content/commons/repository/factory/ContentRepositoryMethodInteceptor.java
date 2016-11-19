@@ -15,18 +15,28 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 
 	private RenditionService renditions;
 	
+	private Method getRenditionMethod; 
+	private Method convertMethod;
+	private Method getContentMethod;
+	
 	public ContentRepositoryMethodInteceptor(RenditionService renditions) {
 		this.renditions = renditions;
+		
+		Class<?> clazz  = Renderable.class;
+		try {
+			getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
+			Class<?> storeClazz  = ContentStore.class;
+			getContentMethod = storeClazz.getMethod("getContent", Object.class);
+			convertMethod = renditions.getClass().getMethod("convert", String.class, InputStream.class, String.class);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
-		Class<?> clazz  = Renderable.class;
-		final Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-		Class<?> storeClazz  = ContentStore.class;
-		final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
-		final Method convertMethod = renditions.getClass().getMethod("convert", String.class, InputStream.class, String.class);
-
 		if (invocation.getMethod().equals(getRenditionMethod)) {
 			try {
 				String fromMimeType = null;
