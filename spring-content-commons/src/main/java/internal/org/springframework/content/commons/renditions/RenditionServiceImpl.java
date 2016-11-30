@@ -1,19 +1,47 @@
 package internal.org.springframework.content.commons.renditions;
 
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
+import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.utils.BeanUtils;
 
-public class RenditionServiceImpl implements RenditionService {
+public class RenditionServiceImpl implements RenditionService, ContentRepositoryExtension {
+	
+	private static final Log LOGGER = LogFactory.getLog(RenditionServiceImpl.class);
 
 	private List<RenditionProvider> providers = new ArrayList<RenditionProvider>();
+
+	private Method getContentMethod = null;
+	
+	public RenditionServiceImpl() {
+		try {
+			Class<?> storeClazz  = ContentStore.class;
+			getContentMethod = storeClazz.getMethod("getContent", Object.class);
+		} catch (Exception e) {
+			LOGGER.error("Failed to get ContentStore.getContentmethod", e);
+		}
+	}
+	
+	public RenditionServiceImpl(Method getContentMethod) {
+		this.getContentMethod = getContentMethod;
+	}
 	
 	@Autowired(required=false)
 	public void setProviders(RenditionProvider... providers) {
@@ -53,4 +81,39 @@ public class RenditionServiceImpl implements RenditionService {
 		return null;
 	}
 
+	@Override
+	public Set<Method> getMethods() {
+		Class<?> clazz  = Renderable.class;
+		Method getRenditionMethod;
+		try {
+			getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
+			Set<Method> methods = Collections.singleton(getRenditionMethod);
+			return methods;
+		} catch (Exception e) {
+			LOGGER.error("Failed to get Renderable.getRendtion method", e);
+		}
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
+		String fromMimeType = null;
+		fromMimeType = (String)BeanUtils.getFieldWithAnnotation(invocation.getArguments()[0], MimeType.class);
+		if (fromMimeType == null) {
+			return null;
+		}
+		String toMimeType = (String) invocation.getArguments()[1];
+		
+		if (this.canConvert(fromMimeType, toMimeType)) {
+			InputStream content = null;
+			try {
+				content = invoker.invokeGetContent();
+//				content = (InputStream) this.getContentMethod.invoke(invocation.getThis(), invocation.getArguments()[0]);
+				return (InputStream) this.convert(fromMimeType, content, toMimeType);
+			} catch (Exception e) {
+				LOGGER.error(String.format("Failed to get rendition from %s to %s", fromMimeType, toMimeType	), e);
+			}
+		} 
+		return null;
+	}
 }
