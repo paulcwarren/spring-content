@@ -19,7 +19,6 @@ import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentRepositoryInvoker;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 
 public class RenditionServiceImpl implements RenditionService, ContentRepositoryExtension {
@@ -28,19 +27,7 @@ public class RenditionServiceImpl implements RenditionService, ContentRepository
 
 	private List<RenditionProvider> providers = new ArrayList<RenditionProvider>();
 
-	private Method getContentMethod = null;
-	
 	public RenditionServiceImpl() {
-		try {
-			Class<?> storeClazz  = ContentStore.class;
-			getContentMethod = storeClazz.getMethod("getContent", Object.class);
-		} catch (Exception e) {
-			LOGGER.error("Failed to get ContentStore.getContentmethod", e);
-		}
-	}
-	
-	public RenditionServiceImpl(Method getContentMethod) {
-		this.getContentMethod = getContentMethod;
 	}
 	
 	@Autowired(required=false)
@@ -108,7 +95,6 @@ public class RenditionServiceImpl implements RenditionService, ContentRepository
 			InputStream content = null;
 			try {
 				content = invoker.invokeGetContent();
-//				content = (InputStream) this.getContentMethod.invoke(invocation.getThis(), invocation.getArguments()[0]);
 				return (InputStream) this.convert(fromMimeType, content, toMimeType);
 			} catch (Exception e) {
 				LOGGER.error(String.format("Failed to get rendition from %s to %s", fromMimeType, toMimeType	), e);

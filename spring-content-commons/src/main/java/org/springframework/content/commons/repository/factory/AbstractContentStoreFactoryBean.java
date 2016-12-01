@@ -22,24 +22,12 @@ import org.springframework.util.Assert;
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ContentStoreFactory {
 
-	//private AbstractContentStoreFactory factory;
-
-	//private ContentStoreService contentStoreService;
 	private Class<? extends ContentStore<Object, Serializable>> contentStoreInterface;
 	private ClassLoader classLoader;
 	
 	private T contentStore;
 	
 	private RenditionService renditionService;
-
-	/*public ContentStoreService getContentStoreService() {
-		return contentStoreService;
-	}
-
-	@Autowired
-	public void setContentStoreService(ContentStoreService contentStoreService) {
-		this.contentStoreService = contentStoreService;
-	}*/
 
 	@Autowired
 	public void setRenditionService(RenditionService renditionService) {

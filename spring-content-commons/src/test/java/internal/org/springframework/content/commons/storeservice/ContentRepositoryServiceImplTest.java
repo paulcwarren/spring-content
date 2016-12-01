@@ -22,8 +22,6 @@ import org.springframework.content.commons.storeservice.ContentStoreInfo;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
-
 @RunWith(Ginkgo4jRunner.class)
 public class ContentRepositoryServiceImplTest {
 
@@ -64,9 +62,11 @@ public class ContentRepositoryServiceImplTest {
 			});
 		});
 	}
+	
 	@Test
 	public void test() {
 	}
+	
 	public interface ContentRepositoryInterface extends ContentStore<Object, String> {
 	}
 }
