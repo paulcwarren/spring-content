@@ -1,27 +1,32 @@
 package org.springframework.content.commons.repository.factory;
 
-import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
-import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionService;
+import org.springframework.content.commons.repository.AstractResourceContentRepositoryImpl;
+import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
+
+import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInteceptor;
 
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ContentStoreFactory {
 
+	private static Log logger = LogFactory.getLog(AstractResourceContentRepositoryImpl.class);
+	
 	private Class<? extends ContentStore<Object, Serializable>> contentStoreInterface;
 	private ClassLoader classLoader;
 	
@@ -107,37 +112,14 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
 		result.setInterfaces(new Class[] { contentStoreInterface, ContentStore.class });
-		result.addAdvice(new MethodInterceptor() {
-
-			@Override
-			public Object invoke(MethodInvocation invocation) throws Throwable {
-				Class<?> clazz  = Renderable.class;
-				final Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-				Class<?> storeClazz  = ContentStore.class;
-				final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
-				final Method convertMethod = renditions.getClass().getMethod("convert", String.class, InputStream.class, String.class);
-
-				if (invocation.getMethod().equals(getRenditionMethod)) {
-					try {
-						String fromMimeType = null;
-						if (BeanUtils.hasFieldWithAnnotation(invocation.getArguments()[0], MimeType.class)) {
-							fromMimeType = (String)BeanUtils.getFieldWithAnnotation(invocation.getArguments()[0], MimeType.class);
-						}
-						String toMimeType = (String) invocation.getArguments()[1];
-						
-						if (renditions.canConvert(fromMimeType, toMimeType)) {
-							InputStream content = (InputStream) getContentMethod.invoke(invocation.getThis(), invocation.getArguments()[0]);
-							InputStream rendition = (InputStream) convertMethod.invoke(renditions, fromMimeType, content, toMimeType);
-							return rendition;
-						} else {
-							return null;
-						}
-					} catch (Exception e) {
-						e.printStackTrace(System.out);
-					}
-				}
-				return invocation.proceed();
-			}});
+		
+		Map<Method, ContentRepositoryExtension> extensions = new HashMap<>();
+		try {
+			extensions.put(Renderable.class.getMethod("getRendition", Object.class, String.class), (ContentRepositoryExtension)renditionService);
+		} catch (Exception e) {
+			logger.error("Failed to setup rendition service", e);
+		}
+		result.addAdvice(new ContentRepositoryMethodInteceptor(extensions));
 
 		return (T)result.getProxy(classLoader);
 	}

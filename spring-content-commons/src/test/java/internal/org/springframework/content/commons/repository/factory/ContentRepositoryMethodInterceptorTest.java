@@ -40,7 +40,7 @@ public class ContentRepositoryMethodInterceptorTest {
 		Describe("ContentRepositoryMethodInterceptor", () -> {
 			JustBeforeEach(() -> {
 				Map<Method, ContentRepositoryExtension> extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
-				interceptor = new ContentRepositoryMethodInteceptor(renditions, extensions);
+				interceptor = new ContentRepositoryMethodInteceptor(extensions);
 				interceptor.invoke(invocation);
 			});
 			Context("when the method invoked is getContent", () -> {
