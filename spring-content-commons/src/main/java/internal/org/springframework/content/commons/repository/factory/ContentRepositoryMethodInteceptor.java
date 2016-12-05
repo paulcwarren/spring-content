@@ -1,6 +1,7 @@
 package internal.org.springframework.content.commons.repository.factory;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -14,6 +15,9 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 	private Map<Method,ContentRepositoryExtension> extensions;
 	
 	public ContentRepositoryMethodInteceptor(Map<Method,ContentRepositoryExtension> extensions) {
+		if (extensions == null) {
+			extensions = Collections.<Method, ContentRepositoryExtension>emptyMap();
+		}
 		this.extensions = extensions;
 	}
 	

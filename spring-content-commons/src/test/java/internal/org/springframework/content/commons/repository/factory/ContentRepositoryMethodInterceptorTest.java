@@ -20,7 +20,6 @@ import java.util.Map;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
 
@@ -33,20 +32,19 @@ public class ContentRepositoryMethodInterceptorTest {
 	
 	// mocks
 	private MethodInvocation invocation;
-	private RenditionService renditions;
 	private ContentRepositoryExtension extension;
+	
+	private Map<Method, ContentRepositoryExtension> extensions = null;
 	
 	{
 		Describe("ContentRepositoryMethodInterceptor", () -> {
 			JustBeforeEach(() -> {
-				Map<Method, ContentRepositoryExtension> extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
 				interceptor = new ContentRepositoryMethodInteceptor(extensions);
 				interceptor.invoke(invocation);
 			});
 			Context("when the method invoked is getContent", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
-					renditions = mock(RenditionService.class);
 					
 					Class<?> storeClazz  = ContentStore.class;
 					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
@@ -60,7 +58,6 @@ public class ContentRepositoryMethodInterceptorTest {
 			Context("when the method invoked is setContent", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
-					renditions = mock(RenditionService.class);
 					
 					Class<?> storeClazz  = ContentStore.class;
 					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
@@ -74,7 +71,6 @@ public class ContentRepositoryMethodInterceptorTest {
 			Context("when the method invoked is unsetContent", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
-					renditions = mock(RenditionService.class);
 					
 					Class<?> storeClazz  = ContentStore.class;
 					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
@@ -88,8 +84,9 @@ public class ContentRepositoryMethodInterceptorTest {
 			Context("when an extension method is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
-					renditions = mock(RenditionService.class);
 					extension = mock(ContentRepositoryExtension.class);
+					
+					extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
 					
 					final Method getCustomMethod = AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class);
 					when(invocation.getMethod()).thenReturn(getCustomMethod);
