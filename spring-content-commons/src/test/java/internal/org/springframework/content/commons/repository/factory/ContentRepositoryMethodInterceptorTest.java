@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -33,13 +34,17 @@ public class ContentRepositoryMethodInterceptorTest {
 	// mocks
 	private MethodInvocation invocation;
 	private ContentRepositoryExtension extension;
+	private ApplicationEventPublisher publisher;
 	
 	private Map<Method, ContentRepositoryExtension> extensions = null;
 	
 	{
 		Describe("ContentRepositoryMethodInterceptor", () -> {
+			BeforeEach(() -> {
+				publisher = mock(ApplicationEventPublisher.class);
+			});
 			JustBeforeEach(() -> {
-				interceptor = new ContentRepositoryMethodInteceptor(extensions);
+				interceptor = new ContentRepositoryMethodInteceptor(extensions, publisher);
 				interceptor.invoke(invocation);
 			});
 			Context("when the method invoked is getContent", () -> {

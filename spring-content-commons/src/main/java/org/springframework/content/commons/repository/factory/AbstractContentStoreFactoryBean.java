@@ -18,17 +18,20 @@ import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.AstractResourceContentRepositoryImpl;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInteceptor;
 
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
-	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ContentStoreFactory {
+	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
 
 	private static Log logger = LogFactory.getLog(AstractResourceContentRepositoryImpl.class);
 	
 	private Class<? extends ContentStore<Object, Serializable>> contentStoreInterface;
 	private ClassLoader classLoader;
+	private ApplicationEventPublisher publisher;
 	
 	private T contentStore;
 	
@@ -56,6 +59,11 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
+	}
+
+	@Override
+	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+		this.publisher = applicationEventPublisher;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -119,7 +127,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		} catch (Exception e) {
 			logger.error("Failed to setup rendition service", e);
 		}
-		result.addAdvice(new ContentRepositoryMethodInteceptor(extensions));
+		result.addAdvice(new ContentRepositoryMethodInteceptor(extensions, publisher));
 
 		return (T)result.getProxy(classLoader);
 	}
