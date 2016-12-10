@@ -21,6 +21,8 @@ public class ContentRepositoryInvokerImpl implements ContentRepositoryInvoker {
 	
 	public ContentRepositoryInvokerImpl(MethodInvocation invocation) {
 		Assert.notNull(invocation, "invocation must not be null");
+		this.invocation = invocation;
+		
 		try {
 			Class<?> storeClazz  = ContentStore.class;
 			getContentMethod = storeClazz.getMethod("getContent", Object.class);
