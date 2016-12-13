@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.junit.Assert;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
@@ -18,6 +17,7 @@ import org.springframework.content.commons.repository.events.BeforeGetContentEve
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 import internal.org.springframework.content.commons.repository.ContentRepositoryInvokerImpl;
@@ -33,11 +33,11 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 	
 	static {
 		getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class);
-		Assert.assertNotNull(getContentMethod);
+		Assert.notNull(getContentMethod);
 		setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class);
-		Assert.assertNotNull(setContentMethod);
+		Assert.notNull(setContentMethod);
 		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class);
-		Assert.assertNotNull(unsetContentMethod);
+		Assert.notNull(unsetContentMethod);
 	}
 	
 	public ContentRepositoryMethodInteceptor(Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
