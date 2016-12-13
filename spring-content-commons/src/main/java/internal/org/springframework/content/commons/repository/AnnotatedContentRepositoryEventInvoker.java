@@ -2,6 +2,8 @@ package internal.org.springframework.content.commons.repository;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,13 +30,21 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
 
-public class AnnotatedContentRepositoryEventHandler
+import internal.org.springframework.content.commons.utils.ReflectionService;
+
+public class AnnotatedContentRepositoryEventInvoker
 		implements ApplicationListener<ContentRepositoryEvent>, BeanPostProcessor {
 
-	private static final Log logger = LogFactory.getLog(AnnotatedContentRepositoryEventHandler.class);
+	private static final Log logger = LogFactory.getLog(AnnotatedContentRepositoryEventInvoker.class);
 
 	private final MultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod> handlerMethods = new LinkedMultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod>();
 
+	private ReflectionService reflectionService;
+
+	public AnnotatedContentRepositoryEventInvoker(ReflectionService reflectionService) {
+		this.reflectionService = reflectionService;
+	}
+	
 	MultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod> getHandlers() {
 		return handlerMethods;
 	}
@@ -76,6 +86,29 @@ public class AnnotatedContentRepositoryEventHandler
 
 	@Override
 	public void onApplicationEvent(ContentRepositoryEvent event) {
+		Class<? extends ContentRepositoryEvent> eventType = event.getClass();
+
+		if (!handlerMethods.containsKey(eventType)) {
+			return;
+		}
+
+		for (EventHandlerMethod handlerMethod : handlerMethods.get(eventType)) {
+
+			Object src = event.getSource();
+
+			if (!ClassUtils.isAssignable(handlerMethod.targetType, src.getClass())) {
+				continue;
+			}
+
+			List<Object> parameters = new ArrayList<Object>();
+			parameters.add(src);
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format("Invoking {} handler for {}.", event.getClass().getSimpleName(), event.getSource()));
+			}
+
+			reflectionService.invokeMethod(handlerMethod.method, handlerMethod.handler, parameters.toArray());
+		}
 	}
 	
 	<H extends Annotation, E> void findHandler(Object bean, Method method, Class<H> handler, Class<? extends ContentRepositoryEvent>  eventType) {
@@ -113,10 +146,6 @@ public class AnnotatedContentRepositoryEventHandler
 			ReflectionUtils.makeAccessible(this.method);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return String.format("EventHandlerMethod{ targetType=%s, method=%s, handler=%s }", targetType, method, handler);

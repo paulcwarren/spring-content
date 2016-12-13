@@ -9,5 +9,4 @@ public class AfterGetContentEvent extends ContentRepositoryEvent {
 	public AfterGetContentEvent(Object source) {
 		super(source);
 	}
-
 }
