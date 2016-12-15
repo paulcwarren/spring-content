@@ -49,7 +49,7 @@ public class ContentRepositoryMethodInterceptorTest {
 	private Map<Method, ContentRepositoryExtension> extensions = null;
 	
 	{
-		Describe("ContentRepositoryMethodInterceptor", () -> {
+		Describe("#invoke", () -> {
 			BeforeEach(() -> {
 				publisher = mock(ApplicationEventPublisher.class);
 			});
@@ -57,7 +57,7 @@ public class ContentRepositoryMethodInterceptorTest {
 				interceptor = new ContentRepositoryMethodInteceptor(extensions, publisher);
 				interceptor.invoke(invocation);
 			});
-			Context("when the method invoked is getContent", () -> {
+			Context("when getContent is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
 					
@@ -75,7 +75,27 @@ public class ContentRepositoryMethodInterceptorTest {
 					inOrder.verify(publisher).publishEvent(argThat(isA(AfterGetContentEvent.class)));
 				});
 			});
-			Context("when the method invoked is setContent", () -> {
+			Context("when getContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+					
+					Class<?> storeClazz  = ContentStore.class;
+					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
+
+					when(invocation.getMethod()).thenReturn(getContentMethod);
+					
+					//no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[] {});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+					
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterGetContentEvent.class)));
+				});
+			});
+			Context("when setContent is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
 					
@@ -93,7 +113,27 @@ public class ContentRepositoryMethodInterceptorTest {
 					inOrder.verify(publisher).publishEvent(argThat(isA(AfterSetContentEvent.class)));
 				});
 			});
-			Context("when the method invoked is unsetContent", () -> {
+			Context("when setContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+					
+					Class<?> storeClazz  = ContentStore.class;
+					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
+
+					when(invocation.getMethod()).thenReturn(setContentMethod);
+					
+					// no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[] {});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+					
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+					verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterSetContentEvent.class)));
+				});
+			});
+			Context("when unsetContent is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
 					
@@ -109,6 +149,26 @@ public class ContentRepositoryMethodInterceptorTest {
 					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
 					verify(invocation).proceed();
 					inOrder.verify(publisher).publishEvent(argThat(isA(AfterUnsetContentEvent.class)));
+				});
+			});
+			Context("when unsetContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+					
+					Class<?> storeClazz  = ContentStore.class;
+					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
+
+					when(invocation.getMethod()).thenReturn(unsetContentMethod);
+					
+					// no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[] {});
+				});
+				It("should not publish events", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+					
+					inOrder.verify(publisher, never()).publishEvent(anyObject());
+					verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(anyObject());
 				});
 			});
 			Context("when an extension method is invoked", () -> {

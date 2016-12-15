@@ -59,19 +59,29 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 		ContentRepositoryEvent after = null;
 		
 		if (getContentMethod.equals(invocation.getMethod())) {
-			before = new BeforeGetContentEvent(invocation.getArguments()[0]);
-			after = new AfterGetContentEvent(invocation.getArguments()[0]);
+			if (invocation.getArguments().length > 0) {
+				before = new BeforeGetContentEvent(invocation.getArguments()[0]);
+				after = new AfterGetContentEvent(invocation.getArguments()[0]);
+			}
 		} else if (setContentMethod.equals(invocation.getMethod())) {
-			before = new BeforeSetContentEvent(invocation.getArguments()[0]);
-			after = new AfterSetContentEvent(invocation.getArguments()[0]);
+			if (invocation.getArguments().length > 0) {
+				before = new BeforeSetContentEvent(invocation.getArguments()[0]);
+				after = new AfterSetContentEvent(invocation.getArguments()[0]);
+			}
 		} else if (unsetContentMethod.equals(invocation.getMethod())) {
-			before = new BeforeUnsetContentEvent(invocation.getArguments()[0]);
-			after = new AfterUnsetContentEvent(invocation.getArguments()[0]);
+			if (invocation.getArguments().length > 0 && invocation.getArguments()[0] != null) {
+				before = new BeforeUnsetContentEvent(invocation.getArguments()[0]);
+				after = new AfterUnsetContentEvent(invocation.getArguments()[0]);
+			}
 		}
 
-		publisher.publishEvent(before);
+		if (before != null) {
+			publisher.publishEvent(before);
+		}
 		Object result = invocation.proceed();
-		publisher.publishEvent(after);
+		if (after != null) {
+			publisher.publishEvent(after);
+		}
 		return result;
 	}
 }
