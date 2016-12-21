@@ -80,6 +80,8 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 //		BeanDefinition htmlRenditionProviderBeanDef = createRenditionProviderBeanDefinition(WordToHtmlRenditionProvider.class);
 //		registry.registerBeanDefinition("htmlRenditionProvider", htmlRenditionProviderBeanDef);
 
+		createOperationsBean(registry);
+		
 		registerContentStoreBeanDefinitions(importingClassMetadata, registry);
 	}
 
@@ -127,6 +129,8 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 		return beanDef;
 	}
 
+	protected void createOperationsBean(BeanDefinitionRegistry registry) { return; }
+	
 	/**
 	 * Return the annotation to obtain configuration information from. Will be wrappen into an
 	 * {@link AnnotationBasedContentRepositoryConfigurationSource} so have a look at the constants in there for what annotation

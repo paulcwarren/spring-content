@@ -1,32 +1,33 @@
-package internal.org.springframework.content.mongo.store;
+package internal.org.springframework.content.mongo;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
+import org.springframework.content.mongo.MongoContentOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 import com.mongodb.gridfs.GridFSFile;
 
-public class DefaultMongoContentStoreImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class MongoContentTemplate implements MongoContentOperations {
 
-	private GridFsOperations gridOps;
+	private GridFsTemplate gridFs;
 
-	public DefaultMongoContentStoreImpl(GridFsOperations gridOps) {
-		this.gridOps = gridOps;
+	@Autowired
+	public void setGridFs(GridFsTemplate gridFs) {
+		this.gridFs = gridFs;
 	}
 
 	@Override
-	public void setContent(S property, InputStream content) {
+	public void setContent(Object property, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
 			contentId = UUID.randomUUID();
@@ -34,21 +35,21 @@ public class DefaultMongoContentStoreImpl<S, SID extends Serializable> implement
 		}
 
 		// delete any existing content object (gridfsoperations doesn't support replace)
-		gridOps.delete(query(whereFilename().is(contentId.toString())));
+		gridFs.delete(query(whereFilename().is(contentId.toString())));
 
-		GridFSFile savedContentFile = gridOps.store(content, contentId.toString());
+		GridFSFile savedContentFile = gridFs.store(content, contentId.toString());
 
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, savedContentFile.getLength());
 	}
 
 	@Override
-	public InputStream getContent(S property) {
+	public InputStream getContent(Object property) {
 		if (property == null)
 			return null;
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return null;
-		GridFsResource resource = gridOps.getResource(contentId.toString());
+		GridFsResource resource = gridFs.getResource(contentId.toString());
 		if (resource != null)
 			try {
 				return resource.getInputStream();
@@ -61,7 +62,7 @@ public class DefaultMongoContentStoreImpl<S, SID extends Serializable> implement
 	}
 
 	@Override
-	public void unsetContent(S property) {
+	public void unsetContent(Object property) {
 		if (property == null)
 			return;
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
@@ -69,11 +70,10 @@ public class DefaultMongoContentStoreImpl<S, SID extends Serializable> implement
 			return;
 
 		// delete any existing content object
-		gridOps.delete(query(whereFilename().is(contentId.toString())));
+		gridFs.delete(query(whereFilename().is(contentId.toString())));
 
 		// reset content fields
         BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
         BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-
 	}
 }

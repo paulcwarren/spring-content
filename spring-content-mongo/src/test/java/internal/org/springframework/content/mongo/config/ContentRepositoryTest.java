@@ -17,6 +17,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.mongo.MongoContentOperations;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +48,8 @@ public class ContentRepositoryTest {
 					context.close();
 				});
 				It("should be present in the context", () -> {
+					assertThat(context.getBean("mongoContentTemplate"), is(not(nullValue())));
+					assertThat(context.getBean(MongoContentOperations.class), is(not(nullValue())));
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
 			});
