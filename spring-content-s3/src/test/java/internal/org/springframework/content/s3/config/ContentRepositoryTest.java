@@ -1,4 +1,4 @@
-package internal.org.springframework.content.mongo.config;
+package internal.org.springframework.content.s3.config;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
@@ -43,8 +43,11 @@ public class ContentRepositoryTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should be present in the context", () -> {
+				It("should have a Content Repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a resource template bean", () -> {
+					assertThat(context.getBean("s3ResourceTemplate"), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
