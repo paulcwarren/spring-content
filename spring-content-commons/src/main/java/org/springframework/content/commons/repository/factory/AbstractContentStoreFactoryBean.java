@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionService;
-import org.springframework.content.commons.repository.AstractResourceContentRepositoryImpl;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,7 +26,7 @@ import internal.org.springframework.content.commons.repository.factory.ContentRe
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
 
-	private static Log logger = LogFactory.getLog(AstractResourceContentRepositoryImpl.class);
+	private static Log logger = LogFactory.getLog(AbstractContentStoreFactoryBean.class);
 	
 	private Class<? extends ContentStore<Object, Serializable>> contentStoreInterface;
 	private ClassLoader classLoader;

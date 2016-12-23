@@ -1,9 +1,8 @@
-package org.springframework.content.commons.repository;
+package org.springframework.content.commons.operations;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -16,18 +15,18 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 
-public abstract class AstractResourceContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
-
-	private static Log logger = LogFactory.getLog(AstractResourceContentRepositoryImpl.class);
+public abstract class AbstractResourceTemplate implements ContentOperations {
+	
+	private static Log logger = LogFactory.getLog(AbstractResourceTemplate.class);
 	
 	private ResourceLoader resourceLoader;
-
-	public AstractResourceContentRepositoryImpl(ResourceLoader resourceLoader) {
+	
+	public AbstractResourceTemplate(ResourceLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
-
+	
 	@Override
-	public void setContent(S property, InputStream content) {
+	public <S> void setContent(S property, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
 			contentId = UUID.randomUUID();
@@ -61,7 +60,7 @@ public abstract class AstractResourceContentRepositoryImpl<S, SID extends Serial
 	}
 
 	@Override
-	public InputStream getContent(S property) {
+	public <S> InputStream getContent(S property) {
 		if (property == null)
 			return null;
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
@@ -81,7 +80,7 @@ public abstract class AstractResourceContentRepositoryImpl<S, SID extends Serial
 	}
 
 	@Override
-	public void unsetContent(S property) {
+	public <S> void unsetContent(S property) {
 		if (property == null)
 			return;
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
@@ -105,4 +104,5 @@ public abstract class AstractResourceContentRepositoryImpl<S, SID extends Serial
 
 	protected abstract String getlocation(Object contentId);
 	protected abstract void deleteResource(Resource resource) throws Exception;
+
 }

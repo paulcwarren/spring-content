@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -44,8 +45,14 @@ public class ContentRepositoryTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should be present in the context", () -> {
+				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a resourceTemplate bean", () -> {
+					assertThat(context.getBean("fileResourceTemplate"), is(not(nullValue())));
+				});
+				It("should have a ContentOperations bean", () -> {
+					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {

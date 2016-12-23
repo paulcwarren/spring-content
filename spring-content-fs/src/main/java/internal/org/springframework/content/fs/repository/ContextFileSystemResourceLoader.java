@@ -2,6 +2,8 @@ package internal.org.springframework.content.fs.repository;
 
 import java.io.File;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
@@ -9,10 +11,10 @@ import org.springframework.util.ResourceUtils;
 
 public class ContextFileSystemResourceLoader extends FileSystemResourceLoader {
 
-	private File fileSystemRoot;
+	private static Log logger = LogFactory.getLog(ContextFileSystemResourceLoader.class);
 	
 	public ContextFileSystemResourceLoader(File fileSystemRoot) {
-		this.fileSystemRoot = fileSystemRoot;
+		logger.info(String.format("File system context root set to: %s", fileSystemRoot.toString()));
 	}
 	
 	@Override

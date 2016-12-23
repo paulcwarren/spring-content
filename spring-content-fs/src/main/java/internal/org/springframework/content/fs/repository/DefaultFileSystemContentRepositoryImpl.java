@@ -1,38 +1,32 @@
 package internal.org.springframework.content.fs.repository;
 
-import java.io.File;
+import java.io.InputStream;
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.content.commons.repository.AstractResourceContentRepositoryImpl;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.content.commons.repository.ContentStore;
 
-public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> extends AstractResourceContentRepositoryImpl<S,SID> {
+import internal.org.springframework.content.fs.operations.FileResourceTemplate;
 
-	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
-	
-	private File fileSystemRoot;
-	private ResourceLoader resourceLoader;
+public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> /*extends AstractResourceContentRepositoryImpl<S,SID>*/  implements ContentStore<S,SID> {
 
-	public DefaultFileSystemContentRepositoryImpl(File fileSystemRoot) {
-		super(new ContextFileSystemResourceLoader(fileSystemRoot));
-		this.fileSystemRoot = fileSystemRoot;
+	private FileResourceTemplate template;
+
+	public DefaultFileSystemContentRepositoryImpl(FileResourceTemplate template) {
+		this.template = template;
 	}
 
 	@Override
-	protected String getlocation(Object contentId) {
-		return new File(fileSystemRoot, contentId.toString()).toURI().toString();
+	public void setContent(S property, InputStream content) {
+		this.template.setContent(property, content);
 	}
 
 	@Override
-	protected void deleteResource(Resource resource) throws Exception {
-		if (resource != null && resource instanceof FileSystemResource) {
-			if (((FileSystemResource)resource).getFile().delete()) {
-				logger.debug(String.format("Deleted resource %s", resource.getFile().getPath()));
-			}
-		}
+	public void unsetContent(S property) {
+		this.template.unsetContent(property);
+	}
+
+	@Override
+	public InputStream getContent(S property) {
+		return this.template.getContent(property);
 	}
 }
