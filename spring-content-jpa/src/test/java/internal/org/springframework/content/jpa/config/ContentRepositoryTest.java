@@ -1,4 +1,4 @@
-package internal.org.springframework.content.mongo.config;
+package internal.org.springframework.content.jpa.config;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -60,8 +61,14 @@ public class ContentRepositoryTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should be present in the context", () -> {
+				It("should have a content repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a jpaContentTemplate bean", () -> {
+					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
+				});
+				It("should have a ContentOperations bean", () -> {
+					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
