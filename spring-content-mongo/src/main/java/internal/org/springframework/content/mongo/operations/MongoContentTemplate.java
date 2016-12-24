@@ -1,28 +1,28 @@
-package internal.org.springframework.content.mongo;
+package internal.org.springframework.content.mongo.operations;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.operations.AbstractResourceTemplate;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.content.mongo.MongoContentOperations;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 import com.mongodb.gridfs.GridFSFile;
 
-public class MongoContentTemplate implements MongoContentOperations {
+public class MongoContentTemplate extends AbstractResourceTemplate {
 
 	private GridFsTemplate gridFs;
 
 	@Autowired
-	public void setGridFs(GridFsTemplate gridFs) {
+	public MongoContentTemplate(GridFsTemplate gridFs) {
+		super(gridFs);
 		this.gridFs = gridFs;
 	}
 
@@ -34,6 +34,7 @@ public class MongoContentTemplate implements MongoContentOperations {
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
+		// gridfs doesnt support writeableresource
 		// delete any existing content object (gridfsoperations doesn't support replace)
 		gridFs.delete(query(whereFilename().is(contentId.toString())));
 
@@ -43,37 +44,12 @@ public class MongoContentTemplate implements MongoContentOperations {
 	}
 
 	@Override
-	public InputStream getContent(Object property) {
-		if (property == null)
-			return null;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null)
-			return null;
-		GridFsResource resource = gridFs.getResource(contentId.toString());
-		if (resource != null)
-			try {
-				return resource.getInputStream();
-			} catch (IllegalStateException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		return null;
+	protected String getlocation(Object contentId) {
+		return contentId.toString();
 	}
 
 	@Override
-	public void unsetContent(Object property) {
-		if (property == null)
-			return;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null)
-			return;
-
-		// delete any existing content object
-		gridFs.delete(query(whereFilename().is(contentId.toString())));
-
-		// reset content fields
-        BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
-        BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+	protected void deleteResource(Resource resource) throws Exception {
+		gridFs.delete(query(whereFilename().is(resource.getFilename())));
 	}
 }

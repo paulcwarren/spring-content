@@ -7,7 +7,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.content.commons.config.AbstractContentStoreBeanDefinitionRegistrar;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 
-import internal.org.springframework.content.mongo.MongoContentTemplate;
+import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
 
 public class MongoContentStoresRegistrar extends AbstractContentStoreBeanDefinitionRegistrar {
 

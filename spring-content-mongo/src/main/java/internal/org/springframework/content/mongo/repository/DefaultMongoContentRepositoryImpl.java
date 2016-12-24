@@ -6,7 +6,7 @@ import java.io.Serializable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.mongo.MongoContentTemplate;
+import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
 
 public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 

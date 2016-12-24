@@ -3,7 +3,7 @@ package internal.org.springframework.content.mongo.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 
-import internal.org.springframework.content.mongo.MongoContentTemplate;
+import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
 import internal.org.springframework.content.mongo.repository.DefaultMongoContentRepositoryImpl;
 
 public class MongoContentRepositoryFactoryBean extends AbstractContentStoreFactoryBean {

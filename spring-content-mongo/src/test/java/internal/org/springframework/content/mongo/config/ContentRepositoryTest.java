@@ -47,10 +47,14 @@ public class ContentRepositoryTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should be present in the context", () -> {
-					assertThat(context.getBean("mongoContentTemplate"), is(not(nullValue())));
-					assertThat(context.getBean(MongoContentOperations.class), is(not(nullValue())));
+				It("should have a mongo content repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a mongoContentTemplate bean", () -> {
+					assertThat(context.getBean("mongoContentTemplate"), is(not(nullValue())));
+				});
+				It("should have a ContentOperations bean", () -> {
+					assertThat(context.getBean(MongoContentOperations.class), is(not(nullValue())));
 				});
 			});
 			Context("given an enabled configuration with no mongo content repository beans", () -> {
