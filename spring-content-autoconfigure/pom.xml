@@ -1,46 +1,50 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
+	<artifactId>spring-content-autoconfigure</artifactId>
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
 		<version>0.0.3-SNAPSHOT</version>
+		<relativePath>..</relativePath>
 	</parent>
-
-	<artifactId>spring-content-jpa-boot-starter</artifactId>
-
 	<dependencies>
-		<dependency>
-			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-jpa</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-autoconfigure</artifactId>
+			<artifactId>spring-content-commons</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
-		
-		<!--  Test Dependencies -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
+			<groupId>org.apache.solr</groupId>
+			<artifactId>solr-solrj</artifactId>
+			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>org.codehaus.woodstox</groupId>
+					<artifactId>wstx-asl</artifactId>
+				</exclusion>
+				<exclusion>
+					<artifactId>log4j</artifactId>
+					<groupId>log4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+
+		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>ginkgo4j</artifactId>
+			<version>${ginkgo4j-version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

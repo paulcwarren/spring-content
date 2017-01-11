@@ -26,9 +26,14 @@
 	
 		<!-- Test Dependencies -->
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>ginkgo4j</artifactId>
-			<version>1.0.0</version>
+			<version>${ginkgo4j-version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

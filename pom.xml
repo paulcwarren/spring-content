@@ -60,6 +60,7 @@
 	</properties>
 
 	<modules>
+		<module>./spring-content-autoconfigure</module>
 		<module>./spring-content-commons</module>
 		<module>./spring-content-docx4j</module>
 		<module>./spring-content-fs</module>
@@ -72,7 +73,7 @@
 		<module>./spring-content-rest-boot-starter</module>
 		<module>./spring-content-s3</module>
 		<module>./spring-content-s3-boot-starter</module>
- 	</modules>
+	</modules>
 
 	<build>
 		<plugins>
