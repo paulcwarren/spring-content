@@ -23,14 +23,4 @@ public class SolrAutoConfiguration {
 	public Object solrFulltextEventListener() {
 		return new SolrUpdateEventHandler(solrClient, ops);
 	}
-
-	@ContentRepositoryEventHandler
-	public static class SolrFulltextEventListener extends AbstractContentRepositoryEventListener<Object> {
-
-		@Override
-		protected void onAfterSetContent(Object entity) {
-			super.onAfterSetContent(entity);
-		}
-		
-	}
 }
