@@ -33,7 +33,14 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 
 	@Override
 	protected void onAfterSetContent(Object contentEntity) {
-
+		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
+			return;
+		}
+		
+		if (BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class) == null) {
+			return;
+		}
+		
 	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
 	    up.addContentStream(new ContentEntityStream(ops, contentEntity));
 	    up.setParam("literal.id", BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString());
@@ -47,6 +54,28 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		}
 	}
 	
+	@Override
+	protected void onBeforeUnsetContent(Object contentEntity) {
+		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
+			return;
+		}
+		
+		Object id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class); 
+		if (id == null) {
+			return;
+		}
+		
+		try {
+			solrClient.deleteById(id.toString());
+			solrClient.commit();
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+
 	public class ContentEntityStream extends ContentStreamBase {
 
 		private ContentOperations ops;
