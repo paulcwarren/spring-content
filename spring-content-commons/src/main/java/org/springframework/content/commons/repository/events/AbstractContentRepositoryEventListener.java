@@ -24,7 +24,7 @@ public abstract class AbstractContentRepositoryEventListener<T>
 		}
 
 		if (event instanceof BeforeGetContentEvent) {
-			onBeforeGetContent((T) event.getSource());
+				onBeforeGetContent((T) event.getSource());
 		} else if (event instanceof AfterGetContentEvent) {
 			onAfterGetContent((T) event.getSource());
 		} else if (event instanceof BeforeSetContentEvent) {

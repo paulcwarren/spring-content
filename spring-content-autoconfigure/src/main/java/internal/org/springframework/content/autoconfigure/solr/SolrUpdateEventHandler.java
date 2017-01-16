@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
 import org.springframework.content.commons.operations.ContentOperations;
+import org.springframework.content.commons.repository.ContentAccessException;
 import org.springframework.content.commons.repository.events.AbstractContentRepositoryEventListener;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
@@ -36,21 +37,22 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
 			return;
 		}
-		
+
 		if (BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class) == null) {
 			return;
 		}
-		
+
 	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
 	    up.addContentStream(new ContentEntityStream(ops, contentEntity));
-	    up.setParam("literal.id", BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString());
+		String id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString();
+	    up.setParam("literal.id", id);
 	    up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
 	    try {
 			/*NamedList<Object> request = */solrClient.request(up, null);
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			throw new ContentAccessException(String.format("Error updating entry in solr index %s", id), e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new ContentAccessException(String.format("Error updating entry in solr index %s", id), e);
 		}
 	}
 	
@@ -69,9 +71,9 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 			solrClient.deleteById(id.toString());
 			solrClient.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		}
 	}
 
