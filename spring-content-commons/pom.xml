@@ -17,7 +17,13 @@
 			<artifactId>commons-io</artifactId>
 			<version>1.3.1</version>
 		</dependency>
-		
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -39,6 +45,6 @@
 		    <artifactId>hamcrest-library</artifactId>
 		    <scope>test</scope>
 		</dependency>
-		
-	</dependencies>
+
+    </dependencies>
 </project>
