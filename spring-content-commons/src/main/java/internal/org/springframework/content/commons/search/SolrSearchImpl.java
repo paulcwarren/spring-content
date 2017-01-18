@@ -1,25 +1,31 @@
 package internal.org.springframework.content.commons.search;
 
+import internal.org.springframework.content.commons.utils.ReflectionService;
+import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.*;
 
-public class SolrSearchImpl implements Searchable<Object> {
+public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExtension {
 
     private SolrClient solr;
+    private ReflectionService reflectionService;
     private String field = "id";
 
-    public SolrSearchImpl(SolrClient solr) {
+    public SolrSearchImpl(SolrClient solr, ReflectionService service) {
         this.solr = solr;
+        this.reflectionService = service;
     }
 
     @Override
@@ -193,6 +199,18 @@ public class SolrSearchImpl implements Searchable<Object> {
             ids.add(results.get(i).getFieldValue("id"));
         }
         return ids;
+    }
+
+    @Override
+    public Set<Method> getMethods() {
+        Set<Method> methods = new HashSet<>();
+        methods.addAll(Arrays.asList(Searchable.class.getMethods()));
+        return methods;
+    }
+
+    @Override
+    public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
+        return reflectionService.invokeMethod(invocation.getMethod(), this, invocation.getArguments());
     }
 }
 
