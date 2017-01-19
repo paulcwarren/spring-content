@@ -74,7 +74,7 @@ public interface Renderable<E> {
 	InputStream getRendition(E entity, String mimeType); 
 }
 ----
-- Returns a `mimeType` rendition of the content associated with `entity`
+NOTE: Returns a `mimeType` rendition of the content associated with `entity`
 
 [[content-repositories.creation]]
 == Creating Content Repositories Instances
@@ -135,7 +135,7 @@ public interface SopDocumentContentRepository extends ContentRepository<SopDocum
 @EnableS3ContentRepositories
 class Config {}
 ----
-- The JPA and S3 namespaces are used in this example.  If you are using the repository and content repository abstraction for other database and Content stores, you need to change this to the appropriate namespace declaration for your store module. 
+NOTE: The JPA and S3 namespaces are used in this example.  If you are using the repository and content repository abstraction for other database and Content stores, you need to change this to the appropriate namespace declaration for your store module. 
 
 . Inject the repositories and use them
 +
@@ -155,4 +155,4 @@ public class SomeClass {
 	}
 }
 ----
-- Spring Content will update the `@ContentId` and `@ContentLength` fields
+NOTE: Spring Content will update the `@ContentId` and `@ContentLength` fields
