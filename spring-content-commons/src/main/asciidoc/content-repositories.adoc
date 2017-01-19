@@ -1,0 +1,138 @@
+[[content-repositories]]
+= Working with Spring Content Repositories
+
+The goal of Spring Content repository abstraction is to significantly reduce the amount of boilerplate code required to implement applications and services that handle rich-content like files and other media by providing capabilities for content access, metadata association, search and transformation for various types of content store.
+
+[IMPORTANT]
+====
+_Spring Content repository documentation and your module_
+
+This chapter explains the core concepts and interfaces for Spring Content repositories. The information in this chapter is pulled from the Spring Content Commons. It uses the configuration and code samples for the S3 module. Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.
+====
+
+[[content-repositories.core-concepts]]
+== Core concepts
+The central interface in the Spring Content repository abstraction is `ContentRepository`. It takes the Spring Data domain class that the content will be associated with along with the `@ContentId` class as type arguments. This interface provides CRUD functionality and metadata management for the content that is being managed.
+
+[[content-repositories.repository]]
+.ContentRepository interface
+====
+[source, java]
+----
+public interface ContentRepository<E, CID extends Serializable> {
+
+	void setContent(E entity, InputStream content); 	<1>
+	
+	InputStream getContent(E entity);			<2>
+	
+	void unsetContent(E entity);				<3>
+}
+----
+<1> Stores content and saves its metadata on `entity` 
+<2> Returns the content associated with `entity`
+<3> Deletes content and unassociates it from `entity`  
+====
+
+[[content-repositories.search]]
+=== Search
+Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it. 
+
+Content repositories can therefore optionally be made searchable by extending the `Searchable<CID>` interface.
+
+[source, java]
+.Searchable interface
+----
+public interface Searchable<CID> {
+
+    Iterable<T> findKeyword(String term);
+
+    Iterable<T> findAllKeywords(String...terms);
+
+    Iterable<T> findAnyKeywords(String...terms);
+
+    Iterable<T> findKeywordsNear(int proximity, String...terms);
+
+    Iterable<T> findKeywordStartsWith(String term);
+
+    Iterable<T> findKeywordStartsWithAndEndsWith(String prefix, String suffix);
+
+    Iterable<T> findAllKeywordsWithWeights(String[] terms, double[] weights);
+}
+----
+
+[[content-repositories.search]]
+=== Renditions
+Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.
+
+Content repositories can therefore optionally also be given rendition capabilities by extending the `Renderable<E>` interface.
+
+[source, java]
+.Renderable interface
+====
+public interface Renderable<E> {
+
+	InputStream getRendition(E entity, String mimeType);    <1>
+}
+----
+1 Returns a `mimeType` rendition of the content associated with `entity`
+====
+
+[[content-repositories.creation]]
+== Creating Content Repositories Instances
+
+. Define an interface extending `ContentRepository` and type it to the domain class and ID type that it will handle.
++
+[source, java]
+----
+public interface SopDocumentContentRepository extends ContentRepository<SopDocument, UUID> {
+}
+----
+- SopDocument is the type of Spring Data entity 
+- UUID is the type of the content id field
+
+. Optionally you can also make it extend `Searchable` 
++
+[source, java]
+----
+public interface SopDocumentContentRepository extends ContentRepository<SopDocument, UUID>, Searchable<UUID> {
+}
+----
+
+. Optionally you can also make it extend `Renderable`
++
+[source, java]
+----
+public interface SopDocumentContentRepository extends ContentRepository<SopDocument, UUID>, Renderable<SopDocument> {
+}
+----
+
+. Set up Spring to create proxy instances for this interface using JavaConfig:
++
+[source, java]
+.example
+----
+import org.springframework.content.s3.config.EnableS3ContentRepositories;
+
+@EnableS3ContentRepositories <1>
+class Config {}
+----
+<1> The S3 namespace is used in this example. If you are using the content repository abstraction for any other store, you need to change this to the appropriate namespace declaration for your store module.  Other stores include the `filesystem`, `JPA` and `Mongo`. 
+
+. Get the content repository injected and use it.
+
+[source, java]
+----
+public class SomeClient {
+
+  @Autowired
+  private SopDocumentContentRepository repository;
+
+  public void doSomething() {
+  	...
+    InputStream content = repository.getContent(sopDocument);
+  }
+}
+----
+
+
+
