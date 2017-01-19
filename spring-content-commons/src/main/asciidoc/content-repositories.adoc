@@ -84,21 +84,18 @@ To use these core concepts:
 . Define a Spring Data entity and associate it with content using content annotations
 +
 [source, java]
-====
+----
 @Entity
 public class SopDocument {
-  
 	private @Id @GeneratedValue Long id;
 	private String title;
-    	private String[] authors, keywords;
+	private String[] authors, keywords;
 
-    	// Spring Content managed attribute
-    	private @ContentId UUID contentId;  	
+	// Spring Content managed attribute
+	private @ContentId UUID contentId;  	
 	private @ContentLength Long contentLen;	
-  
 }
 ----
-====
 
 . Define an interface extending Spring Data's `CrudRepository` and type it to the domain and ID classes.
 +
@@ -139,12 +136,12 @@ public interface SopDocumentContentRepository extends ContentRepository<SopDocum
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 
 @EnableJpaRepositories
-@EnableS3ContentRepositories <1>
+@EnableS3ContentRepositories
 class Config {}
 ----
-<1> The JPA and S3 namespaces are used in this example.  If you are using the repository and content repository abstraction for other database and Content stores, you need to change this to the appropriate namespace declaration for your store module. 
+- The JPA and S3 namespaces are used in this example.  If you are using the repository and content repository abstraction for other database and Content stores, you need to change this to the appropriate namespace declaration for your store module. 
 
-. Inject the repositories and use it.
+. Inject the repositories and use them
 +
 [source, java]
 ====
@@ -165,6 +162,4 @@ public class SomeClient {
 ----
 <1> Spring Content will update the `@ContentId` and `@ContentLength` fields
 ====
-
-
 
