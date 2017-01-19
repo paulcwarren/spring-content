@@ -1,7 +1,7 @@
 [[content-repositories]]
 = Working with Spring Content Repositories
 
-The goal of Spring Content repository abstraction is to significantly reduce the amount of boilerplate code required to implement applications and services that handle rich-content like files and other media by providing capabilities for content access, metadata association, search and transformation for various types of content store.
+The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content files and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.
 
 [IMPORTANT]
 ====
@@ -12,7 +12,7 @@ This chapter explains the core concepts and interfaces for Spring Content reposi
 
 [[content-repositories.core-concepts]]
 == Core concepts
-The central interface in the Spring Content repository abstraction is `ContentRepository`. It takes the Spring Data domain class that the content will be associated with along with the `@ContentId` class as type arguments. This interface provides CRUD functionality and metadata management for the content that is being managed.
+The central interface in the Spring Content is the `ContentRepository` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content id type of that domain class. 
 
 [[content-repositories.repository]]
 .ContentRepository interface
