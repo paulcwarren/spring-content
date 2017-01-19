@@ -41,6 +41,7 @@ Applications that handle files and other media usually have search capabilities 
 Content repositories can therefore optionally be made searchable by extending the `Searchable<CID>` interface.
 
 [source, java]
+.Searchable interface
 ----
 public interface Searchable<CID> {
 
@@ -74,13 +75,13 @@ public interface Renderable<E> {
 	InputStream getRendition(E entity, String mimeType); 
 }
 ----
-NOTE: Returns a `mimeType` rendition of the content associated with `entity`
+Returns a `mimeType` rendition of the content associated with `entity`.
 
 [[content-repositories.creation]]
 == Creating Content Repositories Instances
 To use these core concepts:
 
-. Define a Spring Data entity and associate it with content using content annotations
+. Define a Spring Data entity and give it's instances the ability to be associated with content by adding `@ContentId` and `@ContentLength` annotations
 +
 [source, java]
 ----
@@ -139,6 +140,7 @@ NOTE: The JPA and S3 namespaces are used in this example.  If you are using the 
 
 . Inject the repositories and use them
 +
+====
 [source, java]
 ----
 public class SomeClass {
@@ -146,13 +148,21 @@ public class SomeClass {
   	@Autowired private SopDocumentContentRepository contentRepo;
 
 	public void doSomething() {
+	
 		SopDocument doc = new SopDocument();
 		doc.setTitle("example");
-		contentRepo.setContent(doc, new ByteArrayInputStream("some example content".getBytes()));
+		contentRepo.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); # <1>
 		doc.save(); 
 		...
+		
 		InputStream content = repository.getContent(sopDocument);
+		...
+		
+		List<SopDocument> docs = doc.findAllByContentId(contentRepo.findKeyword("interesting"));
+		...
+		
 	}
 }
 ----
-NOTE: Spring Content will update the `@ContentId` and `@ContentLength` fields
+<1> Spring Content will update the `@ContentId` and `@ContentLength` fields
+====
