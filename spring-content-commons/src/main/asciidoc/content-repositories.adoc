@@ -15,6 +15,7 @@ This chapter explains the core concepts and interfaces for Spring Content reposi
 The central interface in the Spring Content is the `ContentRepository` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content id type of that domain class. 
 
 [[content-repositories.repository]]
++
 .ContentRepository interface
 ====
 [source, java]
@@ -40,6 +41,7 @@ Applications that handle files and other media usually have search capabilities 
 Content repositories can therefore optionally be made searchable by extending the `Searchable<CID>` interface.
 
 [source, java]
++
 .Searchable interface
 ----
 public interface Searchable<CID> {
@@ -67,15 +69,15 @@ Applications that handle files and other media usually also have rendition capab
 Content repositories can therefore optionally also be given rendition capabilities by extending the `Renderable<E>` interface.
 
 [source, java]
++
 .Renderable interface
-====
+----
 public interface Renderable<E> {
 
-	InputStream getRendition(E entity, String mimeType);    <1>
+	InputStream getRendition(E entity, String mimeType); 
 }
 ----
-<1> Returns a `mimeType` rendition of the content associated with `entity`
-====
+- Returns a `mimeType` rendition of the content associated with `entity`
 
 [[content-repositories.creation]]
 == Creating Content Repositories Instances
@@ -133,8 +135,6 @@ public interface SopDocumentContentRepository extends ContentRepository<SopDocum
 +
 [source, java]
 ----
-import org.springframework.content.s3.config.EnableS3ContentRepositories;
-
 @EnableJpaRepositories
 @EnableS3ContentRepositories
 class Config {}
@@ -144,22 +144,19 @@ class Config {}
 . Inject the repositories and use them
 +
 [source, java]
-====
-public class SomeClient {
+----
+public class SomeClass {
+	@Autowired private SopDocumentRepository repo;
+  	@Autowired private SopDocumentContentRepository contentRepo;
 
-  @Autowired private SopDocumentRepository repo;
-  @Autowired private SopDocumentContentRepository contentRepo;
-
-  public void doSomething() {
-    SopDocument doc = new SopDocument();
-    doc.setTitle("example");
-    contentRepo.setContent(doc, new ByteArrayInputStream("some example content".getBytes())); <1>
-    doc.save(); 
-    ...
-    InputStream content = repository.getContent(sopDocument);
-  }
+	public void doSomething() {
+		SopDocument doc = new SopDocument();
+		doc.setTitle("example");
+		contentRepo.setContent(doc, new ByteArrayInputStream("some example content".getBytes()));
+		doc.save(); 
+		...
+		InputStream content = repository.getContent(sopDocument);
+	}
 }
 ----
-<1> Spring Content will update the `@ContentId` and `@ContentLength` fields
-====
-
+- Spring Content will update the `@ContentId` and `@ContentLength` fields
