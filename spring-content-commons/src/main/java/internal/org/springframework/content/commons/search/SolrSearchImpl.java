@@ -11,9 +11,13 @@ import org.springframework.content.commons.repository.ContentAccessException;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -21,11 +25,13 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
 
     private SolrClient solr;
     private ReflectionService reflectionService;
+    private ConversionService conversionService;
     private String field = "id";
 
-    public SolrSearchImpl(SolrClient solr, ReflectionService service) {
+    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService) {
         this.solr = solr;
-        this.reflectionService = service;
+        this.reflectionService = reflectionService;
+        this.conversionService = conversionService;
     }
 
     @Override
@@ -210,7 +216,18 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
 
     @Override
     public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
-        return reflectionService.invokeMethod(invocation.getMethod(), this, invocation.getArguments());
+        List newList = new ArrayList();
+        Class<? extends Serializable> clazz = invoker.getContentIdClass();
+
+        List<String> list = (List) reflectionService.invokeMethod(invocation.getMethod(), this, invocation.getArguments());
+        for (String item : list) {
+            if (conversionService.canConvert(item.getClass(), clazz) == false) {
+                throw new IllegalStateException(String.format("Cannot convert item of type %s to %s", item.getClass().getName(), clazz.getName()));
+            }
+            newList.add(conversionService.convert(item, clazz));
+        }
+
+        return newList;
     }
 }
 
