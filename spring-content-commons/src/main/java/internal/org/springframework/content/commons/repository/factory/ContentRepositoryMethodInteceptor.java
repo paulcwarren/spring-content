@@ -1,6 +1,7 @@
 package internal.org.springframework.content.commons.repository.factory;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
@@ -29,7 +30,9 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 	
 	private static Method getContentMethod; 
 	private static Method setContentMethod; 
-	private static Method unsetContentMethod; 
+	private static Method unsetContentMethod;
+    private Class<?> domainClass = null;
+    private Class<? extends Serializable> contentIdClass = null;
 	
 	static {
 		getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class);
@@ -40,10 +43,12 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 		Assert.notNull(unsetContentMethod);
 	}
 	
-	public ContentRepositoryMethodInteceptor(Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
+	public ContentRepositoryMethodInteceptor(Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
 		if (extensions == null) {
 			extensions = Collections.<Method, ContentRepositoryExtension>emptyMap();
 		}
+        this.domainClass = domainClass;
+        this.contentIdClass = contentIdClass;
 		this.extensions = extensions;
 		this.publisher = publisher;
 	}
@@ -52,7 +57,7 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 		ContentRepositoryExtension extension = extensions.get(invocation.getMethod());
 		if (extension != null) {
-			return extension.invoke(invocation, new ContentRepositoryInvokerImpl(invocation));
+			return extension.invoke(invocation, new ContentRepositoryInvokerImpl(domainClass, contentIdClass, invocation));
 		}
 		
 		ContentRepositoryEvent before = null;

@@ -54,7 +54,7 @@ public class ContentRepositoryMethodInterceptorTest {
 				publisher = mock(ApplicationEventPublisher.class);
 			});
 			JustBeforeEach(() -> {
-				interceptor = new ContentRepositoryMethodInteceptor(extensions, publisher);
+				interceptor = new ContentRepositoryMethodInteceptor(Object.class, String.class, extensions, publisher);
 				interceptor.invoke(invocation);
 			});
 			Context("when getContent is invoked", () -> {

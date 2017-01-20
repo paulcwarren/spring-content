@@ -1,10 +1,6 @@
 package org.springframework.content.commons.repository.factory;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
+import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInteceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -12,16 +8,19 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.content.commons.renditions.Renderable;
-import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInteceptor;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
@@ -34,18 +33,10 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	
 	private T contentStore;
 	
-	private RenditionService renditionService;
+    @Autowired(required=false)
+    private Set<ContentRepositoryExtension> extensions;
 
 	@Autowired
-	public void setRenditionService(RenditionService renditionService) {
-		this.renditionService = renditionService;
-	}
-	
-	protected RenditionService getRenditionService() {
-		return this.renditionService;
-	}
-	
-	@Required
 	public void setContentStoreInterface(Class<? extends ContentStore<Object, Serializable>> contentStoreInterface) {
 		Assert.notNull(contentStoreInterface);
 		this.contentStoreInterface = contentStoreInterface;
@@ -111,25 +102,57 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	}
 
 	@SuppressWarnings("unchecked")
-	private T createContentStore() {
+	protected T createContentStore() {
 		Object target = getContentStoreImpl();
-		final RenditionService renditions = this.getRenditionService();
 
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
 		result.setInterfaces(new Class[] { contentStoreInterface, ContentStore.class });
 		
-		Map<Method, ContentRepositoryExtension> extensions = new HashMap<>();
+		Map<Method, ContentRepositoryExtension> extensionsMap = new HashMap<>();
 		try {
-			extensions.put(Renderable.class.getMethod("getRendition", Object.class, String.class), (ContentRepositoryExtension)renditionService);
+            for (ContentRepositoryExtension extension : extensions) {
+                for (Method method : extension.getMethods()) {
+                    extensionsMap.put(method, extension);
+                }
+            }
 		} catch (Exception e) {
-			logger.error("Failed to setup rendition service", e);
+			logger.error("Failed to setup extensions", e);
 		}
-		result.addAdvice(new ContentRepositoryMethodInteceptor(extensions, publisher));
+		result.addAdvice(new ContentRepositoryMethodInteceptor(getDomainClass(contentStoreInterface), getContentIdClass(contentStoreInterface), extensionsMap, publisher));
 
 		return (T)result.getProxy(classLoader);
 	}
-		
+
+    /* package */ Class<?> getDomainClass(Class<?> repositoryClass) {
+        return getContentRepositoryType(repositoryClass, 0);
+    }
+
+    /* package */ Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
+        return (Class<? extends Serializable>) getContentRepositoryType(repositoryClass, 1);
+    }
+
+    private Class<?> getContentRepositoryType(Class<?> repositoryClass, int index) {
+        Class<?> clazz = null;
+        Type[] types = repositoryClass.getGenericInterfaces();
+
+        for ( Type t : types ) {
+            if (t instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) t;
+                if (pt.getRawType().getTypeName().equals(ContentStore.class.getCanonicalName())) {
+                    types = pt.getActualTypeArguments();
+                    if (types.length != 2) {
+                        throw new IllegalStateException(String.format("ContentRepository class %s must have domain and contentId types", repositoryClass.getCanonicalName()));
+                    }
+                    if (types[index] instanceof Class) {
+                        clazz = (Class<?>) types[index];
+                    }
+                }
+            }
+        }
+        return clazz;
+    }
+
 	protected abstract Object getContentStoreImpl();
 }
