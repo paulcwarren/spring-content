@@ -1,6 +1,5 @@
-package internal.org.springframework.content.commons.search;
+package org.springframework.content.solr;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.commons.utils.ReflectionService;
 import internal.org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -15,6 +14,12 @@ import org.apache.solr.common.util.NamedList;
 import org.hamcrest.core.Every;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.search.Searchable;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.GenericConversionService;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -22,20 +27,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
-import org.springframework.content.commons.search.Searchable;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.core.convert.support.GenericConversionService;
-
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -56,6 +51,7 @@ public class SolrSearchImplTest {
     private MethodInvocation invocation;
     private ContentRepositoryInvoker invoker;
     private GenericConversionService conversionService;
+    private SolrProperties solrProperties;
 
     // mock
     private SolrClient solr;
@@ -67,6 +63,7 @@ public class SolrSearchImplTest {
                         solr = mock(SolrClient.class);
                         reflectionService = mock(ReflectionService.class);
                         conversionService = mock(GenericConversionService.class);
+                        solrProperties = new SolrProperties();
                         NamedList list = new NamedList();
                         SolrDocumentList docs = new SolrDocumentList();
                         SolrDocument doc = new SolrDocument();
@@ -81,7 +78,7 @@ public class SolrSearchImplTest {
                             keyword = "something";
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findKeyword(keyword);
                             } catch (Exception e) {
@@ -89,7 +86,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is(keyword));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -124,7 +121,7 @@ public class SolrSearchImplTest {
                             terms = new String[] {"something", "else"};
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findAllKeywords(terms);
                             } catch(Exception e) {
@@ -132,7 +129,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("something AND else"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -167,7 +164,7 @@ public class SolrSearchImplTest {
                             terms = new String[] {"something", "else", "bobbins"};
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findAnyKeywords(terms);
                             } catch(Exception e) {
@@ -175,7 +172,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("something OR else OR bobbins"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -211,7 +208,7 @@ public class SolrSearchImplTest {
                             terms = new String[] {"foo", "bar"};
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findKeywordsNear(proximity, terms);
                             } catch(Exception e) {
@@ -219,7 +216,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("\"foo bar\"~4"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -254,7 +251,7 @@ public class SolrSearchImplTest {
                             keyword = "something";
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findKeywordStartsWith(keyword);
                             } catch(Exception e) {
@@ -262,7 +259,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("something*"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -298,7 +295,7 @@ public class SolrSearchImplTest {
                             ends = "else";
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findKeywordStartsWithAndEndsWith(starts, ends);
                             } catch(Exception e) {
@@ -306,7 +303,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("something*else"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -342,7 +339,7 @@ public class SolrSearchImplTest {
                             weights = new double[] {1.59, 200};
                         });
                         JustBeforeEach(() -> {
-                            search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                            search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                             try {
                                 result = search.findAllKeywordsWithWeights(terms, weights);
                             } catch(Exception e) {
@@ -350,7 +347,7 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = ArgumentCaptor.forClass(SolrQuery.class);
+                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
                             verify(solr).query(argument.capture());
                             assertThat(argument.getValue().getQuery(), is("(foo)^1.59 AND (bar)^200.0"));
                             assertThat(argument.getValue().getFields(), is("id"));
@@ -392,7 +389,7 @@ public class SolrSearchImplTest {
                        });
 
                        JustBeforeEach(() -> {
-                           search = new SolrSearchImpl(null, reflectionService, conversionService);
+                           search = new SolrSearchImpl(null, reflectionService, conversionService, solrProperties);
                        });
                        It("should return the correct string", () -> {
                            String parsedResult = search.parseTerms(operator, terms);
@@ -407,7 +404,7 @@ public class SolrSearchImplTest {
                        });
 
                        JustBeforeEach(() -> {
-                           search = new SolrSearchImpl(null, reflectionService, conversionService);
+                           search = new SolrSearchImpl(null, reflectionService, conversionService, solrProperties);
                        });
                        It("should return the correct string", () -> {
                            String parsedResult = search.parseTerms(operator, terms);
@@ -423,7 +420,7 @@ public class SolrSearchImplTest {
         Describe("ContentRepositoryExtension", () ->{
             Context("#getMethods", () -> {
                 It("should return searchable methods", () -> {
-                    search = new SolrSearchImpl(null, reflectionService, conversionService);
+                    search = new SolrSearchImpl(null, reflectionService, conversionService, solrProperties);
                     Set<Method> methods = search.getMethods();
                     assertThat(methods, is(not(nullValue())));
                     assertThat(methods.size(), is(greaterThan(0)));
@@ -453,7 +450,7 @@ public class SolrSearchImplTest {
                     when(reflectionService.invokeMethod(anyObject(), anyObject(), anyObject())).thenReturn(Collections.singletonList("12345"));
                     doReturn(String.class).when(invoker).getContentIdClass();
 
-                    search = new SolrSearchImpl(null, reflectionService, conversionService);
+                    search = new SolrSearchImpl(null, reflectionService, conversionService, solrProperties);
                     search.invoke(invocation, invoker);
 
                     verify(reflectionService).invokeMethod(method, search, "something");
@@ -472,7 +469,7 @@ public class SolrSearchImplTest {
 
                     reflectionService = new ReflectionServiceImpl();
 
-                    search = new SolrSearchImpl(solr, reflectionService, conversionService);
+                    search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                     Iterable<?> results = (Iterable<?>)search.invoke(invocation, invoker);
                     assertThat(results, Every.everyItem(instanceOf(Integer.class)));
                 });

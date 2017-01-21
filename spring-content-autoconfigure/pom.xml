@@ -19,6 +19,11 @@
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-solr</artifactId>
+			<version>0.0.4-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-solrj</artifactId>
 			<optional>true</optional>

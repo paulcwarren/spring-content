@@ -1,4 +1,4 @@
-package internal.org.springframework.content.autoconfigure.solr;
+package org.springframework.content.solr;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +27,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		this.solrClient = solrCient;
 	}
 
-	SolrUpdateEventHandler(SolrClient solrCient, ContentOperations ops) {
+	public SolrUpdateEventHandler(SolrClient solrCient, ContentOperations ops) {
 		this.solrClient = solrCient;
 		this.ops = ops;
 	}

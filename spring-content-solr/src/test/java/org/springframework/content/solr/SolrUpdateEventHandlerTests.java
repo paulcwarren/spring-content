@@ -1,10 +1,9 @@
-package internal.org.springframework.content.autoconfigure.solr;
+package org.springframework.content.solr;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -17,7 +16,6 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.junit.Test;
@@ -29,6 +27,7 @@ import org.springframework.content.commons.operations.ContentOperations;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.solr.SolrUpdateEventHandler;
 
 @RunWith(Ginkgo4jRunner.class)
 public class SolrUpdateEventHandlerTests {

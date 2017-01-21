@@ -73,6 +73,7 @@
 		<module>./spring-content-rest-boot-starter</module>
 		<module>./spring-content-s3</module>
 		<module>./spring-content-s3-boot-starter</module>
+		<module>./spring-content-solr</module>
 	</modules>
 
 	<build>

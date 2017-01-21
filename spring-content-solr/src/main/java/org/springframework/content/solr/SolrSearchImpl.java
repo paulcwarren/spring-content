@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.search;
+package org.springframework.content.solr;
 
 import internal.org.springframework.content.commons.utils.ReflectionService;
 import org.aopalliance.intercept.MethodInvocation;
@@ -12,8 +12,6 @@ import org.springframework.content.commons.repository.ContentRepositoryExtension
 import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -26,12 +24,14 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
     private SolrClient solr;
     private ReflectionService reflectionService;
     private ConversionService conversionService;
+    private SolrProperties solrProperties;
     private String field = "id";
 
-    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService) {
+    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService, SolrProperties properties) {
         this.solr = solr;
         this.reflectionService = reflectionService;
         this.conversionService = conversionService;
+        this.solrProperties = solrProperties;
     }
 
     @Override
