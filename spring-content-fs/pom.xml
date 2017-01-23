@@ -44,4 +44,28 @@
 		</dependency>
 
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+				<configuration>
+			        <backend>html</backend>
+			        <doctype>book</doctype>
+			        <attributes>
+					    <version>${project.version}</version>
+			        </attributes>
+			    </configuration>
+			    <executions>
+			        <execution>
+			            <id>output-html</id>             
+			            <phase>generate-resources</phase>
+			            <goals>
+			                <goal>process-asciidoc</goal>
+			            </goals>
+			        </execution>
+			    </executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
