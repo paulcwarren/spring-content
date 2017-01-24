@@ -1,12 +1,15 @@
 package org.springframework.content.solr;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.commons.utils.ReflectionService;
 import internal.org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -34,7 +37,7 @@ import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
-//@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads=1)
 public class SolrSearchImplTest {
 
     private SolrSearchImpl search;
@@ -46,15 +49,17 @@ public class SolrSearchImplTest {
     private String operator, starts, ends;
     private int proximity;
     private List<Object> result;
+    private NamedList<Object> result2;
     private Exception e;
     private Method method;
     private MethodInvocation invocation;
     private ContentRepositoryInvoker invoker;
     private GenericConversionService conversionService;
     private SolrProperties solrProperties;
-
+    private SolrQuery solrQuery;
     // mock
     private SolrClient solr;
+    private QueryRequest queryRequest;
     private ReflectionService reflectionService;
 
     {
@@ -70,7 +75,7 @@ public class SolrSearchImplTest {
                         doc.addField("id", "12345");
                         docs.add(doc);
                         list.add("response", docs);
-                        when(solr.query(anyObject())).thenReturn(new QueryResponse(list, solr));
+                        when(solr.request(anyObject(), anyObject())).thenReturn(list);
                     });
             Context("#findKeyword", () -> {
                     Context("given a keyword", () -> {
@@ -86,10 +91,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is(keyword));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"),is(keyword));
+                            assertThat(argument.getValue().getParams().get("fl"),is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -97,7 +102,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -106,7 +111,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -129,10 +134,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("something AND else"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("something AND else"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -140,7 +145,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -149,7 +154,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -172,10 +177,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("something OR else OR bobbins"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("something OR else OR bobbins"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -183,7 +188,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -192,7 +197,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -216,10 +221,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("\"foo bar\"~4"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("\"foo bar\"~4"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -227,7 +232,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -236,7 +241,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -259,10 +264,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("something*"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("something*"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -270,7 +275,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -279,7 +284,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -303,10 +308,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("something*else"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("something*else"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -314,7 +319,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -323,7 +328,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -347,10 +352,10 @@ public class SolrSearchImplTest {
                             }
                         });
                         It("should execute a query", () -> {
-                            ArgumentCaptor<SolrQuery> argument = forClass(SolrQuery.class);
-                            verify(solr).query(argument.capture());
-                            assertThat(argument.getValue().getQuery(), is("(foo)^1.59 AND (bar)^200.0"));
-                            assertThat(argument.getValue().getFields(), is("id"));
+                            ArgumentCaptor<SolrRequest> argument = forClass(SolrRequest.class);
+                            verify(solr).request(argument.capture(),anyObject());
+                            assertThat(argument.getValue().getParams().get("q"), is("(foo)^1.59 AND (bar)^200.0"));
+                            assertThat(argument.getValue().getParams().get("fl"), is("id"));
                         });
                         It("should map results to set of IDs", () -> {
                             assertThat(result.size(), is(1));
@@ -358,7 +363,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given a SolrServerException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(SolrServerException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -367,7 +372,7 @@ public class SolrSearchImplTest {
                         });
                         Context("given an IOException from solr", () -> {
                             BeforeEach(() -> {
-                                when(solr.query(anyObject())).thenThrow(IOException.class);
+                                when(solr.request(anyObject(), anyObject())).thenThrow(IOException.class);
                             });
                             It("should throw an ContentAccessException", () -> {
                                 assertThat(e, is(not(nullValue())));
@@ -458,13 +463,14 @@ public class SolrSearchImplTest {
 
                 It("should convert the returned list to the content id type", () -> {
                     solr = mock(SolrClient.class);
+                    solrProperties = new SolrProperties();
                     NamedList list = new NamedList();
                     SolrDocumentList docs = new SolrDocumentList();
                     SolrDocument doc = new SolrDocument();
                     doc.addField("id", "12345");
                     docs.add(doc);
                     list.add("response", docs);
-                    when(solr.query(anyObject())).thenReturn(new QueryResponse(list, solr));
+                    when(solr.request(anyObject(), anyObject())).thenReturn(list);
                     doReturn(Integer.class).when(invoker).getContentIdClass();
 
                     reflectionService = new ReflectionServiceImpl();
@@ -472,6 +478,58 @@ public class SolrSearchImplTest {
                     search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
                     Iterable<?> results = (Iterable<?>)search.invoke(invocation, invoker);
                     assertThat(results, Every.everyItem(instanceOf(Integer.class)));
+                });
+            });
+            Context("#solrAuthenticate", () -> {
+                BeforeEach(() -> {
+                    queryRequest = new QueryRequest(new SolrQuery("something"));
+                    solrProperties = new SolrProperties();
+                    solrProperties.setPassword("password");
+                    solrProperties.setUser("username");
+                });
+
+                It("should create an authenticated request", () -> {
+                    search = new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties);
+                    QueryRequest authRequest = search.solrAuthenticate(queryRequest);
+                    assertThat(authRequest.getBasicAuthUser(), is("username"));
+                    assertThat(authRequest.getBasicAuthPassword(), is("password"));
+
+                });
+            });
+            Context("#executeQuery", () -> {
+                BeforeEach(() -> {
+                    NamedList list = new NamedList();
+                    SolrDocumentList docs = new SolrDocumentList();
+                    SolrDocument doc = new SolrDocument();
+                    doc.addField("id", "12345");
+                    docs.add(doc);
+                    list.add("response", docs);
+                    keyword = "something";
+                    solr = mock(SolrClient.class, CALLS_REAL_METHODS);
+                    when(solr.request(anyObject(), anyObject())).thenReturn(list);
+                    solrProperties = new SolrProperties();
+                    search = spy(new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties));
+
+                });
+                Context("When a username/password is specified", () -> {
+                    BeforeEach(() -> {
+                        solrProperties.setPassword("password");
+                        solrProperties.setUser("username");
+                    });
+                    JustBeforeEach(() -> {
+                        search = spy(new SolrSearchImpl(solr, reflectionService, conversionService, solrProperties));
+                        search.executeQuery(keyword);
+                    });
+                    It("should authenticate", () -> {
+                        verify(search, times(1)).solrAuthenticate(anyObject());
+                    });
+                });
+                JustBeforeEach(() -> {
+                    result2 = search.executeQuery(keyword);
+                });
+                It("should execute the query", () -> {
+                    verify(solr, times(1)).request(anyObject(), anyObject());
+                    assertThat(result2, is(notNullValue()));
                 });
             });
         });

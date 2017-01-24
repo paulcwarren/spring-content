@@ -5,8 +5,10 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.util.NamedList;
 import org.springframework.content.commons.repository.ContentAccessException;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentRepositoryInvoker;
@@ -27,7 +29,7 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
     private SolrProperties solrProperties;
     private String field = "id";
 
-    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService, SolrProperties properties) {
+    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService, SolrProperties solrProperties) {
         this.solr = solr;
         this.reflectionService = reflectionService;
         this.conversionService = conversionService;
@@ -36,128 +38,44 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
 
     @Override
     public List<Object> findKeyword(String queryStr) {
-        SolrQuery query = new SolrQuery();
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findAllKeywords(String... terms) {
-        SolrQuery query = new SolrQuery();
         String queryStr = this.parseTerms("AND", terms);
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findAnyKeywords(String... terms) {
-        SolrQuery query = new SolrQuery();
         String queryStr =  this.parseTerms("OR", terms);
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findKeywordsNear(int proximity, String... terms) {
-        SolrQuery query = new SolrQuery();
         String termStr = this.parseTerms("NONE", terms);
         String queryStr = "\""+ termStr + "\"~"+ Integer.toString(proximity);
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findKeywordStartsWith(String term) {
-        SolrQuery query = new SolrQuery();
         String queryStr = term + "*";
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findKeywordStartsWithAndEndsWith(String a, String b) {
-        SolrQuery query = new SolrQuery();
         String queryStr = a + "*" + b;
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     @Override
     public List<Object> findAllKeywordsWithWeights(String[] terms, double[] weights) {
-        SolrQuery query = new SolrQuery();
         String queryStr = parseTermsAndWeights("AND", terms, weights);
-        query.setQuery(queryStr);
-        query.setFields(field);
-
-        QueryResponse response = null;
-        try {
-            response = solr.query(query);
-        } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryStr, field), e);
-        }
-        return getIds(response);
+        return getIds(executeQuery(queryStr));
     }
 
     /* package */ String parseTermsAndWeights(String operator, String[] terms, double[] weights){
@@ -198,13 +116,40 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
         return builder.toString();
     }
 
-    /* package */ List<Object> getIds(QueryResponse response) {
+    /* package */ List<Object> getIds(NamedList response) {
         List<Object> ids = new ArrayList<>();
-        SolrDocumentList results = response.getResults();
-        for (int i = 0; i < results.size(); ++i) {
-            ids.add(results.get(i).getFieldValue("id"));
+        for (int i = 0; i < response.size(); i++) {
+            SolrDocumentList list = (SolrDocumentList) response.getVal(i);
+            for (int j = 0; j < list.size(); ++j) {
+                ids.add(list.get(j).getFieldValue("id"));
+            }
         }
         return ids;
+    }
+
+    /* package */ QueryRequest solrAuthenticate(QueryRequest request) {
+        request.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
+        return request;
+    }
+
+    /* package */ NamedList<Object> executeQuery(String queryString) {
+        SolrQuery query = new SolrQuery();
+        query.setQuery(queryString);
+        query.setFields(field);
+        QueryRequest request = new QueryRequest(query);
+        if (!solrProperties.getUser().isEmpty()) {
+            request = solrAuthenticate(request);
+        }
+        NamedList<Object> response = null;
+
+        try {
+            response = solr.request(request, null);
+        } catch (SolrServerException e) {
+            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
+        } catch (IOException e) {
+            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
+        }
+        return response;
     }
 
     @Override
@@ -230,6 +175,8 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
         return newList;
     }
 }
+
+
 
 
 
