@@ -1,0 +1,57 @@
+[[solr-search]]
+= Searching with Solr
+
+== Overview
+
+When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional `Searchable<CID>` interface to the Content Repositories.   
+
+== Dependencies
+
+Add the solj to the classpath.
+
+====
+[source, java]
+----
+	<dependency>
+		<groupId>org.apache.solr</groupId>
+		<artifactId>solr-solrj</artifactId>
+		<version>5.5.3</version>			<1>
+		<exclusions>
+			<exclusion>
+				<groupId>org.codehaus.woodstox</groupId>
+				<artifactId>wstx-asl</artifactId>
+			</exclusion>
+			<exclusion>
+				<artifactId>log4j</artifactId>
+				<groupId>log4j</groupId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+----
+<1> If using Spring Boot the version may be omitted 
+==== 
+
+== Creating a SolrClient
+
+Searching with solr requires a Solr client.  This can be achieved by creating a SolrClient bean.
+
+====
+[source, java]
+----
+	@Bean
+	public SolrClient solrClient() {
+      return new HttpSolrClient("http://localhost:8983/solr/solr/");
+	}
+----
+==== 
+
+== Solr Properties
+
+Searching with Solr configuration uses the prefix `spring-content-solr` and supports the following properties:-
+
+|=========
+| Property | Description 
+| url | Url of the Solr host and core 
+| user | Solr user  
+| password | Solr user's password 
+|=========

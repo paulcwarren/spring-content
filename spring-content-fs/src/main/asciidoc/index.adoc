@@ -5,6 +5,7 @@ Paul Warren, Peter Blum, Jeff Pak
 :toc:
 :toc-placement!:
 :spring-content-commons-docs: ../../../../spring-content-commons/src/main/asciidoc
+:spring-content-solr-docs: ../../../../spring-content-solr/src/main/asciidoc
 
 (C) 2008-2017 The original authors.
 
@@ -23,6 +24,7 @@ include::{spring-content-commons-docs}/content-repositories.adoc[]
 
 :leveloffset: +1
 include::fs.adoc[]
+include::{spring-content-solr-docs}/solr-search.adoc[]
 :leveloffset: -1
 
 //[[appendix]]

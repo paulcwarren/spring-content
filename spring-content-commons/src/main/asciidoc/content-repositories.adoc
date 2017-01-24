@@ -32,6 +32,104 @@ public interface ContentRepository<E, CID extends Serializable> {
 <3> Deletes content and unassociates it from `entity`  
 ====
 
+[[content-repositories.events]]
+
+=== Events
+There are 6 events that Spring Content emits whilst performing basic content access.  Those are:
+
+* BeforeSetContent
+
+* AfterSetContent
+
+* BeforeGetContent
+
+* AfterGetContent
+
+* BeforeUnsetContent
+
+* AfterUnsetContent
+
+==== Writing an ApplicationListener ====
+
+There is an abstract class that you can subclass which listens for these kinds of events and calls the appropriate method based on the event type. You just override the methods for the events you’re interested in.
+
+.AbstractContentRepositoryEventListener
+====
+[source, java]
+----
+public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+	
+	@Override
+	public void onAfterSetContent(Object entity) {
+		...logic to inspect and handle the entity and it's content after it is stored
+	}
+	
+	@Override
+	public void onBeforeGetContent(Object entity) {
+		...logic to inspect and handle the entity and it's content before it is fetched
+	}
+}
+----
+====
+This approach does not filter events based on domain type.
+
+==== Writing an Annotated ContentRepository Handler ====
+
+Another approach is to use an annotated handler, which does filter events based on domain type.
+
+To declare a handler, create a POJO and annotate it as `@ContentRepositoryEventHandler`. This tells the `BeanPostProcessor` that this class needs to be inspected for handler methods.  It iterates over the class's methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:
+
+* HandleBeforeSetContent
+  
+* HandleAfterSetContent
+
+* HandleBeforeGetContent
+
+* HandleAfterGetContent
+
+* HandleBeforeUnsetContent
+
+* HandleAfterUnsetContent
+
+.Annotated event handler
+====
+[source, java]
+----
+@ContentRepositoryEventHandler
+public class ExampleAnnotatedEventListener {
+	
+	@HandleAfterSetContent
+	public void handleAfterSetContent(SopDocument doc) {
+		...type-safe handling logic for SopDocument's and their content after it is stored
+	}
+	
+	@HandleBeforeGetContent
+	public void onBeforeGetContent(Product product) {
+		...type-safe handling logic for Product's and their content before it is fetched
+	}
+}
+----
+====
+
+The type of interests you are interested in is determined from the type of the first parameter of each annotated method.
+
+To register your event handler, either mark the class with one of Spring’s @Component stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or declare an instance of your annotated bean in your ApplicationContext.  
+
+.Handler registration
+====
+[source, java]
+----
+@Configuration
+public class ContentRepositoryConfiguration {
+
+  @Bean
+  ExampeAnnotatedEventHandler exampleEventHandler() {
+    return new ExampeAnnotatedEventHandler();
+  }
+}
+----
+====
+
 [[content-repositories.search]]
 === Search
 Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it. 
