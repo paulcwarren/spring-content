@@ -1,4 +1,4 @@
-package internal.org.springframework.content.mongo.config;
+package internal.org.springframework.content.fs.config;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
