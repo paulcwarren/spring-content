@@ -117,7 +117,7 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
 
     /* package */ List<Object> getIds(NamedList response) {
         List<Object> ids = new ArrayList<>();
-        for (int i = 0; i < response.size(); i++) {
+        for (int i = 1; i < response.size(); i++) {
             SolrDocumentList list = (SolrDocumentList) response.getVal(i);
             for (int j = 0; j < list.size(); ++j) {
                 ids.add(list.get(j).getFieldValue("id"));

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.util.ContentStreamBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
@@ -22,6 +23,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 	private SolrClient solrClient;
 	
 	@Autowired private ContentOperations ops;
+	@Autowired private SolrProperties properties;
 	
 	public SolrUpdateEventHandler(SolrClient solrCient) {
 		this.solrClient = solrCient;
@@ -43,7 +45,10 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		}
 
 	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
-	    up.addContentStream(new ContentEntityStream(ops, contentEntity));
+		if (properties.getUser() != "") {
+			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
+		}
+		up.addContentStream(new ContentEntityStream(ops, contentEntity));
 		String id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString();
 	    up.setParam("literal.id", id);
 	    up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
@@ -66,10 +71,14 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		if (id == null) {
 			return;
 		}
-		
+
+		UpdateRequest request = new UpdateRequest();
+		request.deleteById(id.toString());
+		if (properties.getUser() != "") {
+			request.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
+		}
 		try {
-			solrClient.deleteById(id.toString());
-			solrClient.commit();
+			request.process(solrClient);
 		} catch (SolrServerException e) {
 			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		} catch (IOException e) {
