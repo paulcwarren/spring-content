@@ -11,10 +11,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -24,11 +20,13 @@ import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import internal.org.springframework.content.fs.config.FilesystemProperties;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentRepositoryTest {
@@ -53,6 +51,10 @@ public class ContentRepositoryTest {
 				});
 				It("should have a ContentOperations bean", () -> {
 					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
+				});
+				It("should have a FilesystemProperties bean", () -> {
+					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
+					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), is("/a/b/c"));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
@@ -90,15 +92,12 @@ public class ContentRepositoryTest {
 	@Configuration
 	@EnableFilesystemContentRepositories
 	@Import(InfrastructureConfig.class)
+	@PropertySource("classpath:/test.properties")
 	public static class TestConfig {
 	}
 
 	@Configuration
 	public static class InfrastructureConfig {
-		@Bean
-		public File fileSystemRoot() throws IOException {
-			return Files.createTempDirectory("").toFile();
-		}
 	}
 
 	@Content

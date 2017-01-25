@@ -10,6 +10,7 @@ import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
+import internal.org.springframework.content.fs.config.FilesystemProperties;
 import internal.org.springframework.content.fs.repository.ContextFileSystemResourceLoader;
 
 /**
@@ -22,9 +23,9 @@ public class FileResourceTemplate extends AbstractResourceTemplate implements Co
 	private File fileSystemRoot;
 
 	@Autowired
-	public FileResourceTemplate(File fileSystemRoot) {
-		super(new ContextFileSystemResourceLoader(fileSystemRoot));
-		this.fileSystemRoot = fileSystemRoot;
+	public FileResourceTemplate(FilesystemProperties props) {
+		super(new ContextFileSystemResourceLoader(props.getFilesystemRoot()));
+		this.fileSystemRoot = new File(props.getFilesystemRoot());
 	}
 
 	@Override

@@ -13,8 +13,8 @@ public class ContextFileSystemResourceLoader extends FileSystemResourceLoader {
 
 	private static Log logger = LogFactory.getLog(ContextFileSystemResourceLoader.class);
 	
-	public ContextFileSystemResourceLoader(File fileSystemRoot) {
-		logger.info(String.format("File system context root set to: %s", fileSystemRoot.toString()));
+	public ContextFileSystemResourceLoader(String filesystemRoot) {
+		logger.info(String.format("File system context root set to: %s", filesystemRoot));
 	}
 	
 	@Override
