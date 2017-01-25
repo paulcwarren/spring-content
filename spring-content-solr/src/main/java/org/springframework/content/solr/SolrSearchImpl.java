@@ -1,12 +1,11 @@
 package org.springframework.content.solr;
 
-import internal.org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.content.commons.utils.ReflectionService;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
 import org.springframework.content.commons.repository.ContentAccessException;

@@ -30,7 +30,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
 
-import internal.org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.content.commons.utils.ReflectionService;
 
 public class AnnotatedContentRepositoryEventInvoker
 		implements ApplicationListener<ContentRepositoryEvent>, BeanPostProcessor {

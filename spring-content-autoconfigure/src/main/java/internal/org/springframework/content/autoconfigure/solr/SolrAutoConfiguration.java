@@ -1,6 +1,6 @@
 package internal.org.springframework.content.autoconfigure.solr;
 
-import internal.org.springframework.content.commons.utils.ReflectionServiceImpl;
+import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

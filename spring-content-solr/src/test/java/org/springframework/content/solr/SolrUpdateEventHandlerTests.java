@@ -27,7 +27,6 @@ import org.springframework.content.commons.operations.ContentOperations;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.solr.SolrUpdateEventHandler;
 
 @RunWith(Ginkgo4jRunner.class)
 public class SolrUpdateEventHandlerTests {

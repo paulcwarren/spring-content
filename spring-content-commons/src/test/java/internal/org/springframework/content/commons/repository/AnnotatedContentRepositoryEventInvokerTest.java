@@ -39,7 +39,7 @@ import org.springframework.util.ReflectionUtils;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.content.commons.utils.ReflectionService;
 
 @RunWith(Ginkgo4jRunner.class)
 public class AnnotatedContentRepositoryEventInvokerTest {

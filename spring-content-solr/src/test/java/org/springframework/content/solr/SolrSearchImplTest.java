@@ -2,15 +2,14 @@ package org.springframework.content.solr;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.commons.utils.ReflectionService;
-import internal.org.springframework.content.commons.utils.ReflectionServiceImpl;
+import org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
@@ -56,7 +55,6 @@ public class SolrSearchImplTest {
     private ContentRepositoryInvoker invoker;
     private GenericConversionService conversionService;
     private SolrProperties solrProperties;
-    private SolrQuery solrQuery;
     // mock
     private SolrClient solr;
     private QueryRequest queryRequest;

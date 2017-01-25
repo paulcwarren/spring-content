@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.utils;
+package org.springframework.content.commons.utils;
 
 import java.lang.reflect.Method;
 
