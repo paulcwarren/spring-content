@@ -66,19 +66,20 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
 			return;
 		}
-		
-		Object id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class); 
+
+		Object id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class);
 		if (id == null) {
 			return;
 		}
 
-		UpdateRequest request = new UpdateRequest();
-		request.deleteById(id.toString());
-		if (properties.getUser() != "") {
-			request.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
+		UpdateRequest up = new UpdateRequest();
+		up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
+		up.deleteById(id.toString());
+		if (!properties.getUser().isEmpty()) {
+			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
 		}
 		try {
-			request.process(solrClient);
+			solrClient.request(up);
 		} catch (SolrServerException e) {
 			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		} catch (IOException e) {
