@@ -18,7 +18,6 @@ import org.springframework.core.convert.ConversionService;
 
 @Configuration
 @ConditionalOnBean({ SolrClient.class })
-//@EnableConfigurationProperties(org.springframework.content.solr.SolrProperties.class)
 public class SolrAutoConfiguration {
 
     @Autowired private SolrProperties props;
@@ -31,7 +30,7 @@ public class SolrAutoConfiguration {
 	
 	@Bean
 	public Object solrFulltextEventListener() {
-		return new SolrUpdateEventHandler(solrClient, ops);
+		return new SolrUpdateEventHandler(solrClient, ops, props);
 	}
 
     @Bean

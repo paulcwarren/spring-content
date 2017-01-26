@@ -6,9 +6,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SolrProperties {
 
-    private String url = "";
-    private String user = "";
-    private String password = "";
+    private String url = null;
+    private String user = null;
+    private String password = null;
 
 
     public String getUrl() {

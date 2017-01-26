@@ -36,7 +36,6 @@ import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
 public class SolrSearchImplTest {
 
     private SolrSearchImpl search;

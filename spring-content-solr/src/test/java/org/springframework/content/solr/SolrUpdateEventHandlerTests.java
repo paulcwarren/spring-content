@@ -1,14 +1,11 @@
 package org.springframework.content.solr;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
@@ -18,10 +15,13 @@ import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -38,6 +38,7 @@ public class SolrUpdateEventHandlerTests {
 	// mocks
 	private SolrClient solrClient;
 	private ContentOperations ops;
+	private SolrProperties props;
 	
 	// args 
 	private Object contentEntity;
@@ -48,7 +49,8 @@ public class SolrUpdateEventHandlerTests {
 			BeforeEach(() -> {
 				solrClient = mock(SolrClient.class);
 				ops = mock(ContentOperations.class);
-				handler = new SolrUpdateEventHandler(solrClient, ops);
+				props = mock(SolrProperties.class);
+				handler = new SolrUpdateEventHandler(solrClient, ops, props);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {
@@ -69,6 +71,18 @@ public class SolrUpdateEventHandlerTests {
 						assertThat(e, is(nullValue()));
 						verify(solrClient).request(anyObject(), anyObject());
 					});
+                    Context("given a username", () -> {
+                        BeforeEach(() -> {
+                            when(props.getUser()).thenReturn("username");
+                            when(props.getPassword()).thenReturn("password");
+                        });
+                        It("should set basic credentials on the request", () -> {
+                            ArgumentCaptor<ContentStreamUpdateRequest> argument = forClass(ContentStreamUpdateRequest.class);
+                            verify(solrClient).request(argument.capture(), anyObject());
+                            assertThat(argument.getValue().getBasicAuthUser(), is("username"));
+                            assertThat(argument.getValue().getBasicAuthPassword(), is("password"));
+                        });
+                    });
                     Context("given a SolrServer Exception", () -> {
                         BeforeEach(() -> {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
@@ -120,6 +134,18 @@ public class SolrUpdateEventHandlerTests {
 						((ContentEntity)contentEntity).contentLen = 128L;
 						((ContentEntity)contentEntity).mimeType = "text/plain";
 					});
+                    Context("given a username", () -> {
+                        BeforeEach(() -> {
+                            when(props.getUser()).thenReturn("username");
+                            when(props.getPassword()).thenReturn("password");
+                        });
+                        It("should set basic credentials on the request", () -> {
+                            ArgumentCaptor<UpdateRequest> argument = forClass(UpdateRequest.class);
+                            verify(solrClient).request(argument.capture(), anyObject());
+                            assertThat(argument.getValue().getBasicAuthUser(), is("username"));
+                            assertThat(argument.getValue().getBasicAuthPassword(), is("password"));
+                        });
+                    });
                     Context("given a SolrServer Exception", () -> {
                         BeforeEach(() -> {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
@@ -150,7 +176,7 @@ public class SolrUpdateEventHandlerTests {
 					BeforeEach(() -> {
 						contentEntity = new NotAContentEntity();
 					});
-					It("", ()->{
+					It("should never attempt deletion", ()->{
 						assertThat(e, is(nullValue()));
 						verify(solrClient, never()).deleteById(anyString());
 					});

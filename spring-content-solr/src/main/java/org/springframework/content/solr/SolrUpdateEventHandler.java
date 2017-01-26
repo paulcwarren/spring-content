@@ -21,17 +21,22 @@ import org.springframework.util.Assert;
 public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListener<Object> {
 
 	private SolrClient solrClient;
+	private ContentOperations ops;
+	private SolrProperties properties;
 	
-	@Autowired private ContentOperations ops;
-	@Autowired private SolrProperties properties;
-	
-	public SolrUpdateEventHandler(SolrClient solrCient) {
-		this.solrClient = solrCient;
-	}
+//	public SolrUpdateEventHandler(SolrClient solrCient) {
+//		this.solrClient = solrCient;
+//	}
+//
+    @Autowired
+    public SolrUpdateEventHandler(SolrClient solrClient, ContentOperations ops, SolrProperties properties) {
+        Assert.notNull(solrClient, "solrClient must not be null");
+        Assert.notNull(ops, "ops must not be null");
+        Assert.notNull(properties, "properties must not be null");
 
-	public SolrUpdateEventHandler(SolrClient solrCient, ContentOperations ops) {
-		this.solrClient = solrCient;
+		this.solrClient = solrClient;
 		this.ops = ops;
+        this.properties = properties;
 	}
 
 	@Override
@@ -45,7 +50,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		}
 
 	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
-		if (properties != null && !properties.getUser().isEmpty()) {
+		if (properties.getUser() != null) {
 			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
 		}
 		up.addContentStream(new ContentEntityStream(ops, contentEntity));
@@ -75,9 +80,9 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		UpdateRequest up = new UpdateRequest();
 		up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
 		up.deleteById(id.toString());
-		if (properties != null && !properties.getUser().isEmpty()) {
-			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
-		}
+		if (properties.getUser() != null) {
+            up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
+        }
 		try {
 			solrClient.request(up, null);
 		} catch (SolrServerException e) {
