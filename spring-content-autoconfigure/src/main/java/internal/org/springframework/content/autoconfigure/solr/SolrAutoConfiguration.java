@@ -1,5 +1,7 @@
 package internal.org.springframework.content.autoconfigure.solr;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
@@ -16,7 +18,7 @@ import org.springframework.core.convert.ConversionService;
 
 @Configuration
 @ConditionalOnBean({ SolrClient.class })
-@EnableConfigurationProperties(org.springframework.content.solr.SolrProperties.class)
+//@EnableConfigurationProperties(org.springframework.content.solr.SolrProperties.class)
 public class SolrAutoConfiguration {
 
     @Autowired private SolrProperties props;
@@ -35,5 +37,12 @@ public class SolrAutoConfiguration {
     @Bean
     public Searchable<Object> solrFulltextSearcher() {
         return new SolrSearchImpl(solrClient, new ReflectionServiceImpl(), contentConversionService, props);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConfigurationProperties(prefix="spring-content-solr")
+    public SolrProperties solrProperties() {
+        return new SolrProperties();
     }
 }
