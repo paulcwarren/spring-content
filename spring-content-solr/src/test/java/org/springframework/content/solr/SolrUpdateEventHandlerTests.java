@@ -16,8 +16,10 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.util.UUID;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
@@ -65,11 +67,11 @@ public class SolrUpdateEventHandlerTests {
 					});
 					It("should call update", () -> {
 						assertThat(e, is(nullValue()));
-						verify(solrClient).request(anyObject(), anyString());
+						verify(solrClient).request(anyObject(), anyObject());
 					});
                     Context("given a SolrServer Exception", () -> {
                         BeforeEach(() -> {
-                            when(solrClient.request(anyObject(), anyString())).thenThrow(SolrServerException.class);
+                            when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
                             assertThat(e, is(instanceOf(ContentAccessException.class)));
@@ -77,7 +79,7 @@ public class SolrUpdateEventHandlerTests {
                     });
                     Context("given a IOException", () -> {
                         BeforeEach(() -> {
-                            when(solrClient.request(anyObject(), anyString())).thenThrow(IOException.class);
+                            when(solrClient.request(anyObject(), anyObject())).thenThrow(IOException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
                             assertThat(e, is(instanceOf(ContentAccessException.class)));
@@ -118,14 +120,9 @@ public class SolrUpdateEventHandlerTests {
 						((ContentEntity)contentEntity).contentLen = 128L;
 						((ContentEntity)contentEntity).mimeType = "text/plain";
 					});
-					It("should call deleteById", () -> {
-						assertThat(e, is(nullValue()));
-						verify(solrClient).deleteById(((ContentEntity)contentEntity).contentId.toString());
-						verify(solrClient).commit();
-					});
                     Context("given a SolrServer Exception", () -> {
                         BeforeEach(() -> {
-                            when(solrClient.deleteById(anyString())).thenThrow(SolrServerException.class);
+                            when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
                             assertThat(e, is(instanceOf(ContentAccessException.class)));
@@ -133,7 +130,7 @@ public class SolrUpdateEventHandlerTests {
                     });
                     Context("given a IOException", () -> {
                         BeforeEach(() -> {
-                            when(solrClient.deleteById(anyString())).thenThrow(IOException.class);
+                            when(solrClient.request(anyObject(), anyObject())).thenThrow(IOException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
                             assertThat(e, is(instanceOf(ContentAccessException.class)));

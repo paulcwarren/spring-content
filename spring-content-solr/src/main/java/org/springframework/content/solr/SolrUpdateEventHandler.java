@@ -45,7 +45,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		}
 
 	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
-		if (properties.getUser() != "") {
+		if (properties != null && !properties.getUser().isEmpty()) {
 			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
 		}
 		up.addContentStream(new ContentEntityStream(ops, contentEntity));
@@ -75,18 +75,17 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		UpdateRequest up = new UpdateRequest();
 		up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
 		up.deleteById(id.toString());
-		if (!properties.getUser().isEmpty()) {
+		if (properties != null && !properties.getUser().isEmpty()) {
 			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
 		}
 		try {
-			solrClient.request(up);
+			solrClient.request(up, null);
 		} catch (SolrServerException e) {
 			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		} catch (IOException e) {
 			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		}
 	}
-
 
 	public class ContentEntityStream extends ContentStreamBase {
 
