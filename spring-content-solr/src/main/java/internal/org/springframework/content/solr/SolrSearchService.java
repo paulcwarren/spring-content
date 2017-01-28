@@ -1,7 +1,5 @@
-package org.springframework.content.solr;
+package internal.org.springframework.content.solr;
 
-import org.springframework.content.commons.utils.ReflectionService;
-import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -9,72 +7,68 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
 import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import org.springframework.content.commons.search.Searchable;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.content.solr.SolrProperties;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExtension {
+public class SolrSearchService implements Searchable<Object> {
+
+    private static final String field = "id";
 
     private SolrClient solr;
-    private ReflectionService reflectionService;
-    private ConversionService conversionService;
     private SolrProperties solrProperties;
-    private String field = "id";
+    private Class<?> domainClass;
 
-    public SolrSearchImpl(SolrClient solr, ReflectionService reflectionService, ConversionService conversionService, SolrProperties solrProperties) {
+    public SolrSearchService(SolrClient solr, SolrProperties solrProperties, Class<?> domainClass) {
         this.solr = solr;
-        this.reflectionService = reflectionService;
-        this.conversionService = conversionService;
         this.solrProperties = solrProperties;
+        this.domainClass = domainClass;
     }
 
     @Override
     public List<Object> findKeyword(String queryStr) {
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findAllKeywords(String... terms) {
         String queryStr = this.parseTerms("AND", terms);
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findAnyKeywords(String... terms) {
         String queryStr =  this.parseTerms("OR", terms);
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findKeywordsNear(int proximity, String... terms) {
         String termStr = this.parseTerms("NONE", terms);
         String queryStr = "\""+ termStr + "\"~"+ Integer.toString(proximity);
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findKeywordStartsWith(String term) {
         String queryStr = term + "*";
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findKeywordStartsWithAndEndsWith(String a, String b) {
         String queryStr = a + "*" + b;
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     @Override
     public List<Object> findAllKeywordsWithWeights(String[] terms, double[] weights) {
         String queryStr = parseTermsAndWeights("AND", terms, weights);
-        return getIds(executeQuery(queryStr));
+        return getIds(executeQuery(this.getDomainClass(), queryStr));
     }
 
     /* package */ String parseTermsAndWeights(String operator, String[] terms, double[] weights){
@@ -119,8 +113,11 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
         List<Object> ids = new ArrayList<>();
         SolrDocumentList list = (SolrDocumentList) response.get("response");
         for (int j = 0; j < list.size(); ++j) {
-            ids.add(list.get(j).getFieldValue("id"));
+            String id =  list.get(j).getFieldValue("id").toString();
+            id = id.substring(id.indexOf(':')+1,id.length());
+            ids.add(id);
         }
+
         return ids;
     }
 
@@ -129,9 +126,9 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
         return request;
     }
 
-    /* package */ NamedList<Object> executeQuery(String queryString) {
+    /* package */ NamedList<Object> executeQuery(Class<?> domainClass, String queryString) {
         SolrQuery query = new SolrQuery();
-        query.setQuery(queryString);
+        query.setQuery("(" + queryString + ") AND id:" + domainClass.getCanonicalName()  + "\\:*");
         query.setFields(field);
         QueryRequest request = new QueryRequest(query);
         if (solrProperties.getUser() != null) {
@@ -149,27 +146,8 @@ public class SolrSearchImpl implements Searchable<Object>, ContentRepositoryExte
         return response;
     }
 
-    @Override
-    public Set<Method> getMethods() {
-        Set<Method> methods = new HashSet<>();
-        methods.addAll(Arrays.asList(Searchable.class.getMethods()));
-        return methods;
-    }
-
-    @Override
-    public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
-        List newList = new ArrayList();
-        Class<? extends Serializable> clazz = invoker.getContentIdClass();
-
-        List<String> list = (List) reflectionService.invokeMethod(invocation.getMethod(), this, invocation.getArguments());
-        for (String item : list) {
-            if (conversionService.canConvert(item.getClass(), clazz) == false) {
-                throw new IllegalStateException(String.format("Cannot convert item of type %s to %s", item.getClass().getName(), clazz.getName()));
-            }
-            newList.add(conversionService.convert(item, clazz));
-        }
-
-        return newList;
+    protected Class<?> getDomainClass() {
+        return domainClass;
     }
 }
 

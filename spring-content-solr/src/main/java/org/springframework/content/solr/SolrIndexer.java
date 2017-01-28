@@ -18,18 +18,14 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
 
 @ContentRepositoryEventHandler
-public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListener<Object> {
+public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> {
 
 	private SolrClient solrClient;
 	private ContentOperations ops;
 	private SolrProperties properties;
 	
-//	public SolrUpdateEventHandler(SolrClient solrCient) {
-//		this.solrClient = solrCient;
-//	}
-//
     @Autowired
-    public SolrUpdateEventHandler(SolrClient solrClient, ContentOperations ops, SolrProperties properties) {
+    public SolrIndexer(SolrClient solrClient, ContentOperations ops, SolrProperties properties) {
         Assert.notNull(solrClient, "solrClient must not be null");
         Assert.notNull(ops, "ops must not be null");
         Assert.notNull(properties, "properties must not be null");
@@ -55,7 +51,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 		}
 		up.addContentStream(new ContentEntityStream(ops, contentEntity));
 		String id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString();
-	    up.setParam("literal.id", id);
+	    up.setParam("literal.id", contentEntity.getClass().getCanonicalName() + ":" + id);
 	    up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
 	    try {
 			/*NamedList<Object> request = */solrClient.request(up, null);
@@ -79,7 +75,7 @@ public class SolrUpdateEventHandler extends AbstractContentRepositoryEventListen
 
 		UpdateRequest up = new UpdateRequest();
 		up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
-		up.deleteById(id.toString());
+		up.deleteById(contentEntity.getClass().getCanonicalName() + ":" + id.toString());
 		if (properties.getUser() != null) {
             up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
         }

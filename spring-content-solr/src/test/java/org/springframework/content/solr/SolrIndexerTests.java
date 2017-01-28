@@ -1,9 +1,7 @@
 package org.springframework.content.solr;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Matchers.anyObject;
@@ -15,7 +13,6 @@ import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -31,9 +28,10 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.repository.ContentAccessException;
 
 @RunWith(Ginkgo4jRunner.class)
-public class SolrUpdateEventHandlerTests {
+@Ginkgo4jConfiguration(threads = 1)
+public class SolrIndexerTests {
 
-	private SolrUpdateEventHandler handler;
+	private SolrIndexer handler;
 	
 	// mocks
 	private SolrClient solrClient;
@@ -50,7 +48,7 @@ public class SolrUpdateEventHandlerTests {
 				solrClient = mock(SolrClient.class);
 				ops = mock(ContentOperations.class);
 				props = mock(SolrProperties.class);
-				handler = new SolrUpdateEventHandler(solrClient, ops, props);
+				handler = new SolrIndexer(solrClient, ops, props);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {
@@ -71,6 +69,11 @@ public class SolrUpdateEventHandlerTests {
 						assertThat(e, is(nullValue()));
 						verify(solrClient).request(anyObject(), anyObject());
 					});
+                    It("should store the content type", () -> {
+                        ArgumentCaptor<ContentStreamUpdateRequest> argument = forClass(ContentStreamUpdateRequest.class);
+                        verify(solrClient).request(argument.capture(), anyObject());
+                        assertThat(argument.getValue().getParams().get("literal.id"), is(((ContentEntity)contentEntity).getClass().getCanonicalName()  + ":" + ((ContentEntity)contentEntity).contentId ));
+                    });
                     Context("given a username", () -> {
                         BeforeEach(() -> {
                             when(props.getUser()).thenReturn("username");
@@ -134,6 +137,12 @@ public class SolrUpdateEventHandlerTests {
 						((ContentEntity)contentEntity).contentLen = 128L;
 						((ContentEntity)contentEntity).mimeType = "text/plain";
 					});
+                    It("should delete the correct id", () -> {
+                        ArgumentCaptor<UpdateRequest> argument = forClass(UpdateRequest.class);
+                        verify(solrClient).request(argument.capture(), anyObject());
+                        String expected = ((ContentEntity)contentEntity).getClass().getCanonicalName()  + ":" + ((ContentEntity)contentEntity).contentId;
+                        assertThat(argument.getValue().getDeleteById(), hasItem(expected));
+                    });
                     Context("given a username", () -> {
                         BeforeEach(() -> {
                             when(props.getUser()).thenReturn("username");
