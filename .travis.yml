@@ -5,3 +5,4 @@ jdk:
 
 script:
  - mvn test jacoco:report coveralls:report
+ - mvn deploy --settings settings.xml
