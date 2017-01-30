@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/paulcwarren/spring-content.svg?branch=master)](https://travis-ci.org/paulcwarren/spring-content)
+[![Coverage Status](https://coveralls.io/repos/github/paulcwarren/spring-content/badge.svg?branch=master)](https://coveralls.io/github/paulcwarren/spring-content?branch=master)
 
 # Spring Content
 
