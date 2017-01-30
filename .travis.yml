@@ -4,9 +4,10 @@ branches:
 language: java
 jdk:
 - oraclejdk8
+before_install: git clone -b travis `git config --get remote.origin.url` target/travis
 script:
 - mvn test jacoco:report coveralls:report
-- mvn deploy --settings settings.xml
+- mvn deploy --settings target/travis/settings.xml
 env:
   global:
   - secure: R3AiYpX8ofOlT2F/gySK+ua/62071naNwPvS1dAmXjkgx//vdnOl0ReEAR6jMc8hAuWXOLUGhDLmbxQldKYNFtGBYdKYiYAh8UlZXP4WM2Mege6UqcT4IBlNBK/1u3Ty6sMfo6itSHEkzp4RHiiik9gCRJRBKELTx7BvBL9MVeaB9XLnDE2ur/k1eIxyqNLa19RPJDZXAfLiEyD9X5Sgu9KwxS9yDEOUoihriZjY+oYgC+xZdfhx/LEJBcj7hGVqZsi0p/pc5QP2N6LHN4RbLjCUIJh3MLBsJnJ4Y0WmoNSNfGVv6ZGl8mYzOObxKV5WlTpgkX4YEDPtWGfD4bUjE+JiesZj2wrHw5goltr4r8a4Q1PGN3945dtajp+ZYeEkbcpyAnl2tlfDemOJ70DTUsuHfVHMp1wFPIWiNKuCb5uXhOC2scZnn2PVpZmdM63hJsxhvoP3Oat6Qkzatk5q+mf9/upPQrvYHkr5XM8n0Yi6Do1OKcHThndRICrm3X8JikrmTJNWThVu/hgdp41calHXxIg1qzn7uuj1SPP5nTPEWtViOhLjRAq3KHb18W8ab0jEoQ0otsQPF74ZZTIyzwCte3xdQTqi8U/0TVG9e6DtsZ7wW+U2cHwTNVzfC7hc4A8/8st3cz3544atRtol4PuKYjiEHmjWGLYS0PikNn0=
