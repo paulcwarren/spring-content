@@ -4,7 +4,6 @@ branches:
 language: java
 jdk:
 - oraclejdk8
-before_install: git clone -b travis `git config --get remote.origin.url` target/travis
 script:
 - mvn test jacoco:report coveralls:report
-- mvn deploy --settings target/travis/settings.xml
+- mvn deploy --settings settings.xml
