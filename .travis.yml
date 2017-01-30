@@ -4,4 +4,4 @@ jdk:
   - oraclejdk8
 
 script:
- - mvn test coveralls:report
+ - mvn test jacoco:report coveralls:report
