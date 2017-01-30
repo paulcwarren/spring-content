@@ -6,4 +6,5 @@ jdk:
 - oraclejdk8
 script:
 - mvn test jacoco:report coveralls:report
+after_success:
 - mvn deploy --settings settings.xml
