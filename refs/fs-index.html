@@ -424,7 +424,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.4-SNAPSHOT,</span>
-<span id="revdate">2017-02-01</span>
+<span id="revdate">2017-02-02</span>
 </div>
 </div>
 <div id="content">
@@ -454,20 +454,21 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#content-repositories">2. Working with Spring Content Repositories</a>
 <ul class="sectlevel2">
 <li><a href="#content-repositories.core-concepts">2.1. Core concepts</a></li>
-<li><a href="#content-repositories.creating">2.2. Creating Content Repositories Instances</a></li>
+<li><a href="#content-repositories.creating">2.2. Creating Content Repositories</a></li>
 <li><a href="#content-repositories.extending">2.3. Extending Content Repositories</a></li>
 </ul>
 </li>
 <li><a href="#_filesystem_content_repositories">3. Filesystem Content Repositories</a>
 <ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">3.1. Annotation based configuration</a></li>
-<li><a href="#_accessing_content">3.2. Accessing Content</a></li>
+<li><a href="#_annotation_based_configuration">3.1. Annotation-based configuration</a></li>
+<li><a href="#_spring_boot_based_configuration">3.2. Spring Boot-based Configuration</a></li>
+<li><a href="#_accessing_content">3.3. Accessing Content</a></li>
 </ul>
 </li>
 <li><a href="#solr-search">4. Searching with Solr</a>
 <ul class="sectlevel2">
 <li><a href="#_overview">4.1. Overview</a></li>
-<li><a href="#_dependencies">4.2. Dependencies</a></li>
+<li><a href="#_dependencies_3">4.2. Dependencies</a></li>
 <li><a href="#_creating_a_solrclient">4.3. Creating a SolrClient</a></li>
 <li><a href="#_solr_properties">4.4. Solr Properties</a></li>
 </ul>
@@ -747,7 +748,7 @@ public class ContentRepositoryConfiguration {
 </div>
 </div>
 <div class="sect2">
-<h3 id="content-repositories.creating">2.2. Creating Content Repositories Instances</h3>
+<h3 id="content-repositories.creating">2.2. Creating Content Repositories</h3>
 <div class="paragraph">
 <p>To use these core concepts:</p>
 </div>
@@ -872,60 +873,71 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <div class="sect2">
 <h3 id="content-repositories.extending">2.3. Extending Content Repositories</h3>
 <div class="paragraph">
-<p>To add custom behavior to all content repositories, first define an interface to declare the new behavior.</p>
+<p>To add custom behavior to one or more content repositories.</p>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Define an interface to declare the new behavior.</p>
 <div class="exampleblock">
-<div class="title">Example 7. Custom Content Repository Behavior</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">public interface MyCustomBehavior&lt;T&gt; {  <b class="conum">(1)</b>
 
-  void sharedCustomMethod(&lt;T&gt; entity);
+  void customMethod(&lt;T&gt; entity);
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>It is common to type this behavior to the domain class that content is associated with or to the type of the content ID, or both</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+It is common to type this behavior to the domain class that content is associated with or to the class of the content ID or both
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
 </li>
-</ol>
-</div>
-</div>
-</div>
-<div class="paragraph">
+<li>
 <p>Create an implementation of that interface.</p>
-</div>
 <div class="exampleblock">
-<div class="title">Example 8. Custom Content Repository Implementation</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">public class MyCustomBehaviorImpl implements MyCustomBehavior&lt;Object&gt; {  <b class="conum">(1)</b>
 
-  void sharedCustomMethod(Object entity) {
+  void customMethod(Object entity) {
      ... custom implementation ...
   }
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>This implementation is usual generic and typed to Object and/or Serializable</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+It is also common that the implementation of the custom behavior is generic and typed to Object or Serializable or both
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
 </li>
-</ol>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>Make the implementation a <code>ContentRepositoryExtension</code>.</p>
-</div>
+<li>
+<p>Wrap the custom behavior in a <code>ContentRepositoryExtension</code> class.</p>
 <div class="exampleblock">
-<div class="title">Example 9. ContentRepositoryExtension</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -941,7 +953,7 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
     @Override
     public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) { <b class="conum">(1)</b>
     	...
-        Object tgt = new MyCustomBehavior(...);
+        Object tgt = new MyCustomBehavior(...); <b class="conum">(2)</b>
         return reflectionService.invokeMethod(invocation.getMethod(), tgt, invocation.getArguments());
     }
 }</code></pre>
@@ -950,17 +962,19 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <div class="colist arabic">
 <ol>
 <li>
-<p>ContentRepositoryInvoker can be used to get the Domain and ContentId classes and to fetch content</p>
+<p>ContentRepositoryInvoker can be used to get the Domain and ContentId classes or to fetch content</p>
+</li>
+<li>
+<p>Custom behavior implementation is instantiated and used as the target of the method invocation.</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
-<div class="paragraph">
-<p>Finally, plug this extension into the system.</p>
-</div>
+</li>
+<li>
+<p>Activate the extension by creating a bean.</p>
 <div class="exampleblock">
-<div class="title">Example 10. Plugging in a ContentRepositoryExtension</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -978,6 +992,45 @@ class Config {
 </div>
 </div>
 </div>
+</li>
+<li>
+<p>Update the content repository by extending the custom behavior interface.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentRepository extends ContentRepository&lt;SopDocument, UUID&gt;, MyCustomBehavior&lt;SopDocument&gt; {
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</li>
+<li>
+<p>Use the custom behavior.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class SomeClass {
+  	@Autowired private SopDocumentContentRepository contentRepo;
+
+	public void doSomething() {
+
+		...
+
+		repository.customMethod(sopDocument);
+
+		...
+	}
+}----</code></pre>
+</div>
+</div>
+</div>
+</div>
+</li>
+</ol>
+</div>
 </div>
 </div>
 </div>
@@ -985,53 +1038,109 @@ class Config {
 <h2 id="_filesystem_content_repositories">3. Filesystem Content Repositories</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_annotation_based_configuration">3.1. Annotation based configuration</h3>
+<h3 id="_annotation_based_configuration">3.1. Annotation-based configuration</h3>
+<div class="sect3">
+<h4 id="_dependencies">3.1.1. Dependencies</h4>
+<div class="paragraph">
+<p>Spring Content Filesystem is provided by the following dependency.</p>
+</div>
+<div class="listingblock">
+<div class="title">Spring Content Filesystem Dependency</div>
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-fs&lt;/artifactId&gt;
+    &lt;version&gt;${release-version}
+  &lt;/dependency&gt;
+&lt;dependencies&gt;</code></pre>
+</div>
+</div>
 <div class="paragraph">
 <p>Spring Content Filesystem repositories are enabled with the following Java Config.</p>
 </div>
-<div class="exampleblock">
-<div class="title">Example 11. Spring Content Filesystem repositories using Java Config</div>
-<div class="content">
 <div class="listingblock">
+<div class="title">Spring Content Filesystem repositories using Java Config</div>
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableFilesystemContentRepositories
 public static class ApplicationConfig {
-
-	@Bean
-	public File fileSystemRoot() throws IOException {  <b class="conum">(1)</b>
-		return Files.createTempDirectory("").toFile();
-	}
-
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Define a bean called <code>fileSystemRoot</code> to instruct Spring Content Filesystem where the root of the content store should be</p>
-</li>
-</ol>
 </div>
+<div class="sect3">
+<h4 id="_properties">3.1.2. Properties</h4>
+<div class="paragraph">
+<p>Spring Content Filesystem uses the prefix <code>spring.content.fs</code> and supports the following properties:-</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Property</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">filesystem-root</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The location where content will be stored.  If not set the location will default to a directory under java&#8217;s TMPDIR</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_example">3.1.3. Example</h4>
+<div class="paragraph">
+<p>See [github](<a href="https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-fs" class="bare">https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-fs</a>) for a working example.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_accessing_content">3.2. Accessing Content</h3>
+<h3 id="_spring_boot_based_configuration">3.2. Spring Boot-based Configuration</h3>
+<div class="paragraph">
+<p>Spring Content Filesystem repositories can also be enabled using the Spring Boot Starter.</p>
+</div>
 <div class="sect3">
-<h4 id="_setting_content">3.2.1. Setting Content</h4>
+<h4 id="_dependencies_2">3.2.1. Dependencies</h4>
+<div class="listingblock">
+<div class="title">Spring Content Dependency</div>
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+    &lt;version&gt;${release-version}
+  &lt;/dependency&gt;
+&lt;dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example_2">3.2.2. Example</h4>
+<div class="paragraph">
+<p>See [github](<a href="https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-fs-boot-starter" class="bare">https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-fs-boot-starter</a>) for a working example.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_accessing_content">3.3. Accessing Content</h3>
+<div class="sect3">
+<h4 id="_setting_content">3.3.1. Setting Content</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.  If content has not been associated with this entity before an ID and storage location (under the content store root) will be generated, the content will be stored and the @ContentId and @ContentLength annotations will be updated on <code>entity</code>.  Otherwise it will overwrite the previously stored content updating just the @ContentLength attribute, if appropriate.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content">3.2.2. Getting Content</h4>
+<h4 id="_getting_content">3.3.2. Getting Content</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentRepository.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content">3.2.3. Unsetting Content</h4>
+<h4 id="_unsetting_content">3.3.3. Unsetting Content</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentRepository.unsetContent(entity)</code> method.</p>
 </div>
@@ -1049,7 +1158,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_dependencies">4.2. Dependencies</h3>
+<h3 id="_dependencies_3">4.2. Dependencies</h3>
 <div class="paragraph">
 <p>Add the solj to the classpath.</p>
 </div>
@@ -1138,7 +1247,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-01-31 10:46:20 PST
+Last updated 2017-02-01 17:40:39 PST
 </div>
 </div>
 </body>
