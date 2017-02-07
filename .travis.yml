@@ -6,5 +6,7 @@ jdk:
 - oraclejdk8
 script:
 - mvn test jacoco:report coveralls:report
+notifications:
+  slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
 - mvn deploy --settings settings.xml
