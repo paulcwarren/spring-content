@@ -3,8 +3,8 @@
 
 # Spring Content
 
-Extensions for Spring-Data that add primitives for handling BLOBs (unstructured data) in the same Developer-friendly way that you handle your structured data.
+Content-Native Content Services for Spring. Integrates with Spring Data, Spring Data REST and Apache Solr. 
 
-Spring Content provides modules for JPA, MongoDB, S3 and the Filesystem.
+Spring Content provides modules for JPA, MongoDB, S3 and the Filesystem for storing content, relies on Spring Data for content metadata and integrates with Apache Solr for searching that content.
 
 For more information [see our docs](https://paulcwarren.github.io/spring-content/).
