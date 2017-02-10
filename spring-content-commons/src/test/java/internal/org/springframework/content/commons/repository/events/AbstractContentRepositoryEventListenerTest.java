@@ -10,6 +10,7 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
@@ -24,6 +25,7 @@ import org.springframework.content.commons.repository.events.BeforeUnsetContentE
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class AbstractContentRepositoryEventListenerTest {
 
 	private AbstractContentRepositoryEventListener<Object> listener;

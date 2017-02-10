@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Method;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
@@ -42,6 +43,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.utils.ReflectionService;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class AnnotatedContentRepositoryEventInvokerTest {
 	
 	private AnnotatedContentRepositoryEventInvoker invoker;

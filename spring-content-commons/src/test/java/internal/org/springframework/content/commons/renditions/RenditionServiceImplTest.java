@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Set;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +35,7 @@ import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class RenditionServiceImplTest {
 
 	private RenditionServiceImpl renditionService;

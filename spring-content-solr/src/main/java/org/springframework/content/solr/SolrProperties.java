@@ -1,9 +1,6 @@
 package org.springframework.content.solr;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 public class SolrProperties {
 
     private String url = null;

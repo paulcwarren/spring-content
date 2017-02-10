@@ -1,5 +1,6 @@
 package org.springframework.content.solr;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.solr.SolrSearchService;
 import org.aopalliance.intercept.MethodInvocation;
@@ -27,6 +28,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class SolrSearchContentRepositoryExtensionTest {
 
     private SolrSearchContentRepositoryExtension search;

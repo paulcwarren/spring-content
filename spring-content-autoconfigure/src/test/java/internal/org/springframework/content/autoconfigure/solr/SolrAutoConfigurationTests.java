@@ -7,6 +7,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import java.io.InputStream;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.hamcrest.CoreMatchers;
@@ -16,11 +17,15 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 
 @RunWith(Ginkgo4jSpringRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class SolrAutoConfigurationTests {
 
 	private AnnotationConfigApplicationContext context;
@@ -45,19 +50,23 @@ public class SolrAutoConfigurationTests {
 	@Test
 	public void test() {
 	}
+
+	@Configuration
+	public static class StarterTestConfig {
+		@Bean
+		public ConversionService conversionService() {
+			return new DefaultFormattingConversionService();
+		}
+	}
 	
 	@Configuration
+	@ComponentScan(basePackageClasses = StarterTestConfig.class)
 	public static class TestConfig extends SolrAutoConfiguration {
-		
-		@Bean
-		public SolrClient solrClient() {
-			return new HttpSolrServer("http://localhost:8983/solr/somesolrcollection");
-		}
-
 		@Bean
 		public ContentOperations contentOperations() {
 			return new TestContentOperations();
 		}
+
 	}
 	
 	public static class TestContentOperations implements ContentOperations {
