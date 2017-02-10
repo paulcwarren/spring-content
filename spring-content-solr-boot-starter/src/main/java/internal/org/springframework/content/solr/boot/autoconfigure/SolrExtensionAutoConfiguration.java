@@ -1,6 +1,5 @@
-package internal.org.springframework.content.autoconfigure.solr;
+package internal.org.springframework.content.solr.boot.autoconfigure;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
