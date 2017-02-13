@@ -1,13 +1,13 @@
 [[solr-search]]
-= Searching with Solr
+= Indexing & Searching with Solr
 
 == Overview
 
-When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional `Searchable<CID>` interface to the Content Repositories.   
+When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional `Searchable<CID>` interface to the Content Repositories.
 
 == Dependencies
 
-Add the solj to the classpath.
+Add the solrj to the classpath.
 
 ====
 [source, java]
@@ -28,30 +28,23 @@ Add the solj to the classpath.
 		</exclusions>
 	</dependency>
 ----
-<1> If using Spring Boot the version may be omitted 
-==== 
-
-== Creating a SolrClient
-
-Searching with solr requires a Solr client.  This can be achieved by creating a SolrClient bean.
-
+<1> If using Spring Boot the version may be omitted
 ====
-[source, java]
-----
-	@Bean
-	public SolrClient solrClient() {
-      return new HttpSolrClient("http://localhost:8983/solr/solr/");
-	}
-----
-==== 
 
-== Solr Properties
+== Enabling
 
-Searching with Solr configuration uses the prefix `spring-content-solr` and supports the following properties:-
+Specify the `@EnableFullTextSolrIndexing` annotation to your `@Configuration` Spring Application block.
 
+
+== Configuring
+
+By default when the Solr module is enabled Spring-Content looks for a `http://localhost:8983/solr/solr` solr server with no username or password.
+To change this behavior the following variables need to be set via the https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config[Externalized Configuration] method.
+
+[cols="2*", options="header"]
 |=========
-| Property | Description 
-| url | Url of the Solr host and core 
-| user | Solr user  
-| password | Solr user's password 
+| Property | Description
+| solr.url | Url of the Solr host (including port and core)
+| solr.username | Solr user
+| solr.password | Solr user's password
 |=========
