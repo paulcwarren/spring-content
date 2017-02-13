@@ -29,7 +29,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @RunWith(Ginkgo4jSpringRunner.class )
-//@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads=1)
 @ContextConfiguration(classes = AbstractContentStoreFactoryBeanTest.TestConfiguration.class)
 public class AbstractContentStoreFactoryBeanTest {
 

@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
@@ -37,6 +38,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class ContentRepositoryMethodInterceptorTest {
 
 	private ContentRepositoryMethodInteceptor interceptor;
