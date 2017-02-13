@@ -46,12 +46,14 @@ public class ContentRepositoryTest {
 				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
+				/*
 				It("should have a resourceTemplate bean", () -> {
 					assertThat(context.getBean("fileResourceTemplate"), is(not(nullValue())));
 				});
 				It("should have a ContentOperations bean", () -> {
 					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
 				});
+				*/
 				It("should have a FilesystemProperties bean", () -> {
 					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
 					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), is("/a/b/c"));

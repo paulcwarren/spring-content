@@ -23,9 +23,12 @@ public class FilesystemContentRepositoriesRegistrar extends AbstractContentStore
 
 	@Override
 	protected void createOperationsBean(BeanDefinitionRegistry registry) {
+		// TODO do we need this when operations are created in FilesystemContentRepositoryFactoryBean as non spring beans?
+		/*
 		String beanName = "fileResourceTemplate";
 	    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(FileResourceTemplate.class);
 	    registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
+	    */
 	}
 
 	@Override
