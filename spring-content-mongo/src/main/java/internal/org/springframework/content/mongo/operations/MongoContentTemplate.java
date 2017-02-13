@@ -44,7 +44,7 @@ public class MongoContentTemplate extends AbstractResourceTemplate {
 	}
 
 	@Override
-	protected String getlocation(Object contentId) {
+	protected String getLocation(Object contentId) {
 		return contentId.toString();
 	}
 

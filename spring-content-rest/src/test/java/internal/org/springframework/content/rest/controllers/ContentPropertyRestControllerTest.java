@@ -33,7 +33,6 @@ import org.springframework.http.ResponseEntity;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentPropertyRestControllerTest {
@@ -61,7 +60,7 @@ public class ContentPropertyRestControllerTest {
 					when(invokerMock.hasFindOneMethod()).thenReturn(true);
 					when(invokerMock.invokeFindOne("12345")).thenReturn(new ContentEntity("12345"));
 					when(contentRepoService.getContentStores()).thenReturn(new ContentStoreInfo[] {contentRepoInfo});
-					when(contentRepoInfo.getImpementation()).thenReturn(contentRepo);
+					when(contentRepoInfo.getImplementation()).thenReturn(contentRepo);
 					Mockito.doReturn(ContentEntity.class).when(contentRepoInfo).getDomainObjectClass();
 					Mockito.doReturn(ContentEntityContentRepository.class).when(contentRepoInfo).getInterface();
 					ContentEntity contentBean = new ContentEntity("12345");

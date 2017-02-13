@@ -28,7 +28,7 @@ public class ContentStoreInfoImpl implements ContentStoreInfo {
 	}
 
 	@Override
-	public ContentStore<Object,Serializable> getImpementation() {
+	public ContentStore<Object,Serializable> getImplementation() {
 		return this.storeImpl;
 	}
 	

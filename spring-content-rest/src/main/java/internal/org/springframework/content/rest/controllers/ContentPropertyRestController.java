@@ -84,7 +84,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
 			
 			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			InputStreamResource inputStreamResource = new InputStreamResource(info.getImpementation().getContent(contentPropertyValue));
+			InputStreamResource inputStreamResource = new InputStreamResource(info.getImplementation().getContent(contentPropertyValue));
 			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
 		} else {
 			final HttpHeaders headers = new HttpHeaders();
@@ -93,7 +93,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 //				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
 			
 			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			ContentStore<Object,Serializable> impl = info.getImpementation();
+			ContentStore<Object,Serializable> impl = info.getImplementation();
 			
 			if (impl instanceof Renderable) {
 				InputStream is = ((Renderable)impl).getRendition(contentPropertyValue, mimeType);
@@ -167,7 +167,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-		info.getImpementation().unsetContent(contentPropertyValue);
+		info.getImplementation().unsetContent(contentPropertyValue);
 		
 		// remove the content property reference from the data object
 		setContentProperty(domainObj, property, contentId, null);
@@ -199,7 +199,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-		info.getImpementation().setContent(contentPropertyValue, stream);
+		info.getImplementation().setContent(contentPropertyValue, stream);
 		
 		rootInfo.getInvoker().invokeSave(domainObj);
 	}

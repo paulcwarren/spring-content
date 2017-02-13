@@ -33,7 +33,7 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+		Resource resource = resourceLoader.getResource(this.getLocation(contentId));
 		OutputStream os = null;
 		try {
 			if (resource instanceof WritableResource) {
@@ -67,7 +67,7 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 		if (contentId == null)
 			return null;
 		
-		Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+		Resource resource = resourceLoader.getResource(this.getLocation(contentId));
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -89,7 +89,7 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 
 		// delete any existing content object
 		try {
-			Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+			Resource resource = resourceLoader.getResource(this.getLocation(contentId));
 			if (resource.exists()) {
 				this.deleteResource(resource);
 
@@ -102,7 +102,7 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 		}
 	}
 
-	protected abstract String getlocation(Object contentId);
+	protected abstract String getLocation(Object contentId);
 	protected abstract void deleteResource(Resource resource) throws Exception;
 
 }

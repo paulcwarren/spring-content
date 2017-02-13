@@ -60,7 +60,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
 
-		InputStream content = info.getImpementation().getContent(domainObj);
+		InputStream content = info.getImplementation().getContent(domainObj);
 		if (content == null) {
 			throw new ResourceNotFoundException();
 		}
@@ -75,7 +75,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentLength.class))
 				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(domainObj, ContentLength.class).toString());
 			
-			InputStreamResource inputStreamResource = new InputStreamResource(info.getImpementation().getContent(domainObj));
+			InputStreamResource inputStreamResource = new InputStreamResource(info.getImplementation().getContent(domainObj));
 			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
 		} else {
 			final HttpHeaders headers = new HttpHeaders();
@@ -83,7 +83,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 //			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, ContentLength.class))
 //				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
 			
-			ContentStore<Object,Serializable> impl = info.getImpementation();
+			ContentStore<Object,Serializable> impl = info.getImplementation();
 			
 			if (impl instanceof Renderable) {
 				InputStream is = ((Renderable)impl).getRendition(domainObj, mimeType);
@@ -114,7 +114,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
 
-		info.getImpementation().setContent(domainObj, request.getInputStream());
+		info.getImplementation().setContent(domainObj, request.getInputStream());
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, request.getHeader("Content-Type"));
@@ -157,11 +157,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
 
-		if (info.getImpementation().getContent(domainObj) == null) {
+		if (info.getImplementation().getContent(domainObj) == null) {
 			throw new ResourceNotFoundException();
 		}
 		
-		info.getImpementation().unsetContent(domainObj);
+		info.getImplementation().unsetContent(domainObj);
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
@@ -180,7 +180,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
 
-		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
+		info.getImplementation().setContent(domainObj, multiPart.getInputStream());
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());

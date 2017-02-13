@@ -224,7 +224,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 			BeanUtils.setFieldWithAnnotation(propVal, MimeType.class, mimeType);
 		}
 		
-		info.getImpementation().setContent(propVal, stream);
+		info.getImplementation().setContent(propVal, stream);
 		
 		rootInfo.getInvoker().invokeSave(domainObj);
 		
