@@ -47,7 +47,7 @@ public class FilesystemContentAutoConfiguration {
 	}
 
 	@Component
-	@ConfigurationProperties(prefix = "spring.content", exceptionIfInvalid = true, ignoreUnknownFields = true)
+	@ConfigurationProperties(prefix = "spring.content.fs", exceptionIfInvalid = true, ignoreUnknownFields = true)
 	public static class FilesystemContentProperties {
 
 		String filesystemRoot;
