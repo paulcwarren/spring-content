@@ -17,6 +17,7 @@ import org.springframework.content.commons.repository.events.AfterUnsetContentEv
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.search.SearchException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -83,7 +84,16 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 		if (before != null) {
 			publisher.publishEvent(before);
 		}
-		Object result = invocation.proceed();
+		Object result;
+		try {
+			result = invocation.proceed();
+		} catch (Exception e) {
+			if (e.getMessage().contains("org.springframework.content.commons.search")) {
+				throw new SearchException();
+			}
+			throw e;
+		}
+
 		if (after != null) {
 			publisher.publishEvent(after);
 		}
