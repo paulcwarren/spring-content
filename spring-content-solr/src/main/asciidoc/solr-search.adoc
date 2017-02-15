@@ -33,8 +33,8 @@ Add the solrj to the classpath.
 
 == Enabling
 
-Specify the `@EnableFullTextSolrIndexing` annotation to your `@Configuration` Spring Application block.
-
+- Specify the `@EnableFullTextSolrIndexing` annotation to your `@Configuration` Spring Application block.
+- Ensure a `(SolrJ) SolrClient` `@Bean` is instantiated somewhere within your `@Configuration` Spring Application block.
 
 == Configuring
 

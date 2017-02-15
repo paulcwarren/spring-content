@@ -50,10 +50,4 @@ public class SolrConfig {
         props.setUser(username);
         return props;
     }
-
-    @Bean
-    public SolrClient solrClient() {
-        return new HttpSolrClient(solrProperties().getUrl());
-    }
-
 }
