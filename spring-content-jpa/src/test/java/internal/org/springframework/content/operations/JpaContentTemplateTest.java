@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.utils.BeanUtils;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
@@ -15,6 +16,7 @@ import java.io.InputStream;
 import java.sql.*;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -37,7 +39,10 @@ public class JpaContentTemplateTest {
     private Connection connection;
     private DatabaseMetaData metadata;
     private ResultSet resultSet;
-    private Statement statement;
+    private PreparedStatement statement;
+    private InputStream inputStream;
+
+    private Blob blob;
 
     {
         Describe("JpaContentTemplate", () -> {
@@ -47,7 +52,7 @@ public class JpaContentTemplateTest {
                     connection = mock(Connection.class);
                     metadata = mock(DatabaseMetaData.class);
                     resultSet = mock(ResultSet.class);
-                    statement = mock(Statement.class);
+                    statement = mock(PreparedStatement.class);
                 });
                 JustBeforeEach(() -> {
                     template = new JpaContentTemplate(datasource);
@@ -163,6 +168,44 @@ public class JpaContentTemplateTest {
                         It("should update the content length metadata", () -> {
                             assertThat(entity.getContentLen(), is(0L));
                         });
+                    });
+                });
+            });
+
+            Describe("#getContent", () -> {
+                BeforeEach(() -> {
+                    datasource = mock(DataSource.class);
+                    connection = mock(Connection.class);
+                    statement = mock(PreparedStatement.class);
+                    resultSet = mock(ResultSet.class);
+                    blob = mock(Blob.class);
+                });
+                JustBeforeEach(() -> {
+                    template = new JpaContentTemplate(datasource);
+                    inputStream = template.getContent(entity);
+                });
+                Context("given content", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity(12345);
+                        stream = new ByteArrayInputStream("hello content world!".getBytes());
+                        when(datasource.getConnection()).thenReturn(connection);
+                        when(connection.prepareStatement(anyObject())).thenReturn(statement);
+                        when(statement.executeQuery()).thenReturn(resultSet);
+                        when(resultSet.next()).thenReturn(true);
+                        when(resultSet.getBlob(anyObject())).thenReturn(blob);
+                        when(blob.getBinaryStream()).thenReturn(mock(InputStream.class));
+                    });
+
+                    It("should execute sql SELECT statement", () -> {
+                        verify(connection).prepareStatement(eq("SELECT blob FROM BLOBS WHERE id='12345'"));
+                    });
+
+                    It("should return a content stream", () -> {
+                        assertThat(inputStream, is(not(nullValue())));
+                    });
+
+                    It("should close the resultset", () -> {
+                        verify(resultSet).close();
                     });
                 });
             });

@@ -88,7 +88,7 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
 				InputStreamEx in = new InputStreamEx(content);
 				pS.setBinaryStream(1, in);
 				pS.executeUpdate();
-		        BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
+				BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
 			} catch (SQLException sqle) {
 				logger.error(String.format("Error updating content %s", BeanUtils.getFieldWithAnnotation(metadata, ContentId.class)),sqle);
 			}
@@ -113,13 +113,11 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
 		String sql = "SELECT blob FROM BLOBS WHERE id='" + BeanUtils.getFieldWithAnnotation(metadata, ContentId.class) + "'";
 		ResultSet set = null;
 		try {
-	        set = datasource.getConnection().prepareCall(sql).executeQuery();
+	        PreparedStatement pS = datasource.getConnection().prepareStatement(sql);
+			set = pS.executeQuery();
 	        if(!set.next()) return null;
 	        Blob b = set.getBlob("blob");           
 	        return b.getBinaryStream();
-	        
-	        // todo: wrap input stream so we can 'free' the blob
-	        //b.free();
 	    } catch (SQLException sqle) {
 			logger.error(String.format("Error getting content %s", BeanUtils.getFieldWithAnnotation(metadata, ContentId.class)), sqle);
 		} finally {
