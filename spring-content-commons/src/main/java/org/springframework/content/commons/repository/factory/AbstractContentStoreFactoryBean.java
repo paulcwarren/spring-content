@@ -1,6 +1,6 @@
 package org.springframework.content.commons.repository.factory;
 
-import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInteceptor;
+import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -120,7 +120,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		} catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-		result.addAdvice(new ContentRepositoryMethodInteceptor(getDomainClass(contentStoreInterface), getContentIdClass(contentStoreInterface), extensionsMap, publisher));
+		result.addAdvice(new ContentRepositoryMethodInterceptor(getDomainClass(contentStoreInterface), getContentIdClass(contentStoreInterface), extensionsMap, publisher));
 
 		return (T)result.getProxy(classLoader);
 	}

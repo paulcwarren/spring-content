@@ -37,7 +37,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 @Ginkgo4jConfiguration(threads = 1)
 public class ContentRepositoryMethodInterceptorTest {
 
-	private ContentRepositoryMethodInteceptor interceptor;
+	private ContentRepositoryMethodInterceptor interceptor;
 	
 	// mocks
 	private MethodInvocation invocation;
@@ -55,7 +55,7 @@ public class ContentRepositoryMethodInterceptorTest {
 					BeforeEach(() -> {
 						invocation = mock(MethodInvocation.class);
 						extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
-						interceptor = new ContentRepositoryMethodInteceptor(Object.class, String.class, extensions, publisher);
+						interceptor = new ContentRepositoryMethodInterceptor(Object.class, String.class, extensions, publisher);
 
 						when(invocation.proceed()).thenThrow(new RuntimeException("org.springframework.content.commons.search"));
 					});
@@ -77,7 +77,7 @@ public class ContentRepositoryMethodInterceptorTest {
 					publisher = mock(ApplicationEventPublisher.class);
 				});
 				JustBeforeEach(() -> {
-					interceptor = new ContentRepositoryMethodInteceptor(Object.class, String.class, extensions, publisher);
+					interceptor = new ContentRepositoryMethodInterceptor(Object.class, String.class, extensions, publisher);
 					interceptor.invoke(invocation);
 				});
 				Context("when getContent is invoked", () -> {

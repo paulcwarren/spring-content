@@ -24,7 +24,7 @@ import org.springframework.util.ReflectionUtils;
 
 import internal.org.springframework.content.commons.repository.ContentRepositoryInvokerImpl;
 
-public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
+public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 
 	private Map<Method,ContentRepositoryExtension> extensions;
 	private ApplicationEventPublisher publisher;
@@ -44,7 +44,7 @@ public class ContentRepositoryMethodInteceptor implements MethodInterceptor {
 		Assert.notNull(unsetContentMethod);
 	}
 	
-	public ContentRepositoryMethodInteceptor(Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
+	public ContentRepositoryMethodInterceptor(Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
 		if (extensions == null) {
 			extensions = Collections.<Method, ContentRepositoryExtension>emptyMap();
 		}
