@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.content.commons.repository.ContentAccessException;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
@@ -17,7 +18,6 @@ import org.springframework.content.commons.repository.events.AfterUnsetContentEv
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
-import org.springframework.content.commons.search.SearchException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -56,9 +56,14 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 	
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
-		ContentRepositoryExtension extension = extensions.get(invocation.getMethod());
+		Method method = invocation.getMethod();
+		ContentRepositoryExtension extension = extensions.get(method);
 		if (extension != null) {
 			return extension.invoke(invocation, new ContentRepositoryInvokerImpl(domainClass, contentIdClass, invocation));
+		} else {
+			if (!isContentMethod(invocation)) {
+				throw new ContentAccessException(String.format("No implementation found for %s", method.getName()));
+			}
 		}
 		
 		ContentRepositoryEvent before = null;
@@ -88,9 +93,6 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		try {
 			result = invocation.proceed();
 		} catch (Exception e) {
-			if (e.getMessage().contains("org.springframework.content.commons.search")) {
-				throw new SearchException();
-			}
 			throw e;
 		}
 
@@ -98,6 +100,13 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 			publisher.publishEvent(after);
 		}
 		return result;
+	}
+
+	private boolean isContentMethod(MethodInvocation invocation) {
+		if (getContentMethod.equals(invocation.getMethod()) || setContentMethod.equals(invocation.getMethod()) || unsetContentMethod.equals(invocation.getMethod())) {
+			return true;
+		}
+		return false;
 	}
 }
 

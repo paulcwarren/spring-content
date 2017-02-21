@@ -2,6 +2,8 @@ package internal.org.springframework.content.commons.repository.factory;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -13,6 +15,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -20,6 +23,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.springframework.aop.AopInvocationException;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
@@ -50,35 +54,17 @@ public class ContentRepositoryMethodInterceptorTest {
 	
 	{
 		Describe("#invoke", () -> {
-			Context("when calling invoke with a uninitialized extension", () -> {
-				Context("when the extension is not provided", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-						extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
-						interceptor = new ContentRepositoryMethodInterceptor(Object.class, String.class, extensions, publisher);
-
-						when(invocation.proceed()).thenThrow(new RuntimeException("org.springframework.content.commons.search"));
-					});
-					JustBeforeEach(() -> {
-						try {
-							interceptor.invoke(invocation);
-						} catch (Exception e){
-							this.e = e;
-						}
-					});
-					FIt("should throw a Missing Extension error", () -> {
-						assert(e.getMessage().contentEquals("Missing extension implementation for service org.springframework.content.commons.search.Searchable"));
-					});
-				});
-						});
 			Context("When calling invoke with a valid set of args", () -> {
-
 				BeforeEach(() -> {
 					publisher = mock(ApplicationEventPublisher.class);
 				});
 				JustBeforeEach(() -> {
 					interceptor = new ContentRepositoryMethodInterceptor(Object.class, String.class, extensions, publisher);
-					interceptor.invoke(invocation);
+					try {
+					    interceptor.invoke(invocation);
+                    } catch (Exception invokeException) {
+					    e = invokeException;
+                    }
 				});
 				Context("when getContent is invoked", () -> {
 					BeforeEach(() -> {
@@ -205,7 +191,7 @@ public class ContentRepositoryMethodInterceptorTest {
 						when(invocation.getMethod()).thenReturn(getCustomMethod);
 						when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("application/pdf")});
 					});
-					Context("when an extension implementation is available", () -> {
+					Context("when an extension implementation is provided", () -> {
 						It("should invoke the extension's implementation", () -> {
 							verify(extension).invoke(eq(invocation), anyObject());
 						});
@@ -214,7 +200,15 @@ public class ContentRepositoryMethodInterceptorTest {
 							verify(publisher, never()).publishEvent(anyObject());
 						});
 					});
-				});
+                    Context("when the extension implementation is not provided", () -> {
+                        BeforeEach(() -> {
+                            extensions = new HashMap<>();
+                        });
+                        It("should throw a Missing Extension error", () -> {
+                            assertThat(e.getMessage(), startsWith("No implementation found for"));
+                        });
+                    });
+                });
 			});
 		});
 	}
