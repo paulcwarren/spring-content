@@ -9,6 +9,7 @@ import org.mockito.ArgumentMatcher;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
@@ -25,7 +26,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1) // required
+//@Ginkgo4jConfiguration(threads=1) // required
 public class JpaContentTemplateTest {
 
     private JpaContentTemplate template;
@@ -72,6 +73,12 @@ public class JpaContentTemplateTest {
                     It("should close the resultset", () -> {
                         verify(resultSet).close();
                     });
+                    It("should close the statement", () -> {
+                        verify(statement).close();
+                    });
+                    It("should close the connection", () -> {
+                        verify(connection).close();
+                    });
                 });
                 Context("given the BLOBS table exists", () -> {
                     BeforeEach(() -> {
@@ -86,6 +93,12 @@ public class JpaContentTemplateTest {
                     It("should close the resultset", () -> {
                         verify(resultSet).close();
                     });
+                    It("should close the statement", () -> {
+                        verify(statement, never()).close();
+                    });
+                    It("should close the connection", () -> {
+                        verify(connection).close();
+                    });
                 });
             });
             Describe("#setContent", () -> {
@@ -97,6 +110,7 @@ public class JpaContentTemplateTest {
                 });
                 JustBeforeEach(() -> {
                     template = new JpaContentTemplate(datasource);
+                    template.setTemplate(new JdbcTemplate(datasource));
                     template.setContent(entity, stream);
                 });
                 Context("given new content", () -> {
@@ -118,6 +132,12 @@ public class JpaContentTemplateTest {
                         It("should close the resultset", () -> {
                             verify(resultSet).close();
                         });
+                        It("should close the statement", () -> {
+                            verify(statement).close();
+                        });
+                        It("should close the connection", () -> {
+                            verify(connection).close();
+                        });
                     });
                 });
                 Context("given content already exists", () -> {
@@ -136,6 +156,13 @@ public class JpaContentTemplateTest {
                             verify((PreparedStatement) statement).setBinaryStream(eq(1), isA(InputStream.class));
                             verify((PreparedStatement) statement).executeUpdate();
                         });
+                        It("should close the statement", () -> {
+                            verify(statement).close();
+                        });
+
+                        It("should close the connection", () -> {
+                            verify(connection).close();
+                        });
                     });
                 });
             });
@@ -148,6 +175,7 @@ public class JpaContentTemplateTest {
                 });
                 JustBeforeEach(() -> {
                     template = new JpaContentTemplate(datasource);
+                    template.setTemplate(new JdbcTemplate(datasource));
                     template.unsetContent(entity);
                 });
                 Context("given content to be deleted", () -> {
@@ -168,6 +196,13 @@ public class JpaContentTemplateTest {
                         It("should update the content length metadata", () -> {
                             assertThat(entity.getContentLen(), is(0L));
                         });
+                        It("should close the statement", () -> {
+                            verify(statement).close();
+                        });
+
+                        It("should close the connection", () -> {
+                            verify(connection).close();
+                        });
                     });
                 });
             });
@@ -182,6 +217,7 @@ public class JpaContentTemplateTest {
                 });
                 JustBeforeEach(() -> {
                     template = new JpaContentTemplate(datasource);
+                    template.setTemplate(new JdbcTemplate(datasource));
                     inputStream = template.getContent(entity);
                 });
                 Context("given content", () -> {
@@ -206,6 +242,13 @@ public class JpaContentTemplateTest {
 
                     It("should close the resultset", () -> {
                         verify(resultSet).close();
+                    });
+                    It("should close the statement", () -> {
+                        verify(statement).close();
+                    });
+
+                    It("should close the connection", () -> {
+                        verify(connection).close();
                     });
                 });
             });
