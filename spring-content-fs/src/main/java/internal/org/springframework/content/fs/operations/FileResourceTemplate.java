@@ -1,12 +1,14 @@
 package internal.org.springframework.content.fs.operations;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.operations.AbstractResourceTemplate;
 import org.springframework.content.commons.operations.ContentOperations;
+import org.springframework.content.commons.operations.ResourceOperations;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -16,7 +18,7 @@ import internal.org.springframework.content.fs.repository.ContextFileSystemResou
 /**
  * {@link ContentOperations} implementation to store and retrieve file-based content.
  */
-public class FileResourceTemplate extends AbstractResourceTemplate implements ContentOperations {
+public class FileResourceTemplate extends AbstractResourceTemplate {
 
 	private static Log logger = LogFactory.getLog(FileResourceTemplate.class);
 	
@@ -34,10 +36,10 @@ public class FileResourceTemplate extends AbstractResourceTemplate implements Co
 	}
 
 	@Override
-	protected void deleteResource(Resource resource) throws Exception {
+	public void deleteResource(Resource resource) {
 		if (resource != null && resource instanceof FileSystemResource) {
-			if (((FileSystemResource)resource).getFile().delete()) {
-				logger.debug(String.format("Deleted resource %s", resource.getFile().getPath()));
+			if (((FileSystemResource) resource).getFile().delete()) {
+				logger.debug(String.format("Deleted resource %s", resource));
 			}
 		}
 	}

@@ -15,7 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 
-public abstract class AbstractResourceTemplate implements ContentOperations {
+public abstract class AbstractResourceTemplate implements ResourceOperations, ContentOperations {
 	
 	private static Log logger = LogFactory.getLog(AbstractResourceTemplate.class);
 	
@@ -33,7 +33,7 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+		Resource resource = this.get(this.getlocation(contentId));
 		OutputStream os = null;
 		try {
 			if (resource instanceof WritableResource) {
@@ -66,8 +66,8 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return null;
-		
-		Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+
+		Resource resource = this.get(this.getlocation(contentId));
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -89,9 +89,9 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 
 		// delete any existing content object
 		try {
-			Resource resource = resourceLoader.getResource(this.getlocation(contentId));
+			Resource resource = this.get(this.getlocation(contentId));
 			if (resource.exists()) {
-				this.deleteResource(resource);
+				this.delete(resource);
 
 				// reset content fields
 		        BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
@@ -102,7 +102,29 @@ public abstract class AbstractResourceTemplate implements ContentOperations {
 		}
 	}
 
+    @Override
+	public Resource get(String location) {
+		Resource resource = resourceLoader.getResource(location);
+		return resource;
+	}
+
+	@Override
+	public void delete(Resource resource) {
+		try {
+			if (resource.exists()) {
+				this.deleteResource(resource);
+			}
+		} catch (Exception ase) {
+			logger.error(String.format("Unexpected error unsetting content %s", resource.getFilename()), ase);
+		}
+	}
+
+
+	// hook for our placement strategy
 	protected abstract String getlocation(Object contentId);
+
+
+	// todo: remove this
 	protected abstract void deleteResource(Resource resource) throws Exception;
 
 }

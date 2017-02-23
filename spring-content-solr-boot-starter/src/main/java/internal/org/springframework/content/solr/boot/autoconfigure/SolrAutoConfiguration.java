@@ -3,6 +3,7 @@ package internal.org.springframework.content.solr.boot.autoconfigure;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
