@@ -33,7 +33,7 @@ public abstract class AbstractResourceTemplate implements ResourceOperations, Co
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		Resource resource = this.get(this.getlocation(contentId));
+		Resource resource = this.get(this.getLocation(contentId));
 		OutputStream os = null;
 		try {
 			if (resource instanceof WritableResource) {
@@ -67,7 +67,7 @@ public abstract class AbstractResourceTemplate implements ResourceOperations, Co
 		if (contentId == null)
 			return null;
 
-		Resource resource = this.get(this.getlocation(contentId));
+		Resource resource = this.get(this.getLocation(contentId));
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -89,7 +89,7 @@ public abstract class AbstractResourceTemplate implements ResourceOperations, Co
 
 		// delete any existing content object
 		try {
-			Resource resource = this.get(this.getlocation(contentId));
+			Resource resource = this.get(this.getLocation(contentId));
 			if (resource.exists()) {
 				this.delete(resource);
 
@@ -121,7 +121,7 @@ public abstract class AbstractResourceTemplate implements ResourceOperations, Co
 
 
 	// hook for our placement strategy
-	protected abstract String getlocation(Object contentId);
+	protected abstract String getLocation(Object contentId);
 
 
 	// todo: remove this

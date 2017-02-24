@@ -26,7 +26,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
-//@Ginkgo4jConfiguration(threads=1) // required
+//@Ginkgo4jConfiguration(threads=1)
 public class JpaContentTemplateTest {
 
     private JpaContentTemplate template;
@@ -229,7 +229,7 @@ public class JpaContentTemplateTest {
                         when(statement.executeQuery()).thenReturn(resultSet);
                         when(resultSet.next()).thenReturn(true);
                         when(resultSet.getBlob(anyObject())).thenReturn(blob);
-                        when(blob.getBinaryStream()).thenReturn(mock(InputStream.class));
+                        when(blob.getBinaryStream()).thenReturn(new ByteArrayInputStream("Hello content world!".getBytes()));
                     });
 
                     It("should execute sql SELECT statement", () -> {

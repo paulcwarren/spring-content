@@ -52,7 +52,7 @@ public class S3ResourceTemplate extends AbstractResourceTemplate implements Init
 	}
 
 	@Override
-	protected String getlocation(Object contentId) {
+	public String getLocation(Object contentId) {
 		return "s3://" + bucket + "/" + contentId;
 	}
 

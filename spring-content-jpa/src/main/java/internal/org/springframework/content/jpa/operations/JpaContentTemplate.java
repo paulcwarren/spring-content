@@ -1,5 +1,7 @@
 package internal.org.springframework.content.jpa.operations;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -10,6 +12,7 @@ import java.sql.Statement;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -171,7 +174,17 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
                     set = ps.executeQuery();
                     if(!set.next()) return null;
                     Blob b = set.getBlob("blob");
-                    return b.getBinaryStream();
+
+                    // yowchie...don't want to copy the content into memory however as the binarystream
+                    // is not available past connection.close() we have no choice.  This is the easieast thing to do
+                    // but we should investigate other alternaitves.  Perhaps read bytes into a temp file and return
+                    // a custom filestream that deletes the file upon stream close.
+                    try {
+                        byte[] bytes = IOUtils.toByteArray(b.getBinaryStream());
+                        return new ByteArrayInputStream(bytes);
+                    } catch (IOException ioe) {
+                        return null;
+                    }
                 } catch (SQLException sqle) {
                     logger.error(String.format("Error getting content %s", BeanUtils.getFieldWithAnnotation(metadata, ContentId.class)), sqle);
                 } finally {

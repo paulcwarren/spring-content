@@ -28,23 +28,16 @@ public class MongoContentTemplate extends AbstractResourceTemplate {
 
 	@Override
 	public void setContent(Object property, InputStream content) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
-		}
 
-		// gridfs doesnt support writeableresource
-		// delete any existing content object (gridfsoperations doesn't support replace)
-		gridFs.delete(query(whereFilename().is(contentId.toString())));
+	}
 
-		GridFSFile savedContentFile = gridFs.store(content, contentId.toString());
-
-		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, savedContentFile.getLength());
+	public Resource create(String location, InputStream content) {
+		GridFSFile savedContentFile = gridFs.store(content, location);
+		return this.get(location);
 	}
 
 	@Override
-	protected String getlocation(Object contentId) {
+	public String getLocation(Object contentId) {
 		return contentId.toString();
 	}
 
