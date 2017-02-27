@@ -1,31 +1,38 @@
-package internal.org.springframework.content.mongo.config;
+package internal.org.springframework.content.mongo.repository;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
-import internal.org.springframework.content.mongo.repository.DefaultMongoContentRepositoryImpl;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.InputStream;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import com.mongodb.gridfs.GridFSFile;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.io.InputStream;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.*;
+import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
 
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultMongoContentRepositoryImplTest {
-    private DefaultMongoContentRepositoryImpl mongoContentRepoImpl;
+    private DefaultMongoContentRepositoryImpl<TestEntity, String> mongoContentRepoImpl;
     private MongoContentTemplate mongoContentTemplate;
     private GridFsTemplate gridFsTemplate;
     private GridFSFile gridFSFile;
@@ -41,7 +48,7 @@ public class DefaultMongoContentRepositoryImplTest {
                 gridFSFile = mock(GridFSFile.class);
                 resource = mock(GridFsResource.class);
                 mongoContentTemplate = new MongoContentTemplate(gridFsTemplate);
-                mongoContentRepoImpl = new DefaultMongoContentRepositoryImpl(mongoContentTemplate);
+                mongoContentRepoImpl = new DefaultMongoContentRepositoryImpl<TestEntity, String>(mongoContentTemplate);
             });
             Context("#setContent", () -> {
                 BeforeEach(() -> {
@@ -118,10 +125,8 @@ public class DefaultMongoContentRepositoryImplTest {
             Context("#unsetContent", () -> {
                 BeforeEach(() -> {
                     property = new TestEntity();
-                    content = mock(InputStream.class);
                     property.setContentId("abcd");
                     when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
-                    when(resource.getInputStream()).thenReturn(content);
                     when(resource.exists()).thenReturn(true);
                 });
 
@@ -140,6 +145,7 @@ public class DefaultMongoContentRepositoryImplTest {
 
     @Test
     public void test() {
+    	//noop
     }
 
     public static class TestEntity {
