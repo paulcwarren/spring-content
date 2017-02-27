@@ -81,6 +81,7 @@ public class ContentRepositoryTest {
 
 	@Test
 	public void noop() {
+		// noop
 	}
 
 	@Configuration

@@ -19,9 +19,9 @@ import internal.org.springframework.content.mongo.operations.MongoContentTemplat
 
 public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
-	private MongoContentTemplate template;
-
 	private static Log logger = LogFactory.getLog(AbstractResourceTemplate.class);
+	
+	private MongoContentTemplate template;
 
 	public DefaultMongoContentRepositoryImpl(MongoContentTemplate template) {
 		this.template = template;
@@ -40,12 +40,8 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		Resource resource = template.get(template.getLocation(contentId));
 		if (resource != null) {
 			template.delete(resource);
-			// gridfs doesnt support writeableresource
-			// delete any existing content object (gridfsoperations doesn't support replace)
-//			gridFs.delete(query(whereFilename().is(contentId.toString())));
 		}
 
-//		GridFSFile savedContentFile = gridFs.store(content, contentId.toString());
 		resource = template.create(template.getLocation(contentId), content);
 
 		long contentLen = 0L;
@@ -97,7 +93,6 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		} catch (Exception ase) {
 			logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()), ase);
 		}
-
 
 		this.template.unsetContent(property);
 	}
