@@ -1,14 +1,12 @@
 package internal.org.springframework.content.fs.operations;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.operations.AbstractResourceTemplate;
 import org.springframework.content.commons.operations.ContentOperations;
-import org.springframework.content.commons.operations.ResourceOperations;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -31,7 +29,7 @@ public class FileResourceTemplate extends AbstractResourceTemplate {
 	}
 
 	@Override
-	protected String getLocation(Object contentId) {
+	public String getLocation(Object contentId) {
 		return new File(fileSystemRoot, contentId.toString()).toURI().toString();
 	}
 
