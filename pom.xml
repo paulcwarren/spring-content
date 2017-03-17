@@ -8,7 +8,9 @@
 
 	<name>Spring Content</name>
 	<url>https://github.com/paulcwarren/spring-content/</url>
-	<description>Extensions for Spring Data for managing BLOBs</description>
+	<description>Cloud-Native Headless Content Management Services (CMS) for Spring.  
+
+Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 	<organization>
 		<name>Paul Warren</name>
 		<url>https://github.com/paulcwarren</url>
@@ -56,7 +58,7 @@
 	</dependencyManagement>
 
 	<properties>
-		<ginkgo4j-version>1.0.7</ginkgo4j-version>
+		<ginkgo4j-version>1.0.8</ginkgo4j-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
