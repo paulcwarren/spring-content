@@ -1,6 +1,10 @@
 package internal.org.springframework.content.commons.repository.factory;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,12 +22,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import org.springframework.aop.AopInvocationException;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
@@ -35,6 +37,7 @@ import org.springframework.content.commons.repository.events.BeforeSetContentEve
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
