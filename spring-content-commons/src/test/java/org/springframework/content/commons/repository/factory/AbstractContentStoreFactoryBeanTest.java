@@ -1,7 +1,21 @@
 package org.springframework.content.commons.repository.factory;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,18 +29,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.ReflectionUtils;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
 @RunWith(Ginkgo4jSpringRunner.class )
 @Ginkgo4jConfiguration(threads=1)

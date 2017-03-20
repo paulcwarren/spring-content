@@ -18,6 +18,7 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +26,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
-import internal.org.springframework.content.fs.config.FilesystemProperties;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentRepositoryTest {
@@ -42,6 +41,9 @@ public class ContentRepositoryTest {
 				});
 				AfterEach(() -> {
 					context.close();
+				});
+				It("should have a ContentStoreService bean", () -> {
+					assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
 				});
 				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
