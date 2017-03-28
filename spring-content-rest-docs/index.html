@@ -117,6 +117,12 @@
             <li><a href="#update-dependencies">Update dependencies</a></li>
         
     
+        <li class="main "><a href="#update-file-entity">Update File Entity</a></li>
+        
+    
+        <li class="main "><a href="#update-filecontentstore">Update FileContentStore</a></li>
+        
+    
         <li class="main "><a href="#remove-filecontentcontroller">Remove FileContentController</a></li>
         
     
@@ -135,17 +141,31 @@
 <p>You'll remove redundant code from the document list web application that we produced in our first <a href="../spring-content-fs-docs/">Getting Started Guide</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
 <ul>
-<li>About 30 minutes</li>
-<li>A favorite text editor or IDE</li>
-<li>JDK 1.8 or later</li>
-<li>Maven 3.0+</li>
+<li>
+<p>About 30 minutes</p>
+</li>
+<li>
+<p>A favorite text editor or IDE</p>
+</li>
+<li>
+<p>JDK 1.8 or later</p>
+</li>
+<li>
+<p>Maven 3.0+</p>
+</li>
 </ul>
 <h2 id="how-to-complete-this-guide">How to complete this guide</h2>
 <p>Before we begin let's set up our development environment:</p>
 <ul>
-<li>Download and unzip the source repository for this guide, or clone it using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></li>
-<li>We are going to start form where we left of in the last Getting Started Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/complete</code></li>
-<li>Move ahead to <code>Update dependencies</code>.</li>
+<li>
+<p>Download and unzip the source repository for this guide, or clone it using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></p>
+</li>
+<li>
+<p>We are going to start form where we left of in the last Getting Started Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/complete</code></p>
+</li>
+<li>
+<p>Move ahead to <code>Update dependencies</code>.</p>
+</li>
 </ul>
 <p>When you’re finished, you can check your results against the code in <code>spring-content-gettingstarted/spring-content-rest/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
@@ -207,59 +227,58 @@
         &lt;/plugins&gt;
     &lt;/build&gt;
 
-&lt;/project&gt;```
-
-## Update File Entity
-
-Add the `@MimeType` marker annotation to our Entity.
-
-`src/main/java/gettingstarted/FileEntity.java`
-
+&lt;/project&gt;
 </code></pre>
 
-<p>package gettingstarted;</p>
-<p>import java.util.Date;</p>
-<p>import javax.persistence.Entity;
+<h2 id="update-file-entity">Update File Entity</h2>
+<p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
+<p><code>src/main/java/gettingstarted/FileEntity.java</code></p>
+<pre><code>package gettingstarted;
+
+import java.util.Date;
+
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.Id;</p>
-<p>import com.emc.spring.content.commons.annotations.Content;
+import javax.persistence.Id;
+
+import com.emc.spring.content.commons.annotations.Content;
 import com.emc.spring.content.commons.annotations.ContentId;
-import com.emc.spring.content.commons.annotations.ContentLength;</p>
-<p>@Entity
-public class File {</p>
-<pre><code>@Id
-@GeneratedValue(strategy = GenerationType.AUTO)
-private Long id;
-private String name;
-private Date created = new Date();
-private String summary;
+import com.emc.spring.content.commons.annotations.ContentLength;
 
-@ContentId private String contentId;
-@ContentLength private long contentLength;
-@MimeType private String mimeType = "text/plain";
+@Entity
+public class File {
 
-...Getters/Setters...
-</code></pre>
-<p>}</p>
-<pre><code>
-The `mimeType` attribute is updated with the Spring Content  `@MimeType` annotation so that Spring Content REST will update its value on our behalf.
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name;
+    private Date created = new Date();
+    private String summary;
 
-## Update FileContentRepository
+    @ContentId private String contentId;
+    @ContentLength private long contentLength;
+    @MimeType private String mimeType = &quot;text/plain&quot;;
 
-So that we can perform simple CRUD operations, over a hypermedia-based API, update our `FileContentRepository` by annotating it with the `@ContentStoreRestResource` Spring Content REST annotation.
-
-`src/main/java/gettingstarted/FileContentRepository.java`
-
-</code></pre>
-
-<p>package gettingstarted;</p>
-<p>import com.emc.spring.content.commons.repository.ContentStore;</p>
-<p>import internal.com.emc.spring.content.rest.annotations.ContentStoreRestResource;</p>
-<p>@ContentStoreRestResource
-public interface FileContentRepository extends ContentStore<File, String> {
+    ...Getters/Setters...
 }
-```</p>
+</code></pre>
+
+<p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code> annotation so that Spring Content REST will update its value on our behalf.</p>
+<h2 id="update-filecontentstore">Update FileContentStore</h2>
+<p>So that we can perform simple CRUD operations, over a hypermedia-based API, update our <code>FileContentStore</code> by annotating it with the <code>@ContentStoreRestResource</code> Spring Content REST annotation.</p>
+<p><code>src/main/java/gettingstarted/FileContentRepository.java</code></p>
+<pre><code>package gettingstarted;
+
+import com.emc.spring.content.commons.repository.ContentStore;
+
+import internal.com.emc.spring.content.rest.annotations.ContentStoreRestResource;
+
+@ContentStoreRestResource
+public interface FileContentStore extends ContentStore&lt;File, String&gt; {
+}
+</code></pre>
+
 <h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
 <p>Having made the above updates we can remove our <code>FileContentController</code> as it is now surplus to requirements.   Spring Content REST will provide these endpoints for us.</p>
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
@@ -268,17 +287,25 @@ public interface FileContentRepository extends ContentStore<File, String> {
 <p>And then point your browser at:-</p>
 <p><code>http://localhost:8080</code> </p>
 <p>and you should see something like this:-</p>
-<p><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></p>
+<p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
 <p>As you did in the previous tutorial, exercise the application by uploading a range of new files and viewing them.  You should see viewed files open as they did before.</p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations!  You've written a simple application that uses Spring Content and Spring Content REST to save objects with content to the file-system and to fetch them again using a hypermedia-based REST API - all without writing any implementation code to handle file access. </p>
 <p>Don't forget you can just changing the type of the spring-content boot-starter project on the classpath you can switch from file-based to a different implementation.  Spring Content REST works seamlessly with all modules.</p>
 <p>Spring Content supports the following implementations:-</p>
 <ul>
-<li>Spring Content Filesystem; stores content on the Filesystem (as used in this tutorial)</li>
-<li>Spring Content S3; stores content in Amazon S3</li>
-<li>Spring Content JPA; stores content as BLOBs in the database</li>
-<li>Spring Content MongoDB; stores content in Mongo's GridFs</li>
+<li>
+<p>Spring Content Filesystem; stores content as Files on the Filesystem (as used in this tutorial)</p>
+</li>
+<li>
+<p>Spring Content S3; stores content as Objects in Amazon S3</p>
+</li>
+<li>
+<p>Spring Content JPA; stores content as BLOBs in the database</p>
+</li>
+<li>
+<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
+</li>
 </ul></div>
             
         </div>
