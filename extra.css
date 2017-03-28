@@ -1,0 +1,144 @@
+body {
+	background: none;
+	background-color: #f1f1f1;
+
+	font-weight: 400;
+    font-family: "Varela Round",sans-serif;
+    color: #34302d;
+}
+
+h2 {
+	font-size: 20px;
+    font-weight: 400;
+    line-height: 24px;
+    margin-bottom: 10px;
+    font-family: "Montserrat",sans-serif;
+    color: #34302d;
+}
+
+h3 {
+	font-size: 17px;
+    font-weight: 400;
+    line-height: 24px;
+    margin-bottom: 10px;
+    font-family: "Montserrat",sans-serif;
+    color: #34302d;
+}
+
+h4 {
+	display: inline-block;
+    border-top: 3px solid #6db33f;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+    text-transform: uppercase;
+    padding-top: 8px;
+    margin-bottom: 16px;
+    font-family: Montserrat,sans-serif;
+    color: #34302d;
+}
+
+a {
+    color: #5fa134;
+}
+
+a:hover {
+	color: #005580;
+    text-decoration: underline;
+}
+
+pre {
+	background-color: #f5f5f5;
+	
+	border: 1px solid #ccc;
+	border-radius: 0px;
+}
+
+code {
+	padding: 2px 4px;
+    color: #d14;
+    white-space: nowrap;
+    background-color: #f7f7f9;
+    
+    font-size: 14px !important;
+    font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+    font-weight: 400;
+    
+    border-radius: 3px;
+}
+
+.navbar {
+	background-image: none;
+	border-bottom: none;
+	background-color: #34302d;
+	
+	border-top-width: 3px;
+	border-top-color: #6db33f;
+	
+	min-height: 70px;
+}
+
+.navbar-brand {
+    color: #eeeeee;
+    font-family: "Montserrat",sans-serif;
+    text-transform: uppercase;
+    text-shadow: none;
+    font-size: 14px;
+    line-height: 14px;
+    padding: 28px 20px;
+}
+
+.navbar-default .navbar-nav li a {
+	color: #eeeeee;
+    font-family: "Montserrat",sans-serif;
+    text-transform: uppercase;
+    text-shadow: none;
+    font-size: 14px;
+    line-height: 70px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus {
+    color: white;
+    background-color: #6db33f;
+ 
+    color: #eeeeee;
+    font-family: "Montserrat",sans-serif;
+    text-transform: uppercase;
+    text-shadow: none;
+    font-size: 14px;
+    line-height: 14px;
+    padding: 28px 20px;
+}
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:hover, .navbar-default .navbar-nav>.active>a:focus {
+    color: white;
+    background-color: #6db33f;
+ 
+    color: #eeeeee;
+    font-family: "Montserrat",sans-serif;
+    text-transform: uppercase;
+    text-shadow: none;
+    font-size: 14px;
+    line-height: 14px;
+    padding: 28px 20px;
+}
+
+.well {
+	font-weight: 400;
+    font-family: "Varela Round",sans-serif;
+    border-color: #34302d;
+    border-radius: 0px;
+}
+
+.bs-sidebar .nav > li > a {
+    color: #5fa134;
+    font-weight: normal;
+}
+
+.bs-sidebar .nav > .active > a, .bs-sidebar .nav > .active:hover > a, .bs-sidebar .nav > .active:focus > a {
+	border-right: 3px solid;
+}

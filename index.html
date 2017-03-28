@@ -12,9 +12,10 @@
 	<title>Spring Content</title>
 
         <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="./css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./extra.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -25,13 +26,14 @@
         
     </head>
 
-    <body>
+    <body class="homepage">
 
         <div class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
 
         <!-- Collapsed navigation -->
         <div class="navbar-header">
+            
             <!-- Expander button -->
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                 <span class="sr-only">Toggle navigation</span>
@@ -39,6 +41,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+            
 
             <!-- Main title -->
             <a class="navbar-brand" href=".">Spring Content</a>
@@ -46,46 +49,49 @@
 
         <!-- Expanded navigation -->
         <div class="navbar-collapse collapse">
-            <!-- Main navigation -->
-            <ul class="nav navbar-nav">
             
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li class="active">
+                        <a href=".">Home</a>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="spring-content-fs-docs/">Basics</a>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="spring-content-rest-docs/">REST</a>
+                    </li>
+                
+                
+                </ul>
             
-                <li class="active">
-                    <a href=".">Home</a>
-                </li>
-            
-            
-            
-                <li >
-                    <a href="spring-content-fs-docs/">Basics</a>
-                </li>
-            
-            
-            
-                <li >
-                    <a href="spring-content-rest-docs/">REST</a>
-                </li>
-            
-            
-            </ul>
 
-            <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
                         <i class="fa fa-search"></i> Search
                     </a>
                 </li>
-                <li class="disabled">
-                    <a rel="next" >
-                        <i class="fa fa-arrow-left"></i> Previous
-                    </a>
-                </li>
-                <li >
-                    <a rel="prev" href="spring-content-fs-docs/">
-                        Next <i class="fa fa-arrow-right"></i>
-                    </a>
-                </li>
+                
+                    <li class="disabled">
+                        <a rel="next" >
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="spring-content-fs-docs/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
                 
             </ul>
         </div>
@@ -93,42 +99,95 @@
 </div>
 
         <div class="container">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#spring-content">Spring Content</a></li>
         
-            <li><a href="#features">Features</a></li>
+    
+        <li class="main "><a href="#features">Features</a></li>
         
-            <li><a href="#modules">Modules</a></li>
+    
+        <li class="main "><a href="#modules">Modules</a></li>
         
-            <li><a href="#overview">Overview</a></li>
+            <li><a href="#coming-soon">Coming Soon</a></li>
         
-            <li><a href="#quick-start">Quick Start</a></li>
+    
+        <li class="main "><a href="#overview">Overview</a></li>
         
-            <li><a href="#references">References</a></li>
+    
+        <li class="main "><a href="#quick-start">Quick Start</a></li>
+        
+    
+        <li class="main "><a href="#reference-documentation">Reference Documentation</a></li>
         
     
     </ul>
 </div></div>
-            <div class="col-md-9" role="main">
+                <div class="col-md-9" role="main">
 
-<h1 id="spring-content">Spring Content</h1>
+<h4 id="spring-content">Spring Content</h4>
 <p>Cloud-Native Headless Content Services for Spring.</p>
 <p>For creating services that manage content such as documents, images and digital assets such as video.  </p>
 <p>Build your own cloud-native, scale-out headless content services using the exact same components as the Enterprise Content Management (ECM) vendors such as Documentum and OpenText, without the hassle.   </p>
-<h4 id="features">Features</h4>
+<h2 id="features">Features</h2>
 <ul>
-<li>Standardized content access no matter where it lives  </li>
-<li>Associate content with metadata   </li>
-<li>Search inside content</li>
-<li>Transform content into different formats with an extensible Rendtion mechanism </li>
+<li>
+<p>Standardized content access no matter where it lives  </p>
+</li>
+<li>
+<p>Content/metadata association   </p>
+</li>
+<li>
+<p>Content Search</p>
+</li>
+<li>
+<p>Content Transformation </p>
+</li>
 </ul>
-<h4 id="modules">Modules</h4>
-<p>Spring Content provides modules for storing content in S3, Filesystem, MongoDB and JPA <em>(with DellEMC ECS coming soon)</em> and provides modules for content search for Apache Solr <em>(with Amazon Elastic Search also coming soon)</em>. </p>
-<h4 id="overview">Overview</h4>
-<p><em>Figure 1. understanding how Spring Content fits into the Spring eco-system</em>
-<img alt="spring-content-arch" src="./spring-content-arch.jpg" /></p>
+<h2 id="modules">Modules</h2>
+<ul>
+<li>
+<p>Spring Content Commons - Core Spring concepts underpinning every Spring Content project.</p>
+</li>
+<li>
+<p>Spring Content S3 - Store support for Amazon S3 objects</p>
+</li>
+<li>
+<p>Spring Content Filesystem - Store support for the Filesystem files</p>
+</li>
+<li>
+<p>Spring Content Mongo - Store support for Mongo's GridFS</p>
+</li>
+<li>
+<p>Spring Content JPA - Store support for JPA BLOBs</p>
+</li>
+<li>
+<p>Spring Content Renditions - Extensible rendition service for content transformations </p>
+</li>
+<li>
+<p>Spring Content Solr - Content indexing and search with Apache Solr</p>
+</li>
+<li>
+<p>Spring Data REST - Exports Spring Content stores as hypermedia-driven RESTful resources.</p>
+</li>
+</ul>
+<h3 id="coming-soon">Coming Soon</h3>
+<ul>
+<li>
+<p>Spring Content ECS - store support for DellEMC ECS</p>
+</li>
+<li>
+<p>Spring Content ElasticSearch - Content indexing and search with Amzaon Elastic Search</p>
+</li>
+<li>
+<p>Spring Content CMIS - CMIS-compliant entity model and REST API</p>
+</li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p><center><img alt="spring-content-arch" src="./spring-content-arch.jpg" /></center>
+<center><em>Figure 1. understanding how Spring Content fits into the Spring eco-system</em></center></p>
 <h2 id="quick-start">Quick Start</h2>
 <pre><code>&lt;dependency&gt;
     &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
@@ -176,21 +235,56 @@ public class MyApp {
 
 <p>Launch your app and Spring Content (having been autoconfigured by Boot) will automatically craft a concrete set of operations for handling content associated with this Entity:</p>
 <ul>
-<li><code>setContent(S property, InputStream content)</code></li>
-<li><code>InputStream getContent(S property)</code></li>
-<li><code>unsetContent(S property)</code></li>
+<li>
+<p><code>setContent(S property, InputStream content)</code></p>
+</li>
+<li>
+<p><code>InputStream getContent(S property)</code></p>
+</li>
+<li>
+<p><code>unsetContent(S property)</code> </p>
+</li>
 </ul>
 <p>To see more following out first <a href="spring-content-fs-docs/">Getting Started Guide</a>, or watch our <a href="https://bit.ly/springone-vid">SpringOne 2016 talk</a>.</p>
-<h2 id="references">References</h2>
-<ul>
-<li><a href="./refs/fs-index.html">Spring Content Filesystem</a></li>
-</ul></div>
+<h2 id="reference-documentation">Reference Documentation</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spring Content S3</td>
+<td>Current</td>
+<td>Release</td>
+</tr>
+<tr>
+<td>Spring Content Filesystem</td>
+<td><a href="./refs/fs-index.html">Current</a></td>
+<td>Release</td>
+</tr>
+<tr>
+<td>Spring Content Mongo</td>
+<td>Current</td>
+<td>Release</td>
+</tr>
+<tr>
+<td>Spring Content JPA</td>
+<td>Current</td>
+<td>Release</td>
+</tr>
+</tbody>
+</table></div>
+            
         </div>
 
         <footer class="col-md-12">
             <hr>
             
-            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
 
         <script src="./js/jquery-1.10.2.min.js"></script>
@@ -224,5 +318,11 @@ public class MyApp {
                 </div>
             </div>
         </div>
+
     </body>
 </html>
+
+<!--
+MkDocs version : 0.15.3
+Build Date UTC : 2017-03-28 02:43:37.529009
+-->

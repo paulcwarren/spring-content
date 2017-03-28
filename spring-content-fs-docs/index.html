@@ -12,9 +12,10 @@
 	<title>Basics - Spring Content</title>
 
         <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../extra.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -32,6 +33,7 @@
 
         <!-- Collapsed navigation -->
         <div class="navbar-header">
+            
             <!-- Expander button -->
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                 <span class="sr-only">Toggle navigation</span>
@@ -39,6 +41,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+            
 
             <!-- Main title -->
             <a class="navbar-brand" href="..">Spring Content</a>
@@ -46,46 +49,49 @@
 
         <!-- Expanded navigation -->
         <div class="navbar-collapse collapse">
-            <!-- Main navigation -->
-            <ul class="nav navbar-nav">
             
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="active">
+                        <a href="./">Basics</a>
+                    </li>
+                
+                
+                
+                    <li >
+                        <a href="../spring-content-rest-docs/">REST</a>
+                    </li>
+                
+                
+                </ul>
             
-                <li >
-                    <a href="..">Home</a>
-                </li>
-            
-            
-            
-                <li class="active">
-                    <a href="./">Basics</a>
-                </li>
-            
-            
-            
-                <li >
-                    <a href="../spring-content-rest-docs/">REST</a>
-                </li>
-            
-            
-            </ul>
 
-            <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
                         <i class="fa fa-search"></i> Search
                     </a>
                 </li>
-                <li >
-                    <a rel="next" href="..">
-                        <i class="fa fa-arrow-left"></i> Previous
-                    </a>
-                </li>
-                <li >
-                    <a rel="prev" href="../spring-content-rest-docs/">
-                        Next <i class="fa fa-arrow-right"></i>
-                    </a>
-                </li>
+                
+                    <li >
+                        <a rel="next" href="..">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../spring-content-rest-docs/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
                 
             </ul>
         </div>
@@ -93,43 +99,59 @@
 </div>
 
         <div class="container">
-            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+            
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
         <li class="main active"><a href="#getting-started-with-spring-content">Getting Started with Spring Content</a></li>
         
-            <li><a href="#what-youll-build">What you'll build</a></li>
+    
+        <li class="main "><a href="#what-youll-build">What you'll build</a></li>
         
-            <li><a href="#what-youll-need">What you'll need</a></li>
+    
+        <li class="main "><a href="#what-youll-need">What you'll need</a></li>
         
-            <li><a href="#how-to-complete-this-guide">How to complete this guide</a></li>
+    
+        <li class="main "><a href="#how-to-complete-this-guide">How to complete this guide</a></li>
         
-            <li><a href="#build-with-maven">Build with Maven</a></li>
+    
+        <li class="main "><a href="#build-with-maven">Build with Maven</a></li>
         
-            <li><a href="#define-a-simple-entity">Define a simple Entity</a></li>
+            <li><a href="#create-a-directory-structure">Create a directory structure</a></li>
         
-            <li><a href="#create-a-file-repository">Create a File Repository</a></li>
+    
+        <li class="main "><a href="#define-a-simple-entity">Define a simple Entity</a></li>
         
-            <li><a href="#create-a-file-contentrepository">Create a File ContentRepository</a></li>
+    
+        <li class="main "><a href="#create-a-file-repository">Create a File Repository</a></li>
         
-            <li><a href="#create-a-file-controller">Create a File Controller</a></li>
+    
+        <li class="main "><a href="#create-a-file-contentrepository">Create a File ContentRepository</a></li>
         
-            <li><a href="#create-web-client">Create Web Client</a></li>
+    
+        <li class="main "><a href="#create-a-file-controller">Create a File Controller</a></li>
         
-            <li><a href="#create-an-application-class">Create an Application class</a></li>
+    
+        <li class="main "><a href="#create-web-client">Create Web Client</a></li>
         
-            <li><a href="#build-an-executable-jar">Build an executable JAR</a></li>
+    
+        <li class="main "><a href="#create-an-application-class">Create an Application class</a></li>
         
-            <li><a href="#summary">Summary</a></li>
+    
+        <li class="main "><a href="#build-an-executable-jar">Build an executable JAR</a></li>
         
-            <li><a href="#look-forward">Look Forward</a></li>
+    
+        <li class="main "><a href="#summary">Summary</a></li>
+        
+    
+        <li class="main "><a href="#look-forward">Look Forward</a></li>
         
     
     </ul>
 </div></div>
-            <div class="col-md-9" role="main">
+                <div class="col-md-9" role="main">
 
-<h1 id="getting-started-with-spring-content">Getting Started with Spring Content</h1>
+<h4 id="getting-started-with-spring-content">Getting Started with Spring Content</h4>
 <h2 id="what-youll-build">What you'll build</h2>
 <p>You'll build an application that uses Spring Content to build a simple web-based document list.</p>
 <h2 id="what-youll-need">What you'll need</h2>
@@ -540,12 +562,13 @@ public class SpringContentFsApplication {
 <h2 id="look-forward">Look Forward</h2>
 <p>In this tutorial we built a simple document list web application using Spring Content.  </p>
 <p>The majority of the work on the server-side was writing the Spring controller for handling the Content.  Check out our next <a href="../spring-content-rest-docs/">getting started guide</a> where we'll use the companion library Spring Content REST to automatically export these REST endpoints for our <code>FileContentRepository</code> saving ourselves even more work.</p></div>
+            
         </div>
 
         <footer class="col-md-12">
             <hr>
             
-            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
 
         <script src="../js/jquery-1.10.2.min.js"></script>
@@ -579,5 +602,6 @@ public class SpringContentFsApplication {
                 </div>
             </div>
         </div>
+
     </body>
 </html>
