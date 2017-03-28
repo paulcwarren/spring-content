@@ -216,14 +216,14 @@ public class SopDocument {
 }
 </code></pre>
 
-<p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and one Spring Content-managed data field; @ContentId.  </p>
+<p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and one Spring Content-managed data field; <code>@ContentId</code>.  </p>
 <p>The structured data fields are handled in the usual way through a <code>CrudRepository&lt;SopDocument,String&gt;</code> interface.  </p>
 <p>Content is handled separately with a ContentStore interface:-</p>
-<pre><code>public interface SopDocuemntContent extends ContentStore&lt;SopDocument, String&gt; {
+<pre><code>public interface SopDocumentContent extends ContentStore&lt;SopDocument, String&gt; {
 }
 </code></pre>
 
-<p>This interface extends Spring Content’s ContentStore, defines the type (SopDocument) and the id type (String).  Put this code inside a Spring Boot application with <code>spring-boot-starter-data-jpa</code> and <code>spring-content-fs-boot-starter</code> like this:</p>
+<p>This interface extends Spring Content’s <code>ContentStore</code>, defines the type (SopDocument) and the id type (String).  Put this code inside a Spring Boot application with <code>spring-boot-starter-data-jpa</code> and <code>spring-content-fs-boot-starter</code> like this:</p>
 <pre><code>@SpringBootApplication
 public class MyApp {
 
@@ -324,5 +324,5 @@ public class MyApp {
 
 <!--
 MkDocs version : 0.15.3
-Build Date UTC : 2017-03-28 02:43:37.529009
+Build Date UTC : 2017-03-28 02:48:47.297889
 -->
