@@ -1,21 +1,22 @@
 package internal.org.springframework.content.commons.placementstrategy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.placementstrategy.PlacementStrategy;
-import org.springframework.content.commons.placementstrategy.PlacementStrategyService;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.util.Assert;
 
-public class PlacementStrategyServiceImpl implements PlacementStrategyService {
+public class PlacementServiceImpl implements PlacementService {
 
-	@Autowired
-	private List<PlacementStrategy<?>> plugins;
+	@Autowired(required=false)
+	private List<PlacementStrategy<?>> plugins = new ArrayList<>();
 	
-	public PlacementStrategyServiceImpl() {
+	public PlacementServiceImpl() {
 	}
 	
-	/* package */ PlacementStrategyServiceImpl(List<PlacementStrategy<?>> plugins) {
+	/* package */ PlacementServiceImpl(List<PlacementStrategy<?>> plugins) {
 		this.plugins = plugins;
 	}
 

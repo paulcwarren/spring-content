@@ -19,14 +19,14 @@ import java.util.Collections;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.content.commons.placementstrategy.PlacementStrategy;
-import org.springframework.content.commons.placementstrategy.PlacementStrategyService;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 public class PlacementStrategyServiceTest {
 
-	private PlacementStrategyService service;
+	private PlacementService service;
 	
 	private String result = null;
 	private Exception exception = null;
@@ -47,7 +47,7 @@ public class PlacementStrategyServiceTest {
 				};
 				spy = Mockito.spy(strategy);
 				
-				service = new PlacementStrategyServiceImpl(Collections.singletonList(spy));
+				service = new PlacementServiceImpl(Collections.singletonList(spy));
 			});
 			JustBeforeEach(() -> {
 				try {

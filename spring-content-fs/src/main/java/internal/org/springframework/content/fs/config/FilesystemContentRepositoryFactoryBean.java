@@ -3,6 +3,7 @@ package internal.org.springframework.content.fs.config;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 import org.springframework.util.Assert;
 
@@ -16,16 +17,20 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 	@Autowired
 	FileResourceTemplate template;
 	
+	@Autowired
+	PlacementService placement;
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
 		
 		Assert.notNull(template, "template cannot be null");
+		Assert.notNull(placement, "placement service cannot be null");
 	}
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFileSystemContentRepositoryImpl(template);
+		return new DefaultFileSystemContentRepositoryImpl(template, placement);
 	}
 
 }

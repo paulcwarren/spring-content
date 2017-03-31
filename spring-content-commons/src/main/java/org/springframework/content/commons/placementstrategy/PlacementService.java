@@ -1,6 +1,6 @@
 package org.springframework.content.commons.placementstrategy;
 
-public interface PlacementStrategyService {
+public interface PlacementService {
 
 	String getLocation(Object contentId);
 	

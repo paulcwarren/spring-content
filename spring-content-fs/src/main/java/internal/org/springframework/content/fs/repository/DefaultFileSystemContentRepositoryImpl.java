@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.io.Resource;
@@ -23,9 +24,11 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
 	
 	private FileResourceTemplate template;
+	private PlacementService placement;
 
-	public DefaultFileSystemContentRepositoryImpl(FileResourceTemplate template) {
+	public DefaultFileSystemContentRepositoryImpl(FileResourceTemplate template, PlacementService placement) {
 		this.template = template;
+		this.placement = placement;
 	}
 
 	@Override

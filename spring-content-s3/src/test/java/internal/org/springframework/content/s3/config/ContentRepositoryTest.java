@@ -18,6 +18,7 @@ import org.springframework.cloud.aws.context.config.annotation.EnableContextReso
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.operations.ContentOperations;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.config.AbstractS3ContentRepositoryConfiguration;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
@@ -52,6 +53,9 @@ public class ContentRepositoryTest {
 				});
 				It("should have a ContentOperations bean", () -> {
 					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
+				});
+				It("should have a PlacementService bean", () -> {
+					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {

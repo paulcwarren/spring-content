@@ -17,6 +17,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.operations.ContentOperations;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -55,6 +56,9 @@ public class ContentRepositoryTest {
 				});
 				It("should have a ContentOperations bean", () -> {
 					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
+				});
+				It("should have a PlacementService bean", () -> {
+					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
 				});
 			});
 			Context("given an enabled configuration with no mongo content repository beans", () -> {

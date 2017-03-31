@@ -17,6 +17,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.operations.ContentOperations;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
@@ -57,6 +58,13 @@ public class ContentRepositoryTest {
 				It("should have a FilesystemProperties bean", () -> {
 					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
 					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), is("/a/b/c"));
+				});
+				It("should have a FilesystemProperties bean", () -> {
+					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
+					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), is("/a/b/c"));
+				});
+				It("should have a PlacementService bean", () -> {
+					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
