@@ -1,6 +1,7 @@
 package internal.org.springframework.content.fs.operations;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -10,7 +11,6 @@ import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
-import internal.org.springframework.content.fs.config.FilesystemProperties;
 import internal.org.springframework.content.fs.repository.ContextFileSystemResourceLoader;
 
 /**
@@ -20,17 +20,30 @@ public class FileResourceTemplate extends AbstractResourceTemplate {
 
 	private static Log logger = LogFactory.getLog(FileResourceTemplate.class);
 	
-	private File fileSystemRoot;
-
 	@Autowired
-	public FileResourceTemplate(FilesystemProperties props) {
-		super(new ContextFileSystemResourceLoader(props.getFilesystemRoot()));
-		this.fileSystemRoot = new File(props.getFilesystemRoot());
+	public FileResourceTemplate(ContextFileSystemResourceLoader loader) {
+		super(loader);
 	}
 
+	// TODO: remove this method once placement strategy is fully implemented
 	@Override
 	public String getLocation(Object contentId) {
-		return new File(fileSystemRoot, contentId.toString()).toURI().toString();
+		return null;
+	}
+
+	public Resource create(String location) {
+		Resource resource = this.get(location);
+		
+		File resourceFile;
+		try {
+			resourceFile = resource.getFile();
+			File resourceParent = resourceFile.getParentFile();
+			resourceParent.mkdirs();
+		} catch (IOException ioe) {
+			logger.error(String.format("Unexpected error creating resource %s", location), ioe);
+		}
+		
+		return resource;
 	}
 
 	@Override
@@ -41,4 +54,5 @@ public class FileResourceTemplate extends AbstractResourceTemplate {
 			}
 		}
 	}
+
 }

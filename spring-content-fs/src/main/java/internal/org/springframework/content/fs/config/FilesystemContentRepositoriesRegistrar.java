@@ -3,14 +3,11 @@ package internal.org.springframework.content.fs.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.MutablePropertyValues;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.content.commons.config.AbstractContentStoreBeanDefinitionRegistrar;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.core.type.AnnotationMetadata;
-
-import internal.org.springframework.content.fs.operations.FileResourceTemplate;
 
 public class FilesystemContentRepositoriesRegistrar extends AbstractContentStoreBeanDefinitionRegistrar {
 
@@ -18,14 +15,14 @@ public class FilesystemContentRepositoriesRegistrar extends AbstractContentStore
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 		super.registerBeanDefinitions(importingClassMetadata, registry);
 		
-		filesystemProperties(registry);
+//		filesystemProperties(registry);
 	}
 
 	@Override
 	protected void createOperationsBean(BeanDefinitionRegistry registry) {
-		String beanName = "fileResourceTemplate";
-	    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(FileResourceTemplate.class);
-	    registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
+//		String beanName = "fileResourceTemplate";
+//	    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(FileResourceTemplate.class);
+//	    registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
 	}
 
 	@Override

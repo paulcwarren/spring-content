@@ -3,16 +3,18 @@ package internal.org.springframework.content.fs.boot.autoconfigure;
 import java.io.File;
 import java.io.IOException;
 
+import internal.org.springframework.content.fs.config.FilesystemContentRepositoryConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 @Configuration
-@Import(FilesystemContentAutoConfigureRegistrar.class)
+@Import({FilesystemContentAutoConfigureRegistrar.class, FilesystemContentRepositoryConfiguration.class})
 public class FilesystemContentAutoConfiguration {
 
 	@Autowired
@@ -45,6 +47,7 @@ public class FilesystemContentAutoConfiguration {
 		}
 		throw new IllegalStateException(String.format("Failed to create directory filesystem root for Spring Content %s", fileSystemRoot.toString()));
 	}
+
 
 	@Component
 	@ConfigurationProperties(prefix = "spring.content", exceptionIfInvalid = true, ignoreUnknownFields = true)

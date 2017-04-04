@@ -1,11 +1,13 @@
 package internal.org.springframework.content.fs.repository;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,21 +16,27 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.FileService;
+import org.springframework.content.io.DeletableResource;
+import org.springframework.content.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
 import internal.org.springframework.content.fs.operations.FileResourceTemplate;
 
-public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> /*extends AstractResourceContentRepositoryImpl<S,SID>*/  implements ContentStore<S,SID> {
+public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
-	
-	private FileResourceTemplate template;
-	private PlacementService placement;
 
-	public DefaultFileSystemContentRepositoryImpl(FileResourceTemplate template, PlacementService placement) {
-		this.template = template;
+	private FileSystemResourceLoader loader;
+	private PlacementService placement;
+	private FileService fileService;
+
+
+	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, PlacementService placement, FileService fileService) {
+		this.loader = loader;
 		this.placement = placement;
+		this.fileService = fileService;
 	}
 
 	@Override
@@ -39,9 +47,15 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		Resource resource = this.template.get(this.template.getLocation(contentId));
+		String location = placement.getLocation(contentId);
+		Resource resource = loader.getResource(location);
 		OutputStream os = null;
 		try {
+		    if (resource.exists() == false) {
+		        File resourceFile = resource.getFile();
+		        File parent = resourceFile.getParentFile();
+		        this.fileService.mkdirs(parent);
+            }
 			if (resource instanceof WritableResource) {
 				os = ((WritableResource)resource).getOutputStream();
 				IOUtils.copy(content, os);
@@ -73,7 +87,11 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		if (contentId == null)
 			return null;
 
-		Resource resource = this.template.get(this.template.getLocation(contentId));
+		String location = placement.getLocation(contentId);
+		Resource resource = loader.getResource(location);
+		
+		resource = checkOriginalPlacementStrategy(contentId, resource);
+		
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -85,7 +103,7 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		return null;
 	}
 
-@Override
+	@Override
 	public void unsetContent(S property) {
 		if (property == null)
 			return;
@@ -93,18 +111,25 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		if (contentId == null)
 			return;
 	
-		// delete any existing content object
-		try {
-			Resource resource = this.template.get(this.template.getLocation(contentId));
-			if (resource.exists()) {
-				this.template.delete(resource);
-	
-				// reset content fields
-		        BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
-		        BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-			}
-		} catch (Exception ase) {
-			logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()), ase);
+		// delete any existing content object	
+		String location = placement.getLocation(contentId);
+		Resource resource = loader.getResource(location);
+
+		resource = checkOriginalPlacementStrategy(contentId, resource);
+
+		if (resource.exists() && resource instanceof DeletableResource) {
+			((DeletableResource)resource).delete();
 		}
+
+		// reset content fields
+		BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+	}
+	
+	/* package */ Resource checkOriginalPlacementStrategy(Object contentId, Resource resource) {
+		if (resource.exists() == false) {
+			resource = loader.getResource(contentId.toString());
+		}
+		return resource;
 	}
 }

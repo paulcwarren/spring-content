@@ -11,13 +11,14 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Import;
 
 import internal.org.springframework.content.fs.config.FilesystemContentRepositoriesRegistrar;
+import internal.org.springframework.content.fs.config.FilesystemContentRepositoryConfiguration;
 import internal.org.springframework.content.fs.config.FilesystemContentRepositoryFactoryBean;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({FilesystemContentRepositoriesRegistrar.class})
+@Import({FilesystemContentRepositoriesRegistrar.class, FilesystemContentRepositoryConfiguration.class})
 public @interface EnableFilesystemContentRepositories {
 
 

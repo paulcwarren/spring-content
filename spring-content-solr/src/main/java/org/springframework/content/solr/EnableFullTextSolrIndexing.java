@@ -11,4 +11,4 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Import({SolrConfig.class, FullTextSolrIndexingConfig.class})
 public @interface EnableFullTextSolrIndexing {
-        }
+}
