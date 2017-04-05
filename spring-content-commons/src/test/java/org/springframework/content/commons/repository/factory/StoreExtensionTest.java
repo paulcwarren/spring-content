@@ -39,9 +39,6 @@ public class StoreExtensionTest {
     @Autowired
     private TestContentRepositoryExtension testExtensionService;
 
-    @Autowired
-    private TestContentStoreFactory testContentStoreFactory;
-
     // mocks/spys
     private TestContentRepositoryExtension spy;
 
