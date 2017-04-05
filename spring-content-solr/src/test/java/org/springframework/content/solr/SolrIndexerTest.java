@@ -29,7 +29,7 @@ import org.springframework.content.commons.repository.ContentAccessException;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class SolrIndexerTests {
+public class SolrIndexerTest {
 
 	private SolrIndexer handler;
 	
