@@ -5,17 +5,18 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.ContentStoreService;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
@@ -49,21 +51,15 @@ public class ContentRepositoryTest {
 				It("should have a ContentStoreService bean", () -> {
 					assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
 				});
+				It("should have a PlacementService bean", () -> {
+					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
+				});
 				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
-//				It("should have a resourceTemplate bean", () -> {
-//					assertThat(context.getBean("fileResourceTemplate"), is(not(nullValue())));
-//				});
-//				It("should have a ContentOperations bean", () -> {
-//					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
-//				});
 				It("should have a FilesystemProperties bean", () -> {
 					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
 					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), endsWith("/a/b/c/"));
-				});
-				It("should have a PlacementService bean", () -> {
-					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
 				});
 				It("should have a FileSystemResourceLoader bean", () -> {
 					assertThat(context.getBean("fileSystemResourceLoader"), is(not(nullValue())));

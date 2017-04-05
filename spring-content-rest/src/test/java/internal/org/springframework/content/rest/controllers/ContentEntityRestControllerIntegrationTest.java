@@ -48,7 +48,6 @@ import internal.org.springframework.content.rest.config.ContentRestConfiguration
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, ContentRestConfiguration.class})
-//@WebIntegrationTest
 @Transactional
 public class ContentEntityRestControllerIntegrationTest {
 	

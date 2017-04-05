@@ -5,17 +5,20 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.UUID;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
 import org.springframework.core.io.Resource;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -68,7 +71,7 @@ public class FileSystemResourceLoaderTest {
 		Describe("DeletableResource", () -> {
 			Context("#delete", () -> {
 				BeforeEach(() -> {
-					parent = new File(System.getProperty("java.io.tmpdir") + UUID.randomUUID());
+					parent = new File(Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString()).toAbsolutePath().toString());
 				});
 				JustBeforeEach(() -> {
 					loader = new FileSystemResourceLoader(parent.getPath() + "/");
