@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,8 +20,6 @@ import org.springframework.content.io.DeletableResource;
 import org.springframework.content.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-
-import internal.org.springframework.content.fs.operations.FileResourceTemplate;
 
 public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 

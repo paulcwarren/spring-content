@@ -1,19 +1,29 @@
 package internal.org.springframework.content.commons.utils;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.commons.utils.FileServiceImpl;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -27,7 +37,7 @@ public class FileServiceTest {
     {
         Describe("mkdirs", () -> {
             BeforeEach(() -> {
-                parent = new File(System.getProperty("java.io.tmpdir") + UUID.randomUUID());
+                parent = new File(Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString()).toAbsolutePath().toString());
             });
 
             JustBeforeEach(() -> {

@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
-import internal.org.springframework.content.fs.operations.FileResourceTemplate;
-import internal.org.springframework.content.fs.repository.ContextFileSystemResourceLoader;
 
 @Configuration
 public class FilesystemContentRepositoryConfiguration {
@@ -19,18 +17,9 @@ public class FilesystemContentRepositoryConfiguration {
 		return new FilesystemProperties();
 	}
 	
-	@Bean ContextFileSystemResourceLoader contextFilesystemResourceLoader() {
-		return new ContextFileSystemResourceLoader(filesystemProperties().getFilesystemRoot());
-	}
-	
 	@Bean FileSystemResourceLoader fileSystemResourceLoader() {
 		return new FileSystemResourceLoader(filesystemProperties().getFilesystemRoot());
 	}
-	
-//	@Bean
-//	public FileResourceTemplate fileResourceTemplate() {
-//		return new FileResourceTemplate(contextFilesystemResourceLoader());
-//	}
 	
 	@Bean
 	public PlacementStrategy<UUID> uuidPlacement() {

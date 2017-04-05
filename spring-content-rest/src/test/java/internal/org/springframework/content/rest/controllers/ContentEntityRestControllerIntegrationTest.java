@@ -94,7 +94,7 @@ public class ContentEntityRestControllerIntegrationTest {
 					});
 				});
 				Context("a PUT to /{repository}/{id} with a content body", () -> {
-					Ginkgo4jDSL.It("should set the content and return 200", () -> {
+					It("should set the content and return 200", () -> {
 						mvc.perform(put("/testEntities/" + testEntity.id.toString())
 						.content("Hello New Spring Content World!")
 						.contentType("text/plain"))

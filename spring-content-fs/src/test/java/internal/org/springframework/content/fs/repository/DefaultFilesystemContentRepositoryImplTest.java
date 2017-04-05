@@ -1,6 +1,10 @@
 package internal.org.springframework.content.fs.repository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -18,7 +22,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Matchers;
@@ -29,13 +32,10 @@ import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.io.DeletableResource;
 import org.springframework.content.io.FileSystemResourceLoader;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
-import internal.org.springframework.content.fs.operations.FileResourceTemplate;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
