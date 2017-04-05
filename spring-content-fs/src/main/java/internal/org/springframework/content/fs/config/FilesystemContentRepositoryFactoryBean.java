@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
-import org.springframework.content.io.FileSystemResourceLoader;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.fs.repository.DefaultFileSystemContentRepositoryImpl;

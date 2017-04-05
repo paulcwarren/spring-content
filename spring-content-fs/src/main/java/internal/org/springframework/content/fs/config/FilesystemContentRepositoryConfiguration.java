@@ -3,7 +3,7 @@ package internal.org.springframework.content.fs.config;
 import java.util.UUID;
 
 import org.springframework.content.commons.placementstrategy.PlacementStrategy;
-import org.springframework.content.io.FileSystemResourceLoader;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -16,8 +16,8 @@ import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.FileService;
-import org.springframework.content.io.DeletableResource;
-import org.springframework.content.io.FileSystemResourceLoader;
+import org.springframework.content.fs.io.DeletableResource;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 

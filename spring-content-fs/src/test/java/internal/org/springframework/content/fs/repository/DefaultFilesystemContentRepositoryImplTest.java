@@ -30,8 +30,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.utils.FileService;
-import org.springframework.content.io.DeletableResource;
-import org.springframework.content.io.FileSystemResourceLoader;
+import org.springframework.content.fs.io.DeletableResource;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.io.WritableResource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;

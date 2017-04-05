@@ -1,4 +1,4 @@
-package org.springframework.content.io;
+package org.springframework.content.fs.io;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -16,6 +16,8 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
+import org.springframework.content.fs.io.DeletableResource;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;

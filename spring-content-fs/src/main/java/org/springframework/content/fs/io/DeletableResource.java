@@ -1,4 +1,4 @@
-package org.springframework.content.io;
+package org.springframework.content.fs.io;
 
 import org.springframework.core.io.Resource;
 
