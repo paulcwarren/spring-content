@@ -10,7 +10,7 @@ notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
 - mvn deploy --settings settings.xml
-- mkdir -p /tmp/spring-content/docs
+- mkdir -p /tmp/spring-content/docs/refs/current
 - mv spring-content-fs/target/generated-docs/*.html /tmp/spring-content-docs/refs/current/
 - cd ..
 - git clone --depth=50 --branch=gh-pages https://github.com/paulcwarren/spring-content.git gh-pages
