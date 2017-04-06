@@ -15,9 +15,10 @@ after_success:
 - ls -la
 - mkdir -p /tmp/spring-content/docs
 - mv spring-content-fs/target/generated-docs/*.html /tmp/spring-content-docs/refs/current/
+- git checkout master
 - git config --global user.email $GITHUB_EMAIL
 - git config --global user.name $GITHUB_NAME
-- git pull origin gh-pages
+- git fetch origin gh-pages
 - git branch
 - git checkout gh-pages
 - git clean -ffd
