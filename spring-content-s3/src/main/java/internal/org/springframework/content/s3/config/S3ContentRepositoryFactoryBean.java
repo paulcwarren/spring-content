@@ -1,24 +1,37 @@
 package internal.org.springframework.content.s3.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
+import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
-import org.springframework.util.Assert;
 
-import internal.org.springframework.content.s3.operations.S3ResourceTemplate;
-import internal.org.springframework.content.s3.store.DefaultS3RepositoryImpl;
+import com.amazonaws.regions.Region;
+import com.amazonaws.services.s3.AmazonS3;
 
+import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
+
+@SuppressWarnings("rawtypes")
 public class S3ContentRepositoryFactoryBean extends AbstractContentStoreFactoryBean {
 
-	private SimpleStorageResourceLoader resourceLoader;
+	@Autowired
+	private AmazonS3 client; 
+
+	@Autowired
+	private Region region;
 	
 	@Autowired
-	private S3ResourceTemplate template;
+	private SimpleStorageResourceLoader loader;
+	
+	@Autowired
+	private PlacementService placement;
+
+	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
+	private String bucket;
 	
 	@Override
 	protected Object getContentStoreImpl() {
-		Assert.notNull(template, "template cannot be null");
-		return new DefaultS3RepositoryImpl(template);
+        client.setRegion(region);
+		return new DefaultS3StoreImpl(loader, placement, client, bucket);
 	}
-
 }

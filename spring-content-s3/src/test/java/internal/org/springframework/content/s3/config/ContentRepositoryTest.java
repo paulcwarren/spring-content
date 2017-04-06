@@ -14,11 +14,10 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.cloud.aws.context.config.annotation.EnableContextResourceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.operations.ContentOperations;
-import org.springframework.content.commons.placementstrategy.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.config.AbstractS3ContentRepositoryConfiguration;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
@@ -28,6 +27,7 @@ import org.springframework.context.annotation.Import;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -47,15 +47,6 @@ public class ContentRepositoryTest {
 				});
 				It("should have a Content Repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have a resource template bean", () -> {
-					assertThat(context.getBean("s3ResourceTemplate"), is(not(nullValue())));
-				});
-				It("should have a ContentOperations bean", () -> {
-					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
-				});
-				It("should have a PlacementService bean", () -> {
-					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
@@ -100,6 +91,10 @@ public class ContentRepositoryTest {
 
 	@Configuration
 	public static class InfrastructureConfig extends AbstractS3ContentRepositoryConfiguration {
+
+		@Autowired
+		private AmazonS3 client;
+		
 		@Override
 		public String bucket() {
 			return "spring-eg-content-s3";
@@ -107,6 +102,12 @@ public class ContentRepositoryTest {
 		@Override
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
+		}
+		
+		@Override
+		public SimpleStorageResourceLoader simpleStorageResourceLoader() {
+	        client.setRegion(region());
+			return new SimpleStorageResourceLoader(client);
 		}
 	}
 
