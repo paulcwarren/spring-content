@@ -9,6 +9,8 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 
+import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
+
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
@@ -34,6 +36,7 @@ public class ContentS3AutoConfigurationTests {
 		context.refresh();
 
 		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean(UUIDPlacementStrategy.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 
 		context.close();
 	}
