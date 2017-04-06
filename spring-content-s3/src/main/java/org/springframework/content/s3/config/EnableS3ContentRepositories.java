@@ -12,13 +12,14 @@ import org.springframework.cloud.aws.context.config.annotation.ContextResourceLo
 import org.springframework.context.annotation.Import;
 
 import internal.org.springframework.content.s3.config.S3ContentRepositoriesRegistrar;
+import internal.org.springframework.content.s3.config.S3ContentRepositoryConfiguration;
 import internal.org.springframework.content.s3.config.S3ContentRepositoryFactoryBean;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({ContextResourceLoaderConfiguration.class, S3ContentRepositoriesRegistrar.class})
+@Import({ContextResourceLoaderConfiguration.class, S3ContentRepositoryConfiguration.class, S3ContentRepositoriesRegistrar.class})
 public @interface EnableS3ContentRepositories {
 
 	/**
