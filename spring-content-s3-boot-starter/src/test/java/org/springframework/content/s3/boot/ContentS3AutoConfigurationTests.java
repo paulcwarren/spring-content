@@ -7,14 +7,16 @@ import javax.persistence.Id;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -40,6 +42,10 @@ public class ContentS3AutoConfigurationTests {
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
 	public static class TestConfig extends AbstractS3ContentRepositoryConfiguration {
+
+		@Autowired
+		private AmazonS3 client;
+
 		@Override
 		public String bucket() {
 			return "spring-eg-content-s3";
@@ -47,6 +53,12 @@ public class ContentS3AutoConfigurationTests {
 		@Override
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
+		}
+
+		@Override
+		public SimpleStorageResourceLoader simpleStorageResourceLoader() {
+	        client.setRegion(region());
+			return new SimpleStorageResourceLoader(client);
 		}
 	}
 
