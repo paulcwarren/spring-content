@@ -10,11 +10,15 @@ notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
 - mvn deploy --settings settings.xml
+- git status
+- git branch
+- ls -la
 - mkdir -p /tmp/spring-content/docs
 - mv spring-content-fs/target/generated-docs/*.html /tmp/spring-content-docs/refs/current/
 - git config --global user.email $GITHUB_EMAIL
 - git config --global user.name $GITHUB_NAME
 - git pull origin gh-pages
+- git branch
 - git checkout gh-pages
 - git clean -ffd
 - mv /tmp/spring-content-docs/refs/current/*.html refs/current/
