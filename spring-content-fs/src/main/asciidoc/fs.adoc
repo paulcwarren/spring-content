@@ -17,7 +17,7 @@ public static class ApplicationConfig {
 
 By default content will be stored in a randomly chosen (at application startup) folder under `java.io.tmdir`.
 
-==Configuring
+== Configuring
 
 The following configuration properties (prefix `spring.content.fs`) are supported.
 
@@ -28,6 +28,14 @@ The following configuration properties (prefix `spring.content.fs`) are supporte
 |=========
 
 == Accessing Content
+
+=== Storage Model 
+
+In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.  
+
+Content IDs of type `java.util.UUID` are mapped to a nested resource path which has the effect of spreading content over the filesystem. 
+
+Additional storage models and Content ID types can be added by creating  `org.springframework.content.commons.placement.PlacementService` plug-ins.  See <<content-repositories.storage,Storage Model>>.   
 
 === Setting Content
 

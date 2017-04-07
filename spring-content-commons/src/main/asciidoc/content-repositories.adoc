@@ -32,8 +32,20 @@ public interface ContentStore<E, CID extends Serializable> {
 <3> Deletes content and unassociates it from `entity`  
 ====
 
-[[content-repositories.events]]
+[[content-repositories.storage]]
+=== Storage Model
 
+Spring Content supports a pluggable storage model giving repositories the ability to store content as they see fit by making a placement service and placement service plugins available to Repositories implementations.  
+
+In general Repository implementations use the `org.springframework.content.commons.placement.PlacementService` to map an entity's `@ContentId` to a physical storage location.
+
+In addition a hierarchical storage model plug-in `internal.org.springframework.content.commons.UUIDPlacementStrategy` is also available to Repositories that can support this.  For example, both Spring Content Filesystem and Spring Content S3 make use this plug-in to map `java.util.UUID` content IDs to nested `org.springframework.core.io.Resource` paths.   
+
+==== Implementation a new Storage Model plugin ====
+
+The placement service can be extended by creating one or more `org.springframework.content.commons.placement.PlacementStrategy` beans that map other content ID types to resource locations.
+
+[[content-repositories.events]]
 === Events
 There are 6 events that Spring Content emits whilst performing basic content access.  Those are:
 
