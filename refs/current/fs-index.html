@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.4-SNAPSHOT,</span>
-<span id="revdate">2017-04-06</span>
+<span id="revdate">2017-04-07</span>
 </div>
 </div>
 <div id="content">
@@ -501,7 +501,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <h2 id="content-repositories">2. Working with Spring Content Repositories</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content files and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.</p>
+<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -520,14 +520,14 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect2">
 <h3 id="content-repositories.core-concepts">2.1. Core concepts</h3>
 <div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentRepository</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content id type of that domain class.</p>
+<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content ID type of that domain class.</p>
 </div>
 <div id="content-repositories.repository" class="exampleblock">
 <div class="title">Example 1. ContentRepository interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentRepository&lt;E, CID extends Serializable&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
 
 	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
 
@@ -887,31 +887,57 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableFilesystemContentRepositories
 public static class ApplicationConfig {
-
-	@Bean
-	public File fileSystemRoot() throws IOException {  <b class="conum">(1)</b>
-		return Files.createTempDirectory("").toFile();
-	}
-
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Define a bean called <code>fileSystemRoot</code> to instruct Spring Content Filesystem where the root of the content store should be</p>
-</li>
-</ol>
 </div>
 </div>
+<div class="paragraph">
+<p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
 </div>
+<div class="paragraph">
+<p>==Configuring</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content store location (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="_accessing_content">3.2. Accessing Content</h3>
 <div class="sect3">
 <h4 id="_setting_content">3.2.1. Setting Content</h4>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.  If content has not been associated with this entity before an ID and storage location (under the content store root) will be generated, the content will be stored and the @ContentId and @ContentLength annotations will be updated on <code>entity</code>.  Otherwise it will overwrite the previously stored content updating just the @ContentLength attribute, if appropriate.</p>
+<p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
+</div>
+<div class="paragraph">
+<p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.</p>
+</div>
+<div class="paragraph">
+<p>From this ID the <code>PlacementService</code> will then be used to determine the physical storage location and the content will be stored.</p>
+</div>
+<div class="paragraph">
+<p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
+</div>
+<div class="paragraph">
+<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
 </div>
 </div>
 <div class="sect3">
@@ -990,8 +1016,10 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_configuring">4.4. Configuring</h3>
 <div class="paragraph">
-<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.
-To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
+<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
+</div>
+<div class="paragraph">
+<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1026,7 +1054,7 @@ To change this behavior the following variables need to be set via the <a href="
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-06 22:21:48 UTC
+Last updated 2017-04-07 00:29:19 UTC
 </div>
 </div>
 </body>
