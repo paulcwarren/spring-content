@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -21,6 +20,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.factory.ContentStoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -30,7 +30,7 @@ public class ContentRepositoryServiceImplTest {
 	private ContentStoreServiceImpl contentRepoService; 
 	private ContentStoreFactory mockFactory;
 	{
-		Describe("ContentRepositoryServiceImpl", () -> {
+		Describe("ContentStoreServiceImpl", () -> {
 			Context("#getContentStores", () -> {
 				BeforeEach(() -> {
 					contentRepoService = new ContentStoreServiceImpl();

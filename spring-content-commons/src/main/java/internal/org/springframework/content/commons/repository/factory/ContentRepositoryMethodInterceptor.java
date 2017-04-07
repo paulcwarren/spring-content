@@ -12,6 +12,7 @@ import org.springframework.content.commons.repository.ContentAccessException;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
@@ -32,6 +33,7 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 	private static Method getContentMethod; 
 	private static Method setContentMethod; 
 	private static Method unsetContentMethod;
+	private static Method getResourceMethod;
     private Class<?> domainClass = null;
     private Class<? extends Serializable> contentIdClass = null;
 	
@@ -42,6 +44,8 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		Assert.notNull(setContentMethod);
 		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class);
 		Assert.notNull(unsetContentMethod);
+		getResourceMethod = ReflectionUtils.findMethod(Store.class, "getResource", Serializable.class);
+		Assert.notNull(getResourceMethod);
 	}
 	
 	public ContentRepositoryMethodInterceptor(Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
@@ -61,7 +65,7 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		if (extension != null) {
 			return extension.invoke(invocation, new ContentRepositoryInvokerImpl(domainClass, contentIdClass, invocation));
 		} else {
-			if (!isContentMethod(invocation)) {
+			if (!isStoreMethod(invocation)) {
 				throw new ContentAccessException(String.format("No implementation found for %s", method.getName()));
 			}
 		}
@@ -102,8 +106,11 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		return result;
 	}
 
-	private boolean isContentMethod(MethodInvocation invocation) {
-		if (getContentMethod.equals(invocation.getMethod()) || setContentMethod.equals(invocation.getMethod()) || unsetContentMethod.equals(invocation.getMethod())) {
+	private boolean isStoreMethod(MethodInvocation invocation) {
+		if (getContentMethod.equals(invocation.getMethod()) || 
+			setContentMethod.equals(invocation.getMethod()) || 
+			unsetContentMethod.equals(invocation.getMethod()) || 
+			getResourceMethod.equals(invocation.getMethod())) {
 			return true;
 		}
 		return false;

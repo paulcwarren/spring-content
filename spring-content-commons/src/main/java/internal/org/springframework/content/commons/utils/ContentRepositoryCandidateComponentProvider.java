@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.content.commons.repository.ContentRepository;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
@@ -14,6 +15,7 @@ public class ContentRepositoryCandidateComponentProvider extends ClassPathScanni
 	public ContentRepositoryCandidateComponentProvider(boolean useDefaultFilters) {
 		super(useDefaultFilters);
 		this.addIncludeFilter(new InterfaceTypeFilter(ContentRepository.class));
+		this.addIncludeFilter(new InterfaceTypeFilter(Store.class));
 	}
 	
 	@Override

@@ -9,13 +9,16 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.Serializable;
+import java.net.URI;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.renditions.RenditionService;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.testsupport.EnableTestStores;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.context.ApplicationContext;
@@ -45,6 +48,9 @@ public class StoreTest {
         			assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
         			assertThat(context.getBean(RenditionService.class), is(not(nullValue())));
         		});
+        		It("should have a teststore bean", () -> {
+        			assertThat(context.getBean(TestStore.class), is(not(nullValue())));
+        		});
         	});
         });
     }
@@ -57,6 +63,12 @@ public class StoreTest {
     public interface TestContentRepository extends ContentStore<Object, Serializable> {
     }
 
+    public interface TestStore extends Store<URI> {
+    }
+    
+    public interface TestAssociativeStore extends AssociativeStore<Object, URI> {
+    }
+    
     @Test
     public void noop() {}
 }

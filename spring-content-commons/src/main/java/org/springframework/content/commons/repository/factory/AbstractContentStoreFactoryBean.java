@@ -1,6 +1,13 @@
 package org.springframework.content.commons.repository.factory;
 
-import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInterceptor;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -14,51 +21,57 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInterceptor;
 
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
 
 	private static Log logger = LogFactory.getLog(AbstractContentStoreFactoryBean.class);
 	
-	private Class<? extends ContentStore<Object, Serializable>> contentStoreInterface;
+	private Class<? extends ContentStore<Object, Serializable>> storeInterface;
 	private ClassLoader classLoader;
 	private ApplicationEventPublisher publisher;
 	
-	private T contentStore;
+	private T store;
 	
     @Autowired(required=false)
     private Set<ContentRepositoryExtension> extensions;
 
 	@Autowired
-	public void setContentStoreInterface(Class<? extends ContentStore<Object, Serializable>> contentStoreInterface) {
-		Assert.notNull(contentStoreInterface);
-		this.contentStoreInterface = contentStoreInterface;
+	public void setContentStoreInterface(Class<? extends ContentStore<Object, Serializable>> storeInterface) {
+		Assert.notNull(storeInterface);
+		this.storeInterface = storeInterface;
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStoreInterface()
+	 */
 	public Class<? extends ContentStore<Object, Serializable>> getContentStoreInterface() {
-		return this.contentStoreInterface;
+		return this.storeInterface;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStore()
+	 */
+	@SuppressWarnings("unchecked")
+	public ContentStore<Object,Serializable> getContentStore() {
+		return (ContentStore<Object, Serializable>) getObject();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang.ClassLoader)
+	 */
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.context.ApplicationEventPublisherAware#setApplicationEventPublisher(org.springframework.context.ApplicationEventPublisher)
+	 */
 	@Override
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.publisher = applicationEventPublisher;
-	}
-
-	@SuppressWarnings("unchecked")
-	public ContentStore<Object,Serializable> getContentStore() {
-		return (ContentStore<Object, Serializable>) getObject();
 	}
 	
 	/*
@@ -75,7 +88,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	 */
 	@SuppressWarnings("unchecked")
 	public Class<? extends T> getObjectType() {
-		return (Class<? extends T>) (null == contentStoreInterface ? ContentStore.class : contentStoreInterface);
+		return (Class<? extends T>) (null == storeInterface ? ContentStore.class : storeInterface);
 	}
 
 	/*
@@ -95,10 +108,10 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	}
 
 	private T initAndReturn() {
-		if (contentStore == null) {
-			contentStore = createContentStore();
+		if (store == null) {
+			store = createContentStore();
 		}
-		return contentStore;
+		return store;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -108,7 +121,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(new Class[] { contentStoreInterface, ContentStore.class });
+		result.setInterfaces(new Class[] { storeInterface, ContentStore.class });
 		
 		Map<Method, ContentRepositoryExtension> extensionsMap = new HashMap<>();
 		try {
@@ -120,7 +133,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		} catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-		result.addAdvice(new ContentRepositoryMethodInterceptor(getDomainClass(contentStoreInterface), getContentIdClass(contentStoreInterface), extensionsMap, publisher));
+		result.addAdvice(new ContentRepositoryMethodInterceptor(getDomainClass(storeInterface), getContentIdClass(storeInterface), extensionsMap, publisher));
 
 		return (T)result.getProxy(classLoader);
 	}

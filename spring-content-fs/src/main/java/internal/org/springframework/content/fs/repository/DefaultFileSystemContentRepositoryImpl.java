@@ -14,6 +14,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.DeletableResource;
@@ -21,7 +22,7 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
 
@@ -34,6 +35,13 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		this.loader = loader;
 		this.placement = placement;
 		this.fileService = fileService;
+	}
+
+	@Override
+	public Resource getResource(SID id) {
+		String location = placement.getLocation(id);
+		Resource resource = loader.getResource(location);
+		return resource;
 	}
 
 	@Override

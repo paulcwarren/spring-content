@@ -23,8 +23,10 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	@Autowired(required=false)
 	public void setFactories(List<ContentStoreFactory> factories){
 		for (ContentStoreFactory factory : factories) {
-			ContentStoreInfo info = new ContentStoreInfoImpl(factory.getContentStoreInterface(), getDomainObjectClass(factory.getContentStoreInterface()), factory.getContentStore());
-			contentStoreInfos.add(info);
+			if (ContentStore.class.isAssignableFrom(factory.getContentStoreInterface())) {
+				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getContentStoreInterface(), getDomainObjectClass(factory.getContentStoreInterface()), factory.getContentStore());
+				contentStoreInfos.add(info);
+			}
 		}
 	}
 	
