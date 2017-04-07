@@ -39,6 +39,7 @@ Add the solrj to the classpath.
 == Configuring
 
 By default when the Solr module is enabled Spring-Content looks for a `http://localhost:8983/solr/solr` solr server with no username or password.
+
 To change this behavior the following variables need to be set via the https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config[Externalized Configuration] method.
 
 [cols="2*", options="header"]

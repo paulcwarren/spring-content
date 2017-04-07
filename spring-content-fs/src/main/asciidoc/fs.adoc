@@ -11,22 +11,35 @@ Spring Content Filesystem repositories are enabled with the following Java Confi
 @Configuration
 @EnableFilesystemContentRepositories
 public static class ApplicationConfig {
-
-	@Bean
-	public File fileSystemRoot() throws IOException {  # <1>
-		return Files.createTempDirectory("").toFile();
-	}
-	
 }
 ----
-<1> Define a bean called `fileSystemRoot` to instruct Spring Content Filesystem where the root of the content store should be
 ====
+
+By default content will be stored in a randomly chosen (at application startup) folder under `java.io.tmdir`.
+
+==Configuring
+
+The following configuration properties (prefix `spring.content.fs`) are supported.
+
+[cols="2*", options="header"]
+|=========
+| Property | Description
+| filesystemRoot | content store location (defaults to `java.io.tmpdir/<random>/`.  
+|=========
 
 == Accessing Content
 
 === Setting Content
 
-Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  If content has not been associated with this entity before an ID and storage location (under the content store root) will be generated, the content will be stored and the @ContentId and @ContentLength annotations will be updated on `entity`.  Otherwise it will overwrite the previously stored content updating just the @ContentLength attribute, if appropriate.
+Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
+
+If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.  
+
+From this ID the `PlacementService` will then be used to determine the physical storage location and the content will be stored.
+
+The @ContentId and @ContentLength annotations will be updated on `entity`.  
+
+If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
 
 === Getting Content
 
