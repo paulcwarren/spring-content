@@ -1,4 +1,4 @@
-package org.springframework.content.commons.placementstrategy;
+package org.springframework.content.commons.placement;
 
 public interface PlacementService {
 

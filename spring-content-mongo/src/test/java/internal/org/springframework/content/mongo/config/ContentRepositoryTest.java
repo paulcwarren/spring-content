@@ -17,7 +17,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.operations.ContentOperations;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

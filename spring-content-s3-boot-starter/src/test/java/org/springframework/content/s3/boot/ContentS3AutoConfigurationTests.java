@@ -9,7 +9,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 
-import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
+import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;

@@ -28,7 +28,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.DeletableResource;
 import org.springframework.content.fs.io.FileSystemResourceLoader;

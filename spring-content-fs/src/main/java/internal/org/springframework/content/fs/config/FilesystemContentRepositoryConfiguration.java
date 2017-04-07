@@ -2,12 +2,12 @@ package internal.org.springframework.content.fs.config;
 
 import java.util.UUID;
 
-import org.springframework.content.commons.placementstrategy.PlacementStrategy;
+import org.springframework.content.commons.placement.PlacementStrategy;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
+import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @Configuration
 public class FilesystemContentRepositoryConfiguration {

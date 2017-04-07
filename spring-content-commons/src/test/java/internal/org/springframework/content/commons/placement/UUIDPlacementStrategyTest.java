@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.placementstrategy;
+package internal.org.springframework.content.commons.placement;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -15,6 +15,8 @@ import java.util.UUID;
 import org.junit.runner.RunWith;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @RunWith(Ginkgo4jRunner.class)
 public class UUIDPlacementStrategyTest {

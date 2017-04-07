@@ -20,7 +20,7 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import internal.org.springframework.content.commons.placementstrategy.PlacementServiceImpl;
+import internal.org.springframework.content.commons.placement.PlacementServiceImpl;
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
 import internal.org.springframework.content.commons.utils.AnnotationBasedContentRepositoryConfigurationSource;

@@ -30,7 +30,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
+import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentRepositoryTest {

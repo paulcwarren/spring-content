@@ -1,8 +1,8 @@
-package internal.org.springframework.content.commons.placementstrategy;
+package internal.org.springframework.content.commons.placement;
 
 import java.util.UUID;
 
-import org.springframework.content.commons.placementstrategy.PlacementStrategy;
+import org.springframework.content.commons.placement.PlacementStrategy;
 import org.springframework.util.Assert;
 
 public class UUIDPlacementStrategy implements PlacementStrategy<UUID> {

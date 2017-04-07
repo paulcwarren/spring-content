@@ -1,7 +1,7 @@
 package internal.org.springframework.content.fs.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;

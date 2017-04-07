@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.placementstrategy;
+package internal.org.springframework.content.commons.placement;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -18,13 +18,13 @@ import java.util.Collections;
 
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.springframework.content.commons.placementstrategy.PlacementStrategy;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
+import org.springframework.content.commons.placement.PlacementStrategy;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
-public class PlacementStrategyServiceTest {
+public class PlacementServiceTest {
 
 	private PlacementService service;
 	
@@ -37,7 +37,7 @@ public class PlacementStrategyServiceTest {
 	private Object contentId;
 
 	{
-		Describe("PlacementStrategyServiceImpl", () -> {
+		Describe("PlacementServiceImpl", () -> {
 			BeforeEach(() -> {
 				strategy = new PlacementStrategy<String>() {
 					@Override

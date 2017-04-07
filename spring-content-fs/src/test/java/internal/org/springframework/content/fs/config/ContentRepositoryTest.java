@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
@@ -29,7 +29,7 @@ import org.springframework.context.annotation.PropertySource;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.commons.placementstrategy.UUIDPlacementStrategy;
+import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)

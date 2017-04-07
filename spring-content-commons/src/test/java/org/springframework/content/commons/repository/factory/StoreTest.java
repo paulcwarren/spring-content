@@ -13,7 +13,7 @@ import java.io.Serializable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.factory.testsupport.EnableTestStores;

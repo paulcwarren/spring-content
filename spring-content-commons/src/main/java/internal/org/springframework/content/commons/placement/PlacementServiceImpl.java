@@ -1,11 +1,11 @@
-package internal.org.springframework.content.commons.placementstrategy;
+package internal.org.springframework.content.commons.placement;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.placementstrategy.PlacementStrategy;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
+import org.springframework.content.commons.placement.PlacementStrategy;
 import org.springframework.util.Assert;
 
 public class PlacementServiceImpl implements PlacementService {

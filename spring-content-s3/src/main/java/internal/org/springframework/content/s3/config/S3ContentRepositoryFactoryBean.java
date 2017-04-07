@@ -3,7 +3,7 @@ package internal.org.springframework.content.s3.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
-import org.springframework.content.commons.placementstrategy.PlacementService;
+import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 
 import com.amazonaws.regions.Region;
