@@ -445,9 +445,11 @@ public static class ApplicationConfig {
 <div class="paragraph">
 <p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
 </div>
-<div class="paragraph">
-<p>==Configuring</p>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_configuring">Configuring</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
 </div>
@@ -474,6 +476,18 @@ public static class ApplicationConfig {
 <div class="sect1">
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_storage_model">Storage Model</h3>
+<div class="paragraph">
+<p>In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.</p>
+</div>
+<div class="paragraph">
+<p>Content IDs of type <code>java.util.UUID</code> are mapped to a nested resource path which has the effect of spreading content over the filesystem.</p>
+</div>
+<div class="paragraph">
+<p>Additional storage models and Content ID types can be added by creating  <code>org.springframework.content.commons.placement.PlacementService</code> plug-ins.  See <a href="#content-repositories.storage">Storage Model</a>.</p>
+</div>
+</div>
 <div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
@@ -509,7 +523,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-04-07 00:29:19 UTC
+Last updated 2017-04-07 19:48:02 UTC
 </div>
 </div>
 </body>
