@@ -61,6 +61,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<ginkgo4j-version>1.0.9</ginkgo4j-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<docs.type>current</docs.type>
+		<docs.output.dir>../target/generated-docs/refs/${docs.type}/</docs.output.dir>
 	</properties>
 
 	<modules>
@@ -150,12 +152,43 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 					</execution>
 				</executions>
 			</plugin>
+			
+			<!-- Doc Publishing -->
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-scm-publish-plugin</artifactId>
+			    <configuration>
+				    <providerImplementations>
+		            	<git>jgit</git>
+			        </providerImplementations>
+			        <checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
+			        <checkinComment>Publishing reference guides for ${project.artifactId}:${project.version}</checkinComment>
+			        <content>${basedir}/target/generated-docs</content>
+ 			        <skipDeletedFiles>true</skipDeletedFiles>
+ 				    <dryRun>true</dryRun>    
+ 					<pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
+			        <scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
+			        <username>${env.GITHUB_USERNAME}</username>
+			        <password>${env.GITHUB_PASSWORD}</password>
+			        <ignorePathsToDelete>/*</ignorePathsToDelete>
+			    </configuration>
+			    <dependencies>
+		          <dependency>
+		              <groupId>org.apache.maven.scm</groupId>
+		              <artifactId>maven-scm-provider-jgit</artifactId>
+	                  <version>1.9.5</version>
+		          </dependency>
+		         </dependencies>
+			</plugin>
 		</plugins>
 	</build>
 
 	<profiles>
 		<profile>
 			<id>release</id>
+			<properties>
+				<docs.type>release</docs.type>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
