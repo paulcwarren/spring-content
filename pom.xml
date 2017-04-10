@@ -170,7 +170,9 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			        <scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
 			        <username>${env.GITHUB_USERNAME}</username>
 			        <password>${env.GITHUB_PASSWORD}</password>
-			        <ignorePathsToDelete>/*</ignorePathsToDelete>
+			        <ignorePathsToDelete>
+			        	<ignorePathToDelete>/*</ignorePathToDelete>
+			        </ignorePathsToDelete>
 			    </configuration>
 			    <dependencies>
 		          <dependency>
