@@ -165,8 +165,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			        <checkinComment>Publishing reference guides for ${project.artifactId}:${project.version}</checkinComment>
 			        <content>${basedir}/target/generated-docs</content>
  			        <skipDeletedFiles>true</skipDeletedFiles>
- 				    <dryRun>true</dryRun>    
- 					<pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
+<!--  				    <dryRun>true</dryRun>    
+ --> 					<pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
 			        <scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
 			        <username>${env.GITHUB_USERNAME}</username>
 			        <password>${env.GITHUB_PASSWORD}</password>
