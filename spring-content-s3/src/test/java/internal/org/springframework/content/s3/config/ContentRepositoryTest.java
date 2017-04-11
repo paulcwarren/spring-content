@@ -100,11 +100,6 @@ public class ContentRepositoryTest {
 		@Autowired
 		private AmazonS3 client;
 		
-		@Override
-		public String bucket() {
-			return "spring-eg-content-s3";
-		}
-		@Override
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
 		}

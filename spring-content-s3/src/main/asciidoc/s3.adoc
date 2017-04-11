@@ -16,20 +16,13 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 	private AmazonS3 client;
 
 	@Override
-	public Region region() {
-		return RegionUtils.getRegion(env.getProperty("AWS_REGION"));
-	}
-	
-	@Override
 	public SimpleStorageResourceLoader simpleStorageResourceLoader() {	<1>
-		client.setRegion(region());
+		client.setRegion(RegionUtils.getRegion("us-west-1"));
 		return new SimpleStorageResourceLoader(client);
 	}
 }
 ----
-<1> The bucket to store content in 
-<2> The region of the bucket 
-<3> The S3 resource loader that will be used by the S3 Content Store
+<1> The S3 resource loader that will be used by the S3 Content Store
 ====
 
 == Configuring
@@ -38,8 +31,8 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 
 [cols="2*", options="header"]
 |=========
-| Property | Description
-| bucket | Content store location.  If not set then Spring Content S3 will look up the bucket from the environment variable AWS_BUCKET.   
+| Property | Required | Description
+| bucket | Yes | Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET   
 |=========
 
 == Accessing Content
