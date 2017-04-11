@@ -15,7 +15,7 @@ toc::[]
 
 :numbered:
 
-include::fs-preface.adoc[]
+include::s3-preface.adoc[]
 
 :leveloffset: +1
 // include::new-features.adoc[]
@@ -23,7 +23,7 @@ include::{spring-content-commons-docs}/content-repositories.adoc[]
 :leveloffset: -1
 
 :leveloffset: +1
-include::fs.adoc[]
+include::s3.adoc[]
 include::{spring-content-solr-docs}/solr-search.adoc[]
 :leveloffset: -1
 
