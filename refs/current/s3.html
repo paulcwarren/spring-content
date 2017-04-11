@@ -442,13 +442,8 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 	private AmazonS3 client;
 
 	@Override
-	public Region region() {
-		return RegionUtils.getRegion(env.getProperty("AWS_REGION"));
-	}
-
-	@Override
 	public SimpleStorageResourceLoader simpleStorageResourceLoader() {	<b class="conum">(1)</b>
-		client.setRegion(region());
+		client.setRegion(RegionUtils.getRegion("us-west-1"));
 		return new SimpleStorageResourceLoader(client);
 	}
 }</code></pre>
@@ -456,12 +451,6 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 </div>
 <div class="colist arabic">
 <ol>
-<li>
-<p>The bucket to store content in</p>
-</li>
-<li>
-<p>The region of the bucket</p>
-</li>
 <li>
 <p>The S3 resource loader that will be used by the S3 Content Store</p>
 </li>
@@ -485,13 +474,17 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Required</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set then Spring Content S3 will look up the bucket from the environment variable AWS_BUCKET.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
 </tr>
 </tbody>
 </table>
@@ -547,7 +540,7 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-04-11 19:22:40 UTC
+Last updated 2017-04-11 19:25:03 UTC
 </div>
 </div>
 </body>
