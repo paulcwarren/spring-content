@@ -7,6 +7,7 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import internal.org.springframework.content.commons.placement.StringBasedUUIDPlacementStrategy;
 import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @Configuration
@@ -24,5 +25,10 @@ public class FilesystemContentRepositoryConfiguration {
 	@Bean
 	public PlacementStrategy<UUID> uuidPlacement() {
 		return new UUIDPlacementStrategy();
+	}
+	
+	@Bean
+	public PlacementStrategy<String> stringUUIDPlacement() {
+		return new StringBasedUUIDPlacementStrategy();
 	}
 }
