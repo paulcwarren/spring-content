@@ -5,8 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.3">
-<meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
-<title>Spring Content Filesystem - Reference Documentation</title>
+<title>S3 Content Repositories</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -420,459 +419,36 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Spring Content Filesystem - Reference Documentation</h1>
-<div class="details">
-<span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.0.4-SNAPSHOT,</span>
-<span id="revdate">2017-04-11</span>
-</div>
+<h1>S3 Content Repositories</h1>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>&#169; 2008-2017 The original authors.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
-</td>
-</tr>
-</table>
-</div>
-<div id="toc" class="toc">
-<div id="toctitle" class="title">Table of Contents</div>
-<ul class="sectlevel0">
-<li><a href="#preface">Preface</a>
-<ul class="sectlevel1">
-<li><a href="#project">1. Project metadata</a></li>
-<li><a href="#content-repositories">2. Working with Spring Content Repositories</a>
-<ul class="sectlevel2">
-<li><a href="#content-repositories.core-concepts">2.1. Core concepts</a></li>
-<li><a href="#content-repositories.creation">2.2. Creating Content Repositories Instances</a></li>
-</ul>
-</li>
-<li><a href="#_filesystem_content_repositories">3. Filesystem Content Repositories</a>
-<ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">3.1. Annotation based configuration</a></li>
-<li><a href="#_configuring">3.2. Configuring</a></li>
-<li><a href="#_accessing_content">3.3. Accessing Content</a></li>
-</ul>
-</li>
-<li><a href="#solr-search">4. Indexing &amp; Searching with Solr</a>
-<ul class="sectlevel2">
-<li><a href="#_overview">4.1. Overview</a></li>
-<li><a href="#_dependencies">4.2. Dependencies</a></li>
-<li><a href="#_enabling">4.3. Enabling</a></li>
-<li><a href="#_configuring_2">4.4. Configuring</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<h1 id="preface" class="sect0">Preface</h1>
 <div class="sect1">
-<h2 id="project">1. Project metadata</h2>
-<div class="sectionbody">
-<div class="ulist">
-<ul>
-<li>
-<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
-</li>
-<li>
-<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
-</li>
-<li>
-<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
-</li>
-<li>
-<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="content-repositories">2. Working with Spring Content Repositories</h2>
+<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Important</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>This chapter explains the core concepts and interfaces for Spring Content repositories. The information in this chapter is pulled from the Spring Content Commons. It uses the configuration and code samples for the S3 module. Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="sect2">
-<h3 id="content-repositories.core-concepts">2.1. Core concepts</h3>
-<div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content ID type of that domain class.</p>
-</div>
-<div id="content-repositories.repository" class="exampleblock">
-<div class="title">Example 1. ContentRepository interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
-
-	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
-
-	InputStream getContent(E entity);			<b class="conum">(2)</b>
-
-	void unsetContent(E entity);				<b class="conum">(3)</b>
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Stores content and saves its metadata on <code>entity</code></p>
-</li>
-<li>
-<p>Returns the content associated with <code>entity</code></p>
-</li>
-<li>
-<p>Deletes content and unassociates it from <code>entity</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="content-repositories.storage">2.1.1. Storage Model</h4>
-<div class="paragraph">
-<p>Spring Content supports a pluggable storage model giving repositories the ability to store content as they see fit by making a placement service and placement service plugins available to Repositories implementations.</p>
-</div>
-<div class="paragraph">
-<p>In general Repository implementations use the <code>org.springframework.content.commons.placement.PlacementService</code> to map an entity&#8217;s <code>@ContentId</code> to a physical storage location.</p>
-</div>
-<div class="paragraph">
-<p>In addition a hierarchical storage model plug-in <code>internal.org.springframework.content.commons.UUIDPlacementStrategy</code> is also available to Repositories that can support this.  For example, both Spring Content Filesystem and Spring Content S3 make use this plug-in to map <code>java.util.UUID</code> content IDs to nested <code>org.springframework.core.io.Resource</code> paths.</p>
-</div>
-<div class="sect4">
-<h5 id="_implementation_a_new_storage_model_plugin">Implementation a new Storage Model plugin</h5>
-<div class="paragraph">
-<p>The placement service can be extended by creating one or more <code>org.springframework.content.commons.placement.PlacementStrategy</code> beans that map other content ID types to resource locations.</p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="content-repositories.events">2.1.2. Events</h4>
-<div class="paragraph">
-<p>There are 6 events that Spring Content emits whilst performing basic content access.  Those are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>BeforeSetContent</p>
-</li>
-<li>
-<p>AfterSetContent</p>
-</li>
-<li>
-<p>BeforeGetContent</p>
-</li>
-<li>
-<p>AfterGetContent</p>
-</li>
-<li>
-<p>BeforeUnsetContent</p>
-</li>
-<li>
-<p>AfterUnsetContent</p>
-</li>
-</ul>
-</div>
-<div class="sect4">
-<h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
-<div class="paragraph">
-<p>There is an abstract class that you can subclass which listens for these kinds of events and calls the appropriate method based on the event type. You just override the methods for the events you’re interested in.</p>
+<p>Spring Content S3 is enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. AbstractContentRepositoryEventListener</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
-
-	@Override
-	public void onAfterSetContent(Object entity) {
-		...logic to inspect and handle the entity and it's content after it is stored
-	}
-
-	@Override
-	public void onBeforeGetContent(Object entity) {
-		...logic to inspect and handle the entity and it's content before it is fetched
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This approach does not filter events based on domain type.</p>
-</div>
-</div>
-<div class="sect4">
-<h5 id="_writing_an_annotated_contentrepository_handler">Writing an Annotated ContentRepository Handler</h5>
-<div class="paragraph">
-<p>Another approach is to use an annotated handler, which does filter events based on domain type.</p>
-</div>
-<div class="paragraph">
-<p>To declare a handler, create a POJO and annotate it as <code>@ContentRepositoryEventHandler</code>. This tells the <code>BeanPostProcessor</code> that this class needs to be inspected for handler methods.  It iterates over the class&#8217;s methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>HandleBeforeSetContent</p>
-</li>
-<li>
-<p>HandleAfterSetContent</p>
-</li>
-<li>
-<p>HandleBeforeGetContent</p>
-</li>
-<li>
-<p>HandleAfterGetContent</p>
-</li>
-<li>
-<p>HandleBeforeUnsetContent</p>
-</li>
-<li>
-<p>HandleAfterUnsetContent</p>
-</li>
-</ul>
-</div>
-<div class="exampleblock">
-<div class="title">Example 3. Annotated event handler</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@ContentRepositoryEventHandler
-public class ExampleAnnotatedEventListener {
-
-	@HandleAfterSetContent
-	public void handleAfterSetContent(SopDocument doc) {
-		...type-safe handling logic for SopDocument's and their content after it is stored
-	}
-
-	@HandleBeforeGetContent
-	public void onBeforeGetContent(Product product) {
-		...type-safe handling logic for Product's and their content before it is fetched
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>The type of interests you are interested in is determined from the type of the first parameter of each annotated method.</p>
-</div>
-<div class="paragraph">
-<p>To register your event handler, either mark the class with one of Spring’s @Component stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or declare an instance of your annotated bean in your ApplicationContext.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 4. Handler registration</div>
+<div class="title">Example 1. Enabling Spring Content S3 using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class ContentRepositoryConfiguration {
-
-  @Bean
-  ExampeAnnotatedEventHandler exampleEventHandler() {
-    return new ExampeAnnotatedEventHandler();
-  }
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="content-repositories.search">2.1.3. Search</h4>
-<div class="paragraph">
-<p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
-</div>
-<div class="paragraph">
-<p>Content repositories can therefore optionally be made searchable by extending the <code>Searchable&lt;CID&gt;</code> interface.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 5. Searchable interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Searchable&lt;CID&gt; {
-
-    Iterable&lt;T&gt; findKeyword(String term);
-
-    Iterable&lt;T&gt; findAllKeywords(String...terms);
-
-    Iterable&lt;T&gt; findAnyKeywords(String...terms);
-
-    Iterable&lt;T&gt; findKeywordsNear(int proximity, String...terms);
-
-    Iterable&lt;T&gt; findKeywordStartsWith(String term);
-
-    Iterable&lt;T&gt; findKeywordStartsWithAndEndsWith(String prefix, String suffix);
-
-    Iterable&lt;T&gt; findAllKeywordsWithWeights(String[] terms, double[] weights);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="content-repositories.renditions">2.1.4. Renditions</h4>
-<div class="paragraph">
-<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
-</div>
-<div class="paragraph">
-<p>Content repositories can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 6. Renderable interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Renderable&lt;E&gt; {
-
-	InputStream getRendition(E entity, String mimeType);
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="content-repositories.creation">2.2. Creating Content Repositories Instances</h3>
-<div class="paragraph">
-<p>To use these core concepts:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Define a Spring Data entity and give it&#8217;s instances the ability to be associated with content by adding <code>@ContentId</code> and <code>@ContentLength</code> annotations</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class SopDocument {
-	private @Id @GeneratedValue Long id;
-	private String title;
-	private String[] authors, keywords;
-
-	// Spring Content managed attribute
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Define an interface extending Spring Data&#8217;s <code>CrudRepository</code> and type it to the domain and ID classes.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentRepository extends CrudRepository&lt;SopDocument, Long&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Define another interface extending <code>ContentRepository</code> and type it to the domain and <code>@ContentId</code> class.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentRepository extends ContentRepository&lt;SopDocument, UUID&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Optionally, make it extend <code>Searchable</code></p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentRepository extends ContentRepository&lt;SopDocument, UUID&gt;, Searchable&lt;UUID&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Optionally, make it extend <code>Renderable</code></p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentRepository extends ContentRepository&lt;SopDocument, UUID&gt;, Renderable&lt;SopDocument&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Set up Spring to create proxy instances for these two interfaces using JavaConfig:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
 @EnableS3ContentRepositories
-class Config {}</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-The JPA and S3 namespaces are used in this example.  If you are using the repository and content repository abstraction for other database and Content stores, you need to change this to the appropriate namespace declaration for your store module.
-</td>
-</tr>
-</table>
-</div>
-</li>
-<li>
-<p>Inject the repositories and use them</p>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class SomeClass {
-	@Autowired private SopDocumentRepository repo;
-  	@Autowired private SopDocumentContentRepository contentRepo;
+public static class ApplicationConfig extends AbstractS3ContentRepositoryConfiguration {
 
-	public void doSomething() {
+	@Autowired
+	private AmazonS3 client;
 
-		SopDocument doc = new SopDocument();
-		doc.setTitle("example");
-		contentRepo.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); <b class="conum">(1)</b>
-		doc.save();
-		...
+	@Override
+	public Region region() {
+		return RegionUtils.getRegion(env.getProperty("AWS_REGION"));
+	}
 
-		InputStream content = repository.getContent(sopDocument);
-		...
-
-		List&lt;SopDocument&gt; docs = doc.findAllByContentId(contentRepo.findKeyword("interesting"));
-		...
-
+	@Override
+	public SimpleStorageResourceLoader simpleStorageResourceLoader() {	<b class="conum">(1)</b>
+		client.setRegion(region());
+		return new SimpleStorageResourceLoader(client);
 	}
 }</code></pre>
 </div>
@@ -880,47 +456,25 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <div class="colist arabic">
 <ol>
 <li>
-<p>Spring Content will update the <code>@ContentId</code> and <code>@ContentLength</code> fields</p>
+<p>The bucket to store content in</p>
+</li>
+<li>
+<p>The region of the bucket</p>
+</li>
+<li>
+<p>The S3 resource loader that will be used by the S3 Content Store</p>
 </li>
 </ol>
 </div>
-</div>
-</div>
-</li>
-</ol>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_filesystem_content_repositories">3. Filesystem Content Repositories</h2>
+<h2 id="_configuring">Configuring</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_annotation_based_configuration">3.1. Annotation based configuration</h3>
 <div class="paragraph">
-<p>Spring Content Filesystem repositories are enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 7. Spring Content Filesystem repositories using Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableFilesystemContentRepositories
-public static class ApplicationConfig {
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring">3.2. Configuring</h3>
-<div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
+<p>The following configuration properties (prefix <code>spring.content.s3</code>) are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -935,28 +489,30 @@ public static class ApplicationConfig {
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content store location (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set then Spring Content S3 will look up the bucket from the environment variable AWS_BUCKET.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_accessing_content">Accessing Content</h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="_accessing_content">3.3. Accessing Content</h3>
-<div class="sect3">
-<h4 id="_storage_model">3.3.1. Storage Model</h4>
+<h3 id="_storage_model">Storage Model</h3>
 <div class="paragraph">
-<p>In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.</p>
+<p>In order to store as much content as possible in the bucket Spring Content S3 supports a hierarchical storage model.</p>
 </div>
 <div class="paragraph">
-<p>Content IDs of type <code>java.util.UUID</code> are mapped to a nested resource path which has the effect of spreading content over the filesystem.</p>
+<p>Content IDs of type <code>java.util.UUID</code> are mapped to a nested resource path which has the effect of distributing content evenly throughout the bucket.</p>
 </div>
 <div class="paragraph">
 <p>Additional storage models and Content ID types can be added by creating  <code>org.springframework.content.commons.placement.PlacementService</code> plug-ins.  See <a href="#content-repositories.storage">Storage Model</a>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_setting_content">3.3.2. Setting Content</h4>
+<div class="sect2">
+<h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -973,14 +529,14 @@ public static class ApplicationConfig {
 <p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_getting_content">3.3.3. Getting Content</h4>
+<div class="sect2">
+<h3 id="_getting_content">Getting Content</h3>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentRepository.getContent(entity)</code> method.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_unsetting_content">3.3.4. Unsetting Content</h4>
+<div class="sect2">
+<h3 id="_unsetting_content">Unsetting Content</h3>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentRepository.unsetContent(entity)</code> method.</p>
 </div>
@@ -988,106 +544,9 @@ public static class ApplicationConfig {
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="solr-search">4. Indexing &amp; Searching with Solr</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_overview">4.1. Overview</h3>
-<div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_dependencies">4.2. Dependencies</h3>
-<div class="paragraph">
-<p>Add the solrj to the classpath.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
-		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
-		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
-		&lt;exclusions&gt;
-			&lt;exclusion&gt;
-				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
-				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
-			&lt;/exclusion&gt;
-			&lt;exclusion&gt;
-				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
-				&lt;groupId&gt;log4j&lt;/groupId&gt;
-			&lt;/exclusion&gt;
-		&lt;/exclusions&gt;
-	&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>If using Spring Boot the version may be omitted</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enabling">4.3. Enabling</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
-</li>
-<li>
-<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring_2">4.4. Configuring</h3>
-<div class="paragraph">
-<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
-</div>
-<div class="paragraph">
-<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
 <div id="footer">
 <div id="footer-text">
-Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-06 17:19:33 PDT
+Last updated 2017-04-11 08:52:41 PDT
 </div>
 </div>
 </body>
