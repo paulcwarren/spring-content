@@ -1,0 +1,60 @@
+= Mongo Content Repositories
+
+== Annotation based configuration
+
+Spring Content Mongo repositories are enabled with the following Java Config.
+
+.Spring Content Mongo repositories using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableMongoContentRepositories
+public static class ApplicationConfig extends AbstractMongoConfiguration <1> {
+
+  	@Override
+  	protected String getDatabaseName() {
+  		return "database";
+  	}
+
+	@Override
+  	public Mongo mongo() throws Exception {
+  		return new Mongo();
+  	}
+
+	@Bean
+	public GridFsTemplate gridFsTemplate() throws Exception {			<2>
+		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+	}
+	
+}
+----
+<1> For ease of use we extend Spring Data MongoDB's `AbstractMongoConfiguration` to set the container up for all of the required foundational MongoDB beans
+<2> In addition we add MongoDB's `GridFsTemplate` bean
+====
+
+== Accessing Content
+
+=== Storage Model 
+
+MongoDB supports `String`-based `@ContentId`s.  
+
+=== Setting Content
+
+Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
+
+If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.  
+
+From this ID the `PlacementService` will then be used to determine the physical storage location and the content will be stored.
+
+The @ContentId and @ContentLength annotations will be updated on `entity`.  
+
+If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+
+=== Getting Content
+
+Content can be accessed using the `ContentRepository.getContent(entity)` method.  
+
+=== Unsetting Content
+
+Content can be removed using the `ContentRepository.unsetContent(entity)` method.
