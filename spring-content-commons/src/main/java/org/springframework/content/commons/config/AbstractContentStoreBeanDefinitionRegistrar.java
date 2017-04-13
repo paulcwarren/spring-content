@@ -23,7 +23,6 @@ import org.springframework.util.ClassUtils;
 import internal.org.springframework.content.commons.placement.PlacementServiceImpl;
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
-import internal.org.springframework.content.commons.utils.AnnotationBasedContentRepositoryConfigurationSource;
 import internal.org.springframework.content.commons.utils.ContentRepositoryUtils;
 
 public abstract class AbstractContentStoreBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanFactoryAware {
