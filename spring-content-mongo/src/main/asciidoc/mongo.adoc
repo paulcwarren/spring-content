@@ -39,11 +39,7 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <1>
 
 Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
 
-If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.  
-
-From this ID the `PlacementService` will then be used to determine the physical storage location and the content will be stored.
-
-The @ContentId and @ContentLength annotations will be updated on `entity`.  
+The fields annotated with @ContentId and @ContentLength will be updated on `entity`.  
 
 If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
 
@@ -58,3 +54,5 @@ Content can be accessed using the `ContentRepository.getContent(entity)` method.
 === Unsetting Content
 
 Content can be removed using the `ContentRepository.unsetContent(entity)` method.
+
+When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values; 
