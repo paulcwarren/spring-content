@@ -1,4 +1,4 @@
-= Spring Content Filesystem - Reference Documentation
+= Spring Content MongoDB - Reference Documentation
 Paul Warren, Peter Blum, Jeff Pak
 :revnumber: {version}
 :revdate: {localdate}

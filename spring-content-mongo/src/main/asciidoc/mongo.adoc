@@ -1,16 +1,16 @@
-= Mongo Content Repositories
+= MongoDB Content Repositories
 
 == Annotation based configuration
 
-Spring Content Mongo repositories are enabled with the following Java Config.
+Spring Content MongoDB repositories are enabled with the following Java Config.
 
-.Spring Content Mongo repositories using Java Config
+.Spring Content MongoDB repositories using Java Config
 ====
 [source, java]
 ----
 @Configuration
 @EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration <1> {
+public static class ApplicationConfig extends AbstractMongoConfiguration { <1> 
 
   	@Override
   	protected String getDatabaseName() {
@@ -35,10 +35,6 @@ public static class ApplicationConfig extends AbstractMongoConfiguration <1> {
 
 == Accessing Content
 
-=== Storage Model 
-
-MongoDB supports `String`-based `@ContentId`s.  
-
 === Setting Content
 
 Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
@@ -50,6 +46,10 @@ From this ID the `PlacementService` will then be used to determine the physical 
 The @ContentId and @ContentLength annotations will be updated on `entity`.  
 
 If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+
+==== How the @ContentId field is handled 
+
+Spring Data MongoDB requires that content entities have an `@ContentId` field for identity.  If you do not provide a value for this field one will be generated based on `java.util.UUID`.  
 
 === Getting Content
 
