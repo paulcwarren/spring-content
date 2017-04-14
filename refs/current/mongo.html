@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.3">
-<title>Filesystem Content Repositories</title>
+<title>Mongo Content Repositories</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -419,57 +419,54 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Filesystem Content Repositories</h1>
+<h1>Mongo Content Repositories</h1>
 </div>
 <div id="content">
 <div class="sect1">
 <h2 id="_annotation_based_configuration">Annotation based configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content Filesystem repositories are enabled with the following Java Config.</p>
+<p>Spring Content Mongo repositories are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content Filesystem repositories using Java Config</div>
+<div class="title">Example 1. Spring Content Mongo repositories using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableFilesystemContentRepositories
-public static class ApplicationConfig {
+@EnableMongoContentRepositories
+public static class ApplicationConfig extends AbstractMongoConfiguration &lt;1&gt; {
+
+  	@Override
+  	protected String getDatabaseName() {
+  		return "database";
+  	}
+
+	@Override
+  	public Mongo mongo() throws Exception {
+  		return new Mongo();
+  	}
+
+	@Bean
+	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
+		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+	}
+
 }</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
+</li>
+<li>
+<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
+</li>
+</ol>
 </div>
 </div>
-<div class="paragraph">
-<p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_configuring">Configuring</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content store location (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>.</p></td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 <div class="sect1">
@@ -478,13 +475,7 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_storage_model">Storage Model</h3>
 <div class="paragraph">
-<p>In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.</p>
-</div>
-<div class="paragraph">
-<p>Content IDs of type <code>java.util.UUID</code> are mapped to a nested resource path which has the effect of spreading content over the filesystem.</p>
-</div>
-<div class="paragraph">
-<p>Additional storage models and Content ID types can be added by creating  <code>org.springframework.content.commons.placement.PlacementService</code> plug-ins.  See <a href="#content-repositories.storage">Storage Model</a>.</p>
+<p>MongoDB supports <code>String</code>-based `@ContentId`s.</p>
 </div>
 </div>
 <div class="sect2">
@@ -522,7 +513,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-04-11 11:05:12 PDT
+Last updated 2017-04-13 12:40:21 PDT
 </div>
 </div>
 </body>
