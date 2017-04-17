@@ -19,6 +19,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.DeletableResource;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -28,12 +29,14 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 
 	private FileSystemResourceLoader loader;
 	private PlacementService placement;
+	private ConversionService conversion;
 	private FileService fileService;
 
 
-	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, PlacementService placement, FileService fileService) {
+	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, PlacementService placement, ConversionService conversion, FileService fileService) {
 		this.loader = loader;
 		this.placement = placement;
+		this.conversion = conversion;
 		this.fileService = fileService;
 	}
 
@@ -42,6 +45,21 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		String location = placement.getLocation(id);
 		Resource resource = loader.getResource(location);
 		return resource;
+	}
+	
+	public void associate(S entity, SID id) {
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
+		String location = placement.getLocation(id);
+		Resource resource = loader.getResource(location);
+		try {
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
+		} catch (IOException e) {
+			logger.error(String.format("Unexpected error setting content length for %s", id.toString()), e);
+		}
+	}
+	
+	public void unassociate(S entity) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -52,7 +70,7 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		String location = placement.getLocation(contentId);
+		String location = conversion.convert(contentId, String.class);
 		Resource resource = loader.getResource(location);
 		OutputStream os = null;
 		try {
@@ -92,10 +110,8 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		if (contentId == null)
 			return null;
 
-		String location = placement.getLocation(contentId);
+		String location = conversion.convert(contentId, String.class);
 		Resource resource = loader.getResource(location);
-		
-		resource = checkOriginalPlacementStrategy(contentId, resource);
 		
 		try {
 			if (resource.exists()) {
@@ -117,10 +133,8 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 			return;
 	
 		// delete any existing content object	
-		String location = placement.getLocation(contentId);
+		String location = conversion.convert(contentId, String.class);
 		Resource resource = loader.getResource(location);
-
-		resource = checkOriginalPlacementStrategy(contentId, resource);
 
 		if (resource.exists() && resource instanceof DeletableResource) {
 			((DeletableResource)resource).delete();
@@ -129,12 +143,5 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 		// reset content fields
 		BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-	}
-	
-	/* package */ Resource checkOriginalPlacementStrategy(Object contentId, Resource resource) {
-		if (resource.exists() == false) {
-			resource = loader.getResource(contentId.toString());
-		}
-		return resource;
 	}
 }

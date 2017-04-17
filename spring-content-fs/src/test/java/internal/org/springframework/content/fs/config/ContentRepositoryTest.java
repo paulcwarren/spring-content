@@ -17,9 +17,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -48,14 +46,11 @@ public class ContentRepositoryTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should have a ContentStoreService bean", () -> {
-					assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
-				});
-				It("should have a PlacementService bean", () -> {
-					assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
-				});
 				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a filesystem conversion service bean", () -> {
+					assertThat(context.getBean("filesystemStoreConverter"), is(not(nullValue())));
 				});
 				It("should have a FilesystemProperties bean", () -> {
 					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));

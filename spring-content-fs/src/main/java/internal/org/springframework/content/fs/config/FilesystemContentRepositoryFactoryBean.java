@@ -5,6 +5,7 @@ import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.fs.repository.DefaultFileSystemContentRepositoryImpl;
@@ -18,6 +19,9 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 	@Autowired
 	PlacementService placement;
 	
+	@Autowired
+	ConversionService filesystemStoreConversionService;
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
@@ -28,7 +32,7 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFileSystemContentRepositoryImpl(loader, placement, new FileServiceImpl());
+		return new DefaultFileSystemContentRepositoryImpl(loader, placement, filesystemStoreConversionService, new FileServiceImpl());
 	}
 
 }

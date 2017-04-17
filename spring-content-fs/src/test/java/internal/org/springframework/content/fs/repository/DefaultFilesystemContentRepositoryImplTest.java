@@ -32,6 +32,7 @@ import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.DeletableResource;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -44,6 +45,7 @@ public class DefaultFilesystemContentRepositoryImplTest {
     private DefaultFileSystemContentRepositoryImpl<TestEntity, String> filesystemContentRepoImpl;
     private FileSystemResourceLoader loader;
     private PlacementService placement;
+    private ConversionService conversion;
     private TestEntity entity;
     
     private Resource resource;
@@ -65,19 +67,21 @@ public class DefaultFilesystemContentRepositoryImplTest {
                 writeableResource = mock(WritableResource.class);
                 loader = mock(FileSystemResourceLoader.class);
                 placement = mock(PlacementService.class);
+                conversion= mock(ConversionService.class);
 
                 fileService = mock(FileService.class);
 
-                filesystemContentRepoImpl = new DefaultFileSystemContentRepositoryImpl<TestEntity, String>(loader, placement, fileService);
+                filesystemContentRepoImpl = new DefaultFileSystemContentRepositoryImpl<TestEntity, String>(loader, placement, conversion, fileService);
             });
+            
             Context("#setContent", () -> {
                 BeforeEach(() -> {
                     entity = new TestEntity();
                     content = new ByteArrayInputStream("Hello content world!".getBytes());
 
-                    when(placement.getLocation(anyObject())).thenReturn("/some/deep/location");
+                    when(conversion.convert(anyObject(), eq(String.class))).thenReturn("12345-67890");
 
-                    when(loader.getResource(eq("/some/deep/location"))).thenReturn(writeableResource);
+                    when(loader.getResource(eq("12345-67890"))).thenReturn(writeableResource);
                     output = mock(OutputStream.class);
                     when(writeableResource.getOutputStream()).thenReturn(output);
 
@@ -91,13 +95,13 @@ public class DefaultFilesystemContentRepositoryImplTest {
 
                 Context("when the content already exists", () -> {
                     BeforeEach(() -> {
-                        entity.setContentId("abcd");
+                        entity.setContentId("12345-67890");
                         when(writeableResource.exists()).thenReturn(true);
                     });
 
-                    It("should get a location from the placement service and use that to create the resource", () -> {
-                        verify(placement).getLocation(anyObject());
-                        verify(loader).getResource(eq("/some/deep/location"));
+                    It("should use the conversion service to get a resource path", () -> {
+                        verify(conversion).convert(anyObject(), anyObject());
+                        verify(loader).getResource(eq("12345-67890"));
                     });
 
                     It("should change the content length", () -> {
@@ -129,7 +133,7 @@ public class DefaultFilesystemContentRepositoryImplTest {
                         assertThat(entity.getContentId(), is(not(nullValue())));
                     });
                     It("should create a new resource", () -> {
-                    	verify(loader).getResource(eq("/some/deep/location"));
+                    	verify(loader).getResource(eq("12345-67890"));
                     });
                     It("should write to the resource's outputstream", () -> {
                         verify(writeableResource).getOutputStream();
@@ -144,9 +148,9 @@ public class DefaultFilesystemContentRepositoryImplTest {
                     content = mock(InputStream.class);
                     entity.setContentId("abcd-efgh");
                   
-                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
+                    when(conversion.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-                    when(loader.getResource(eq("/abcd/efgh"))).thenReturn(writeableResource);
+                    when(loader.getResource(eq("abcd-efgh"))).thenReturn(writeableResource);
                     when(writeableResource.getInputStream()).thenReturn(content);
                 });
 
@@ -188,7 +192,6 @@ public class DefaultFilesystemContentRepositoryImplTest {
                 	It("should check the new location and then the old", () -> {
                 		InOrder inOrder = Mockito.inOrder(loader);
                 		
-                		inOrder.verify(loader).getResource(eq("/abcd/efgh"));
                 		inOrder.verify(loader).getResource(eq("abcd-efgh"));
                 		inOrder.verifyNoMoreInteractions();
                 	});
@@ -212,9 +215,9 @@ public class DefaultFilesystemContentRepositoryImplTest {
 
                 Context("when the content exists in the new location", () -> {
                 	BeforeEach(() -> {
-                		when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+                		when(conversion.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
                 		
-	            		when(loader.getResource(eq("/abcd/efgh"))).thenReturn(deletableResource);
+	            		when(loader.getResource(eq("abcd-efgh"))).thenReturn(deletableResource);
 	            		when(deletableResource.exists()).thenReturn(true);
                 	});
                 	It("should unset content", () -> {
@@ -224,31 +227,9 @@ public class DefaultFilesystemContentRepositoryImplTest {
                 	});
                 });
                 
-                Context("when the content exists in the old location", () -> {
-                	BeforeEach(() -> {
-                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-
-                        nonExistentResource = mock(DeletableResource.class);
-                        when(loader.getResource(eq("/abcd/efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
-
-                        when(loader.getResource(eq("abcd-efgh"))).thenReturn(deletableResource);
-                        when(deletableResource.exists()).thenReturn(true);
-
-                	});
-                	It("should unset the content", () -> {
-                		assertThat(entity.getContentId(), is(nullValue()));
-                		assertThat(entity.getContentLen(), is(0L));
-                	});
-                });
-                
                 Context("when the content doesnt exist", () -> {
                 	BeforeEach(() -> {
-                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-
-                		nonExistentResource = mock(DeletableResource.class);
-                        when(loader.getResource(eq("/abcd/efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
+                        when(conversion.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                 		nonExistentResource = mock(DeletableResource.class);
                         when(loader.getResource(eq("abcd-efgh"))).thenReturn(nonExistentResource);

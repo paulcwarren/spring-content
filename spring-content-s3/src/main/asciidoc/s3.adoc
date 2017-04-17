@@ -39,19 +39,17 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 
 === Storage Model 
 
-In order to store as much content as possible in the bucket Spring Content S3 supports a hierarchical storage model.  
+In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.
 
-Content IDs of type `java.util.UUID` are mapped to a nested resource path which has the effect of distributing content evenly throughout the bucket. 
+Accordingly by default Spring Content S3 will store content entities in the root of the store's bucket using the @ContentId field value as the key.  
 
-Additional storage models and Content ID types can be added by creating  `org.springframework.content.commons.placement.PlacementService` plug-ins.  See <<content-repositories.storage,Storage Model>>.   
+If you wish to take advantage of S3's console folder concept you can create your content entities with hierarchical @ContentId field types like `java.net.URI` or field types that can be mapped to a hierarchy like `java.util.UUID` and create a corresponding `org.springframework.content.commons.placement.PlacementStrategy`.  See <<content-repositories.storage,Storage Model>> for more information.   
 
 === Setting Content
 
 Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
 
-If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.  
-
-From this ID the `PlacementService` will then be used to determine the physical storage location and the content will be stored.
+If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based in `java.util.UUID`.  
 
 The @ContentId and @ContentLength annotations will be updated on `entity`.  
 

@@ -74,10 +74,20 @@ public class PlacementServiceTest {
 				});
 				Context("given no placement strategy plugins", () -> {
 					BeforeEach(() -> {
+						service = new PlacementServiceImpl();
+						
 						contentId = "12345";
 					});
-					It("should return null", () -> {
-						assertThat(result, is(nullValue()));
+					It("should return the given content ID", () -> {
+						assertThat(result, is("12345"));
+					});
+					Context("when the content ID isnt a String", () -> {
+						BeforeEach(() -> {
+							contentId = 12345L;
+						});
+						It("should return the given content ID as a String", () -> {
+							assertThat(result, is("12345"));
+						});
 					});
 				});
 				Context("given a placement strategy plugin", () -> {

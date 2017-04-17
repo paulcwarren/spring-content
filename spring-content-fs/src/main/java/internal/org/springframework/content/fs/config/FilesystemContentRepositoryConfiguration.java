@@ -6,6 +6,8 @@ import org.springframework.content.commons.placement.PlacementStrategy;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import internal.org.springframework.content.commons.placement.StringBasedUUIDPlacementStrategy;
 import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
@@ -30,5 +32,9 @@ public class FilesystemContentRepositoryConfiguration {
 	@Bean
 	public PlacementStrategy<String> stringUUIDPlacement() {
 		return new StringBasedUUIDPlacementStrategy();
+	}
+	
+	@Bean ConversionService filesystemStoreConverter() {
+		return new DefaultConversionService();
 	}
 }

@@ -35,7 +35,7 @@ public class PlacementServiceImpl implements PlacementService, InitializingBean 
 				//ignore, dont care!
 			}
 		}
-		return null;
+		return contentId.toString();
 	}
 
 	@Override

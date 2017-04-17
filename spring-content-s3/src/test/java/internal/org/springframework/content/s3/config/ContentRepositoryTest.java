@@ -50,9 +50,9 @@ public class ContentRepositoryTest {
 				It("should have a Content Repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
-				It("should have a default UUIDPlacementStrategy bean", () -> {
-					assertThat(context.getBean(UUIDPlacementStrategy.class), is(not(nullValue())));
-				});
+//				It("should have a default UUIDPlacementStrategy bean", () -> {
+//					assertThat(context.getBean(UUIDPlacementStrategy.class), is(not(nullValue())));
+//				});
 			});
 			Context("given a context with an empty configuration", () -> {
 				BeforeEach(() -> {
