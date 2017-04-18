@@ -1,5 +1,8 @@
 package internal.org.springframework.content.mongo.repository;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -16,22 +19,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
-
 public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultMongoContentRepositoryImpl.class);
 
-	private MongoContentTemplate template;
 	private GridFsTemplate gridFs;
 	private ConversionService converter;
 
-	public DefaultMongoContentRepositoryImpl(MongoContentTemplate template, GridFsTemplate gridFs, ConversionService converter) {
-		Assert.notNull(template, "template cannot be null");
+	public DefaultMongoContentRepositoryImpl(GridFsTemplate gridFs, ConversionService converter) {
 		Assert.notNull(gridFs, "gridFs cannot be null");
 		Assert.notNull(converter, "converter cannot be null");
 
-		this.template = template;
 		this.gridFs = gridFs;
 		this.converter = converter;
 	}
@@ -45,12 +43,13 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		}
 
 		String location = converter.convert(contentId, String.class);
-		Resource resource = template.get(location);
-		if (resource != null) {
-			template.delete(resource);
+		Resource resource = gridFs.getResource(location);
+		if (resource != null && resource.exists()) {
+			gridFs.delete(query(whereFilename().is(resource.getFilename())));
 		}
 
-		resource = template.create(location, content);
+		gridFs.store(content, location);
+		resource = gridFs.getResource(location);
 
 		long contentLen = 0L;
 		try {
@@ -70,7 +69,7 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 			return null;
 
 		String location = converter.convert(contentId, String.class);
-		Resource resource = template.get(location);
+		Resource resource = gridFs.getResource(location);
 		try {
 			if (resource != null && resource.exists()) {
 				return resource.getInputStream();
@@ -89,12 +88,11 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		if (contentId == null)
 			return;
 
-		// delete any existing content object
 		try {
 			String location = converter.convert(contentId, String.class);
-			Resource resource = template.get(location);
+			Resource resource = gridFs.getResource(location);
 			if (resource != null && resource.exists()) {
-				template.delete(resource);
+				gridFs.delete(query(whereFilename().is(resource.getFilename())));
 
 				// reset content fields
 				BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
@@ -103,7 +101,5 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		} catch (Exception ase) {
 			logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()), ase);
 		}
-
-		this.template.unsetContent(property);
 	}
 }
