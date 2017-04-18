@@ -13,12 +13,13 @@ import org.springframework.data.mongodb.repository.support.MongoRepositoryFactor
 
 import internal.org.springframework.content.mongo.config.MongoContentRepositoryFactoryBean;
 import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
+import internal.org.springframework.content.mongo.config.MongoStoreConfiguration;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({MongoContentStoresRegistrar.class})
+@Import({MongoContentStoresRegistrar.class, MongoStoreConfiguration.class})
 public @interface EnableMongoContentRepositories {
 
 	/**

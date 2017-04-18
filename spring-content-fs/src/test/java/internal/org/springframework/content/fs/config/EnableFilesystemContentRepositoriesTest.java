@@ -31,7 +31,7 @@ import internal.org.springframework.content.commons.placement.UUIDPlacementStrat
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
-public class ContentRepositoryTest {
+public class EnableFilesystemContentRepositoriesTest {
 
 	private AnnotationConfigApplicationContext context;
 	{

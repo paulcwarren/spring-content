@@ -9,24 +9,31 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.operations.AbstractResourceTemplate;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.mongo.operations.MongoContentTemplate;
 
 public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
-	private static Log logger = LogFactory.getLog(AbstractResourceTemplate.class);
-	
+	private static Log logger = LogFactory.getLog(DefaultMongoContentRepositoryImpl.class);
+
 	private MongoContentTemplate template;
+	private GridFsTemplate gridFs;
+	private ConversionService converter;
 
-	public DefaultMongoContentRepositoryImpl(MongoContentTemplate template) {
+	public DefaultMongoContentRepositoryImpl(MongoContentTemplate template, GridFsTemplate gridFs, ConversionService converter) {
+		Assert.notNull(template, "template cannot be null");
+		Assert.notNull(gridFs, "gridFs cannot be null");
+		Assert.notNull(converter, "converter cannot be null");
+
 		this.template = template;
-
-		Assert.notNull(this.template, "MongoContentTemplate cannot be null");
+		this.gridFs = gridFs;
+		this.converter = converter;
 	}
 
 	@Override
@@ -37,12 +44,13 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		Resource resource = template.get(template.getLocation(contentId));
+		String location = converter.convert(contentId, String.class);
+		Resource resource = template.get(location);
 		if (resource != null) {
 			template.delete(resource);
 		}
 
-		resource = template.create(template.getLocation(contentId), content);
+		resource = template.create(location, content);
 
 		long contentLen = 0L;
 		try {
@@ -61,7 +69,8 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 		if (contentId == null)
 			return null;
 
-		Resource resource = template.get(template.getLocation(contentId));
+		String location = converter.convert(contentId, String.class);
+		Resource resource = template.get(location);
 		try {
 			if (resource != null && resource.exists()) {
 				return resource.getInputStream();
@@ -82,7 +91,8 @@ public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> impl
 
 		// delete any existing content object
 		try {
-			Resource resource = template.get(template.getLocation(contentId));
+			String location = converter.convert(contentId, String.class);
+			Resource resource = template.get(location);
 			if (resource != null && resource.exists()) {
 				template.delete(resource);
 

@@ -176,9 +176,8 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
                     Blob b = set.getBlob("blob");
 
                     // yowchie...don't want to copy the content into memory however as the binarystream
-                    // is not available past connection.close() we have no choice.  This is the easieast thing to do
-                    // but we should investigate other alternaitves.  Perhaps read bytes into a temp file and return
-                    // a custom filestream that deletes the file upon stream close.
+                    // is not available past connection.close() we have no choice.  This is the easiest thing to do with the current API
+                    // but we should investigate other alternatives.  Suspect we should pass in the OutputStream to write to.
                     try {
                         byte[] bytes = IOUtils.toByteArray(b.getBinaryStream());
                         return new ByteArrayInputStream(bytes);

@@ -6,21 +6,24 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
@@ -38,66 +41,98 @@ public class DefaultMongoContentRepositoryImplTest {
     private GridFSFile gridFSFile;
     private TestEntity property;
     private GridFsResource resource;
+    private ConversionService converter;
 
     private InputStream content;
+    private InputStream result;
 
     {
         Describe("DefaultMongoContentRepositoryImpl", () -> {
-            BeforeEach(() -> {
+
+        	BeforeEach(() -> {
+            	converter = mock(ConversionService.class);
                 gridFsTemplate = mock(GridFsTemplate.class);
                 gridFSFile = mock(GridFSFile.class);
                 resource = mock(GridFsResource.class);
                 mongoContentTemplate = new MongoContentTemplate(gridFsTemplate);
-                mongoContentRepoImpl = new DefaultMongoContentRepositoryImpl<TestEntity, String>(mongoContentTemplate);
+                mongoContentRepoImpl = new DefaultMongoContentRepositoryImpl<TestEntity, String>(mongoContentTemplate, gridFsTemplate, converter);
             });
+
             Context("#setContent", () -> {
                 BeforeEach(() -> {
                     property = new TestEntity();
+
                     content = mock(InputStream.class);
-                    when(gridFsTemplate.store(anyObject(), anyString())).thenReturn(gridFSFile);
-                    when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
-                    when(resource.contentLength()).thenReturn(1L);
                 });
 
                 JustBeforeEach(() -> {
-                    mongoContentRepoImpl.setContent(property, content);
+                	mongoContentRepoImpl.setContent(property, content);
                 });
 
-                It("should store content onto GridFS", () -> {
-                    verify(gridFsTemplate).store(anyObject(), anyString());
-                });
+                Context("when content is new", () -> {
+                	BeforeEach(() -> {
+                		when(converter.convert(isA(UUID.class), eq(String.class))).thenReturn("12345-67890");
+                		when(gridFsTemplate.getResource(anyString())).thenReturn(null).thenReturn(resource);
+                		when(gridFsTemplate.store(anyObject(), anyString())).thenReturn(gridFSFile);
+                		when(resource.contentLength()).thenReturn(1L);
+                	});
 
-                It("should change the content length", () -> {
-                    assertThat(property.getContentLen(), is(1L));
-                });
+                	It("should use the mongoStoreConverter to find the resource path", () -> {
+                		verify(converter).convert(isA(UUID.class), eq(String.class));
+                	});
+
+                	It("should store content in GridFS", () -> {
+                		verify(gridFsTemplate).store(eq(content), eq("12345-67890"));
+                	});
+
+                	It("should update the content length", () -> {
+                		assertThat(property.getContentLen(), is(1L));
+                	});
+            	});
 
                 Context("#when the content already exists", () -> {
-                    BeforeEach(() -> {
-                        property.setContentId("abcd");
-                    });
+                	BeforeEach(() -> {
+                		property.setContentId("abcd-efghi");
 
-                    It("should use the existing UUID", () -> {
-                        assertThat(property.getContentId(), is("abcd"));
-                    });
-                });
+                		when(converter.convert(eq("abcd-efghi"), eq(String.class))).thenReturn("abcd-efghi");
+                		when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
+                		when(gridFsTemplate.store(anyObject(), anyString())).thenReturn(gridFSFile);
+                		when(resource.exists()).thenReturn(true);
+                		when(resource.contentLength()).thenReturn(1L);
+                	});
 
-                Context("when the content does not already exist", () -> {
-                    BeforeEach(() -> {
-                        assertThat(property.getContentId(), is(nullValue()));
-                    });
-                    It("should make a new UUID", () -> {
-                        assertThat(property.getContentId(), is(not(nullValue())));
-                    });
+                	It("should use the mongoStoreConverter to find the resource path", () -> {
+                		verify(converter).convert(eq("abcd-efghi"), eq(String.class));
+                	});
+
+                	It("should delete the exsting resource", () -> {
+                		verify(gridFsTemplate).delete(anyObject());
+                	});
+
+                	It("should store content in GridFS", () -> {
+                		verify(gridFsTemplate).store(eq(content), eq("abcd-efghi"));
+                	});
+
+                	It("should update the content length", () -> {
+                		assertThat(property.getContentLen(), is(1L));
+                	});
                 });
             });
 
-            Context("#getContent", () -> {
+             Context("#getContent", () -> {
                 BeforeEach(() -> {
                     property = new TestEntity();
-                    content = mock(InputStream.class);
                     property.setContentId("abcd");
+
+                    content = mock(InputStream.class);
+
+            		when(converter.convert(eq("abcd"), eq(String.class))).thenReturn("abcd");
                     when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
                     when(resource.getInputStream()).thenReturn(content);
+                });
+
+                JustBeforeEach(() -> {
+                	result = mongoContentRepoImpl.getContent(property);
                 });
 
                 Context("when the resource exists", () -> {
@@ -105,8 +140,16 @@ public class DefaultMongoContentRepositoryImplTest {
                         when(resource.exists()).thenReturn(true);
                     });
 
+                    It("should use the converter to get the resource path", () -> {
+                    	verify(converter).convert(eq("abcd"), eq(String.class));
+                    });
+
+                    It("should fetch the resource from that path", () -> {
+                    	verify(gridFsTemplate).getResource("abcd");
+                    });
+
                     It("should get content", () -> {
-                        assertThat(mongoContentRepoImpl.getContent(property), is(content));
+                        assertThat(result, is(content));
                     });
                 });
 
@@ -117,7 +160,7 @@ public class DefaultMongoContentRepositoryImplTest {
                     });
 
                     It("should not find the content", () -> {
-                        assertThat(mongoContentRepoImpl.getContent(property), is(nullValue()));
+                        assertThat(result, is(nullValue()));
                     });
                 });
             });
@@ -126,6 +169,8 @@ public class DefaultMongoContentRepositoryImplTest {
                 BeforeEach(() -> {
                     property = new TestEntity();
                     property.setContentId("abcd");
+
+            		when(converter.convert(eq("abcd"), eq(String.class))).thenReturn("abcd");
                     when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
                     when(resource.exists()).thenReturn(true);
                 });
@@ -134,8 +179,19 @@ public class DefaultMongoContentRepositoryImplTest {
                     mongoContentRepoImpl.unsetContent(property);
                 });
 
+                It("should use the converter to get the resource path", () -> {
+                	verify(converter).convert(eq("abcd"), eq(String.class));
+                });
+
+                It("should fetch the resource from that path", () -> {
+                	verify(gridFsTemplate).getResource(eq("abcd"));
+                });
+
                 It("should unset content", () -> {
                     verify(gridFsTemplate).delete(anyObject());
+                });
+
+                It("should reset the metadata", () -> {
                     assertThat(property.getContentId(), is(nullValue()));
                     assertThat(property.getContentLen(), is(0L));
                 });
