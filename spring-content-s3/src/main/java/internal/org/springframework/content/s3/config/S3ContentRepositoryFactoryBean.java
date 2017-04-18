@@ -3,8 +3,8 @@ package internal.org.springframework.content.s3.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
+import org.springframework.core.convert.ConversionService;
 
 import com.amazonaws.services.s3.AmazonS3;
 
@@ -20,13 +20,13 @@ public class S3ContentRepositoryFactoryBean extends AbstractContentStoreFactoryB
 	private SimpleStorageResourceLoader loader;
 	
 	@Autowired
-	private PlacementService placement;
+	private ConversionService s3StoreConverter;
 
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 	
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultS3StoreImpl(loader, placement, client, bucket);
+		return new DefaultS3StoreImpl(loader, s3StoreConverter, client, bucket);
 	}
 }

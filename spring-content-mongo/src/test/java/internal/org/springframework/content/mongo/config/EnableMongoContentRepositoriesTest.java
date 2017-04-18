@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -50,11 +49,8 @@ public class EnableMongoContentRepositoriesTest {
 				It("should have a mongo content repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
-				It("should have a mongoContentTemplate bean", () -> {
-					assertThat(context.getBean("mongoContentTemplate"), is(not(nullValue())));
-				});
-				It("should have a ContentOperations bean", () -> {
-					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
+				It("should have a mongo store converter", () -> {
+					assertThat(context.getBean("mongoStoreConverter"), is(not(nullValue())));
 				});
 			});
 			Context("given an enabled configuration with no mongo content repository beans", () -> {

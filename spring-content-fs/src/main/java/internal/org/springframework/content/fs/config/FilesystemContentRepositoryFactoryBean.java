@@ -20,7 +20,7 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 	PlacementService placement;
 	
 	@Autowired
-	ConversionService filesystemStoreConversionService;
+	ConversionService filesystemStoreConverter;
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -32,7 +32,7 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFileSystemContentRepositoryImpl(loader, placement, filesystemStoreConversionService, new FileServiceImpl());
+		return new DefaultFileSystemContentRepositoryImpl(loader, placement, filesystemStoreConverter, new FileServiceImpl());
 	}
 
 }

@@ -24,12 +24,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.junit.runner.RunWith;
-import org.mockito.InOrder;
 import org.mockito.Matchers;
-import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.placement.PlacementService;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -44,7 +42,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class DefaultS3StoreImplTest {
     private DefaultS3StoreImpl<TestEntity, String> s3StoreImpl;
     private ResourceLoader loader;
-    private PlacementService placement;
+    private ConversionService converter;
     private AmazonS3 client;
     private TestEntity entity;
     
@@ -63,41 +61,48 @@ public class DefaultS3StoreImplTest {
             BeforeEach(() -> {
                 resource = mock(WritableResource.class);
                 loader = mock(ResourceLoader.class);
-                placement = mock(PlacementService.class);
+                converter = mock(ConversionService.class);
                 client = mock(AmazonS3.class);
 
-                s3StoreImpl = new DefaultS3StoreImpl<TestEntity, String>(loader, placement, client, "some-bucket");
+                s3StoreImpl = new DefaultS3StoreImpl<TestEntity, String>(loader, converter, client, "some-bucket");
             });
             Context("#setContent", () -> {
                 BeforeEach(() -> {
                     entity = new TestEntity();
                     content = new ByteArrayInputStream("Hello content world!".getBytes());
 
-                    when(placement.getLocation(anyObject())).thenReturn("/some/deeply/located/content");
-
-                    when(loader.getResource(endsWith("/some/deeply/located/content"))).thenReturn(resource);
-                    output = mock(OutputStream.class);
-                    when(resource.getOutputStream()).thenReturn(output);
-
-                    when(resource.contentLength()).thenReturn(20L);
+//                    when(placement.getLocation(anyObject())).thenReturn("/some/deeply/located/content");
                 });
 
                 JustBeforeEach(() -> {
                     s3StoreImpl.setContent(entity, content);
                 });
 
-
                 Context("#when the content already exists", () -> {
                     BeforeEach(() -> {
-                        entity.setContentId("abcd");
+                        entity.setContentId("abcd-efgh");
+                        
+                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
+
+                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+                        output = mock(OutputStream.class);
+                        when(resource.getOutputStream()).thenReturn(output);
+
+                        when(resource.contentLength()).thenReturn(20L);
+
+                        
                         when(resource.exists()).thenReturn(true);
                     });
 
-                    It("should get a location from the placement service and use that to create the resource", () -> {
-                        verify(placement).getLocation(anyObject());
-                        verify(loader).getResource(eq("s3://some-bucket/some/deeply/located/content"));
+                    It("should use the converter to establish a resource path", () -> {
+//                        verify(placement).getLocation(anyObject());
+                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
                     });
 
+                    It("should fetch the resource", () -> {
+                    	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+                    });
+                    
                     It("should change the content length", () -> {
                         assertThat(entity.getContentLen(), is(20L));
                     });
@@ -112,6 +117,15 @@ public class DefaultS3StoreImplTest {
                     BeforeEach(() -> {
                         assertThat(entity.getContentId(), is(nullValue()));
 
+                        when(converter.convert(anyObject(), eq(String.class))).thenReturn("abcd-efgh");
+
+                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+                        output = mock(OutputStream.class);
+                        when(resource.getOutputStream()).thenReturn(output);
+
+                        when(resource.contentLength()).thenReturn(20L);
+
+                        
                         File resourceFile = mock(File.class);
                         parent = mock(File.class);
 
@@ -124,7 +138,7 @@ public class DefaultS3StoreImplTest {
                     });
 
                     It("should create a new resource", () -> {
-                    	verify(loader).getResource(eq("s3://some-bucket/some/deeply/located/content"));
+                    	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
                     });
                     
                     It("should write to the resource's outputstream", () -> {
@@ -140,9 +154,10 @@ public class DefaultS3StoreImplTest {
                     content = mock(InputStream.class);
                     entity.setContentId("abcd-efgh");
                   
-                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
+//                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
+                    when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-                    when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(resource);
+                    when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
                     when(resource.getInputStream()).thenReturn(content);
                 });
 
@@ -154,41 +169,36 @@ public class DefaultS3StoreImplTest {
                         when(resource.exists()).thenReturn(true);
                     });
 
+                    It("should use the converter to establish a resource path", () -> {
+                      verify(converter).convert(eq("abcd-efgh"),eq(String.class));
+                    });
+
+	                It("should fetch the resource", () -> {
+	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+	                });
+                  
                     It("should get content", () -> {
                         assertThat(result, is(content));
                     });
                 });
-                Context("when the resource does not exists", () -> {
+                Context("when the resource does not exist", () -> {
                     BeforeEach(() -> {
                 		nonExistentResource = mock(Resource.class);
                 		when(resource.exists()).thenReturn(true);
 
-                		when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(nonExistentResource);
                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
                     });
 
+                    It("should use the converter to establish a resource path", () -> {
+                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
+                      });
+
+  	                It("should fetch the resource", () -> {
+  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+  	                });
+                    
                     It("should not find the content", () -> {
                         assertThat(result, is(nullValue()));
-                    });
-                });
-                Context("when the resource exists in the old location", () -> {
-                	BeforeEach(() -> {
-                		nonExistentResource = mock(Resource.class);
-                        when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
-
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-                        when(resource.exists()).thenReturn(true);
-                	});
-                	It("should check the new location and then the old", () -> {
-                		InOrder inOrder = Mockito.inOrder(loader);
-                		
-                		inOrder.verify(loader).getResource(eq("s3://some-bucket/abcd/efgh"));
-                		inOrder.verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-                		inOrder.verifyNoMoreInteractions();
-                	});
-                    It("should get content", () -> {
-                        assertThat(result, is(content));
                     });
                 });
             });
@@ -205,33 +215,26 @@ public class DefaultS3StoreImplTest {
                 	s3StoreImpl.unsetContent(entity);
                 });
 
-                Context("when the content exists in the new location", () -> {
+                Context("when the content exists", () -> {
+                	
                 	BeforeEach(() -> {
-                		when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
                 		
-	            		when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(resource);
+	            		when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
 	            		when(resource.exists()).thenReturn(true);
                 	});
-                	It("should unset content", () -> {
+                	
+                    It("should use the converter to establish a resource path", () -> {
+                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
+                      });
+
+  	                It("should fetch the resource", () -> {
+  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+  	                });
+
+  	                It("should unset content", () -> {
                 	    verify(client).deleteObject(anyObject());
-                		assertThat(entity.getContentId(), is(nullValue()));
-                		assertThat(entity.getContentLen(), is(0L));
-                	});
-                });
-                
-                Context("when the content exists in the old location", () -> {
-                	BeforeEach(() -> {
-                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-
-                        nonExistentResource = mock(Resource.class);
-                        when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
-
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-                        when(resource.exists()).thenReturn(true);
-
-                	});
-                	It("should unset the content", () -> {
                 		assertThat(entity.getContentId(), is(nullValue()));
                 		assertThat(entity.getContentLen(), is(0L));
                 	});
@@ -239,17 +242,23 @@ public class DefaultS3StoreImplTest {
                 
                 Context("when the content doesnt exist", () -> {
                 	BeforeEach(() -> {
-                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-
-                		nonExistentResource = mock(Resource.class);
-                        when(loader.getResource(endsWith("/abcd/efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
+//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                 		nonExistentResource = mock(Resource.class);
                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
                         when(nonExistentResource.exists()).thenReturn(false);
                 	});
-                	It("should unset the content", () -> {
+                	
+                    It("should use the converter to establish a resource path", () -> {
+                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
+                      });
+
+  	                It("should fetch the resource", () -> {
+  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+  	                });
+
+  	                It("should unset the content", () -> {
                 		verify(client, never()).deleteObject(anyObject());
                 		assertThat(entity.getContentId(), is(nullValue()));
                 		assertThat(entity.getContentLen(), is(0L));

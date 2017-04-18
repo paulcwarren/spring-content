@@ -14,6 +14,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -27,13 +28,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
 	private ResourceLoader loader;
-	private PlacementService placement;
+	private ConversionService converter;
 	private AmazonS3 client;
 	private String bucket;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, PlacementService placement, AmazonS3 client, String bucket) {
+	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter, AmazonS3 client, String bucket) {
 		this.loader = loader;
-		this.placement = placement;
+		this.converter = converter;
 		this.client = client;
 		this.bucket = bucket;
 	}
@@ -46,7 +47,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
 		}
 
-		String location = placement.getLocation(contentId);
+		String location = converter.convert(contentId, String.class);
 		location = absolutify(location);
 		Resource resource = loader.getResource(location);
 		OutputStream os = null;
@@ -82,10 +83,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 		if (contentId == null)
 			return null;
 
-		String location = placement.getLocation(contentId);
+		String location = converter.convert(contentId, String.class);
 		location = absolutify(location);
 		Resource resource = loader.getResource(location);
-		resource = checkOriginalPlacementStrategy(contentId, resource);
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -107,10 +107,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 
 		// delete any existing content object
 		try {
-			String location = placement.getLocation(contentId);
+			String location = converter.convert(contentId, String.class);
 			location = absolutify(location);
 			Resource resource = loader.getResource(location);
-			resource = checkOriginalPlacementStrategy(contentId, resource);
 			if (resource.exists()) {
 				this.delete(resource);
 			}
@@ -134,13 +133,6 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 		return String.format("s3://%s/%s", bucket, locationToUse);
 	}
 	
-	/* package */ Resource checkOriginalPlacementStrategy(Object contentId, Resource resource) {
-		if (resource.exists() == false) {
-			resource = loader.getResource(absolutify(contentId.toString()));
-		}
-		return resource;
-	}
-
 	private void delete(Resource resource) {
 		if (resource.exists()) {
 			client.deleteObject(new DeleteObjectRequest(bucket, resource.getFilename()));
