@@ -1,4 +1,4 @@
-package org.springframework.content.commons.repository.events;
+package org.springframework.content.commons.annotations;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;

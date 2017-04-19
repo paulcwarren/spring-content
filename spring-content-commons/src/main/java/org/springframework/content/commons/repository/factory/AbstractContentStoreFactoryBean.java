@@ -133,7 +133,12 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		} catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-		result.addAdvice(new ContentRepositoryMethodInterceptor(getDomainClass(storeInterface), getContentIdClass(storeInterface), extensionsMap, publisher));
+		ContentRepositoryMethodInterceptor intercepter = new ContentRepositoryMethodInterceptor((ContentStore<Object,Serializable>)target, 
+																								getDomainClass(storeInterface), 
+																								getContentIdClass(storeInterface), 
+																								extensionsMap, 
+																								publisher);
+		result.addAdvice(intercepter);
 
 		return (T)result.getProxy(classLoader);
 	}

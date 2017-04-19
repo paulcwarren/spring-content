@@ -7,6 +7,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -83,10 +84,16 @@ public class StoreExtensionTest {
         }
     }
 
-    public static class TestConfigStoreImpl {
+    public static class TestConfigStoreImpl implements ContentStore<Object,Serializable> {
+
+		@Override public void setContent(Object property, InputStream content) {}
+
+		@Override public void unsetContent(Object property) {}
+
+		@Override public InputStream getContent(Object property) { return null; }
 
     }
-
+    
     public interface TestContentRepository extends ContentStore<Object, Serializable>, TestExtensionService {
     }
 

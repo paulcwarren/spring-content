@@ -24,16 +24,22 @@ public abstract class AbstractContentRepositoryEventListener<T>
 		}
 
 		if (event instanceof BeforeGetContentEvent) {
-				onBeforeGetContent((T) event.getSource());
+			onBeforeGetContent((BeforeGetContentEvent) event);
+			onBeforeGetContent((T) event.getSource());
 		} else if (event instanceof AfterGetContentEvent) {
+			onAfterGetContent((AfterGetContentEvent) event);
 			onAfterGetContent((T) event.getSource());
 		} else if (event instanceof BeforeSetContentEvent) {
+			onBeforeSetContent((BeforeSetContentEvent) event);
 			onBeforeSetContent((T) event.getSource());
 		} else if (event instanceof AfterSetContentEvent) {
+			onAfterSetContent((AfterSetContentEvent) event);
 			onAfterSetContent((T) event.getSource());
 		} else if (event instanceof BeforeUnsetContentEvent) {
+			onBeforeUnsetContent((BeforeUnsetContentEvent) event);
 			onBeforeUnsetContent((T) event.getSource());
 		} else if (event instanceof AfterUnsetContentEvent) {
+			onAfterUnsetContent((AfterUnsetContentEvent) event);
 			onAfterUnsetContent((T) event.getSource());
 		}
 	}
@@ -41,9 +47,23 @@ public abstract class AbstractContentRepositoryEventListener<T>
 	/**
 	 * Override this method if you are interested in {@literal beforeGetContent} events.
 	 * 
+	 * @param event The event
+	 */
+	protected void onBeforeGetContent(BeforeGetContentEvent event) {}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeGetContent} events.
+	 * 
 	 * @param entity The content entity being fetched.
 	 */
 	protected void onBeforeGetContent(T entity) {}
+
+	/**
+	 * Override this method if you are interested in {@literal afterGetContent} events.
+	 * 
+	 * @param event The event
+	 */
+	protected void onAfterGetContent(AfterGetContentEvent event) {}
 
 	/**
 	 * Override this method if you are interested in {@literal afterGetContent} events.
@@ -55,9 +75,23 @@ public abstract class AbstractContentRepositoryEventListener<T>
 	/**
 	 * Override this method if you are interested in {@literal beforeSetContent} events.
 	 * 
+	 * @param event The content event
+	 */
+	protected void onBeforeSetContent(BeforeSetContentEvent entity) {}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeSetContent} events.
+	 * 
 	 * @param entity The content entity being updated.
 	 */
 	protected void onBeforeSetContent(T entity) {}
+
+	/**
+	 * Override this method if you are interested in {@literal afterSetContent} events.
+	 * 
+	 * @param event The content event
+	 */
+	protected void onAfterSetContent(AfterSetContentEvent event) {}
 
 	/**
 	 * Override this method if you are interested in {@literal afterSetContent} events.
@@ -69,9 +103,23 @@ public abstract class AbstractContentRepositoryEventListener<T>
 	/**
 	 * Override this method if you are interested in {@literal beforeUnsetContent} events.
 	 * 
+	 * @param event The content event
+	 */
+	protected void onBeforeUnsetContent(BeforeUnsetContentEvent event) {}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeUnsetContent} events.
+	 * 
 	 * @param entity The content entity being removed.
 	 */
 	protected void onBeforeUnsetContent(T entity) {}
+
+	/**
+	 * Override this method if you are interested in {@literal afterUnsetContent} events.
+	 * 
+	 * @param event The content event
+	 */
+	protected void onAfterUnsetContent(AfterUnsetContentEvent event) {}
 
 	/**
 	 * Override this method if you are interested in {@literal afterUnsetContent} events.

@@ -28,6 +28,7 @@ import internal.org.springframework.content.commons.repository.ContentRepository
 public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 
 	private Map<Method,ContentRepositoryExtension> extensions;
+	private ContentStore<Object, Serializable> store = null;
 	private ApplicationEventPublisher publisher;
 	
 	private static Method getContentMethod; 
@@ -48,10 +49,11 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		Assert.notNull(getResourceMethod);
 	}
 	
-	public ContentRepositoryMethodInterceptor(Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
+	public ContentRepositoryMethodInterceptor(ContentStore<Object, Serializable> store, Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
 		if (extensions == null) {
 			extensions = Collections.<Method, ContentRepositoryExtension>emptyMap();
 		}
+		this.store = store;
         this.domainClass = domainClass;
         this.contentIdClass = contentIdClass;
 		this.extensions = extensions;
@@ -75,18 +77,18 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
-				before = new BeforeGetContentEvent(invocation.getArguments()[0]);
-				after = new AfterGetContentEvent(invocation.getArguments()[0]);
+				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
+				after = new AfterGetContentEvent(invocation.getArguments()[0], store);
 			}
 		} else if (setContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
-				before = new BeforeSetContentEvent(invocation.getArguments()[0]);
-				after = new AfterSetContentEvent(invocation.getArguments()[0]);
+				before = new BeforeSetContentEvent(invocation.getArguments()[0], store);
+				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
 		} else if (unsetContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0 && invocation.getArguments()[0] != null) {
-				before = new BeforeUnsetContentEvent(invocation.getArguments()[0]);
-				after = new AfterUnsetContentEvent(invocation.getArguments()[0]);
+				before = new BeforeUnsetContentEvent(invocation.getArguments()[0], store);
+				after = new AfterUnsetContentEvent(invocation.getArguments()[0], store);
 			}
 		}
 

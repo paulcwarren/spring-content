@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -53,7 +54,13 @@ public class AbstractContentStoreFactoryBeanTest {
         }
     }
 
-    public static class TestConfigStoreImpl {
+    public static class TestConfigStoreImpl implements ContentStore<Object,Serializable> {
+
+		@Override public void setContent(Object property, InputStream content) {}
+
+		@Override public void unsetContent(Object property) {}
+
+		@Override public InputStream getContent(Object property) { return null; }
 
     }
 

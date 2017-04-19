@@ -17,9 +17,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
@@ -28,20 +28,22 @@ import org.springframework.content.commons.annotations.HandleAfterSetContent;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
+import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
+import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
-import org.springframework.content.commons.repository.events.HandleBeforeUnsetContent;
+import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.util.ReflectionUtils;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import org.springframework.content.commons.utils.ReflectionService;
-
+@SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class AnnotatedContentRepositoryEventInvokerTest {
@@ -50,11 +52,16 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 	
 	private ContentRepositoryEvent event;
 	
+	// mocks
 	private ReflectionService reflectionService;
+	private ContentStore<Object,Serializable> store;
 	
 	{
 		Describe("#postProcessAfterInitialization", () -> {
 			Context("when initialized with a ContentRepositoryEventHandler bean", () -> {
+				BeforeEach(() -> {
+					store = mock(ContentStore.class);
+				});
 				JustBeforeEach(() -> {
 					reflectionService = mock(ReflectionService.class);
 					invoker = new AnnotatedContentRepositoryEventInvoker(reflectionService);
@@ -83,7 +90,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a BeforeGetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new BeforeGetContentEvent(source);
+					event = new BeforeGetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "beforeGetContent", Object.class);
@@ -95,7 +102,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a AfterGetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new AfterGetContentEvent(source);
+					event = new AfterGetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "afterGetContent", Object.class);
@@ -107,7 +114,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a BeforeSetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new BeforeSetContentEvent(source);
+					event = new BeforeSetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "beforeSetContent", Object.class);
@@ -119,7 +126,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a BeforeSetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new AfterSetContentEvent(source);
+					event = new AfterSetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "afterSetContent", Object.class);
@@ -131,7 +138,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a BeforeUnsetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new BeforeUnsetContentEvent(source);
+					event = new BeforeUnsetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "beforeUnsetContent", Object.class);
@@ -143,7 +150,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and a AfterUnsetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new AfterUnsetContentEvent(source);
+					event = new AfterUnsetContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "afterUnsetContent", Object.class);
@@ -155,7 +162,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 			Context("given an event handler and an unknown event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new UnknownContentEvent(source);
+					event = new UnknownContentEvent(source, store);
 				});	
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class, "afterUnsetContent", Object.class);
@@ -196,8 +203,8 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 
 		private static final long serialVersionUID = 4393640168031790561L;
 
-		public UnknownContentEvent(Object source) {
-			super(source);
+		public UnknownContentEvent(Object source, ContentStore<Object,Serializable> store) {
+			super(source, store);
 		}
 	}
 	

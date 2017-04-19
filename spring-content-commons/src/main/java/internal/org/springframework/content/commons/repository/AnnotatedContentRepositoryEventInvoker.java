@@ -15,6 +15,7 @@ import org.springframework.content.commons.annotations.HandleAfterSetContent;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
+import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
 import org.springframework.content.commons.repository.ContentRepositoryEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
@@ -22,7 +23,6 @@ import org.springframework.content.commons.repository.events.AfterUnsetContentEv
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
-import org.springframework.content.commons.repository.events.HandleBeforeUnsetContent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;

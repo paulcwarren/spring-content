@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+@SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class ContentRepositoryMethodInterceptorTest {
@@ -47,6 +49,7 @@ public class ContentRepositoryMethodInterceptorTest {
 	private ContentRepositoryMethodInterceptor interceptor;
 	
 	// mocks
+	private ContentStore<Object, Serializable> store;
 	private MethodInvocation invocation;
 	private ContentRepositoryExtension extension;
 	private ApplicationEventPublisher publisher;
@@ -59,10 +62,11 @@ public class ContentRepositoryMethodInterceptorTest {
 		Describe("#invoke", () -> {
 			Context("When calling invoke with a valid set of args", () -> {
 				BeforeEach(() -> {
+					store = mock(ContentStore.class);
 					publisher = mock(ApplicationEventPublisher.class);
 				});
 				JustBeforeEach(() -> {
-					interceptor = new ContentRepositoryMethodInterceptor(Object.class, String.class, extensions, publisher);
+					interceptor = new ContentRepositoryMethodInterceptor(store, Object.class, String.class, extensions, publisher);
 					try {
 					    interceptor.invoke(invocation);
                     } catch (Exception invokeException) {
