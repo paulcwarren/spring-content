@@ -11,6 +11,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.UUID;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -21,9 +23,12 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.config.AbstractS3ContentRepositoryConfiguration;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
+import org.springframework.content.s3.config.S3StoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -52,6 +57,22 @@ public class EnableS3ContentRepositoriesTest {
 					assertThat(context.getBean("s3StoreConverter"), is(not(nullValue())));
 				});
 			});
+			
+			Context("given a context with a custom converter", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(ConverterConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should use that converter", () -> {
+					ConversionService converters = (ConversionService) context.getBean("s3StoreConverter");
+					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+				});
+			});
+
 			Context("given a context with an empty configuration", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -90,6 +111,24 @@ public class EnableS3ContentRepositoriesTest {
 //	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
+	}
+	
+	@Configuration
+	@EnableS3ContentRepositories
+//	@EnableContextResourceLoader
+	@Import(InfrastructureConfig.class)
+	public static class ConverterConfig {
+		@Bean
+		public S3StoreConverter<UUID,String> uuidConverter() {
+			return new S3StoreConverter<UUID,String>() {
+
+				@Override
+				public String convert(UUID source) {
+					return String.format("/%s", source.toString().replaceAll("-","/"));
+				}
+
+			};
+		}
 	}
 
 	@Configuration

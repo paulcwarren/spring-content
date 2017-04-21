@@ -37,9 +37,37 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 
 == Accessing Content
 
+
+=== Storage Customization
+
+In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.  
+
+However, the S3 Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.content.fs.config.S3StoreConverter` it is possible to configure the Store to take advantage of S3's console folder concepts. 
+
+For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.       
+ 
+.Configuring the S3 Store  
+====
+[source, java]
+----
+@Configuration
+public class S3StoreConfiguration  {
+
+	@Bean
+	public S3StoreConverter<UUID,String> uuidConverter() {
+		return new S3StoreConverter<UUID,String>() {
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-","/"));
+			}
+		};
+	}
+}
+----
+====  
+
 === Storage Model 
 
-In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.
 
 Accordingly by default Spring Content S3 will store content entities in the root of the store's bucket using the @ContentId field value as the key.  
 
