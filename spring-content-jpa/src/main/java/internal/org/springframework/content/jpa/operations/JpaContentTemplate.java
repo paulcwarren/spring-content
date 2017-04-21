@@ -19,7 +19,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.utils.BeanUtils;
 
 import internal.org.springframework.content.jpa.utils.InputStreamEx;
@@ -29,7 +28,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 
-public class JpaContentTemplate implements ContentOperations, InitializingBean {
+public class JpaContentTemplate implements InitializingBean {
 
 	private static Log logger = LogFactory.getLog(JpaContentTemplate.class);
 	
@@ -85,7 +84,6 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
         });
 	}
 
-	@Override
 	public <T> void setContent(T metadata, InputStream content) {
 		if (BeanUtils.getFieldWithAnnotation(metadata, ContentId.class) == null) {
 			String sql = "INSERT INTO BLOBS VALUES(NULL, ?);";
@@ -144,7 +142,6 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
         }
     }
 
-	@Override
 	public <T> void unsetContent(T metadata) {
 		String sql = "DELETE FROM BLOBS WHERE id=" + BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
         this.template.execute(sql, new PreparedStatementCallback<Integer>() {
@@ -163,7 +160,6 @@ public class JpaContentTemplate implements ContentOperations, InitializingBean {
         });
 	}
 
-	@Override
 	public <T> InputStream getContent(T metadata) {
 		String sql = "SELECT blob FROM BLOBS WHERE id='" + BeanUtils.getFieldWithAnnotation(metadata, ContentId.class) + "'";
         return this.template.execute(sql, new PreparedStatementCallback<InputStream>() {

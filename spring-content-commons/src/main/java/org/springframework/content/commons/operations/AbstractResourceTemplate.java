@@ -1,13 +1,11 @@
 package org.springframework.content.commons.operations;
 
-import java.io.InputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-public abstract class AbstractResourceTemplate implements ResourceOperations, ContentOperations {
+public abstract class AbstractResourceTemplate implements ResourceOperations {
 	
 	private static Log logger = LogFactory.getLog(AbstractResourceTemplate.class);
 	
@@ -17,22 +15,6 @@ public abstract class AbstractResourceTemplate implements ResourceOperations, Co
 		this.resourceLoader = resourceLoader;
 	}
 	
-	@Override
-	public <S> void setContent(S property, InputStream content) {
-		// unused
-	}
-
-	@Override
-	public <S> InputStream getContent(S property) {
-		// unused
-		return null;
-	}
-
-	@Override
-	public <S> void unsetContent(S property) {
-		// unused
-	}
-
     @Override
 	public Resource get(String location) {
 		Resource resource = resourceLoader.getResource(location);

@@ -29,7 +29,7 @@ The following configuration properties (prefix `spring.content.fs`) are supporte
 
 == Accessing Content
 
-=== Storage Configuration
+=== Storage Customization
 
 By default Spring Content Filesystem will store all content at the root of the content store location.  
 

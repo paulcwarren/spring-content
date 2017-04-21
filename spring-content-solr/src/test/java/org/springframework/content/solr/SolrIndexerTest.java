@@ -23,7 +23,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.operations.ContentOperations;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.repository.ContentAccessException;
@@ -41,7 +40,6 @@ public class SolrIndexerTest {
 	// mocks
 	private SolrClient solrClient;
 	private ContentStore<Object,Serializable> store;
-	private ContentOperations ops;
 	private SolrProperties props;
 	
 	// args 
@@ -54,7 +52,6 @@ public class SolrIndexerTest {
 		Describe("SolrUpdateEventHandler", () -> {
 			BeforeEach(() -> {
 				solrClient = mock(SolrClient.class);
-				ops = mock(ContentOperations.class);
 				store = mock(ContentStore.class);
 				props = mock(SolrProperties.class);
 				handler = new SolrIndexer(solrClient, props);

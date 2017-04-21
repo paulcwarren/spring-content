@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -46,7 +45,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1) // required
-public class ContentRepositoryTest {
+public class EnableJpaContentRepositoriesTest {
 
 	private AnnotationConfigApplicationContext context;
 	{
@@ -65,9 +64,6 @@ public class ContentRepositoryTest {
 				});
 				It("should have a jpaContentTemplate bean", () -> {
 					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
-				});
-				It("should have a ContentOperations bean", () -> {
-					assertThat(context.getBean(ContentOperations.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {

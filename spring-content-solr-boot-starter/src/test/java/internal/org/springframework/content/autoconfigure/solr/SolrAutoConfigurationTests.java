@@ -5,15 +5,12 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
-import java.io.InputStream;
-
 import org.apache.solr.client.solrj.SolrClient;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.content.solr.SolrIndexer;
@@ -60,11 +57,6 @@ public class SolrAutoConfigurationTests {
 
 	@Configuration
 	public static class StarterTestConfig extends SolrAutoConfiguration{
-
-		@Bean
-		public ContentOperations contentOperations() {
-			return new TestContentOperations();
-		}
 	}
 	
 	@Configuration
@@ -90,21 +82,5 @@ public class SolrAutoConfigurationTests {
 		}
 
 
-	}
-	
-	public static class TestContentOperations implements ContentOperations {
-
-		@Override
-		public <T> void setContent(T metadata, InputStream content) {
-		}
-
-		@Override
-		public <T> void unsetContent(T property) {
-		}
-		
-		@Override
-		public <T> InputStream getContent(T property) {
-			return null;
-		}
 	}
 }

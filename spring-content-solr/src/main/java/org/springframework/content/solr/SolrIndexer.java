@@ -2,7 +2,6 @@ package org.springframework.content.solr;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -12,9 +11,7 @@ import org.apache.solr.common.util.ContentStreamBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AbstractContentRepositoryEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
@@ -25,7 +22,6 @@ import org.springframework.util.Assert;
 public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> {
 
 	private SolrClient solrClient;
-	private ContentStore<Object,Serializable> store;
 	private SolrProperties properties;
 	
     @Autowired
@@ -98,10 +94,6 @@ public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> 
 		
 		public ContentEntityStream(InputStream stream) {
 			this.stream = stream;
-		}
-		
-		public ContentEntityStream(ContentOperations ops, Object contentEntity) {
-			Assert.notNull(stream, "stream cannot be null");
 		}
 		
 		@Override
