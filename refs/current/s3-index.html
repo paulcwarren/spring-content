@@ -944,10 +944,41 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 <div class="sect2">
 <h3 id="_accessing_content">3.3. Accessing Content</h3>
 <div class="sect3">
-<h4 id="_storage_model">3.3.1. Storage Model</h4>
+<h4 id="_storage_customization">3.3.1. Storage Customization</h4>
 <div class="paragraph">
-<p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.</p>
+<p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.</p>
 </div>
+<div class="paragraph">
+<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.content.fs.config.S3StoreConverter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
+</div>
+<div class="paragraph">
+<p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 8. Configuring the S3 Store</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class S3StoreConfiguration  {
+
+	@Bean
+	public S3StoreConverter&lt;UUID,String&gt; uuidConverter() {
+		return new S3StoreConverter&lt;UUID,String&gt;() {
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-","/"));
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_storage_model">3.3.2. Storage Model</h4>
 <div class="paragraph">
 <p>Accordingly by default Spring Content S3 will store content entities in the root of the store&#8217;s bucket using the @ContentId field value as the key.</p>
 </div>
@@ -956,7 +987,7 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content">3.3.2. Setting Content</h4>
+<h4 id="_setting_content">3.3.3. Setting Content</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -971,13 +1002,13 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content">3.3.3. Getting Content</h4>
+<h4 id="_getting_content">3.3.4. Getting Content</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentRepository.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content">3.3.4. Unsetting Content</h4>
+<h4 id="_unsetting_content">3.3.5. Unsetting Content</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentRepository.unsetContent(entity)</code> method.</p>
 </div>
@@ -1084,7 +1115,7 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-21 23:10:23 UTC
+Last updated 2017-04-21 23:30:17 UTC
 </div>
 </div>
 </body>
