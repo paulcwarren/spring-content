@@ -1,20 +1,20 @@
 [[content-repositories]]
-= Working with Spring Content Repositories
+= Working with Spring Stores
 
-The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.
+The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various implementations of Content Store.
 
 [IMPORTANT]
 ====
-This chapter explains the core concepts and interfaces for Spring Content repositories. The information in this chapter is pulled from the Spring Content Commons. It uses the configuration and code samples for the S3 module. Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.
+This chapter explains the core concepts and interfaces for Spring Content stores. The information in this chapter is pulled from the Spring Content Commons.  It uses the configuration and code samples for the S3 module.  Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.
 ====
 
 [[content-repositories.core-concepts]]
 == Core concepts
-The central interface in the Spring Content is the `ContentStore` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content ID type of that domain class. 
+The central interface in the Spring Content is the `ContentStore` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to content ID type of that domain class. 
 
 [[content-repositories.repository]]
 
-.ContentRepository interface
+.ContentStore interface
 ====
 [source, java]
 ----
@@ -31,19 +31,6 @@ public interface ContentStore<E, CID extends Serializable> {
 <2> Returns the content associated with `entity`
 <3> Deletes content and unassociates it from `entity`  
 ====
-
-[[content-repositories.storage]]
-=== Storage Model
-
-Spring Content supports a pluggable storage model giving repositories the ability to store content as they see fit by making a placement service and placement service plugins available to Repositories implementations.  
-
-In general Repository implementations use the `org.springframework.content.commons.placement.PlacementService` to map an entity's `@ContentId` to a physical storage location.
-
-In addition a hierarchical storage model plug-in `internal.org.springframework.content.commons.UUIDPlacementStrategy` is also available to Repositories that can support this.  For example, both Spring Content Filesystem and Spring Content S3 make use this plug-in to map `java.util.UUID` content IDs to nested `org.springframework.core.io.Resource` paths.   
-
-==== Implementation a new Storage Model plugin ====
-
-The placement service can be extended by creating one or more `org.springframework.content.commons.placement.PlacementStrategy` beans that map other content ID types to resource locations.
 
 [[content-repositories.events]]
 === Events

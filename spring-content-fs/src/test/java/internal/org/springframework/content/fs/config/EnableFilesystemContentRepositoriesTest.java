@@ -12,6 +12,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.UUID;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -19,15 +21,15 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
+import org.springframework.content.fs.config.FilesystemStoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.convert.ConversionService;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
-import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -59,11 +61,23 @@ public class EnableFilesystemContentRepositoriesTest {
 				It("should have a FileSystemResourceLoader bean", () -> {
 					assertThat(context.getBean("fileSystemResourceLoader"), is(not(nullValue())));
 				});
-				It("should have a default UUIDPlacementStrategy bean", () -> {
-					assertThat(context.getBean(UUIDPlacementStrategy.class), is(not(nullValue())));
-				});
 			});
 
+			Context("given a context with a custom converter", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(ConverterConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should use that converter", () -> {
+					ConversionService converters = (ConversionService) context.getBean("filesystemStoreConverter");
+					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+				});
+			});
+			
 			Context("given a context with an empty configuration", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -92,20 +106,31 @@ public class EnableFilesystemContentRepositoriesTest {
 
 	@Configuration
 	@EnableFilesystemContentRepositories(basePackages="contains.no.fs.repositories")
-	@Import(InfrastructureConfig.class)
     @PropertySource("classpath:/test.properties")
 	public static class EmptyConfig {
 	}
 
 	@Configuration
 	@EnableFilesystemContentRepositories
-	@Import(InfrastructureConfig.class)
 	@PropertySource("classpath:/test.properties")
 	public static class TestConfig {
 	}
 
 	@Configuration
-	public static class InfrastructureConfig {
+	@EnableFilesystemContentRepositories
+	@PropertySource("classpath:/test.properties")
+	public static class ConverterConfig {
+		@Bean
+		public FilesystemStoreConverter<UUID,String> uuidConverter() {
+			return new FilesystemStoreConverter<UUID,String>() {
+
+				@Override
+				public String convert(UUID source) {
+					return String.format("/%s", source.toString().replaceAll("-","/"));
+				}
+				
+			};
+		}
 	}
 
 	@Content

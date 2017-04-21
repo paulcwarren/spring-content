@@ -1,20 +1,21 @@
 package internal.org.springframework.content.fs.config;
 
-import java.util.UUID;
+import java.util.List;
 
-import org.springframework.content.commons.placement.PlacementStrategy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.fs.config.FilesystemStoreConverter;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
-
-import internal.org.springframework.content.commons.placement.StringBasedUUIDPlacementStrategy;
-import internal.org.springframework.content.commons.placement.UUIDPlacementStrategy;
 
 @Configuration
 public class FilesystemContentRepositoryConfiguration {
 
+	@Autowired(required=false) private List<FilesystemStoreConverter<?,String>> customConverters;
+	
 	@Bean
 	public FilesystemProperties filesystemProperties() {
 		return new FilesystemProperties();
@@ -24,17 +25,13 @@ public class FilesystemContentRepositoryConfiguration {
 		return new FileSystemResourceLoader(filesystemProperties().getFilesystemRoot());
 	}
 	
-	@Bean
-	public PlacementStrategy<UUID> uuidPlacement() {
-		return new UUIDPlacementStrategy();
-	}
-	
-	@Bean
-	public PlacementStrategy<String> stringUUIDPlacement() {
-		return new StringBasedUUIDPlacementStrategy();
-	}
-	
 	@Bean ConversionService filesystemStoreConverter() {
-		return new DefaultConversionService();
+		DefaultConversionService conversion = new DefaultConversionService();
+		if (customConverters != null) {
+			for (Converter<?,String> converter : customConverters) {
+				conversion.addConverter(converter);
+			}
+		}
+		return conversion;
 	}
 }

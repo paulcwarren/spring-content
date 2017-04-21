@@ -12,7 +12,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -28,28 +27,26 @@ public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
 
 	private FileSystemResourceLoader loader;
-	private PlacementService placement;
 	private ConversionService conversion;
 	private FileService fileService;
 
 
-	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, PlacementService placement, ConversionService conversion, FileService fileService) {
+	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
 		this.loader = loader;
-		this.placement = placement;
 		this.conversion = conversion;
 		this.fileService = fileService;
 	}
 
 	@Override
 	public Resource getResource(SID id) {
-		String location = placement.getLocation(id);
+		String location = conversion.convert(id, String.class);
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
 	
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
-		String location = placement.getLocation(id);
+		String location = conversion.convert(id, String.class);
 		Resource resource = loader.getResource(location);
 		try {
 			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());

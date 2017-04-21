@@ -14,7 +14,6 @@ import java.net.URI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -45,7 +44,6 @@ public class StoreTest {
         		});
         		It("should have the core spring content service beans", () -> {
         			assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
-        			assertThat(context.getBean(PlacementService.class), is(not(nullValue())));
         			assertThat(context.getBean(RenditionService.class), is(not(nullValue())));
         		});
         		It("should have a teststore bean", () -> {

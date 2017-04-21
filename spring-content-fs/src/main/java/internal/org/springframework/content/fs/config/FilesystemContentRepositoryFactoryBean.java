@@ -1,7 +1,6 @@
 package internal.org.springframework.content.fs.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -17,9 +16,6 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 	FileSystemResourceLoader loader;
 	
 	@Autowired
-	PlacementService placement;
-	
-	@Autowired
 	ConversionService filesystemStoreConverter;
 	
 	@Override
@@ -27,12 +23,12 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractContentStore
 		super.afterPropertiesSet();
 		
 		Assert.notNull(loader, "resource loader cannot be null");
-		Assert.notNull(placement, "placement service cannot be null");
+		Assert.notNull(loader, "filesystemStoreConverter cannot be null");
 	}
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFileSystemContentRepositoryImpl(loader, placement, filesystemStoreConverter, new FileServiceImpl());
+		return new DefaultFileSystemContentRepositoryImpl(loader, filesystemStoreConverter, new FileServiceImpl());
 	}
 
 }

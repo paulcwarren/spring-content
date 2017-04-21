@@ -28,7 +28,6 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.placement.PlacementService;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.DeletableResource;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -44,7 +43,6 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class DefaultFilesystemContentRepositoryImplTest {
     private DefaultFileSystemContentRepositoryImpl<TestEntity, String> filesystemContentRepoImpl;
     private FileSystemResourceLoader loader;
-    private PlacementService placement;
     private ConversionService conversion;
     private TestEntity entity;
     
@@ -66,12 +64,11 @@ public class DefaultFilesystemContentRepositoryImplTest {
             BeforeEach(() -> {
                 writeableResource = mock(WritableResource.class);
                 loader = mock(FileSystemResourceLoader.class);
-                placement = mock(PlacementService.class);
                 conversion= mock(ConversionService.class);
 
                 fileService = mock(FileService.class);
 
-                filesystemContentRepoImpl = new DefaultFileSystemContentRepositoryImpl<TestEntity, String>(loader, placement, conversion, fileService);
+                filesystemContentRepoImpl = new DefaultFileSystemContentRepositoryImpl<TestEntity, String>(loader, conversion, fileService);
             });
             
             Context("#setContent", () -> {
@@ -245,7 +242,7 @@ public class DefaultFilesystemContentRepositoryImplTest {
             
             Context("#getResource", () -> {
             	BeforeEach(() -> {
-                    when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+                    when(conversion.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("/abcd/efgh");
 
             		resource = mock(Resource.class);
                     when(loader.getResource(eq("/abcd/efgh"))).thenReturn(resource);

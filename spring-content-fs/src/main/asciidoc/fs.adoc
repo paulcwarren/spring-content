@@ -29,21 +29,39 @@ The following configuration properties (prefix `spring.content.fs`) are supporte
 
 == Accessing Content
 
-=== Storage Model 
+=== Storage Configuration
 
-In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.  
+By default Spring Content Filesystem will store all content at the root of the content store location.  
 
-Content IDs of type `java.util.UUID` are mapped to a nested resource path which has the effect of spreading content over the filesystem. 
+The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.content.fs.configFilesytemStoreConverter` it is possible to configure the Store to use other. more sophisticated storage models.  
 
-Additional storage models and Content ID types can be added by creating  `org.springframework.content.commons.placement.PlacementService` plug-ins.  See <<content-repositories.storage,Storage Model>>.   
+For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.       
+ 
+.Configuring the Filesystem Store  
+====
+[source, java]
+----
+@Configuration
+public class FilesystemStoreConfiguration  {
+
+	@Bean
+	public FilesystemStoreConverter<UUID,String> uuidConverter() {
+		return new FilesystemStoreConverter<UUID,String>() {
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-","/"));
+			}
+		};
+	}
+}
+----
+====   
 
 === Setting Content
 
 Storing content is achieved using the `ContentRepostory.setContent(entity, InputStream)` method.  
 
-If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.  
-
-From this ID the `PlacementService` will then be used to determine the physical storage location and the content will be stored.
+If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on `java.util.UUID`.  
 
 The @ContentId and @ContentLength annotations will be updated on `entity`.  
 

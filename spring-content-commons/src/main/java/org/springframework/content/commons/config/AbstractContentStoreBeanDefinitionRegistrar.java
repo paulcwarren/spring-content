@@ -20,7 +20,6 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import internal.org.springframework.content.commons.placement.PlacementServiceImpl;
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
 import internal.org.springframework.content.commons.utils.ContentRepositoryUtils;
@@ -73,15 +72,6 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 
 		BeanDefinition renditionServiceBeanDef = createRenditionServiceBeanDefinition();
 		registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
-
-		BeanDefinition placementServiceBeanDef = createBeanDefinition(PlacementServiceImpl.class);
-		registry.registerBeanDefinition("placementService", placementServiceBeanDef);
-
-//		BeanDefinition renditionProviderBeanDef = createRenditionProviderBeanDefinition(PdfRenditionProvider.class);
-//		registry.registerBeanDefinition("pdfRenditionProvider", renditionProviderBeanDef);
-//
-//		BeanDefinition htmlRenditionProviderBeanDef = createRenditionProviderBeanDefinition(WordToHtmlRenditionProvider.class);
-//		registry.registerBeanDefinition("htmlRenditionProvider", htmlRenditionProviderBeanDef);
 
 		createOperationsBean(registry);
 		
