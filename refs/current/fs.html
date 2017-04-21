@@ -477,15 +477,37 @@ public static class ApplicationConfig {
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_storage_model">Storage Model</h3>
+<h3 id="_storage_configuration">Storage Configuration</h3>
 <div class="paragraph">
-<p>In order to store as much content as possible on the filesystem without hitting limits Spring Content Filesystem supports a hierarchical storage model.</p>
+<p>By default Spring Content Filesystem will store all content at the root of the content store location.</p>
 </div>
 <div class="paragraph">
-<p>Content IDs of type <code>java.util.UUID</code> are mapped to a nested resource path which has the effect of spreading content over the filesystem.</p>
+<p>The Filesystem Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.content.fs.configFilesytemStoreConverter</code> it is possible to configure the Store to use other. more sophisticated storage models.</p>
 </div>
 <div class="paragraph">
-<p>Additional storage models and Content ID types can be added by creating  <code>org.springframework.content.commons.placement.PlacementService</code> plug-ins.  See <a href="#content-repositories.storage">Storage Model</a>.</p>
+<p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Configuring the Filesystem Store</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class FilesystemStoreConfiguration  {
+
+	@Bean
+	public FilesystemStoreConverter&lt;UUID,String&gt; uuidConverter() {
+		return new FilesystemStoreConverter&lt;UUID,String&gt;() {
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-","/"));
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -494,10 +516,7 @@ public static class ApplicationConfig {
 <p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated.</p>
-</div>
-<div class="paragraph">
-<p>From this ID the <code>PlacementService</code> will then be used to determine the physical storage location and the content will be stored.</p>
+<p>If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on <code>java.util.UUID</code>.</p>
 </div>
 <div class="paragraph">
 <p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
@@ -523,7 +542,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-04-21 04:19:49 UTC
+Last updated 2017-04-21 21:21:57 UTC
 </div>
 </div>
 </body>

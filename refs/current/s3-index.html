@@ -452,7 +452,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#preface">Preface</a>
 <ul class="sectlevel1">
 <li><a href="#project">1. Project metadata</a></li>
-<li><a href="#content-repositories">2. Working with Spring Content Repositories</a>
+<li><a href="#content-repositories">2. Working with Spring Stores</a>
 <ul class="sectlevel2">
 <li><a href="#content-repositories.core-concepts">2.1. Core concepts</a></li>
 <li><a href="#content-repositories.creation">2.2. Creating Content Repositories Instances</a></li>
@@ -502,10 +502,10 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect1">
-<h2 id="content-repositories">2. Working with Spring Content Repositories</h2>
+<h2 id="content-repositories">2. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various types of content store.</p>
+<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various implementations of Content Store.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -515,7 +515,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </td>
 <td class="content">
 <div class="paragraph">
-<p>This chapter explains the core concepts and interfaces for Spring Content repositories. The information in this chapter is pulled from the Spring Content Commons. It uses the configuration and code samples for the S3 module. Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.</p>
+<p>This chapter explains the core concepts and interfaces for Spring Content stores. The information in this chapter is pulled from the Spring Content Commons.  It uses the configuration and code samples for the S3 module.  Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.</p>
 </div>
 </td>
 </tr>
@@ -524,10 +524,10 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect2">
 <h3 id="content-repositories.core-concepts">2.1. Core concepts</h3>
 <div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class, with which the content will be associated, and to content ID type of that domain class.</p>
+<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to content ID type of that domain class.</p>
 </div>
 <div id="content-repositories.repository" class="exampleblock">
-<div class="title">Example 1. ContentRepository interface</div>
+<div class="title">Example 1. ContentStore interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -557,25 +557,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.storage">2.1.1. Storage Model</h4>
-<div class="paragraph">
-<p>Spring Content supports a pluggable storage model giving repositories the ability to store content as they see fit by making a placement service and placement service plugins available to Repositories implementations.</p>
-</div>
-<div class="paragraph">
-<p>In general Repository implementations use the <code>org.springframework.content.commons.placement.PlacementService</code> to map an entity&#8217;s <code>@ContentId</code> to a physical storage location.</p>
-</div>
-<div class="paragraph">
-<p>In addition a hierarchical storage model plug-in <code>internal.org.springframework.content.commons.UUIDPlacementStrategy</code> is also available to Repositories that can support this.  For example, both Spring Content Filesystem and Spring Content S3 make use this plug-in to map <code>java.util.UUID</code> content IDs to nested <code>org.springframework.core.io.Resource</code> paths.</p>
-</div>
-<div class="sect4">
-<h5 id="_implementation_a_new_storage_model_plugin">Implementation a new Storage Model plugin</h5>
-<div class="paragraph">
-<p>The placement service can be extended by creating one or more <code>org.springframework.content.commons.placement.PlacementStrategy</code> beans that map other content ID types to resource locations.</p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="content-repositories.events">2.1.2. Events</h4>
+<h4 id="content-repositories.events">2.1.1. Events</h4>
 <div class="paragraph">
 <p>There are 6 events that Spring Content emits whilst performing basic content access.  Those are:</p>
 </div>
@@ -709,7 +691,7 @@ public class ContentRepositoryConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.search">2.1.3. Search</h4>
+<h4 id="content-repositories.search">2.1.2. Search</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
 </div>
@@ -743,7 +725,7 @@ public class ContentRepositoryConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.renditions">2.1.4. Renditions</h4>
+<h4 id="content-repositories.renditions">2.1.3. Renditions</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
 </div>
@@ -1102,7 +1084,7 @@ public static class ApplicationConfig extends AbstractS3ContentRepositoryConfigu
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-21 04:19:49 UTC
+Last updated 2017-04-21 21:21:57 UTC
 </div>
 </div>
 </body>
