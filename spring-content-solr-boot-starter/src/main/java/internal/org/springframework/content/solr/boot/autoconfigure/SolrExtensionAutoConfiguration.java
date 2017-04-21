@@ -4,7 +4,6 @@ import org.springframework.content.commons.repository.ContentRepositoryExtension
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.content.solr.SolrSearchContentRepositoryExtension;
 import org.springframework.content.solr.SolrIndexer;
@@ -19,7 +18,6 @@ public class SolrExtensionAutoConfiguration {
 
     @Autowired private SolrProperties props;
     @Autowired private SolrClient solrClient;
-	@Autowired private ContentOperations ops;
     @Autowired private ConversionService contentConversionService;
 
 	public SolrExtensionAutoConfiguration() {
@@ -27,7 +25,7 @@ public class SolrExtensionAutoConfiguration {
 	
 	@Bean
 	public Object solrFulltextEventListener() {
-		return new SolrIndexer(solrClient, ops, props);
+		return new SolrIndexer(solrClient, props);
 	}
 
     @Bean

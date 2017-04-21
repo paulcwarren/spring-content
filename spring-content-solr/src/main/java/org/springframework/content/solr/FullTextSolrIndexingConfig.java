@@ -3,7 +3,6 @@ package org.springframework.content.solr;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.operations.ContentOperations;
 import org.springframework.content.commons.repository.ContentRepositoryExtension;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +19,6 @@ public class FullTextSolrIndexingConfig {
     @Autowired
     private SolrProperties props;
     @Autowired
-    private ContentOperations ops;
-    @Autowired
     private ConversionService contentConversionService;
 
     @Bean
@@ -31,7 +28,7 @@ public class FullTextSolrIndexingConfig {
 
     @Bean
     public Object solrFulltextEventListener() {
-        return new SolrIndexer(solrClient, ops, props);
+        return new SolrIndexer(solrClient, props);
     }
 
 

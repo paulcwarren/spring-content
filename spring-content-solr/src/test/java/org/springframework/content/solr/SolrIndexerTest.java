@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -26,7 +27,11 @@ import org.springframework.content.commons.operations.ContentOperations;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 
+@SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class SolrIndexerTest {
@@ -35,11 +40,14 @@ public class SolrIndexerTest {
 	
 	// mocks
 	private SolrClient solrClient;
+	private ContentStore<Object,Serializable> store;
 	private ContentOperations ops;
 	private SolrProperties props;
 	
 	// args 
 	private Object contentEntity;
+	private AfterSetContentEvent afterSetEvent;
+	private BeforeUnsetContentEvent beforeUnsetEvent;
 	private Throwable e;
 	
 	{
@@ -47,13 +55,15 @@ public class SolrIndexerTest {
 			BeforeEach(() -> {
 				solrClient = mock(SolrClient.class);
 				ops = mock(ContentOperations.class);
+				store = mock(ContentStore.class);
 				props = mock(SolrProperties.class);
-				handler = new SolrIndexer(solrClient, ops, props);
+				handler = new SolrIndexer(solrClient, props);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {
 					try {
-						handler.onAfterSetContent(contentEntity);
+						afterSetEvent = new AfterSetContentEvent(contentEntity, store);
+						handler.onAfterSetContent(afterSetEvent);
 					} catch (Throwable e) {
 						this.e = e;
 					}
@@ -125,7 +135,8 @@ public class SolrIndexerTest {
 			Context("#onBeforeUnsetContent", () -> {
 				JustBeforeEach(() -> {
 					try {
-						handler.onBeforeUnsetContent(contentEntity);
+						beforeUnsetEvent = new BeforeUnsetContentEvent(contentEntity, store);
+						handler.onBeforeUnsetContent(beforeUnsetEvent);
 					} catch (Exception e) {
 						this.e = e;
 					}
