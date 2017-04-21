@@ -11,6 +11,8 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.UUID;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -18,10 +20,12 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
+import org.springframework.content.mongo.config.MongoStoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -53,6 +57,22 @@ public class EnableMongoContentRepositoriesTest {
 					assertThat(context.getBean("mongoStoreConverter"), is(not(nullValue())));
 				});
 			});
+
+			Context("given a context with a custom converter", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(ConverterConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should use that converter", () -> {
+					ConversionService converters = (ConversionService) context.getBean("mongoStoreConverter");
+					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+				});
+			});
+
 			Context("given an enabled configuration with no mongo content repository beans", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -84,12 +104,31 @@ public class EnableMongoContentRepositoriesTest {
 	@EnableMongoContentRepositories(basePackages="contains.no.mongo.repositores")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
+		//
 	}
 
 	@Configuration
 	@EnableMongoContentRepositories
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
+		//
+	}
+
+	@Configuration
+	@EnableMongoContentRepositories
+	@Import(InfrastructureConfig.class)
+	public static class ConverterConfig {
+		@Bean
+		public MongoStoreConverter<UUID,String> uuidConverter() {
+			return new MongoStoreConverter<UUID,String>() {
+
+				@Override
+				public String convert(UUID source) {
+					return String.format("/%s", source.toString().replaceAll("-","/"));
+				}
+
+			};
+		}
 	}
 
 	@Configuration
