@@ -45,7 +45,9 @@ If content has been previously stored it will overwritten updating just the @Con
 
 ==== How the @ContentId field is handled 
 
-Spring Data MongoDB requires that content entities have an `@ContentId` field for identity.  If you do not provide a value for this field one will be generated based on `java.util.UUID`.  
+The MongoDB Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  
+
+It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) `org.springframework.content.mongo.config.MongoStoreConverter` beans.  
 
 === Getting Content
 
