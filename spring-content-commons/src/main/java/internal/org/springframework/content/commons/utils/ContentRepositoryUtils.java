@@ -6,12 +6,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.content.commons.config.ContentRepositoryConfiguration;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 public class ContentRepositoryUtils {
@@ -70,21 +67,5 @@ public class ContentRepositoryUtils {
 		}
 
 		return result;	
-	}
-	
-	public static BeanDefinitionBuilder buildContentRepositoryBeanDefinitionBuilder(ResourceLoader resourceLoader, ContentRepositoryConfiguration<?> configuration) {
-
-		Assert.notNull(resourceLoader, "ResourceLoader must not be null!");
-		Assert.notNull(configuration, "ContentRepositoryConfiguration<?> must not be null!");
-
-		String factoryBeanName = configuration.getRepositoryFactoryBeanName();
-
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
-
-		builder.getRawBeanDefinition().setSource(configuration.getSource());
-		builder.addPropertyValue("contentStoreInterface", configuration.getRepositoryInterface());
-
-		return builder;
-		
 	}
 }
