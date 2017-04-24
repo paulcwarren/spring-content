@@ -458,7 +458,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#content-repositories.creation">2.2. Creating Content Store Instances</a></li>
 </ul>
 </li>
-<li><a href="#_s3_content_repositories">3. S3 Content Repositories</a>
+<li><a href="#_s3_content_stores">3. S3 Content Stores</a>
 <ul class="sectlevel2">
 <li><a href="#_annotation_based_configuration">3.1. Annotation based configuration</a></li>
 <li><a href="#_configuring">3.2. Configuring</a></li>
@@ -876,7 +876,7 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 </div>
 </div>
 <div class="sect1">
-<h2 id="_s3_content_repositories">3. S3 Content Repositories</h2>
+<h2 id="_s3_content_stores">3. S3 Content Stores</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_annotation_based_configuration">3.1. Annotation based configuration</h3>
@@ -989,7 +989,7 @@ public class S3StoreConfiguration  {
 <div class="sect3">
 <h4 id="_setting_content">3.3.3. Setting Content</h4>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
 <p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based in <code>java.util.UUID</code>.</p>
@@ -1004,13 +1004,13 @@ public class S3StoreConfiguration  {
 <div class="sect3">
 <h4 id="_getting_content">3.3.4. Getting Content</h4>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentRepository.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_unsetting_content">3.3.5. Unsetting Content</h4>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentRepository.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 </div>
@@ -1115,7 +1115,7 @@ public class S3StoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-24 17:30:14 UTC
+Last updated 2017-04-24 17:49:09 UTC
 </div>
 </div>
 </body>

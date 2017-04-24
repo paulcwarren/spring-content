@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.5">
-<title>S3 Content Repositories</title>
+<title>S3 Content Stores</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -420,7 +420,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>S3 Content Repositories</h1>
+<h1>S3 Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
@@ -539,7 +539,7 @@ public class S3StoreConfiguration  {
 <div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentRepostory.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
 <p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based in <code>java.util.UUID</code>.</p>
@@ -554,13 +554,13 @@ public class S3StoreConfiguration  {
 <div class="sect2">
 <h3 id="_getting_content">Getting Content</h3>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentRepository.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_unsetting_content">Unsetting Content</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentRepository.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 </div>
@@ -568,7 +568,7 @@ public class S3StoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-04-24 17:30:14 UTC
+Last updated 2017-04-24 17:49:09 UTC
 </div>
 </div>
 </body>
