@@ -15,13 +15,13 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.commons.repository.factory.ContentRepositoryMethodInterceptor;
+import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
 public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
 	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
@@ -35,7 +35,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	private T store;
 	
     @Autowired(required=false)
-    private Set<ContentRepositoryExtension> extensions;
+    private Set<StoreExtension> extensions;
 
 	@Autowired
 	public void setContentStoreInterface(Class<? extends ContentStore<Object, Serializable>> storeInterface) {
@@ -123,9 +123,9 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		result.setTarget(target);
 		result.setInterfaces(new Class[] { storeInterface, ContentStore.class });
 		
-		Map<Method, ContentRepositoryExtension> extensionsMap = new HashMap<>();
+		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
-            for (ContentRepositoryExtension extension : extensions) {
+            for (StoreExtension extension : extensions) {
                 for (Method method : extension.getMethods()) {
                     extensionsMap.put(method, extension);
                 }
@@ -133,7 +133,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		} catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-		ContentRepositoryMethodInterceptor intercepter = new ContentRepositoryMethodInterceptor((ContentStore<Object,Serializable>)target, 
+		StoreMethodInterceptor intercepter = new StoreMethodInterceptor((ContentStore<Object,Serializable>)target, 
 																								getDomainClass(storeInterface), 
 																								getContentIdClass(storeInterface), 
 																								extensionsMap, 

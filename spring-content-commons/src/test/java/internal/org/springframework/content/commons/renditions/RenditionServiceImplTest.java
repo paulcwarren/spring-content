@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.StoreInvoker;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -43,7 +43,7 @@ public class RenditionServiceImplTest {
 	
 	// mocks
 	private MethodInvocation invocation;
-	private ContentRepositoryInvoker repoInvoker;
+	private StoreInvoker repoInvoker;
 	private RenditionProvider mockProvider = null;
 	
 	{
@@ -145,7 +145,7 @@ public class RenditionServiceImplTest {
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
 							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("something"), "something/else"});
 							
-							repoInvoker = mock(ContentRepositoryInvoker.class);
+							repoInvoker = mock(StoreInvoker.class);
 							when(repoInvoker.invokeGetContent()).thenReturn(new ByteArrayInputStream("some content".getBytes()));
 						});
 						

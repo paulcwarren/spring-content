@@ -11,7 +11,7 @@ import org.apache.solr.common.util.NamedList;
 import org.hamcrest.core.Every;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -35,7 +35,7 @@ public class SolrSearchContentRepositoryExtensionTest {
 
     private Method method;
     private MethodInvocation invocation;
-    private ContentRepositoryInvoker invoker;
+    private StoreInvoker invoker;
     private GenericConversionService conversionService;
     private SolrProperties solrProperties;
 
@@ -67,7 +67,7 @@ public class SolrSearchContentRepositoryExtensionTest {
                     when(invocation.getMethod()).thenReturn(method);
                     when(invocation.getArguments()).thenReturn(new String[]{"something"});
 
-                    invoker = mock(ContentRepositoryInvoker.class);
+                    invoker = mock(StoreInvoker.class);
 
                     conversionService = new GenericConversionService();
                     conversionService.addConverter(new StringToInteger());

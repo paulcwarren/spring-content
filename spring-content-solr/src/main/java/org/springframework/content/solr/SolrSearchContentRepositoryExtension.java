@@ -3,8 +3,8 @@ package org.springframework.content.solr;
 import internal.org.springframework.content.solr.SolrSearchService;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.core.convert.ConversionService;
@@ -13,7 +13,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class SolrSearchContentRepositoryExtension implements ContentRepositoryExtension {
+public class SolrSearchContentRepositoryExtension implements StoreExtension {
 
     private SolrClient solr;
     private ReflectionService reflectionService;
@@ -35,7 +35,7 @@ public class SolrSearchContentRepositoryExtension implements ContentRepositoryEx
     }
 
     @Override
-    public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
+    public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
         List newList = new ArrayList();
         Class<? extends Serializable> clazz = invoker.getContentIdClass();
         Class<?> domainClass = invoker.getDomainClass();

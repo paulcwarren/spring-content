@@ -25,7 +25,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class ContentRepositoryServiceImplTest {
+public class ContentStoreServiceImplTest {
 
 	private ContentStoreServiceImpl contentRepoService; 
 	private ContentStoreFactory mockFactory;

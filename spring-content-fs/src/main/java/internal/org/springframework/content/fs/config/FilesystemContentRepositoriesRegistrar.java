@@ -5,11 +5,11 @@ import java.lang.annotation.Annotation;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.content.commons.config.AbstractContentStoreBeanDefinitionRegistrar;
+import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.core.type.AnnotationMetadata;
 
-public class FilesystemContentRepositoriesRegistrar extends AbstractContentStoreBeanDefinitionRegistrar {
+public class FilesystemContentRepositoriesRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {

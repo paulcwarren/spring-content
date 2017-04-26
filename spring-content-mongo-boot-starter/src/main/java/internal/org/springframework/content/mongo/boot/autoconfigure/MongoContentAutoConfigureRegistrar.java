@@ -2,7 +2,7 @@ package internal.org.springframework.content.mongo.boot.autoconfigure;
 
 import java.util.Set;
 
-import internal.org.springframework.content.commons.utils.ContentRepositoryUtils;
+import internal.org.springframework.content.commons.utils.StoreUtils;
 import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -25,18 +25,18 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = ContentRepositoryUtils.getContentRepositoryCandidates(this.getResourceLoader(), basePackages);
+		Set<GenericBeanDefinition> definitions = StoreUtils.getContentRepositoryCandidates(this.getResourceLoader(), basePackages);
 
 		for (BeanDefinition definition : definitions) {
 
-			String factoryBeanName = ContentRepositoryUtils.getRepositoryFactoryBeanName(attributes);
+			String factoryBeanName = StoreUtils.getRepositoryFactoryBeanName(attributes);
 
 			BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
 
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
 			builder.addPropertyValue("contentStoreInterface", definition.getBeanClassName());
 
-			registry.registerBeanDefinition(ContentRepositoryUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
+			registry.registerBeanDefinition(StoreUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
 		}
 	}
 

@@ -11,7 +11,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
 
-public class ContentRepositoryUtils {
+public class StoreUtils {
 
 	private static final String BASE_PACKAGES = "basePackages";
 	private static final String BASE_PACKAGE_CLASSES = "basePackageClasses";
@@ -49,7 +49,7 @@ public class ContentRepositoryUtils {
 	}
 	
 	public static Set<GenericBeanDefinition> getContentRepositoryCandidates(ResourceLoader loader, String[] basePackages) {
-		ContentRepositoryCandidateComponentProvider scanner = new ContentRepositoryCandidateComponentProvider(false);
+		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
 		//scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
 		scanner.setResourceLoader(loader);
 		//scanner.setEnvironment(environment);

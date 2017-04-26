@@ -16,9 +16,9 @@ import java.io.Serializable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.ContentRepositoryEvent;
+import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.events.AbstractContentRepositoryEventListener;
+import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
@@ -32,10 +32,10 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class AbstractContentRepositoryEventListenerTest {
+public class AbstractStoreEventListenerTest {
 
-	private AbstractContentRepositoryEventListener<Object> listener;
-	private ContentRepositoryEvent event;
+	private AbstractStoreEventListener<Object> listener;
+	private StoreEvent event;
 	
 	//mocks
 	private TestContentEventConsumer consumer;
@@ -150,7 +150,7 @@ public class AbstractContentRepositoryEventListenerTest {
 	public void noop() {
 	}
 
-	public static class TestContentEventListener extends AbstractContentRepositoryEventListener<Object> {
+	public static class TestContentEventListener extends AbstractStoreEventListener<Object> {
 		private TestContentEventConsumer consumer;
 
 		public TestContentEventListener(TestContentEventConsumer consumer) {

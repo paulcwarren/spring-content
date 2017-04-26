@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.aopalliance.intercept.MethodInvocation;
 
-public interface ContentRepositoryExtension {
+public interface StoreExtension {
 	Set<Method> getMethods();
-	Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker);
+	Object invoke(MethodInvocation invocation, StoreInvoker invoker);
 }

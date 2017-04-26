@@ -22,14 +22,14 @@ import java.lang.reflect.Method;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
+import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
-import org.springframework.content.commons.repository.ContentRepositoryEvent;
+import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
@@ -46,11 +46,11 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class AnnotatedContentRepositoryEventInvokerTest {
+public class AnnotatedStoreEventInvokerTest {
 	
-	private AnnotatedContentRepositoryEventInvoker invoker;
+	private AnnotatedStoreEventInvoker invoker;
 	
-	private ContentRepositoryEvent event;
+	private StoreEvent event;
 	
 	// mocks
 	private ReflectionService reflectionService;
@@ -64,7 +64,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 				});
 				JustBeforeEach(() -> {
 					reflectionService = mock(ReflectionService.class);
-					invoker = new AnnotatedContentRepositoryEventInvoker(reflectionService);
+					invoker = new AnnotatedStoreEventInvoker(reflectionService);
 					invoker.postProcessAfterInitialization(new CustomEventHandler(), "custom-bean");
 				});
 				It("register the handlers", () -> {
@@ -81,7 +81,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 		Describe("#onApplicationEvent", () -> {
 			BeforeEach(() -> {
 				reflectionService = mock(ReflectionService.class);
-				invoker = new AnnotatedContentRepositoryEventInvoker(reflectionService);
+				invoker = new AnnotatedStoreEventInvoker(reflectionService);
 			});
 			JustBeforeEach(() -> {
 				invoker.postProcessAfterInitialization(new CustomEventHandler(), "custom-bean");
@@ -174,7 +174,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 		});
 	}
 	
-	@ContentRepositoryEventHandler
+	@StoreEventHandler
 	public class CustomEventHandler {
 		
 		@HandleBeforeGetContent
@@ -199,7 +199,7 @@ public class AnnotatedContentRepositoryEventInvokerTest {
 	public class EventSource {
 	}
 	
-	public class UnknownContentEvent extends ContentRepositoryEvent {
+	public class UnknownContentEvent extends StoreEvent {
 
 		private static final long serialVersionUID = 4393640168031790561L;
 

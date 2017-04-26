@@ -17,11 +17,11 @@ import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.utils.BeanUtils;
 
-public class RenditionServiceImpl implements RenditionService, ContentRepositoryExtension {
+public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	
 	private static final Log LOGGER = LogFactory.getLog(RenditionServiceImpl.class);
 
@@ -83,7 +83,7 @@ public class RenditionServiceImpl implements RenditionService, ContentRepository
 	}
 
 	@Override
-	public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
+	public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
 		String fromMimeType = null;
 		fromMimeType = (String)BeanUtils.getFieldWithAnnotation(invocation.getArguments()[0], MimeType.class);
 		if (fromMimeType == null) {

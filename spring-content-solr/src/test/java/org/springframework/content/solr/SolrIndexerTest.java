@@ -25,7 +25,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
@@ -98,7 +98,7 @@ public class SolrIndexerTest {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given a IOException", () -> {
@@ -106,7 +106,7 @@ public class SolrIndexerTest {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(IOException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
 				});
@@ -168,7 +168,7 @@ public class SolrIndexerTest {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(SolrServerException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given a IOException", () -> {
@@ -176,7 +176,7 @@ public class SolrIndexerTest {
                             when(solrClient.request(anyObject(), anyObject())).thenThrow(IOException.class);
                         });
                         It("should throw a ContextAccessException", () -> {
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
 				});

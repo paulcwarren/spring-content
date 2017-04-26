@@ -2,20 +2,20 @@ package org.springframework.content.commons.repository.events;
 
 import static org.springframework.core.GenericTypeResolver.resolveTypeArgument;
 
-import org.springframework.content.commons.repository.ContentRepositoryEvent;
+import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.context.ApplicationListener;
 
-public abstract class AbstractContentRepositoryEventListener<T>
-		implements ApplicationListener<ContentRepositoryEvent> {
+public abstract class AbstractStoreEventListener<T>
+		implements ApplicationListener<StoreEvent> {
 
-	private final Class<?> INTERESTED_TYPE = resolveTypeArgument(getClass(), AbstractContentRepositoryEventListener.class);
+	private final Class<?> INTERESTED_TYPE = resolveTypeArgument(getClass(), AbstractStoreEventListener.class);
 
 	/* (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public final void onApplicationEvent(ContentRepositoryEvent event) {
+	public final void onApplicationEvent(StoreEvent event) {
 
 		Class<?> srcType = event.getSource().getClass();
 

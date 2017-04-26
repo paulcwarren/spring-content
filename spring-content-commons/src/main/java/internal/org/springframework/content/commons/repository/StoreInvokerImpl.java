@@ -8,13 +8,13 @@ import java.lang.reflect.Method;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
+import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.util.Assert;
 
-public class ContentRepositoryInvokerImpl implements ContentRepositoryInvoker {
+public class StoreInvokerImpl implements StoreInvoker {
 
-	private static final Log LOGGER = LogFactory.getLog(ContentRepositoryInvokerImpl.class);
+	private static final Log LOGGER = LogFactory.getLog(StoreInvokerImpl.class);
 
 	private Class<?> domainClass = null;
 
@@ -25,7 +25,7 @@ public class ContentRepositoryInvokerImpl implements ContentRepositoryInvoker {
 	private MethodInvocation invocation = null;
 
 
-	public ContentRepositoryInvokerImpl(Class<?> domainClass, Class<? extends Serializable> contentIdClass, MethodInvocation invocation) {
+	public StoreInvokerImpl(Class<?> domainClass, Class<? extends Serializable> contentIdClass, MethodInvocation invocation) {
 		Assert.notNull(domainClass, "domainClass must not be null");
 		this.domainClass = domainClass;
 

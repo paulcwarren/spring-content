@@ -18,9 +18,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
-import org.springframework.content.commons.repository.ContentRepositoryInvoker;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -101,7 +101,7 @@ public class StoreExtensionTest {
         Object someMethod();
     }
 
-    public static class TestContentRepositoryExtension implements TestExtensionService, ContentRepositoryExtension {
+    public static class TestContentRepositoryExtension implements TestExtensionService, StoreExtension {
 
         @Override
         public Object someMethod() {
@@ -120,7 +120,7 @@ public class StoreExtensionTest {
         }
 
         @Override
-        public Object invoke(MethodInvocation invocation, ContentRepositoryInvoker invoker) {
+        public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
             return ReflectionUtils.invokeMethod(invocation.getMethod(), this, null);
         }
     }

@@ -46,8 +46,11 @@ public class StoreTest {
         			assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
         			assertThat(context.getBean(RenditionService.class), is(not(nullValue())));
         		});
-        		It("should have a teststore bean", () -> {
+        		It("should have a TestStore bean", () -> {
         			assertThat(context.getBean(TestStore.class), is(not(nullValue())));
+        		});
+        		It("should have an TestAssociativeStore bean", () -> {
+        			assertThat(context.getBean(TestAssociativeStore.class), is(not(nullValue())));
         		});
         	});
         });

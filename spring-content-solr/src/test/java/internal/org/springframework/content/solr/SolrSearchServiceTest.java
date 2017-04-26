@@ -13,7 +13,7 @@ import org.apache.solr.common.util.NamedList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.core.convert.converter.Converter;
 
@@ -87,7 +87,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -96,7 +96,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -130,7 +130,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -139,7 +139,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -173,7 +173,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -182,7 +182,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -217,7 +217,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -226,7 +226,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -260,7 +260,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -269,7 +269,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -304,7 +304,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -313,7 +313,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });
@@ -348,7 +348,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                     Context("given an IOException from solr", () -> {
@@ -357,7 +357,7 @@ public class SolrSearchServiceTest {
                         });
                         It("should throw an ContentAccessException", () -> {
                             assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(ContentAccessException.class)));
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
                         });
                     });
                 });

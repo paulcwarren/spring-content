@@ -8,9 +8,9 @@ import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.commons.repository.ContentRepositoryEvent;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.StoreEvent;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
@@ -23,11 +23,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
-import internal.org.springframework.content.commons.repository.ContentRepositoryInvokerImpl;
+import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 
-public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
+public class StoreMethodInterceptor implements MethodInterceptor {
 
-	private Map<Method,ContentRepositoryExtension> extensions;
+	private Map<Method,StoreExtension> extensions;
 	private ContentStore<Object, Serializable> store = null;
 	private ApplicationEventPublisher publisher;
 	
@@ -49,9 +49,9 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 		Assert.notNull(getResourceMethod);
 	}
 	
-	public ContentRepositoryMethodInterceptor(ContentStore<Object, Serializable> store, Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,ContentRepositoryExtension> extensions, ApplicationEventPublisher publisher) {
+	public StoreMethodInterceptor(ContentStore<Object, Serializable> store, Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,StoreExtension> extensions, ApplicationEventPublisher publisher) {
 		if (extensions == null) {
-			extensions = Collections.<Method, ContentRepositoryExtension>emptyMap();
+			extensions = Collections.<Method, StoreExtension>emptyMap();
 		}
 		this.store = store;
         this.domainClass = domainClass;
@@ -63,17 +63,17 @@ public class ContentRepositoryMethodInterceptor implements MethodInterceptor {
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Method method = invocation.getMethod();
-		ContentRepositoryExtension extension = extensions.get(method);
+		StoreExtension extension = extensions.get(method);
 		if (extension != null) {
-			return extension.invoke(invocation, new ContentRepositoryInvokerImpl(domainClass, contentIdClass, invocation));
+			return extension.invoke(invocation, new StoreInvokerImpl(domainClass, contentIdClass, invocation));
 		} else {
 			if (!isStoreMethod(invocation)) {
-				throw new ContentAccessException(String.format("No implementation found for %s", method.getName()));
+				throw new StoreAccessException(String.format("No implementation found for %s", method.getName()));
 			}
 		}
 		
-		ContentRepositoryEvent before = null;
-		ContentRepositoryEvent after = null;
+		StoreEvent before = null;
+		StoreEvent after = null;
 		
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {

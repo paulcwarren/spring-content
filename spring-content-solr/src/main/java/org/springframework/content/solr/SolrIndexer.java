@@ -10,16 +10,16 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.util.ContentStreamBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
-import org.springframework.content.commons.repository.ContentAccessException;
-import org.springframework.content.commons.repository.events.AbstractContentRepositoryEventListener;
+import org.springframework.content.commons.annotations.StoreEventHandler;
+import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
 
-@ContentRepositoryEventHandler
-public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> {
+@StoreEventHandler
+public class SolrIndexer extends AbstractStoreEventListener<Object> {
 
 	private SolrClient solrClient;
 	private SolrProperties properties;
@@ -55,9 +55,9 @@ public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> 
 	    try {
 			/*NamedList<Object> request = */solrClient.request(up, null);
 		} catch (SolrServerException e) {
-			throw new ContentAccessException(String.format("Error updating entry in solr index %s", id), e);
+			throw new StoreAccessException(String.format("Error updating entry in solr index %s", id), e);
 		} catch (IOException e) {
-			throw new ContentAccessException(String.format("Error updating entry in solr index %s", id), e);
+			throw new StoreAccessException(String.format("Error updating entry in solr index %s", id), e);
 		}
 	}
 	
@@ -82,9 +82,9 @@ public class SolrIndexer extends AbstractContentRepositoryEventListener<Object> 
 		try {
 			solrClient.request(up, null);
 		} catch (SolrServerException e) {
-			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
+			throw new StoreAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		} catch (IOException e) {
-			throw new ContentAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
+			throw new StoreAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
 		}
 	}
 

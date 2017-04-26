@@ -9,14 +9,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.content.commons.annotations.ContentRepositoryEventHandler;
+import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
-import org.springframework.content.commons.repository.ContentRepositoryEvent;
+import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
@@ -32,20 +32,20 @@ import org.springframework.util.ReflectionUtils;
 
 import org.springframework.content.commons.utils.ReflectionService;
 
-public class AnnotatedContentRepositoryEventInvoker
-		implements ApplicationListener<ContentRepositoryEvent>, BeanPostProcessor {
+public class AnnotatedStoreEventInvoker
+		implements ApplicationListener<StoreEvent>, BeanPostProcessor {
 
-	private static final Log logger = LogFactory.getLog(AnnotatedContentRepositoryEventInvoker.class);
+	private static final Log logger = LogFactory.getLog(AnnotatedStoreEventInvoker.class);
 
-	private final MultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod> handlerMethods = new LinkedMultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod>();
+	private final MultiValueMap<Class<? extends StoreEvent>, EventHandlerMethod> handlerMethods = new LinkedMultiValueMap<Class<? extends StoreEvent>, EventHandlerMethod>();
 
 	private ReflectionService reflectionService;
 
-	public AnnotatedContentRepositoryEventInvoker(ReflectionService reflectionService) {
+	public AnnotatedStoreEventInvoker(ReflectionService reflectionService) {
 		this.reflectionService = reflectionService;
 	}
 	
-	MultiValueMap<Class<? extends ContentRepositoryEvent>, EventHandlerMethod> getHandlers() {
+	MultiValueMap<Class<? extends StoreEvent>, EventHandlerMethod> getHandlers() {
 		return handlerMethods;
 	}
 	
@@ -60,7 +60,7 @@ public class AnnotatedContentRepositoryEventInvoker
 			throws BeansException {
 
 		Class<?> beanType = ClassUtils.getUserClass(bean);
-		ContentRepositoryEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType, ContentRepositoryEventHandler.class);
+		StoreEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType, StoreEventHandler.class);
 
 		if (typeAnno == null) {
 			return bean;
@@ -85,8 +85,8 @@ public class AnnotatedContentRepositoryEventInvoker
 	}
 
 	@Override
-	public void onApplicationEvent(ContentRepositoryEvent event) {
-		Class<? extends ContentRepositoryEvent> eventType = event.getClass();
+	public void onApplicationEvent(StoreEvent event) {
+		Class<? extends StoreEvent> eventType = event.getClass();
 
 		if (!handlerMethods.containsKey(eventType)) {
 			return;
@@ -111,7 +111,7 @@ public class AnnotatedContentRepositoryEventInvoker
 		}
 	}
 	
-	<H extends Annotation, E> void findHandler(Object bean, Method method, Class<H> handler, Class<? extends ContentRepositoryEvent>  eventType) {
+	<H extends Annotation, E> void findHandler(Object bean, Method method, Class<H> handler, Class<? extends StoreEvent>  eventType) {
 		H annotation = AnnotationUtils.findAnnotation(method, handler);
 
 		if (annotation == null) {

@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
@@ -44,19 +44,19 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class ContentRepositoryMethodInterceptorTest {
+public class StoreMethodInterceptorTest {
 
-	private ContentRepositoryMethodInterceptor interceptor;
+	private StoreMethodInterceptor interceptor;
 	
 	// mocks
 	private ContentStore<Object, Serializable> store;
 	private MethodInvocation invocation;
-	private ContentRepositoryExtension extension;
+	private StoreExtension extension;
 	private ApplicationEventPublisher publisher;
 
 	private Exception e;
 	
-	private Map<Method, ContentRepositoryExtension> extensions = null;
+	private Map<Method, StoreExtension> extensions = null;
 	
 	{
 		Describe("#invoke", () -> {
@@ -66,7 +66,7 @@ public class ContentRepositoryMethodInterceptorTest {
 					publisher = mock(ApplicationEventPublisher.class);
 				});
 				JustBeforeEach(() -> {
-					interceptor = new ContentRepositoryMethodInterceptor(store, Object.class, String.class, extensions, publisher);
+					interceptor = new StoreMethodInterceptor(store, Object.class, String.class, extensions, publisher);
 					try {
 					    interceptor.invoke(invocation);
                     } catch (Exception invokeException) {
@@ -190,7 +190,7 @@ public class ContentRepositoryMethodInterceptorTest {
 				Context("when an extension method is invoked", () -> {
 					BeforeEach(() -> {
 						invocation = mock(MethodInvocation.class);
-						extension = mock(ContentRepositoryExtension.class);
+						extension = mock(StoreExtension.class);
 
 						extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
 

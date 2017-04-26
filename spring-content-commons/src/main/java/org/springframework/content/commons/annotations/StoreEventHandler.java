@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-public @interface ContentRepositoryEventHandler {
+public @interface StoreEventHandler {
 	
 }

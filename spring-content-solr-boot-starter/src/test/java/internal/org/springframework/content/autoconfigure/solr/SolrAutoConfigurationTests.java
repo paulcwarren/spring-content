@@ -11,7 +11,7 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.content.solr.SolrIndexer;
 import org.springframework.content.solr.SolrProperties;
@@ -77,7 +77,7 @@ public class SolrAutoConfigurationTests {
 		}
 
 		@Bean
-		public ContentRepositoryExtension solrFulltextSearcher() {
+		public StoreExtension solrFulltextSearcher() {
 			return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), contentConversionService, props);
 		}
 

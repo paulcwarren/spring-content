@@ -10,9 +10,9 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
-public class ContentRepositoryCandidateComponentProvider extends ClassPathScanningCandidateComponentProvider {
+public class StoreCandidateComponentProvider extends ClassPathScanningCandidateComponentProvider {
 
-	public ContentRepositoryCandidateComponentProvider(boolean useDefaultFilters) {
+	public StoreCandidateComponentProvider(boolean useDefaultFilters) {
 		super(useDefaultFilters);
 		this.addIncludeFilter(new InterfaceTypeFilter(ContentRepository.class));
 		this.addIncludeFilter(new InterfaceTypeFilter(Store.class));

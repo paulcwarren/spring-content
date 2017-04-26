@@ -4,12 +4,12 @@ import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.content.commons.config.AbstractContentStoreBeanDefinitionRegistrar;
+import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 
 import internal.org.springframework.content.jpa.operations.JpaContentTemplate;
 
-public class JpaContentRepositoriesRegistrar extends AbstractContentStoreBeanDefinitionRegistrar {
+public class JpaContentRepositoriesRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 
 	@Override
 	protected void createOperationsBean(BeanDefinitionRegistry registry) {

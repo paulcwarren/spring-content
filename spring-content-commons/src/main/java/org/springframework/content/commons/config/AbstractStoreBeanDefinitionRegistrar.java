@@ -22,11 +22,11 @@ import org.springframework.util.ClassUtils;
 
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
-import internal.org.springframework.content.commons.utils.ContentRepositoryUtils;
+import internal.org.springframework.content.commons.utils.StoreUtils;
 
-public abstract class AbstractContentStoreBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanFactoryAware {
+public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanFactoryAware {
 
-	private static String REPOSITORY_INTERFACE_POST_PROCESSOR = "internal.org.springframework.content.commons.utils.ContentRepositoryInterfaceAwareBeanPostProcessor";
+	private static String REPOSITORY_INTERFACE_POST_PROCESSOR = "internal.org.springframework.content.commons.utils.StoreInterfaceAwareBeanPostProcessor";
 	
 	private ResourceLoader resourceLoader;
 	private BeanFactory beanFactory;
@@ -67,10 +67,10 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 		repositoryInterfacePostProcessor.setSource(importingClassMetadata);
 		registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR, repositoryInterfacePostProcessor);
 		
-		BeanDefinition storeServiceBeanDef = createContentStoreServiceBeanDefinition();
+		BeanDefinition storeServiceBeanDef = createBeanDefinition(ContentStoreServiceImpl.class);
 		registry.registerBeanDefinition("contentStoreService", storeServiceBeanDef);
 
-		BeanDefinition renditionServiceBeanDef = createRenditionServiceBeanDefinition();
+		BeanDefinition renditionServiceBeanDef = createBeanDefinition(RenditionServiceImpl.class);
 		registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
 
 		createOperationsBean(registry);
@@ -82,46 +82,26 @@ public abstract class AbstractContentStoreBeanDefinitionRegistrar implements Imp
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 		
-		Set<GenericBeanDefinition> definitions = ContentRepositoryUtils.getContentRepositoryCandidates(resourceLoader, basePackages);
+		Set<GenericBeanDefinition> definitions = StoreUtils.getContentRepositoryCandidates(resourceLoader, basePackages);
 
 		for (BeanDefinition definition : definitions) {
 		
-			String factoryBeanName = ContentRepositoryUtils.getRepositoryFactoryBeanName(attributes);
+			String factoryBeanName = StoreUtils.getRepositoryFactoryBeanName(attributes);
 
 			BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
 
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
 			builder.addPropertyValue("contentStoreInterface", definition.getBeanClassName());
 			
-			registry.registerBeanDefinition(ContentRepositoryUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
+			registry.registerBeanDefinition(StoreUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
 		}
 	}
 	
 	// default implementation for non-autoconfigured clients
 	protected String[] getBasePackages(AnnotationAttributes attributes, AnnotationMetadata importingClassMetadata) {
-		return ContentRepositoryUtils.getBasePackages(attributes, /* default*/ new String[] { ClassUtils.getPackageName(importingClassMetadata.getClassName()) });
+		return StoreUtils.getBasePackages(attributes, /* default*/ new String[] { ClassUtils.getPackageName(importingClassMetadata.getClassName()) });
 	}
 	
-	private BeanDefinition createContentStoreServiceBeanDefinition() {
-		GenericBeanDefinition beanDef = new GenericBeanDefinition();
-		beanDef.setBeanClass(ContentStoreServiceImpl.class);
-
-		MutablePropertyValues values = new MutablePropertyValues();
-		beanDef.setPropertyValues(values);
-		
-		return beanDef;
-	}
-
-	private BeanDefinition createRenditionServiceBeanDefinition() {
-		GenericBeanDefinition beanDef = new GenericBeanDefinition();
-		beanDef.setBeanClass(RenditionServiceImpl.class);
-
-		MutablePropertyValues values = new MutablePropertyValues();
-		beanDef.setPropertyValues(values);
-		
-		return beanDef;
-	}
-
 	private BeanDefinition createBeanDefinition(Class<?> beanType) {
 		GenericBeanDefinition beanDef = new GenericBeanDefinition();
 		beanDef.setBeanClass(beanType);

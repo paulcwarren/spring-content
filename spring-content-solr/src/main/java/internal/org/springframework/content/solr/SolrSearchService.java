@@ -6,7 +6,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
-import org.springframework.content.commons.repository.ContentAccessException;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.util.Assert;
@@ -139,9 +139,9 @@ public class SolrSearchService implements Searchable<Object> {
         try {
             response = solr.request(request, null);
         } catch (SolrServerException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
+            throw new StoreAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
         } catch (IOException e) {
-            throw new ContentAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
+            throw new StoreAccessException(String.format("Error running query %s on field %s against solr.", queryString, field), e);
         }
         return response;
     }

@@ -24,10 +24,10 @@ import org.springframework.util.ClassUtils;
  * {@link AbstractContentStoreFactoryBean}s just to find out what repository interface they actually create.
  * <br/><br/>
  */
-class ContentRepositoryInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter implements
+class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter implements
 		BeanFactoryAware, PriorityOrdered {
 
-	private static final Log LOGGER = LogFactory.getLog(ContentRepositoryInterfaceAwareBeanPostProcessor.class);
+	private static final Log LOGGER = LogFactory.getLog(StoreInterfaceAwareBeanPostProcessor.class);
 	private static final Class<?> REPOSITORY_TYPE = AbstractContentStoreFactoryBean.class;
 
 	private final Map<String, Class<?>> cache = new ConcurrentHashMap<String, Class<?>>();

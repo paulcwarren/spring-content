@@ -1,6 +1,6 @@
 package internal.org.springframework.content.solr.boot.autoconfigure;
 
-import org.springframework.content.commons.repository.ContentRepositoryExtension;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class SolrExtensionAutoConfiguration {
 	}
 
     @Bean
-    public ContentRepositoryExtension solrFulltextSearcher() {
+    public StoreExtension solrFulltextSearcher() {
         return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), contentConversionService, props);
     }
 
