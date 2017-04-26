@@ -3,7 +3,7 @@ package internal.org.springframework.content.s3.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
-import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
+import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.core.convert.ConversionService;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -11,7 +11,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 
 @SuppressWarnings("rawtypes")
-public class S3ContentRepositoryFactoryBean extends AbstractContentStoreFactoryBean {
+public class S3ContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private AmazonS3 client; 

@@ -19,7 +19,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class )
 @Ginkgo4jConfiguration(threads=1)
-public class AbstractContentStoreFactoryBeanTest {
+public class AbstractStoreFactoryBeanTest {
 
     {
         Describe("AbstractContentStoreFactoryBean", () -> {
@@ -47,7 +47,7 @@ public class AbstractContentStoreFactoryBeanTest {
         });
     }
 
-    public static class TestContentStoreFactory extends AbstractContentStoreFactoryBean {
+    public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
         @Override
         protected Object getContentStoreImpl() {
             return new TestConfigStoreImpl();

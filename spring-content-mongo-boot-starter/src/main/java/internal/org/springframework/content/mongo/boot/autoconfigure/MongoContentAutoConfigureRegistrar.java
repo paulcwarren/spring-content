@@ -10,6 +10,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
+import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
@@ -25,18 +26,18 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getContentRepositoryCandidates(this.getResourceLoader(), basePackages);
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getResourceLoader(), basePackages);
 
 		for (BeanDefinition definition : definitions) {
 
-			String factoryBeanName = StoreUtils.getRepositoryFactoryBeanName(attributes);
+			String factoryBeanName = StoreUtils.getStoreFactoryBeanName(attributes);
 
 			BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
 
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
-			builder.addPropertyValue("contentStoreInterface", definition.getBeanClassName());
+			builder.addPropertyValue(AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY, definition.getBeanClassName());
 
-			registry.registerBeanDefinition(StoreUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
+			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition), builder.getBeanDefinition());
 		}
 	}
 

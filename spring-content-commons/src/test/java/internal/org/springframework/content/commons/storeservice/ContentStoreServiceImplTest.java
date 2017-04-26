@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.factory.ContentStoreFactory;
+import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -28,7 +28,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class ContentStoreServiceImplTest {
 
 	private ContentStoreServiceImpl contentRepoService; 
-	private ContentStoreFactory mockFactory;
+	private StoreFactory mockFactory;
 	{
 		Describe("ContentStoreServiceImpl", () -> {
 			Context("#getContentStores", () -> {
@@ -43,16 +43,16 @@ public class ContentStoreServiceImplTest {
 				Context("given a factory", () -> {
 					BeforeEach(() -> {
 						ContentStore repo = mock(ContentStore.class);
-						mockFactory = mock(ContentStoreFactory.class);
-						when(mockFactory.getContentStore()).thenReturn(repo);
-						when(mockFactory.getContentStoreInterface()).thenAnswer(new Answer<Object>() {
+						mockFactory = mock(StoreFactory.class);
+						when(mockFactory.getStore()).thenReturn(repo);
+						when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
 							@Override
 							public Object answer(InvocationOnMock invocation)
 									throws Throwable {
 								return ContentRepositoryInterface.class;
 							}
 						});
-						List<ContentStoreFactory> factories = new ArrayList<>();
+						List<StoreFactory> factories = new ArrayList<>();
 						factories.add(mockFactory);
 						contentRepoService.setFactories(factories);
 					});

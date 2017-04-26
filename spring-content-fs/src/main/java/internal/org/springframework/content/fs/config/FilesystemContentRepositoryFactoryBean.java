@@ -1,7 +1,7 @@
 package internal.org.springframework.content.fs.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
+import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 import internal.org.springframework.content.fs.repository.DefaultFileSystemContentRepositoryImpl;
 
 @SuppressWarnings("rawtypes")
-public class FilesystemContentRepositoryFactoryBean extends AbstractContentStoreFactoryBean {
+public class FilesystemContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	FileSystemResourceLoader loader;

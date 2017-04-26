@@ -15,7 +15,7 @@ public class StoreUtils {
 
 	private static final String BASE_PACKAGES = "basePackages";
 	private static final String BASE_PACKAGE_CLASSES = "basePackageClasses";
-	private static final String CONTENT_REPOSITORY_FACTORY_BEAN_CLASS = "contentRepositoryFactoryBeanClass";
+	private static final String STORE_FACTORY_BEAN_CLASS = "storeFactoryBeanClass";
 	
 	public static String[] getBasePackages(AnnotationAttributes attributes, String[] defaultPackages) {
 		
@@ -39,16 +39,16 @@ public class StoreUtils {
 		return packages.toArray(new String[] {});
 	}
 
-	public static String getRepositoryFactoryBeanName(AnnotationAttributes attributes) {
-		return attributes.getClass(CONTENT_REPOSITORY_FACTORY_BEAN_CLASS).getName();
+	public static String getStoreFactoryBeanName(AnnotationAttributes attributes) {
+		return attributes.getClass(STORE_FACTORY_BEAN_CLASS).getName();
 	}
 	
-	public static String getRepositoryBeanName(BeanDefinition definition) {
+	public static String getStoreBeanName(BeanDefinition definition) {
 		String beanName = ClassUtils.getShortName(definition.getBeanClassName());
 		return Introspector.decapitalize(beanName);
 	}
 	
-	public static Set<GenericBeanDefinition> getContentRepositoryCandidates(ResourceLoader loader, String[] basePackages) {
+	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages) {
 		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
 		//scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
 		scanner.setResourceLoader(loader);

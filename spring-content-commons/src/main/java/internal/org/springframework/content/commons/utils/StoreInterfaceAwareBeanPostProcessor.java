@@ -12,7 +12,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.config.TypedStringValue;
-import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBean;
+import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
+import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.util.ClassUtils;
@@ -20,15 +21,15 @@ import org.springframework.util.ClassUtils;
 /**
  * A {@link org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor} implementing
  * {@code #predictBeanType(Class, String)} to return the configured content repository interface from
- * {@link AbstractContentStoreFactoryBean}s. This is done as shortcut to prevent the need of instantiating
- * {@link AbstractContentStoreFactoryBean}s just to find out what repository interface they actually create.
+ * {@link AbstractStoreFactoryBean}s. This is done as shortcut to prevent the need of instantiating
+ * {@link AbstractStoreFactoryBean}s just to find out what repository interface they actually create.
  * <br/><br/>
  */
 class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter implements
 		BeanFactoryAware, PriorityOrdered {
 
 	private static final Log LOGGER = LogFactory.getLog(StoreInterfaceAwareBeanPostProcessor.class);
-	private static final Class<?> REPOSITORY_TYPE = AbstractContentStoreFactoryBean.class;
+	private static final Class<?> REPOSITORY_TYPE = AbstractStoreFactoryBean.class;
 
 	private final Map<String, Class<?>> cache = new ConcurrentHashMap<String, Class<?>>();
 	private ConfigurableListableBeanFactory context;
@@ -62,7 +63,7 @@ class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostPro
 		}
 
 		BeanDefinition definition = context.getBeanDefinition(beanName);
-		PropertyValue value = definition.getPropertyValues().getPropertyValue("contentStoreInterface");
+		PropertyValue value = definition.getPropertyValues().getPropertyValue(AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY);
 
 		resolvedBeanClass = getClassForPropertyValue(value, beanName);
 		cache.put(beanName, resolvedBeanClass);

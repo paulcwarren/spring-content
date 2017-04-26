@@ -26,6 +26,8 @@ import internal.org.springframework.content.commons.utils.StoreUtils;
 
 public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanFactoryAware {
 
+	public static final String STORE_INTERFACE_PROPERTY = "storeInterface";
+
 	private static String REPOSITORY_INTERFACE_POST_PROCESSOR = "internal.org.springframework.content.commons.utils.StoreInterfaceAwareBeanPostProcessor";
 	
 	private ResourceLoader resourceLoader;
@@ -82,18 +84,18 @@ public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBean
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 		
-		Set<GenericBeanDefinition> definitions = StoreUtils.getContentRepositoryCandidates(resourceLoader, basePackages);
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages);
 
 		for (BeanDefinition definition : definitions) {
 		
-			String factoryBeanName = StoreUtils.getRepositoryFactoryBeanName(attributes);
+			String factoryBeanName = StoreUtils.getStoreFactoryBeanName(attributes);
 
 			BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
 
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
-			builder.addPropertyValue("contentStoreInterface", definition.getBeanClassName());
+			builder.addPropertyValue(STORE_INTERFACE_PROPERTY, definition.getBeanClassName());
 			
-			registry.registerBeanDefinition(StoreUtils.getRepositoryBeanName(definition), builder.getBeanDefinition());
+			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition), builder.getBeanDefinition());
 		}
 	}
 	

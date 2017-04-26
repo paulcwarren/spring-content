@@ -51,7 +51,7 @@ public @interface EnableS3ContentRepositories {
 	 * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
 	 * {@link S3ContentRepositoryFactoryBean}.
 	 *
-	 * @return s2 content repository factory bean
+	 * @return s3 store factory bean
 	 */
-	Class<?> contentRepositoryFactoryBeanClass() default S3ContentRepositoryFactoryBean.class;
+	Class<?> storeFactoryBeanClass() default S3ContentRepositoryFactoryBean.class;
 }

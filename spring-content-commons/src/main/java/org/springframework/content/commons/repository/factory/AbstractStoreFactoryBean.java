@@ -15,30 +15,31 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
-public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, ID>, S, ID extends Serializable>
-	implements InitializingBean, FactoryBean<T>, BeanClassLoaderAware, ApplicationEventPublisherAware, ContentStoreFactory {
+public abstract class AbstractStoreFactoryBean
+	implements InitializingBean, FactoryBean<Store<? extends Serializable>>, BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
 
-	private static Log logger = LogFactory.getLog(AbstractContentStoreFactoryBean.class);
+	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
 	
-	private Class<? extends ContentStore<Object, Serializable>> storeInterface;
+	private Class<? extends Store<Serializable>> storeInterface;
 	private ClassLoader classLoader;
 	private ApplicationEventPublisher publisher;
 	
-	private T store;
+	private Store<? extends Serializable> store;
 	
     @Autowired(required=false)
     private Set<StoreExtension> extensions;
 
 	@Autowired
-	public void setContentStoreInterface(Class<? extends ContentStore<Object, Serializable>> storeInterface) {
+	public void setStoreInterface(Class<? extends Store<Serializable>> storeInterface) {
 		Assert.notNull(storeInterface);
 		this.storeInterface = storeInterface;
 	}
@@ -46,7 +47,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	/* (non-Javadoc)
 	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStoreInterface()
 	 */
-	public Class<? extends ContentStore<Object, Serializable>> getContentStoreInterface() {
+	public Class<?> getStoreInterface() {
 		return this.storeInterface;
 	}
 
@@ -54,8 +55,8 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStore()
 	 */
 	@SuppressWarnings("unchecked")
-	public ContentStore<Object,Serializable> getContentStore() {
-		return (ContentStore<Object, Serializable>) getObject();
+	public Store<Serializable> getStore() {
+		return (Store<Serializable>) getObject();
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +79,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
-	public T getObject() {
+	public Store<? extends Serializable> getObject() {
 		return initAndReturn();
 	}
 
@@ -87,8 +88,8 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 	 */
 	@SuppressWarnings("unchecked")
-	public Class<? extends T> getObjectType() {
-		return (Class<? extends T>) (null == storeInterface ? ContentStore.class : storeInterface);
+	public Class<? extends Store<? extends Serializable>> getObjectType() {
+		return (Class<? extends Store<? extends Serializable>>) (null == storeInterface ? Store.class : storeInterface);
 	}
 
 	/*
@@ -107,7 +108,7 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 		initAndReturn();
 	}
 
-	private T initAndReturn() {
+	private Store<? extends Serializable> initAndReturn() {
 		if (store == null) {
 			store = createContentStore();
 		}
@@ -115,13 +116,13 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 	}
 
 	@SuppressWarnings("unchecked")
-	protected T createContentStore() {
+	protected Store<? extends Serializable> createContentStore() {
 		Object target = getContentStoreImpl();
 
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(new Class[] { storeInterface, ContentStore.class });
+		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class });
 		
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
@@ -140,18 +141,18 @@ public abstract class AbstractContentStoreFactoryBean<T extends ContentStore<S, 
 																								publisher);
 		result.addAdvice(intercepter);
 
-		return (T)result.getProxy(classLoader);
+		return (Store<? extends Serializable>)result.getProxy(classLoader);
 	}
 
     /* package */ Class<?> getDomainClass(Class<?> repositoryClass) {
-        return getContentRepositoryType(repositoryClass, 0);
+        return getStoreParameter(repositoryClass, 0);
     }
 
     /* package */ Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
-        return (Class<? extends Serializable>) getContentRepositoryType(repositoryClass, 1);
+        return (Class<? extends Serializable>) getStoreParameter(repositoryClass, 1);
     }
 
-    private Class<?> getContentRepositoryType(Class<?> repositoryClass, int index) {
+    private Class<?> getStoreParameter(Class<?> repositoryClass, int index) {
         Class<?> clazz = null;
         Type[] types = repositoryClass.getGenericInterfaces();
 

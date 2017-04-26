@@ -52,6 +52,9 @@ public class StoreTest {
         		It("should have an TestAssociativeStore bean", () -> {
         			assertThat(context.getBean(TestAssociativeStore.class), is(not(nullValue())));
         		});
+        		It("should have an TestAssociativeAndContentStore bean", () -> {
+        			assertThat(context.getBean(TestAssociativeAndContentStore.class), is(not(nullValue())));
+        		});
         	});
         });
     }
@@ -68,6 +71,9 @@ public class StoreTest {
     }
     
     public interface TestAssociativeStore extends AssociativeStore<Object, URI> {
+    }
+    
+    public interface TestAssociativeAndContentStore extends AssociativeStore<Object, URI>, ContentStore<Object, URI> {
     }
     
     @Test

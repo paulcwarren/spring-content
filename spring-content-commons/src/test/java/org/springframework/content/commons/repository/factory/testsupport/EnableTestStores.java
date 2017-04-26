@@ -8,8 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBeanTest;
-import org.springframework.content.commons.repository.factory.AbstractContentStoreFactoryBeanTest.TestContentStoreFactory;
+import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBeanTest.TestContentStoreFactory;
 import org.springframework.context.annotation.Import;
 
 @Target(ElementType.TYPE)
@@ -51,7 +50,7 @@ public @interface EnableTestStores {
 	 *
 	 * @return content repository factory bean class
 	 */
-	Class<?> contentRepositoryFactoryBeanClass() default TestContentStoreFactory.class;
+	Class<?> storeFactoryBeanClass() default TestContentStoreFactory.class;
 
 }
 

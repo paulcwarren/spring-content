@@ -53,6 +53,6 @@ public @interface EnableFilesystemContentRepositories {
 	 *
 	 * @return content repository factory bean class
 	 */
-	Class<?> contentRepositoryFactoryBeanClass() default FilesystemContentRepositoryFactoryBean.class;
+	Class<?> storeFactoryBeanClass() default FilesystemContentRepositoryFactoryBean.class;
 
 }

@@ -52,6 +52,6 @@ public @interface EnableJpaContentRepositories {
 	 *
 	 * @return jpa content repository factory bean
 	 */
-	Class<?> contentRepositoryFactoryBeanClass() default JpaContentRepositoryFactoryBean.class;
+	Class<?> storeFactoryBeanClass() default JpaContentRepositoryFactoryBean.class;
 
 }

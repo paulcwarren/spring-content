@@ -1,6 +1,5 @@
 package internal.org.springframework.content.commons.storeservice;
 
-import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashSet;
@@ -9,7 +8,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.factory.ContentStoreFactory;
+import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 
@@ -21,16 +20,16 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	}
 
 	@Autowired(required=false)
-	public void setFactories(List<ContentStoreFactory> factories){
-		for (ContentStoreFactory factory : factories) {
-			if (ContentStore.class.isAssignableFrom(factory.getContentStoreInterface())) {
-				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getContentStoreInterface(), getDomainObjectClass(factory.getContentStoreInterface()), factory.getContentStore());
+	public void setFactories(List<StoreFactory> factories){
+		for (StoreFactory factory : factories) {
+			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
+				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), factory.getStore());
 				contentStoreInfos.add(info);
 			}
 		}
 	}
 	
-	private Class<?> getDomainObjectClass(Class<? extends ContentStore<Object,Serializable>> contentStoreInterface) {
+	private Class<?> getDomainObjectClass(Class<?> contentStoreInterface) {
 		Type[] genericInterfaces = contentStoreInterface.getGenericInterfaces();
 		for (Type genericInterface : genericInterfaces) {
 			if (genericInterface instanceof ParameterizedType) {

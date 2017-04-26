@@ -47,6 +47,6 @@ public @interface EnableMongoContentRepositories {
 	 *
 	 * @return
 	 */
-	Class<?> contentRepositoryFactoryBeanClass() default MongoContentRepositoryFactoryBean.class;
+	Class<?> storeFactoryBeanClass() default MongoContentRepositoryFactoryBean.class;
 
 }

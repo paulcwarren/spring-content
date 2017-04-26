@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.context.annotation.Bean;
@@ -67,17 +68,17 @@ public class StoreExtensionTest {
         }
 
         @Bean
-        public Class<? extends ContentStore<Object, Serializable>> contentStoreInterface() {
+        public Class<? extends Store<Serializable>> storeInterface() {
             return TestContentRepository.class;
         }
 
         @Bean
-        public AbstractContentStoreFactoryBean contentStoreFactory() {
+        public AbstractStoreFactoryBean contentStoreFactory() {
             return new TestContentStoreFactory();
         }
     }
 
-    public static class TestContentStoreFactory extends AbstractContentStoreFactoryBean {
+    public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
         @Override
         protected Object getContentStoreImpl() {
             return new TestConfigStoreImpl();
@@ -94,7 +95,7 @@ public class StoreExtensionTest {
 
     }
     
-    public interface TestContentRepository extends ContentStore<Object, Serializable>, TestExtensionService {
+    public interface TestContentRepository extends Store<Serializable>, ContentStore<Object, Serializable>, TestExtensionService {
     }
 
     public interface TestExtensionService {
