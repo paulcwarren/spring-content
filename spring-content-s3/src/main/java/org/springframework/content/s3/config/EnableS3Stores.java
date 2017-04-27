@@ -11,16 +11,16 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cloud.aws.context.config.annotation.ContextResourceLoaderConfiguration;
 import org.springframework.context.annotation.Import;
 
-import internal.org.springframework.content.s3.config.S3ContentRepositoriesRegistrar;
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
 import internal.org.springframework.content.s3.config.S3StoreFactoryBean;
+import internal.org.springframework.content.s3.config.S3StoresRegistrar;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({ContextResourceLoaderConfiguration.class, S3StoreConfiguration.class, S3ContentRepositoriesRegistrar.class})
-public @interface EnableS3ContentRepositories {
+@Import({ContextResourceLoaderConfiguration.class, S3StoreConfiguration.class, S3StoresRegistrar.class})
+public @interface EnableS3Stores {
 
 	/**
 	 * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:

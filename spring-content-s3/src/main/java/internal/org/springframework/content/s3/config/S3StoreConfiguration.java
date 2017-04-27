@@ -11,7 +11,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
-public class S3ContentRepositoryConfiguration {
+public class S3StoreConfiguration {
 	
 	@Autowired(required=false) private List<S3StoreConverter<?,String>> customConverters;
 

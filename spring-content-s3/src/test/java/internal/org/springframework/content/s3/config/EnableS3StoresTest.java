@@ -21,8 +21,9 @@ import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.s3.config.AbstractS3ContentRepositoryConfiguration;
+import org.springframework.content.s3.config.AbstractS3StoreConfiguration;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
+import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.S3StoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,11 +37,11 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
-public class EnableS3ContentRepositoriesTest {
+public class EnableS3StoresTest {
 
 	private AnnotationConfigApplicationContext context;
 	{
-		Describe("EnableS3ContentRepositories", () -> {
+		Describe("EnableS3Stores", () -> {
 			Context("given a context and a configuartion with an S3 content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -92,6 +93,25 @@ public class EnableS3ContentRepositoriesTest {
 				});
 			});
 		});
+		
+		Describe("EnableS3ContentRepositories", () -> {
+			Context("given a context and a configuartion with an S3 content repository bean", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(EnableS3ContentRepositoriesConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should have a Content Repository bean", () -> {
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have an s3 store converter", () -> {
+					assertThat(context.getBean("s3StoreConverter"), is(not(nullValue())));
+				});
+			});
+		});
 	}
 
 
@@ -100,21 +120,21 @@ public class EnableS3ContentRepositoriesTest {
 	}
 
 	@Configuration
-	@EnableS3ContentRepositories(basePackages="contains.no.fs.repositores")
+	@EnableS3Stores(basePackages="contains.no.fs.repositores")
 //	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 	}
 
 	@Configuration
-	@EnableS3ContentRepositories
+	@EnableS3Stores
 //	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
 	}
 	
 	@Configuration
-	@EnableS3ContentRepositories
+	@EnableS3Stores
 //	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class ConverterConfig {
@@ -132,7 +152,14 @@ public class EnableS3ContentRepositoriesTest {
 	}
 
 	@Configuration
-	public static class InfrastructureConfig extends AbstractS3ContentRepositoryConfiguration {
+	@EnableS3ContentRepositories
+//	@EnableContextResourceLoader
+	@Import(InfrastructureConfig.class)
+	public static class EnableS3ContentRepositoriesConfig {
+	}
+	
+	@Configuration
+	public static class InfrastructureConfig extends AbstractS3StoreConfiguration {
 
 		@Autowired
 		private AmazonS3 client;

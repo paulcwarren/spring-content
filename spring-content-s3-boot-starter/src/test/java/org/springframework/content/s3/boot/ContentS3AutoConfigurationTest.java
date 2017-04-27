@@ -19,12 +19,12 @@ import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.s3.config.AbstractS3ContentRepositoryConfiguration;
+import org.springframework.content.s3.config.AbstractS3StoreConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public class ContentS3AutoConfigurationTests {
+public class ContentS3AutoConfigurationTest {
 
 	@Test
 	public void contextLoads() {
@@ -40,7 +40,7 @@ public class ContentS3AutoConfigurationTests {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	public static class TestConfig extends AbstractS3ContentRepositoryConfiguration {
+	public static class TestConfig extends AbstractS3StoreConfiguration {
 
 		@Autowired
 		private AmazonS3 client;

@@ -11,7 +11,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 
 @SuppressWarnings("rawtypes")
-public class S3ContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
+public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private AmazonS3 client; 
