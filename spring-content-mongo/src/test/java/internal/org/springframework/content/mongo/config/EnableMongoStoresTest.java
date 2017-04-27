@@ -20,6 +20,7 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
+import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.content.mongo.config.MongoStoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,11 +37,11 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 @RunWith(Ginkgo4jRunner.class)
-public class EnableMongoContentRepositoriesTest {
+public class EnableMongoStoresTest {
 
 	private AnnotationConfigApplicationContext context;
 	{
-		Describe("EnableMongoRepositories", () -> {
+		Describe("EnableMongoStores", () -> {
 			Context("given an enabled configuration with a mongo content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -92,8 +93,26 @@ public class EnableMongoContentRepositoriesTest {
 				});
 			});
 		});
-	}
 
+		Describe("EnableMongoContentRepositories", () -> {
+			Context("given an enabled configuration with a mongo content repository bean", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(EnableMongoContentRepositoriesConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should have a mongo content repository bean", () -> {
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a mongo store converter", () -> {
+					assertThat(context.getBean("mongoStoreConverter"), is(not(nullValue())));
+				});
+			});
+		});
+	}
 
 	@Test
 	public void noop() {
@@ -101,16 +120,23 @@ public class EnableMongoContentRepositoriesTest {
 	}
 
 	@Configuration
-	@EnableMongoContentRepositories(basePackages="contains.no.mongo.repositores")
+	@EnableMongoStores(basePackages="contains.no.mongo.repositores")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 		//
 	}
 
 	@Configuration
-	@EnableMongoContentRepositories
+	@EnableMongoStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
+		//
+	}
+
+	@Configuration
+	@EnableMongoContentRepositories
+	@Import(InfrastructureConfig.class)
+	public static class EnableMongoContentRepositoriesConfig {
 		//
 	}
 

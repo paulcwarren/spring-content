@@ -12,6 +12,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
+import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
@@ -45,7 +46,7 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 		return AutoConfigurationPackages.get(this.getBeanFactory()).toArray(new String[] {});
 	}
 
-	@EnableMongoContentRepositories
+	@EnableMongoStores
 	private static class EnableMongoContentAutoConfiguration {
 	}
 

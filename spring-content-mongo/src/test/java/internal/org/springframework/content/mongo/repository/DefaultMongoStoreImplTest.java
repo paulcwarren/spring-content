@@ -32,8 +32,8 @@ import com.mongodb.gridfs.GridFSFile;
 
 
 @RunWith(Ginkgo4jRunner.class)
-public class DefaultMongoContentRepositoryImplTest {
-    private DefaultMongoContentRepositoryImpl<TestEntity, String> mongoContentRepoImpl;
+public class DefaultMongoStoreImplTest {
+    private DefaultMongoStoreImpl<TestEntity, String> mongoContentRepoImpl;
     private GridFsTemplate gridFsTemplate;
     private GridFSFile gridFSFile;
     private TestEntity property;
@@ -51,7 +51,7 @@ public class DefaultMongoContentRepositoryImplTest {
                 gridFsTemplate = mock(GridFsTemplate.class);
                 gridFSFile = mock(GridFSFile.class);
                 resource = mock(GridFsResource.class);
-                mongoContentRepoImpl = new DefaultMongoContentRepositoryImpl<TestEntity, String>(gridFsTemplate, converter);
+                mongoContentRepoImpl = new DefaultMongoStoreImpl<TestEntity, String>(gridFsTemplate, converter);
             });
 
             Context("#setContent", () -> {

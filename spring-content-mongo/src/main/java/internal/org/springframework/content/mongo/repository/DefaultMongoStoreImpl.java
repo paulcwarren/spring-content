@@ -19,14 +19,14 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
-public class DefaultMongoContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class DefaultMongoStoreImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
-	private static Log logger = LogFactory.getLog(DefaultMongoContentRepositoryImpl.class);
+	private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
 
 	private GridFsTemplate gridFs;
 	private ConversionService converter;
 
-	public DefaultMongoContentRepositoryImpl(GridFsTemplate gridFs, ConversionService converter) {
+	public DefaultMongoStoreImpl(GridFsTemplate gridFs, ConversionService converter) {
 		Assert.notNull(gridFs, "gridFs cannot be null");
 		Assert.notNull(converter, "converter cannot be null");
 

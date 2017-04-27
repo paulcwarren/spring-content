@@ -11,16 +11,16 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 
-import internal.org.springframework.content.mongo.config.MongoContentRepositoriesRegistrar;
 import internal.org.springframework.content.mongo.config.MongoStoreFactoryBean;
+import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
 import internal.org.springframework.content.mongo.config.MongoStoreConfiguration;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({MongoContentRepositoriesRegistrar.class, MongoStoreConfiguration.class})
-public @interface EnableMongoContentRepositories {
+@Import({MongoContentStoresRegistrar.class, MongoStoreConfiguration.class})
+public @interface EnableMongoStores {
 
 	/**
 	 * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:

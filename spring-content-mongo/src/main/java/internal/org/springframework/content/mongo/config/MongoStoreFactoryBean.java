@@ -5,9 +5,9 @@ import org.springframework.content.commons.repository.factory.AbstractStoreFacto
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import internal.org.springframework.content.mongo.repository.DefaultMongoContentRepositoryImpl;
+import internal.org.springframework.content.mongo.repository.DefaultMongoStoreImpl;
 
-public class MongoContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
+public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired private GridFsTemplate gridFs;
 	@Autowired private ConversionService mongoStoreConverter;
@@ -19,6 +19,6 @@ public class MongoContentRepositoryFactoryBean extends AbstractStoreFactoryBean 
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultMongoContentRepositoryImpl(gridFs, mongoStoreConverter);
+		return new DefaultMongoStoreImpl(gridFs, mongoStoreConverter);
 	}
 }
