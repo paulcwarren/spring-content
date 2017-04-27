@@ -7,11 +7,11 @@ import org.springframework.content.commons.repository.ContentStore;
 
 import internal.org.springframework.content.jpa.operations.JpaContentTemplate;
 
-public class DefaultJpaContentRepositoryImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class DefaultJpaStoreImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
 
 	private JpaContentTemplate template;
 	
-	public DefaultJpaContentRepositoryImpl(JpaContentTemplate template) {
+	public DefaultJpaStoreImpl(JpaContentTemplate template) {
 		this.template = template;
 	}
 

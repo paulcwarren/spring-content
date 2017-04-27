@@ -25,6 +25,7 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
+import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,11 +46,11 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1) // required
-public class EnableJpaContentRepositoriesTest {
+public class EnableJpaStoresTest {
 
 	private AnnotationConfigApplicationContext context;
 	{
-		Describe("EnableJpaContentRepositories", () -> {
+		Describe("EnableJpaStores", () -> {
 			Context("given a context and a configuartion with a jpa content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -85,6 +86,26 @@ public class EnableJpaContentRepositoriesTest {
 				});
 			});
 		});
+		
+		Describe("EnableJpaContentRepositores", () -> {
+			Context("given a context and a configuartion with a jpa content repository bean", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(EnableJpaContentRepositoriesConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should have a content repository bean", () -> {
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+				It("should have a jpaContentTemplate bean", () -> {
+					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
+				});
+			});
+		});
+
 	}
 
 
@@ -93,15 +114,21 @@ public class EnableJpaContentRepositoriesTest {
 	}
 
 	@Configuration
-	@EnableJpaContentRepositories(basePackages="contains.no.jpa.repositores")
+	@EnableJpaStores(basePackages="contains.no.jpa.repositores")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 	}
 
 	@Configuration
-	@EnableJpaContentRepositories
+	@EnableJpaStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
+	}
+
+	@Configuration
+	@EnableJpaContentRepositories
+	@Import(InfrastructureConfig.class)
+	public static class EnableJpaContentRepositoriesConfig {
 	}
 
 	@Configuration

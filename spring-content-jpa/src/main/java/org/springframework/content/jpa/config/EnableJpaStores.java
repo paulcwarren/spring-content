@@ -10,15 +10,15 @@ import java.lang.annotation.Target;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Import;
 
-import internal.org.springframework.content.jpa.config.JpaContentRepositoriesRegistrar;
+import internal.org.springframework.content.jpa.config.JpaStoresRegistrar;
 import internal.org.springframework.content.jpa.config.JpaStoreFactoryBean;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({JpaContentRepositoriesRegistrar.class})
-public @interface EnableJpaContentRepositories {
+@Import({JpaStoresRegistrar.class})
+public @interface EnableJpaStores {
 
 
 	/**

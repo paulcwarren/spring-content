@@ -5,10 +5,10 @@ import org.springframework.content.commons.repository.factory.AbstractStoreFacto
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.jpa.operations.JpaContentTemplate;
-import internal.org.springframework.content.jpa.repository.DefaultJpaContentRepositoryImpl;
+import internal.org.springframework.content.jpa.repository.DefaultJpaStoreImpl;
 
 @SuppressWarnings("rawtypes")
-public class JpaContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
+public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired 
 	private JpaContentTemplate template;
@@ -16,7 +16,7 @@ public class JpaContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
 	@Override
 	protected Object getContentStoreImpl() {
 		Assert.notNull(template, "template cannot be null");
-		return new DefaultJpaContentRepositoryImpl(template);
+		return new DefaultJpaStoreImpl(template);
 	}
 
 }
