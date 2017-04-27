@@ -7,10 +7,10 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.fs.repository.DefaultFileSystemContentRepositoryImpl;
+import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 
 @SuppressWarnings("rawtypes")
-public class FilesystemContentRepositoryFactoryBean extends AbstractStoreFactoryBean {
+public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	FileSystemResourceLoader loader;
@@ -28,7 +28,7 @@ public class FilesystemContentRepositoryFactoryBean extends AbstractStoreFactory
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFileSystemContentRepositoryImpl(loader, filesystemStoreConverter, new FileServiceImpl());
+		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter, new FileServiceImpl());
 	}
 
 }

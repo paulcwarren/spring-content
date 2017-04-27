@@ -40,8 +40,8 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
-public class DefaultFilesystemContentRepositoryImplTest {
-    private DefaultFileSystemContentRepositoryImpl<TestEntity, String> filesystemContentRepoImpl;
+public class DefaultFilesystemStoresImplTest {
+    private DefaultFilesystemStoreImpl<TestEntity, String> filesystemContentRepoImpl;
     private FileSystemResourceLoader loader;
     private ConversionService conversion;
     private TestEntity entity;
@@ -68,7 +68,7 @@ public class DefaultFilesystemContentRepositoryImplTest {
 
                 fileService = mock(FileService.class);
 
-                filesystemContentRepoImpl = new DefaultFileSystemContentRepositoryImpl<TestEntity, String>(loader, conversion, fileService);
+                filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<TestEntity, String>(loader, conversion, fileService);
             });
             
             Context("#setContent", () -> {

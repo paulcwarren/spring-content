@@ -4,6 +4,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
@@ -21,6 +22,7 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
+import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.config.FilesystemStoreConverter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -31,13 +33,14 @@ import org.springframework.core.convert.ConversionService;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+@SuppressWarnings("deprecation")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
-public class EnableFilesystemContentRepositoriesTest {
+public class EnableFilesystemStoresTest {
 
 	private AnnotationConfigApplicationContext context;
 	{
-		Describe("EnableFilesystemContentRepositories", () -> {
+		Describe("EnableFilesystemStores", () -> {
 
 			Context("given a context and a configuartion with a filesystem content repository bean", () -> {
 				BeforeEach(() -> {
@@ -48,7 +51,7 @@ public class EnableFilesystemContentRepositoriesTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should have a ContentRepository bean", () -> {
+				FIt("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
 				It("should have a filesystem conversion service bean", () -> {
@@ -97,6 +100,24 @@ public class EnableFilesystemContentRepositoriesTest {
 				});
 			});
 		});
+		
+		Describe("EnableFilesystemContentRepositories", () -> {
+
+			Context("given a context and a configuartion with a filesystem content repository bean", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigApplicationContext();
+					context.register(BackwardCompatibilityConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should have a ContentRepository bean", () -> {
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				});
+			});
+		});
+
 	}
 
 
@@ -105,19 +126,19 @@ public class EnableFilesystemContentRepositoriesTest {
 	}
 
 	@Configuration
-	@EnableFilesystemContentRepositories(basePackages="contains.no.fs.repositories")
+	@EnableFilesystemStores(basePackages="contains.no.fs.repositories")
     @PropertySource("classpath:/test.properties")
 	public static class EmptyConfig {
 	}
 
 	@Configuration
-	@EnableFilesystemContentRepositories
+	@EnableFilesystemStores
 	@PropertySource("classpath:/test.properties")
 	public static class TestConfig {
 	}
 
 	@Configuration
-	@EnableFilesystemContentRepositories
+	@EnableFilesystemStores
 	@PropertySource("classpath:/test.properties")
 	public static class ConverterConfig {
 		@Bean
@@ -131,6 +152,11 @@ public class EnableFilesystemContentRepositoriesTest {
 				
 			};
 		}
+	}
+
+	@EnableFilesystemContentRepositories
+	@PropertySource("classpath:/test.properties")
+	public static class BackwardCompatibilityConfig {
 	}
 
 	@Content

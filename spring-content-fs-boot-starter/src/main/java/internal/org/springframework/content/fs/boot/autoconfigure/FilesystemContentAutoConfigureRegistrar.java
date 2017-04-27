@@ -3,7 +3,7 @@ package internal.org.springframework.content.fs.boot.autoconfigure;
 import java.util.Set;
 
 import internal.org.springframework.content.commons.utils.StoreUtils;
-import internal.org.springframework.content.fs.config.FilesystemContentRepositoriesRegistrar;
+import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -12,11 +12,12 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
+import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 
-public class FilesystemContentAutoConfigureRegistrar extends FilesystemContentRepositoriesRegistrar {
+public class FilesystemContentAutoConfigureRegistrar extends FilesystemStoreRegistrar {
 
 	@Override
 	protected void registerContentStoreBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
@@ -45,7 +46,7 @@ public class FilesystemContentAutoConfigureRegistrar extends FilesystemContentRe
 		return AutoConfigurationPackages.get(this.getBeanFactory()).toArray(new String[] {});
 	}
 
-	@EnableFilesystemContentRepositories
+	@EnableFilesystemStores
 	private static class EnableFilesystemContentAutoConfiguration {
 	}
 }

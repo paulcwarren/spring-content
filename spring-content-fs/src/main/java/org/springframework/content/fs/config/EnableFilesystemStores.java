@@ -10,17 +10,16 @@ import java.lang.annotation.Target;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Import;
 
-import internal.org.springframework.content.fs.config.FilesystemContentRepositoriesRegistrar;
 import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
 import internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean;
+import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({FilesystemContentRepositoriesRegistrar.class, FilesystemStoreConfiguration.class})
-@Deprecated
-public @interface EnableFilesystemContentRepositories {
+@Import({FilesystemStoreRegistrar.class, FilesystemStoreConfiguration.class})
+public @interface EnableFilesystemStores {
 
 
 	/**

@@ -18,7 +18,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public class ContentFilesystemAutoConfigurationTests {
+public class ContentFilesystemAutoConfigurationTest {
 
 	@Test
 	public void contextLoads() {

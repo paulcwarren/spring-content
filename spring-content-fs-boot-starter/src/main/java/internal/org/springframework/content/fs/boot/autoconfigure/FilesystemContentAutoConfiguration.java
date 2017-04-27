@@ -3,7 +3,7 @@ package internal.org.springframework.content.fs.boot.autoconfigure;
 import java.io.File;
 import java.io.IOException;
 
-import internal.org.springframework.content.fs.config.FilesystemContentRepositoryConfiguration;
+import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 @Configuration
-@Import({FilesystemContentAutoConfigureRegistrar.class, FilesystemContentRepositoryConfiguration.class})
+@Import({FilesystemContentAutoConfigureRegistrar.class, FilesystemStoreConfiguration.class})
 public class FilesystemContentAutoConfiguration {
 
 	@Autowired

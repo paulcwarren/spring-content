@@ -12,7 +12,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
-public class FilesystemContentRepositoryConfiguration {
+public class FilesystemStoreConfiguration {
 
 	@Autowired(required=false) private List<FilesystemStoreConverter<?,String>> customConverters;
 	

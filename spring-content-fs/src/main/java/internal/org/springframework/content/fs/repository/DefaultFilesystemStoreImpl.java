@@ -22,16 +22,16 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-public class DefaultFileSystemContentRepositoryImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
+public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
 
-	private static Log logger = LogFactory.getLog(DefaultFileSystemContentRepositoryImpl.class);
+	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
 	private FileSystemResourceLoader loader;
 	private ConversionService conversion;
 	private FileService fileService;
 
 
-	public DefaultFileSystemContentRepositoryImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
 		this.loader = loader;
 		this.conversion = conversion;
 		this.fileService = fileService;
