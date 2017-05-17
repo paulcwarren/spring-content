@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.4-SNAPSHOT,</span>
-<span id="revdate">2017-04-27</span>
+<span id="revdate">2017-05-17</span>
 </div>
 </div>
 <div id="content">
@@ -619,7 +619,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <p>Another approach is to use an annotated handler, which does filter events based on domain type.</p>
 </div>
 <div class="paragraph">
-<p>To declare a handler, create a POJO and annotate it as <code>@ContentRepositoryEventHandler</code>. This tells the <code>BeanPostProcessor</code> that this class needs to be inspected for handler methods.  It iterates over the class&#8217;s methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:</p>
+<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells the <code>BeanPostProcessor</code> that this class needs to be inspected for handler methods.  It iterates over the class&#8217;s methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -648,7 +648,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@ContentRepositoryEventHandler
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
 public class ExampleAnnotatedEventListener {
 
 	@HandleAfterSetContent
@@ -1089,7 +1089,7 @@ public class FilesystemStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-04-27 06:12:40 UTC
+Last updated 2017-05-17 19:05:46 UTC
 </div>
 </div>
 </body>
