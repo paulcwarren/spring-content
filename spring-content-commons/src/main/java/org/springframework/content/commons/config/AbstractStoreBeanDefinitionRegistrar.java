@@ -21,6 +21,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
+import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
 import internal.org.springframework.content.commons.utils.StoreUtils;
 
@@ -71,6 +72,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBean
 		
 		BeanDefinition storeServiceBeanDef = createBeanDefinition(ContentStoreServiceImpl.class);
 		registry.registerBeanDefinition("contentStoreService", storeServiceBeanDef);
+
+		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(AnnotatedStoreEventInvoker.class);
+		registry.registerBeanDefinition("annotatedStoreEventHandler", annotatedStoreEventHandlerDef);
 
 		BeanDefinition renditionServiceBeanDef = createBeanDefinition(RenditionServiceImpl.class);
 		registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);

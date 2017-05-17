@@ -76,7 +76,7 @@ This approach does not filter events based on domain type.
 
 Another approach is to use an annotated handler, which does filter events based on domain type.
 
-To declare a handler, create a POJO and annotate it as `@ContentRepositoryEventHandler`. This tells the `BeanPostProcessor` that this class needs to be inspected for handler methods.  It iterates over the class's methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:
+To declare a handler, create a POJO and annotate it as `@StoreEventHandler`. This tells the `BeanPostProcessor` that this class needs to be inspected for handler methods.  It iterates over the class's methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:
 
 * HandleBeforeSetContent
   
@@ -94,7 +94,7 @@ To declare a handler, create a POJO and annotate it as `@ContentRepositoryEventH
 ====
 [source, java]
 ----
-@ContentRepositoryEventHandler
+@StoreEventHandler
 public class ExampleAnnotatedEventListener {
 	
 	@HandleAfterSetContent

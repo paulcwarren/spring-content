@@ -27,6 +27,8 @@ import org.springframework.test.context.ContextConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
+import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
+
 @RunWith(Ginkgo4jSpringRunner.class )
 @Ginkgo4jConfiguration(threads=1)
 @ContextConfiguration(classes = StoreTest.StoreTestConfiguration.class)
@@ -45,6 +47,7 @@ public class StoreTest {
         		It("should have the core spring content service beans", () -> {
         			assertThat(context.getBean(ContentStoreService.class), is(not(nullValue())));
         			assertThat(context.getBean(RenditionService.class), is(not(nullValue())));
+        			assertThat(context.getBean(AnnotatedStoreEventInvoker.class), is(not(nullValue())));
         		});
         		It("should have a TestStore bean", () -> {
         			assertThat(context.getBean(TestStore.class), is(not(nullValue())));

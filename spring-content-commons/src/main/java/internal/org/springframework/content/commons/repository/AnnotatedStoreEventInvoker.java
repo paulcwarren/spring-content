@@ -9,13 +9,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
+import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
@@ -23,14 +23,14 @@ import org.springframework.content.commons.repository.events.AfterUnsetContentEv
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
-
-import org.springframework.content.commons.utils.ReflectionService;
 
 public class AnnotatedStoreEventInvoker
 		implements ApplicationListener<StoreEvent>, BeanPostProcessor {
@@ -41,6 +41,10 @@ public class AnnotatedStoreEventInvoker
 
 	private ReflectionService reflectionService;
 
+	public AnnotatedStoreEventInvoker() {
+		reflectionService = new ReflectionServiceImpl();
+	}
+	
 	public AnnotatedStoreEventInvoker(ReflectionService reflectionService) {
 		this.reflectionService = reflectionService;
 	}
