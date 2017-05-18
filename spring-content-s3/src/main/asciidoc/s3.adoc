@@ -9,20 +9,25 @@ Spring Content S3 is enabled with the following Java Config.
 [source, java]
 ----
 @Configuration
-@EnableS3ContentRepositories
-public static class ApplicationConfig extends AbstractS3ContentRepositoryConfiguration {
+@EnableS3Stores
+public static class ApplicationConfig {
 	
-	@Autowired
-	private AmazonS3 client;
-
-	@Override
-	public SimpleStorageResourceLoader simpleStorageResourceLoader() {	<1>
-		client.setRegion(RegionUtils.getRegion("us-west-1"));
+	@Bean
+	public AmazonS3 client() {	<1>
+		BasicAWSCredentials creds = new BasicAWSCredentials(...)
+		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
+		return amazonS3Client;
+	}
+    
+	@Bean
+	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<2>
 		return new SimpleStorageResourceLoader(client);
 	}
+	
 }
 ----
-<1> The S3 resource loader that will be used by the S3 Content Store
+<1> The Amazon S3 client used by the S3 ResourceLoader
+<2> The S3 ResourceLoader used by the S3 Store
 ====
 
 == Configuring
