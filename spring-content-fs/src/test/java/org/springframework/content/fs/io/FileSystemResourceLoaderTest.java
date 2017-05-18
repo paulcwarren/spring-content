@@ -16,8 +16,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
-import org.springframework.content.fs.io.DeletableResource;
-import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -35,7 +34,7 @@ public class FileSystemResourceLoaderTest {
 	
 	private File parent;
 	private File file;
-
+	
 	private Exception ex;
 	
 	{
@@ -55,6 +54,7 @@ public class FileSystemResourceLoaderTest {
                     It("succeeds", () -> {
                         assertThat(ex, is(nullValue()));
                         assertThat(loader.getResource("/something").getFile().getPath(), is("/some/well-formed/path/something"));
+                        assertThat(loader.getResource("/something"), instanceOf(DeletableResource.class));
                     });
                 });
 
@@ -65,6 +65,7 @@ public class FileSystemResourceLoaderTest {
                     It("succeeds", () -> {
                         assertThat(ex, is(nullValue()));
                         assertThat(loader.getResource("/something").getFile().getPath(), is("/some/malformed/path/something"));
+                        assertThat(loader.getResource("/something"), instanceOf(DeletableResource.class));
                     });
                 });
 			});

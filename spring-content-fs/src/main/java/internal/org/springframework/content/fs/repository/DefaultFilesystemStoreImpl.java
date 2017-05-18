@@ -12,17 +12,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.FileService;
-import org.springframework.content.fs.io.DeletableResource;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
+public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -56,7 +57,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 	}
 	
 	public void unassociate(S entity) {
-		throw new UnsupportedOperationException();
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
 	}
 
 	@Override
