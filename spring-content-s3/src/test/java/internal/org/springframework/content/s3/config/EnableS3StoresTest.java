@@ -34,6 +34,7 @@ import org.springframework.core.convert.ConversionService;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -161,17 +162,19 @@ public class EnableS3StoresTest {
 	@Configuration
 	public static class InfrastructureConfig extends AbstractS3StoreConfiguration {
 
-		@Autowired
-		private AmazonS3 client;
-		
+		@Bean
+		public AmazonS3 client() {
+			return new AmazonS3Client();
+		}
+
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
 		}
 		
 		@Override
 		public SimpleStorageResourceLoader simpleStorageResourceLoader() {
-	        client.setRegion(region());
-			return new SimpleStorageResourceLoader(client);
+	        client().setRegion(region());
+			return new SimpleStorageResourceLoader(client());
 		}
 	}
 

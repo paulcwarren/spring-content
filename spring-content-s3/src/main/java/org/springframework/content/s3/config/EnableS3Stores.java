@@ -19,7 +19,7 @@ import internal.org.springframework.content.s3.config.S3StoresRegistrar;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({ContextResourceLoaderConfiguration.class, S3StoreConfiguration.class, S3StoresRegistrar.class})
+@Import({S3StoreConfiguration.class, S3StoresRegistrar.class})
 public @interface EnableS3Stores {
 
 	/**
