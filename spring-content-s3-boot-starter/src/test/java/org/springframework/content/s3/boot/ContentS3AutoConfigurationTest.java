@@ -8,28 +8,39 @@ import javax.persistence.Id;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.s3.config.AbstractS3StoreConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public class ContentS3AutoConfigurationTest {
 
 	@Test
-	public void contextLoads() {
+	public void configurationWithBeans() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 		context.register(TestConfig.class);
+		context.refresh();
+
+		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+
+		context.close();
+	}
+
+	@Test
+	public void configurationWithoutBeans() {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+		context.register(TestConfigWithoutBeans.class);
 		context.refresh();
 
 		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
@@ -40,20 +51,30 @@ public class ContentS3AutoConfigurationTest {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	public static class TestConfig extends AbstractS3StoreConfiguration {
-
-		@Autowired
-		private AmazonS3 client;
+	public static class TestConfig {
 
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
 		}
 
-		@Override
-		public SimpleStorageResourceLoader simpleStorageResourceLoader() {
-	        client.setRegion(region());
+		@Bean
+		public AmazonS3 s3Client() {
+			AmazonS3 s3Client = new AmazonS3Client();
+			s3Client.setRegion(region());
+			return s3Client;
+		}
+
+		@Bean
+		public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
 			return new SimpleStorageResourceLoader(client);
 		}
+	}
+
+	@Configuration
+	@AutoConfigurationPackage
+	@EnableAutoConfiguration
+	public static class TestConfigWithoutBeans {
+		// will be supplied by auto-configuration
 	}
 
 	@Entity

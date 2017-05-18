@@ -16,12 +16,10 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.s3.config.AbstractS3StoreConfiguration;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.S3StoreConverter;
@@ -160,21 +158,22 @@ public class EnableS3StoresTest {
 	}
 	
 	@Configuration
-	public static class InfrastructureConfig extends AbstractS3StoreConfiguration {
-
-		@Bean
-		public AmazonS3 client() {
-			return new AmazonS3Client();
-		}
+	public static class InfrastructureConfig {
 
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
 		}
 		
-		@Override
-		public SimpleStorageResourceLoader simpleStorageResourceLoader() {
-	        client().setRegion(region());
-			return new SimpleStorageResourceLoader(client());
+		@Bean
+		public AmazonS3 client() {
+			AmazonS3Client client = new AmazonS3Client();
+			client.setRegion(region());
+			return client;
+		}
+
+		@Bean
+		public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
+			return new SimpleStorageResourceLoader(client);
 		}
 	}
 

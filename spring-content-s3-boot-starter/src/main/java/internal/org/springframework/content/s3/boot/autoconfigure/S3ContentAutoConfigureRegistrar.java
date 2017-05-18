@@ -2,6 +2,9 @@ package internal.org.springframework.content.s3.boot.autoconfigure;
 
 import java.util.Set;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+
 import internal.org.springframework.content.commons.utils.StoreUtils;
 import internal.org.springframework.content.s3.config.S3StoresRegistrar;
 
@@ -10,8 +13,13 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
+import org.springframework.content.s3.config.AbstractS3StoreConfiguration;
 import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
@@ -47,6 +55,6 @@ public class S3ContentAutoConfigureRegistrar extends S3StoresRegistrar {
 
 	@EnableS3Stores
 	private static class EnableS3ContentAutoConfiguration {
+		//
 	}
-
 }
