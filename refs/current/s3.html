@@ -435,24 +435,31 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableS3ContentRepositories
-public static class ApplicationConfig extends AbstractS3ContentRepositoryConfiguration {
+@EnableS3Stores
+public static class ApplicationConfig {
 
-	@Autowired
-	private AmazonS3 client;
+	@Bean
+	public AmazonS3 client() {	<b class="conum">(1)</b>
+		BasicAWSCredentials creds = new BasicAWSCredentials(...)
+		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
+		return amazonS3Client;
+	}
 
-	@Override
-	public SimpleStorageResourceLoader simpleStorageResourceLoader() {	<b class="conum">(1)</b>
-		client.setRegion(RegionUtils.getRegion("us-west-1"));
+	@Bean
+	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<b class="conum">(2)</b>
 		return new SimpleStorageResourceLoader(client);
 	}
+
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>The S3 resource loader that will be used by the S3 Content Store</p>
+<p>The Amazon S3 client used by the S3 ResourceLoader</p>
+</li>
+<li>
+<p>The S3 ResourceLoader used by the S3 Store</p>
 </li>
 </ol>
 </div>
@@ -568,7 +575,7 @@ public class S3StoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-05-18 05:07:43 UTC
+Last updated 2017-05-18 05:35:51 UTC
 </div>
 </div>
 </body>
