@@ -8,12 +8,16 @@ import java.net.URI;
 import java.net.URL;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-class FileSystemDeletableResource implements WritableResource, DeletableResource {
+public class FileSystemDeletableResource implements WritableResource, DeletableResource {
+
+	private static Log logger = LogFactory.getLog(FileSystemDeletableResource.class);
 
 	private FileSystemResource resource;
 	
@@ -26,7 +30,7 @@ class FileSystemDeletableResource implements WritableResource, DeletableResource
 		try {
 			FileUtils.forceDelete(this.getFile());
 		} catch (IOException ioe) {
-			FileSystemResourceLoader.logger.debug(String.format("Unexpected error deleting resource %s", this), ioe);
+			logger.debug(String.format("Unexpected error deleting resource %s", this), ioe);
 		}
 	}
 
