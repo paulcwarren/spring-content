@@ -10,7 +10,7 @@ This chapter explains the core concepts and interfaces for Spring Content stores
 
 [[content-repositories.core-concepts]]
 == Core concepts
-The central interface in the Spring Content is the `ContentStore` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to content ID type of that domain class. 
+The central interface in the Spring Content is the `ContentStore` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to the type of the content ID attribute on that domain class. 
 
 [[content-repositories.repository]]
 
@@ -125,6 +125,39 @@ public class ContentStoreConfiguration {
   ExampeAnnotatedEventHandler exampleEventHandler() {
     return new ExampeAnnotatedEventHandler();
   }
+}
+----
+====
+
+==== Experimental API ====
+
+Some Spring Content modules offer support for a new experimental Store API.  This API offers lower-level management of content that can be used to satisfy a wider set of content-related use cases.
+
+The base interface in this API is the `Store`, a generic version of a `org.springframework.core.io.ResourceLoader` that returns `org.springframework.content.commons.io.DeletableResource`s allowing them to be fully-managed.
+
+.Store interface
+====
+[source, java]
+----
+public interface Store<ID extends Serializable> {
+
+	Resource getResource(ID id);
+	
+}
+----
+====
+
+Derived from the `Store` is a second interface `AssociativeStore` allowing Resources returned by `Store`s to be associated with Spring Data Entity objects.
+
+.AssociativeStore interface
+====
+[source, java]
+----
+public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
+	
+	void associate(S entity, SID id);
+	void unassociate(S entity);
+
 }
 ----
 ====
