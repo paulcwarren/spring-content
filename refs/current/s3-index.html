@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.4-SNAPSHOT,</span>
-<span id="revdate">2017-05-18</span>
+<span id="revdate">2017-05-19</span>
 </div>
 </div>
 <div id="content">
@@ -524,7 +524,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect2">
 <h3 id="content-repositories.core-concepts">2.1. Core concepts</h3>
 <div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to content ID type of that domain class.</p>
+<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to the type of the content ID attribute on that domain class.</p>
 </div>
 <div id="content-repositories.repository" class="exampleblock">
 <div class="title">Example 1. ContentStore interface</div>
@@ -689,6 +689,47 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_experimental_api">Experimental API</h5>
+<div class="paragraph">
+<p>Some Spring Content modules offer support for a new experimental Store API.  This API offers lower-level management of content that can be used to satisfy a wider set of content-related use cases.</p>
+</div>
+<div class="paragraph">
+<p>The base interface in this API is the <code>Store</code>, a generic version of a <code>org.springframework.core.io.ResourceLoader</code> that returns `org.springframework.content.commons.io.DeletableResource`s allowing them to be fully-managed.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Store interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;ID extends Serializable&gt; {
+
+	Resource getResource(ID id);
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing Resources returned by `Store`s to be associated with Spring Data Entity objects.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 6. AssociativeStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
+
+	void associate(S entity, SID id);
+	void unassociate(S entity);
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="content-repositories.search">2.1.2. Search</h4>
@@ -699,7 +740,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally be made searchable by extending the <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. Searchable interface</div>
+<div class="title">Example 7. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -733,7 +774,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 6. Renderable interface</div>
+<div class="title">Example 8. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -884,7 +925,7 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <p>Spring Content S3 is enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Enabling Spring Content S3 using Java Config</div>
+<div class="title">Example 9. Enabling Spring Content S3 using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -962,7 +1003,7 @@ public static class ApplicationConfig {
 <p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Configuring the S3 Store</div>
+<div class="title">Example 10. Configuring the S3 Store</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1122,7 +1163,7 @@ public class S3StoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.4-SNAPSHOT<br>
-Last updated 2017-05-18 05:35:51 UTC
+Last updated 2017-05-19 05:35:23 UTC
 </div>
 </div>
 </body>
