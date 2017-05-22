@@ -5,7 +5,7 @@ language: java
 jdk:
 - oraclejdk8
 script:
-- mvn jacoco:report coveralls:report deploy --settings settings.xml -P $TRAVIS_BRANCH
+- mvn deploy --settings settings.xml -P $TRAVIS_BRANCH jacoco:report coveralls:report 
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
