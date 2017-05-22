@@ -5,11 +5,10 @@ language: java
 jdk:
 - oraclejdk8
 script:
-- mvn test jacoco:report coveralls:report
+- mvn jacoco:report coveralls:report deploy --settings settings.xml -p $TRAVIS_BRANCH
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
-- mvn deploy --settings settings.xml
 - mvn scm-publish:publish-scm
 #- mkdir -p /tmp/spring-content-docs/refs/current
 #- mv spring-content-fs/target/generated-docs/*.html /tmp/spring-content-docs/refs/current/
