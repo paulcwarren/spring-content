@@ -209,6 +209,9 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
 	<profiles>
 		<profile>
+			<id>master</id>
+		</profile>
+		<profile>
 			<id>release</id>
 			<build>
 				<plugins>
