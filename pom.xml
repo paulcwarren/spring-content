@@ -61,7 +61,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<ginkgo4j-version>1.0.9</ginkgo4j-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<docs.type>current</docs.type>
+		<docs.type>${env.TRAVIS_BUILD}</docs.type>
 		<docs.output.dir>../target/generated-docs/refs/${docs.type}/</docs.output.dir>
 	</properties>
 

@@ -28,8 +28,10 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
@@ -60,163 +62,203 @@ public class StoreMethodInterceptorTest {
 	
 	{
 		Describe("#invoke", () -> {
-			Context("When calling invoke with a valid set of args", () -> {
+			BeforeEach(() -> {
+				store = mock(ContentStore.class);
+				publisher = mock(ApplicationEventPublisher.class);
+			});
+			JustBeforeEach(() -> {
+				interceptor = new StoreMethodInterceptor(store, Object.class, String.class, extensions, publisher);
+				try {
+				    interceptor.invoke(invocation);
+                } catch (Exception invokeException) {
+				    e = invokeException;
+                }
+			});
+			Context("when getContent is invoked", () -> {
 				BeforeEach(() -> {
-					store = mock(ContentStore.class);
-					publisher = mock(ApplicationEventPublisher.class);
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = ContentStore.class;
+					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
+
+					when(invocation.getMethod()).thenReturn(getContentMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
 				});
-				JustBeforeEach(() -> {
-					interceptor = new StoreMethodInterceptor(store, Object.class, String.class, extensions, publisher);
-					try {
-					    interceptor.invoke(invocation);
-                    } catch (Exception invokeException) {
-					    e = invokeException;
-                    }
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(isA(AfterGetContentEvent.class)));
 				});
-				Context("when getContent is invoked", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
+			});
+			Context("when getContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
 
-						Class<?> storeClazz = ContentStore.class;
-						final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
+					Class<?> storeClazz = ContentStore.class;
+					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
 
-						when(invocation.getMethod()).thenReturn(getContentMethod);
-						when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+					when(invocation.getMethod()).thenReturn(getContentMethod);
+
+					//no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[]{});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterGetContentEvent.class)));
+				});
+			});
+			Context("when setContent is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = ContentStore.class;
+					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
+
+					when(invocation.getMethod()).thenReturn(setContentMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(isA(AfterSetContentEvent.class)));
+				});
+			});
+			Context("when setContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = ContentStore.class;
+					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
+
+					when(invocation.getMethod()).thenReturn(setContentMethod);
+
+					// no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[]{});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+					verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterSetContentEvent.class)));
+				});
+			});
+			Context("when unsetContent is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = ContentStore.class;
+					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
+
+					when(invocation.getMethod()).thenReturn(unsetContentMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
+					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(isA(AfterUnsetContentEvent.class)));
+				});
+			});
+			Context("when unsetContent is invoked with illegal arguments", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = ContentStore.class;
+					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
+
+					when(invocation.getMethod()).thenReturn(unsetContentMethod);
+
+					// no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[]{});
+				});
+				It("should not publish events", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher, never()).publishEvent(anyObject());
+					verify(invocation).proceed();
+					inOrder.verify(publisher, never()).publishEvent(anyObject());
+				});
+			});
+			Context("when getResource is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = Store.class;
+					final Method getResourceMethod = storeClazz.getMethod("getResource", Serializable.class);
+
+					when(invocation.getMethod()).thenReturn(getResourceMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{"some-id"});
+				});
+				It("should proceed", () -> {
+					verify(invocation).proceed();
+				});
+			});
+			Context("when associate is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = AssociativeStore.class;
+					final Method getResourceMethod = storeClazz.getMethod("associate", Object.class, Serializable.class);
+
+					when(invocation.getMethod()).thenReturn(getResourceMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text"), "some-id"});
+				});
+				It("should proceed", () -> {
+					verify(invocation).proceed();
+				});
+			});
+			Context("when unassociate is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = AssociativeStore.class;
+					final Method getResourceMethod = storeClazz.getMethod("unassociate", Object.class);
+
+					when(invocation.getMethod()).thenReturn(getResourceMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+				});
+				It("should proceed", () -> {
+					verify(invocation).proceed();
+				});
+			});
+			Context("when an extension method is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+					extension = mock(StoreExtension.class);
+
+					extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
+
+					final Method getCustomMethod = AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class);
+					when(invocation.getMethod()).thenReturn(getCustomMethod);
+					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("application/pdf")});
+				});
+				Context("when an extension implementation is provided", () -> {
+					It("should invoke the extension's implementation", () -> {
+						verify(extension).invoke(eq(invocation), anyObject());
 					});
-					It("should proceed", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
-						inOrder.verify(invocation).proceed();
-						inOrder.verify(publisher).publishEvent(argThat(isA(AfterGetContentEvent.class)));
+					It("should never proceed with the real invocation", () -> {
+						verify(invocation, never()).proceed();
+						verify(publisher, never()).publishEvent(anyObject());
 					});
 				});
-				Context("when getContent is invoked with illegal arguments", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-
-						Class<?> storeClazz = ContentStore.class;
-						final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
-
-						when(invocation.getMethod()).thenReturn(getContentMethod);
-
-						//no arguments!
-						when(invocation.getArguments()).thenReturn(new Object[]{});
-					});
-					It("should proceed", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
-						inOrder.verify(invocation).proceed();
-						inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterGetContentEvent.class)));
-					});
-				});
-				Context("when setContent is invoked", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-
-						Class<?> storeClazz = ContentStore.class;
-						final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
-
-						when(invocation.getMethod()).thenReturn(setContentMethod);
-						when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
-					});
-					It("should proceed", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
-						verify(invocation).proceed();
-						inOrder.verify(publisher).publishEvent(argThat(isA(AfterSetContentEvent.class)));
-					});
-				});
-				Context("when setContent is invoked with illegal arguments", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-
-						Class<?> storeClazz = ContentStore.class;
-						final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
-
-						when(invocation.getMethod()).thenReturn(setContentMethod);
-
-						// no arguments!
-						when(invocation.getArguments()).thenReturn(new Object[]{});
-					});
-					It("should proceed", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
-						verify(invocation).proceed();
-						inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterSetContentEvent.class)));
-					});
-				});
-				Context("when unsetContent is invoked", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-
-						Class<?> storeClazz = ContentStore.class;
-						final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
-
-						when(invocation.getMethod()).thenReturn(unsetContentMethod);
-						when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
-					});
-					It("should proceed", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
-						verify(invocation).proceed();
-						inOrder.verify(publisher).publishEvent(argThat(isA(AfterUnsetContentEvent.class)));
-					});
-				});
-				Context("when unsetContent is invoked with illegal arguments", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-
-						Class<?> storeClazz = ContentStore.class;
-						final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
-
-						when(invocation.getMethod()).thenReturn(unsetContentMethod);
-
-						// no arguments!
-						when(invocation.getArguments()).thenReturn(new Object[]{});
-					});
-					It("should not publish events", () -> {
-						InOrder inOrder = Mockito.inOrder(publisher, invocation);
-
-						inOrder.verify(publisher, never()).publishEvent(anyObject());
-						verify(invocation).proceed();
-						inOrder.verify(publisher, never()).publishEvent(anyObject());
-					});
-				});
-				Context("when an extension method is invoked", () -> {
-					BeforeEach(() -> {
-						invocation = mock(MethodInvocation.class);
-						extension = mock(StoreExtension.class);
-
-						extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
-
-						final Method getCustomMethod = AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class);
-						when(invocation.getMethod()).thenReturn(getCustomMethod);
-						when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("application/pdf")});
-					});
-					Context("when an extension implementation is provided", () -> {
-						It("should invoke the extension's implementation", () -> {
-							verify(extension).invoke(eq(invocation), anyObject());
-						});
-						It("should never proceed with the real invocation", () -> {
-							verify(invocation, never()).proceed();
-							verify(publisher, never()).publishEvent(anyObject());
-						});
-					});
-                    Context("when the extension implementation is not provided", () -> {
-                        BeforeEach(() -> {
-                            extensions = new HashMap<>();
-                        });
-                        It("should throw a Missing Extension error", () -> {
-                            assertThat(e.getMessage(), startsWith("No implementation found for"));
-                        });
+                Context("when the extension implementation is not provided", () -> {
+                    BeforeEach(() -> {
+                        extensions = new HashMap<>();
+                    });
+                    It("should throw a Missing Extension error", () -> {
+                        assertThat(e.getMessage(), startsWith("No implementation found for"));
                     });
                 });
-			});
+            });
 		});
 	}
 	

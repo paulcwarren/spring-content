@@ -45,6 +45,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		return resource;
 	}
 	
+	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
 		String location = conversion.convert(id, String.class);
@@ -56,6 +57,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		}
 	}
 	
+	@Override
 	public void unassociate(S entity) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
