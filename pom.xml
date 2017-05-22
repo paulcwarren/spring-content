@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.paulcwarren</groupId>
 	<artifactId>spring-content</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.4</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Content</name>
@@ -179,7 +179,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-scm-publish-plugin</artifactId>
 				<configuration>
-					<providerImplementations>
+ 					<providerImplementations>
 						<git>jgit</git>
 					</providerImplementations>
 					<checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
