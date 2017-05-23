@@ -4,24 +4,11 @@ branches:
 language: java
 jdk:
 - oraclejdk8
+before_install:
+- ./scripts/before-install.sh
 script:
 - mvn deploy --settings settings.xml -P $TRAVIS_BRANCH jacoco:report coveralls:report 
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:
 - mvn scm-publish:publish-scm
-#- mkdir -p /tmp/spring-content-docs/refs/current
-#- mv spring-content-fs/target/generated-docs/*.html /tmp/spring-content-docs/refs/current/
-#- cd ..
-#- git clone --depth=50 --branch=gh-pages https://github.com/paulcwarren/spring-content.git gh-pages
-#- cd gh-pages
-#- git branch
-#- git branch -r
-#- git config --global user.email $GITHUB_EMAIL
-#- git config --global user.name $GITHUB_NAME
-#- mkdir -p refs/current
-#- mv /tmp/spring-content-docs/refs/current/*.html refs/current/
-#- git add refs/current/
-#- git commit --message "SpringContentCI Publishing References"
-#- git remote add origin-pages $GITHUB_LINK > /dev/null 2>&1
-#- git push --quiet --set-upstream origin-pages gh-pages

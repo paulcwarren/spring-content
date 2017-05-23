@@ -122,7 +122,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<configuration>
 					<serverId>ossrh</serverId>
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>false</autoReleaseAfterClose>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -208,17 +208,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 	</build>
 
 	<profiles>
-		<profile>
-      		<id>ossrh</id>
-      		<activation>
-        		<activeByDefault>true</activeByDefault>
-      		</activation>
-      		<properties>
-        		<gpg.executable>gpg</gpg.executable>
-        		<gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
-        		<gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-      		</properties>
-		</profile>
    		<profile>
 			<id>master</id>
 		</profile>
