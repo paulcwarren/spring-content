@@ -75,7 +75,7 @@ public abstract class AbstractStoreEventListener<T>
 	/**
 	 * Override this method if you are interested in {@literal beforeSetContent} events.
 	 * 
-	 * @param event The content event
+	 * @param entity The content event
 	 */
 	protected void onBeforeSetContent(BeforeSetContentEvent entity) {}
 

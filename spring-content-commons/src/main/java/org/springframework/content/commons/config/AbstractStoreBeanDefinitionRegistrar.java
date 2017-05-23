@@ -121,9 +121,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBean
 	protected void createOperationsBean(BeanDefinitionRegistry registry) { return; }
 	
 	/**
-	 * Return the annotation to obtain configuration information from. Will be wrappen into an
-	 * {@link AnnotationBasedContentRepositoryConfigurationSource} so have a look at the constants in there for what annotation
-	 * attributes it expects.
+	 * Return the annotation to obtain configuration information from
+	 * @return 
+	 * 		configuration annotation
 	 */
 	protected abstract Class<? extends Annotation> getAnnotation();
 }
