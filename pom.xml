@@ -209,15 +209,21 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
 	<profiles>
 		<profile>
-			<id>master</id>
-		</profile>
-		<profile>
-			<id>release</id>
-			<properties>
+      		<id>ossrh</id>
+      		<activation>
+        		<activeByDefault>true</activeByDefault>
+      		</activation>
+      		<properties>
         		<gpg.executable>gpg</gpg.executable>
         		<gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
         		<gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
       		</properties>
+		</profile>
+   		<profile>
+			<id>master</id>
+		</profile>
+		<profile>
+			<id>release</id>
    			<build>
 				<plugins>
 					<plugin>
