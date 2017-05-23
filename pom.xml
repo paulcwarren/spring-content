@@ -213,7 +213,12 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		</profile>
 		<profile>
 			<id>release</id>
-			<build>
+			<properties>
+        		<gpg.executable>gpg</gpg.executable>
+        		<gpg.keyname>${env.GPG_KEY_NAME}</gpg.keyname>
+        		<gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+      		</properties>
+   			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
