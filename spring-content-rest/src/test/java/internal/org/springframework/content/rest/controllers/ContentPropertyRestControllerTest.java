@@ -33,7 +33,7 @@ import org.springframework.http.ResponseEntity;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
+import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentPropertyRestControllerTest {
@@ -50,7 +50,7 @@ public class ContentPropertyRestControllerTest {
 		Describe("ContentPropertyRestController", () -> {
 			BeforeEach(() -> {
 				MockitoAnnotations.initMocks(this);
-				controller = new ContentPropertyRestController(contentRepoService);
+				controller = new ContentPropertyRestController(contentRepoService, new ContentRestByteRangeHttpRequestHandler());
 			});
 			
 			Context("given a content entity get request", () -> {
@@ -60,7 +60,7 @@ public class ContentPropertyRestControllerTest {
 					when(rootResourceInfoMock.getInvoker()).thenReturn(invokerMock);
 					when(invokerMock.hasFindOneMethod()).thenReturn(true);
 					when(invokerMock.invokeFindOne("12345")).thenReturn(new ContentEntity("12345"));
-					when(contentRepoService.getContentStores()).thenReturn(new ContentStoreInfo[] {contentRepoInfo});
+					when(contentRepoService.getStores(anyObject())).thenReturn(new ContentStoreInfo[] {contentRepoInfo});
 					when(contentRepoInfo.getImpementation()).thenReturn(contentRepo);
 					Mockito.doReturn(ContentEntity.class).when(contentRepoInfo).getDomainObjectClass();
 					Mockito.doReturn(ContentEntityContentRepository.class).when(contentRepoInfo).getInterface();

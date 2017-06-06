@@ -4,19 +4,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
+import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +37,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
@@ -40,14 +47,67 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	private static final String BASE_MAPPING = "/{repository}/{id}/{contentProperty}/{contentId}";
 
 	private ContentStoreService storeService;
+	private ContentRestByteRangeHttpRequestHandler handler;
 	
 	@Autowired 
-	public ContentPropertyRestController(ContentStoreService storeService) {
+	public ContentPropertyRestController(ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
 		super();
 		this.storeService = storeService;
+		this.handler = handler;
 	}
 
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", "range"})
+	public void getContent(HttpServletRequest request, HttpServletResponse response,
+						   final RootResourceInformation rootInfo,
+						   @PathVariable String repository, 
+						   @PathVariable String id, 
+						   @PathVariable String contentProperty,
+						   @PathVariable String contentId) 
+			throws HttpRequestMethodNotSupportedException {
+		
+		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
+
+		Object contentPropertyValue = null;
+		Class<?> contentEntityClass = null;
+		
+		if (domainObj.getClass().isAnnotationPresent(Content.class)) {
+			contentPropertyValue = domainObj;
+			contentEntityClass = domainObj.getClass();
+		} else {
+			PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
+			contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
+			contentPropertyValue = getContentProperty(domainObj, property, contentId);
+		}
+		
+		Serializable cid = (Serializable) BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentId.class);
+		
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
+		if (info == null) {
+			throw new IllegalArgumentException("Entity not a content repository");
+		}
+
+		Resource r = ((Store)info.getImpementation()).getResource(cid);
+		if (r == null) {
+			throw new ResourceNotFoundException();
+		}
+
+		request.setAttribute("SPRING_CONTENT_RESOURCE", r);
+
+		if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
+			request.setAttribute("SPRING_CONTENT_CONTENTTYPE", BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class).toString());
+		}
+		
+		try {
+			handler.handleRequest(request, response);
+		} catch (ServletException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return;
+	}
+	
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json"})
 	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
 														  @PathVariable String repository, 
 														  @PathVariable String id, 

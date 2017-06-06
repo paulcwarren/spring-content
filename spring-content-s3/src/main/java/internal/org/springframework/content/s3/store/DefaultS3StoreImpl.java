@@ -12,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
@@ -22,7 +23,7 @@ import org.springframework.util.Assert;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 
-public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -136,5 +137,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements ContentS
 		if (resource.exists()) {
 			client.deleteObject(new DeleteObjectRequest(bucket, resource.getFilename()));
 		}
+	}
+
+	@Override
+	public Resource getResource(SID id) {
+		String location = converter.convert(id, String.class);
+		location = absolutify(location);
+		Resource resource = loader.getResource(location);
+		return resource;
 	}
 }

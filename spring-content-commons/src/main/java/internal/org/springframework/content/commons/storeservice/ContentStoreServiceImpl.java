@@ -1,5 +1,6 @@
 package internal.org.springframework.content.commons.storeservice;
 
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
@@ -19,11 +21,15 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	public ContentStoreServiceImpl() {
 	}
 
+	@SuppressWarnings("unchecked")
 	@Autowired(required=false)
 	public void setFactories(List<StoreFactory> factories){
 		for (StoreFactory factory : factories) {
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
-				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), factory.getStore());
+				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), (ContentStore<Object,Serializable>)factory.getStore());
+				contentStoreInfos.add(info);
+			} else {
+				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), (Store<Serializable>)factory.getStore());
 				contentStoreInfos.add(info);
 			}
 		}
@@ -39,7 +45,7 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 				}
 			}
 		}
-		throw new IllegalStateException(String.format("ContentStore %s must specify parameters <T, SID>", contentStoreInterface.getCanonicalName()));
+		return null;
 	}
 
 	public Set<ContentStoreInfo> getContentStoreInfos() {
@@ -51,6 +57,17 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	}
 
 	public ContentStoreInfo[] getContentStores() {
-		return contentStoreInfos.toArray(new ContentStoreInfo[] {});
+		return getStores(ContentStore.class);
+	}
+
+	@Override
+	public ContentStoreInfo[] getStores(Class<?> storeType) {
+		Set<ContentStoreInfo> storeInfos = new HashSet<>();
+		for (ContentStoreInfo info : contentStoreInfos) {
+			if (info.getImplementation(storeType) != null) {
+				storeInfos.add(info);
+			}
+		}
+		return storeInfos.toArray(new ContentStoreInfo[] {});
 	}
 }

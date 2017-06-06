@@ -4,17 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
@@ -31,6 +36,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
 @ContentRestController
@@ -39,13 +46,53 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	private static final String BASE_MAPPING = "/{repository}/{id}";
 
 	private ContentStoreService storeService;
+	private ContentRestByteRangeHttpRequestHandler handler;
 	
 	@Autowired 
-	public ContentEntityRestController(ContentStoreService storeService) {
+	public ContentEntityRestController(ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
 		super();
 		this.storeService = storeService;
+		this.handler = handler;
 	}
 
+	@StoreType("contentstore")
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", "range"})
+	public void getContent(HttpServletRequest request, HttpServletResponse response,
+														  final RootResourceInformation rootInfo,
+														  @PathVariable String repository, 
+														  @PathVariable String id) 
+			throws HttpRequestMethodNotSupportedException {
+		
+		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
+		
+		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, request.getPathInfo());
+		if (info == null) {
+			throw new IllegalArgumentException("Entity not a content repository");
+		}
+
+		Serializable cid = (Serializable) BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class);
+		
+		Resource r = ((Store)info.getImpementation()).getResource(cid);
+		if (r == null) {
+			throw new ResourceNotFoundException();
+		}
+
+		request.setAttribute("SPRING_CONTENT_RESOURCE", r);
+
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
+			request.setAttribute("SPRING_CONTENT_CONTENTTYPE", BeanUtils.getFieldWithAnnotation(domainObj, MimeType.class).toString());
+		}
+		
+		try {
+			handler.handleRequest(request, response);
+		} catch (ServletException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return;
+	}
+	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers="accept!=application/hal+json")
 	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
 														  @PathVariable String repository, 

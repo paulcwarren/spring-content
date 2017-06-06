@@ -48,8 +48,6 @@ import internal.org.springframework.content.rest.TestEntityChildContentRepositor
 import internal.org.springframework.content.rest.TestEntityContentRepository;
 import internal.org.springframework.content.rest.TestEntityRepository;
 import internal.org.springframework.content.rest.config.ContentRestConfiguration;
-import internal.org.springframework.content.rest.controllers.ContentPropertyCollectionRestController;
-import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
@@ -106,11 +104,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 				Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
 					It("should set the content and return 200", () -> {
 						mvc.perform(put("/files/" + testEntity2.id.toString() + "/child"))
-//								.content("Hello New Spring Content World!")
-//								.contentType("text/plain"))
 								.andExpect(status().isMethodNotAllowed());
-
-//						assertThat(IOUtils.toString(contentRepository2.getContent(testEntity2.child)), is("Hello New Spring Content World!"));
 					});
 				});
 				Context("given the property has content", () -> {
@@ -131,6 +125,18 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(response, is(not(nullValue())));
 
 							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+						});
+					});
+					Context("a range GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.accept("text/plain")
+									.header("range", "bytes=6-19"))
+									.andExpect(status().isPartialContent())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+
+							assertThat(response.getContentAsString(), is("Spring Content"));
 						});
 					});
 					Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {

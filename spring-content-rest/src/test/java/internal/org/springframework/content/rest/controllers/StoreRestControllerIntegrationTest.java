@@ -21,6 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -50,7 +52,7 @@ import internal.org.springframework.content.rest.config.ContentRestConfiguration
 @WebAppConfiguration
 @ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, ContentRestConfiguration.class})
 @Transactional
-public class ContentEntityRestControllerIntegrationTest {
+public class StoreRestControllerIntegrationTest {
 	
 	@Autowired TestEntityRepository repository;
 	@Autowired TestEntityContentRepository contentRepository;
@@ -63,17 +65,38 @@ public class ContentEntityRestControllerIntegrationTest {
 	private TestEntity testEntity;
 	
 	{
-		Describe("ContentEntityRestController", () -> {
+		Describe("StoreRestController", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders
 						.webAppContextSetup(context)
 						.build();
 			});
+			
+			Describe("Store", () -> {
+    			BeforeEach(() -> {
+    				Resource r = store.getResource("/some-resource.txt");
+    				if (r instanceof WritableResource) {
+    					IOUtils.copy(new ByteArrayInputStream("Existing content".getBytes()), ((WritableResource)r).getOutputStream());
+    				}
+    			});
+    			It("should return a byte range when requested", () -> {
+					MockHttpServletResponse response = mvc.perform(get("/teststore/some-resource.txt")
+							.header("range", "bytes=9-12"))
+							.andExpect(status().isPartialContent())
+							.andReturn().getResponse();
+
+					assertThat(response, is(not(nullValue())));
+					assertThat(response.getContentAsString(), is("cont"));
+
+    			});
+
+			});
+			
 			Context("given an Entity is a ContentRepository", () -> {
 				BeforeEach(() -> {
 					testEntity = repository.save(new TestEntity());
 				});
-				Context("a GET to /{repository}/{id} accepting a content mime-type", () -> {
+				Context("a GET to /{store}/{id} accepting a content mime-type", () -> {
 					It("should return 404", () -> {
 						mvc.perform(get("/testEntities/" + testEntity.id)
 						.accept("text/plain"))
@@ -161,18 +184,6 @@ public class ContentEntityRestControllerIntegrationTest {
 
 							assertThat(response, is(not(nullValue())));
 							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
-						});
-					});
-					Context("a GET to /{repository}/{id} with a range header", () -> {
-						Ginkgo4jDSL.It("should return the content range and 206", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
-									.accept("text/plain")
-									.header("range", "bytes=6-19"))
-									.andExpect(status().isPartialContent())
-									.andReturn().getResponse();
-
-							assertThat(response, is(not(nullValue())));
-							assertThat(response.getContentAsString(), is("Spring Content"));
 						});
 					});
 					Context("a PUT to /{repository}/{id}", () -> {

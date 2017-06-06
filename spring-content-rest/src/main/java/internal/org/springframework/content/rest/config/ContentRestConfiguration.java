@@ -22,6 +22,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import internal.org.springframework.content.rest.links.ContentLinksResourceProcessor;
+import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 
 @Configuration
@@ -43,6 +44,11 @@ public class ContentRestConfiguration extends HateoasAwareSpringDataWebConfigura
 	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
 		return new ContentHandlerMapping(repositories, repositoryMappings, storeService);
+	}
+	
+	@Bean
+	ContentRestByteRangeHttpRequestHandler ascRestRequestHandler() {
+		return new ContentRestByteRangeHttpRequestHandler();
 	}
 
 	@Override

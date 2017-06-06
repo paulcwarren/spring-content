@@ -16,7 +16,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 
@@ -31,35 +33,96 @@ public class ContentStoreServiceImplTest {
 	private StoreFactory mockFactory;
 	{
 		Describe("ContentStoreServiceImpl", () -> {
-			Context("#getContentStores", () -> {
+			BeforeEach(() -> {
+				contentRepoService = new ContentStoreServiceImpl();
+			});
+			Context("given no factories", () -> {
+				It("should always return empty", () -> {
+					assertThat(contentRepoService.getContentStores(), is(new ContentStoreInfo[]{}));
+				});
+			});
+			Context("given a ContentStore factory", () -> {
 				BeforeEach(() -> {
-					contentRepoService = new ContentStoreServiceImpl();
+					mockFactory = mock(StoreFactory.class);
+					when(mockFactory.getStore()).thenReturn(mock(ContentStore.class));
+					when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
+						@Override
+						public Object answer(InvocationOnMock invocation)
+								throws Throwable {
+							return ContentRepositoryInterface.class;
+						}
+					});
+					List<StoreFactory> factories = new ArrayList<>();
+					factories.add(mockFactory);
+					contentRepoService.setFactories(factories);
 				});
-				Context("given no factories", () -> {
-					It("should always return empty", () -> {
-						assertThat(contentRepoService.getContentStores(), is(new ContentStoreInfo[]{}));
-					});
+				It("should return no store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					assertThat(infos.length, is(0));
 				});
-				Context("given a factory", () -> {
-					BeforeEach(() -> {
-						ContentStore repo = mock(ContentStore.class);
-						mockFactory = mock(StoreFactory.class);
-						when(mockFactory.getStore()).thenReturn(repo);
-						when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
-							@Override
-							public Object answer(InvocationOnMock invocation)
-									throws Throwable {
-								return ContentRepositoryInterface.class;
-							}
-						});
-						List<StoreFactory> factories = new ArrayList<>();
-						factories.add(mockFactory);
-						contentRepoService.setFactories(factories);
+				It("should return no associativestore info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(AssociativeStore.class);
+					assertThat(infos.length, is(0));
+				});
+				It("should return content store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					assertThat(infos.length, is(1));
+				});
+			});
+			Context("given a Store factory", () -> {
+				BeforeEach(() -> {
+					mockFactory = mock(StoreFactory.class);
+					when(mockFactory.getStore()).thenReturn(mock(Store.class));
+					when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
+						@Override
+						public Object answer(InvocationOnMock invocation)
+								throws Throwable {
+							return StoreInterface.class;
+						}
 					});
-					It("should return content store information", () -> {
-						ContentStoreInfo[] infos = contentRepoService.getContentStores();
-						assertThat(infos.length, is(1));
+					List<StoreFactory> factories = new ArrayList<>();
+					factories.add(mockFactory);
+					contentRepoService.setFactories(factories);
+				});
+				It("should return store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					assertThat(infos.length, is(1));
+				});
+				It("should return associativestore info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(AssociativeStore.class);
+					assertThat(infos.length, is(0));
+				});
+				It("should return no content store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					assertThat(infos.length, is(0));
+				});
+			});
+			Context("given an AssociativeStore factory", () -> {
+				BeforeEach(() -> {
+					mockFactory = mock(StoreFactory.class);
+					when(mockFactory.getStore()).thenReturn(mock(AssociativeStore.class));
+					when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
+						@Override
+						public Object answer(InvocationOnMock invocation)
+								throws Throwable {
+							return AssociativeStoreInterface.class;
+						}
 					});
+					List<StoreFactory> factories = new ArrayList<>();
+					factories.add(mockFactory);
+					contentRepoService.setFactories(factories);
+				});
+				It("should return no content store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					assertThat(infos.length, is(0));
+				});
+				It("should return store info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					assertThat(infos.length, is(1));
+				});
+				It("should return associativestore info", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(AssociativeStore.class);
+					assertThat(infos.length, is(1));
 				});
 			});
 		});
@@ -67,6 +130,12 @@ public class ContentStoreServiceImplTest {
 	
 	@Test
 	public void test() {
+	}
+	
+	public interface StoreInterface extends Store<String> {
+	}
+	
+	public interface AssociativeStoreInterface extends AssociativeStore<Object,String> {
 	}
 	
 	public interface ContentRepositoryInterface extends ContentStore<Object, String> {
