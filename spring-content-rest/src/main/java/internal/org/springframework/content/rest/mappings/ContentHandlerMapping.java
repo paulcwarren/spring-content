@@ -136,7 +136,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 				try {
 					List<MediaType> mediaTypes = MediaType.parseMediaTypes(accept);
 					for (MediaType mediaType : mediaTypes) {
-						if (mediaType.includes(halJson)) {
+						if (mediaType.equals(MediaType.ALL_VALUE) && mediaType.includes(halJson)) {
 							return true;
 						}
 					}
