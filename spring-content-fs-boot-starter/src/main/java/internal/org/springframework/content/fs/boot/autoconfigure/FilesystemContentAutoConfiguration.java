@@ -1,58 +1,15 @@
 package internal.org.springframework.content.fs.boot.autoconfigure;
 
-import java.io.File;
-import java.io.IOException;
-
-import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
-
-import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
+import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
+
 @Configuration
 @Import({FilesystemContentAutoConfigureRegistrar.class, FilesystemStoreConfiguration.class})
 public class FilesystemContentAutoConfiguration {
-
-	@Autowired
-	FilesystemContentProperties properties;
-
-	@Bean
-	public File fileSystemRoot() throws IOException {
-		File fileSystemRoot = null;
-		if (this.properties.getFilesystemRoot() != null) {
-			fileSystemRoot = new File(this.properties.getFilesystemRoot());
-			if (fileSystemRoot.exists()) {
-				return fileSystemRoot;
-			}
-			else {
-				try {
-					FileUtils.forceMkdir(fileSystemRoot);
-					return fileSystemRoot;
-				} catch (IOException ioe) {
-					throw new IllegalStateException(String.format("Failed to create directory filesystem root for Spring Content %s", fileSystemRoot.toString()), ioe);
-				}
-			}
-		}
-		else {
-			File baseDir = new File(System.getProperty("java.io.tmpdir"));
-			String baseName = "spring-content-" + System.currentTimeMillis() + "-";
-
-			for (int counter = 0; counter < Integer.MAX_VALUE; counter++) {
-				fileSystemRoot = new File(baseDir, baseName + counter);
-				if (fileSystemRoot.mkdir()) {
-					return fileSystemRoot;
-				}
-			}
-		}
-		throw new IllegalStateException(String.format("Failed to create directory filesystem root for Spring Content %s", fileSystemRoot.toString()));
-	}
-
 
 	@Component
 	@ConfigurationProperties(prefix = "spring.content.fs", exceptionIfInvalid = true, ignoreUnknownFields = true)
