@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
+
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -29,8 +31,11 @@ public class FilesystemContentAutoConfiguration {
 				return fileSystemRoot;
 			}
 			else {
-				if (fileSystemRoot.mkdirs()) {
+				try {
+					FileUtils.forceMkdir(fileSystemRoot);
 					return fileSystemRoot;
+				} catch (IOException ioe) {
+					throw new IllegalStateException(String.format("Failed to create directory filesystem root for Spring Content %s", fileSystemRoot.toString()), ioe);
 				}
 			}
 		}
