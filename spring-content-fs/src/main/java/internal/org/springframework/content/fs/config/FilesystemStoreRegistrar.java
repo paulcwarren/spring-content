@@ -25,13 +25,4 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 		return EnableFilesystemStores.class;
 	}
 	
-	/* package */ void filesystemProperties(BeanDefinitionRegistry registry) {
-		GenericBeanDefinition beanDef = new GenericBeanDefinition();
-		beanDef.setBeanClass(FilesystemProperties.class);
-
-		MutablePropertyValues values = new MutablePropertyValues();
-		beanDef.setPropertyValues(values);
-		
-		registry.registerBeanDefinition("filesystemProperties", beanDef);
-	}
 }

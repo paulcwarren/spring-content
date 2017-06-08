@@ -15,16 +15,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 public class FilesystemStoreConfiguration {
 
 	@Autowired(required=false) private List<FilesystemStoreConverter<?,String>> customConverters;
-	
-	@Bean
-	public FilesystemProperties filesystemProperties() {
-		return new FilesystemProperties();
-	}
-	
-	@Bean FileSystemResourceLoader fileSystemResourceLoader() {
-		return new FileSystemResourceLoader(filesystemProperties().getFilesystemRoot());
-	}
-	
+
 	@Bean ConversionService filesystemStoreConverter() {
 		DefaultConversionService conversion = new DefaultConversionService();
 		if (customConverters != null) {

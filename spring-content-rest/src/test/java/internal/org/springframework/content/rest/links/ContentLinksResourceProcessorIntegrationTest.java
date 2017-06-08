@@ -16,6 +16,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,7 +142,7 @@ public class ContentLinksResourceProcessorIntegrationTest {
 						repository2.save(testEntity2);
 					});
 					Context("a GET to /repository/id", () -> {
-						Ginkgo4jDSL.FIt("should return the content collection link", () -> {
+						It("should return the content collection link", () -> {
 							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id)
 									.accept("application/hal+json"))
 									.andExpect(status().isOk())

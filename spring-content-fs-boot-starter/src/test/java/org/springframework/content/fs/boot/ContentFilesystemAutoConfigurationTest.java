@@ -21,7 +21,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -55,11 +57,25 @@ public class ContentFilesystemAutoConfigurationTest {
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemContentProperties.class).getFilesystemRoot(), endsWith("/a/b/c/"));
+					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).getFilesystemRoot(), endsWith("/a/b/c/"));
 
 					context.close();
 				});
 			});
+
+			Context("given a configuration that contributes a loader bean", () -> {
+				It("should have that loader bean in the context", () -> {
+					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+					context.register(ConfigWithLoaderBean.class);
+					context.refresh();
+
+					FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+					assertThat(loader.getFilesystemRoot(), is("/some/random/path/"));
+
+					context.close();
+				});
+			});
+
 		});
 	}
 
@@ -68,6 +84,18 @@ public class ContentFilesystemAutoConfigurationTest {
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
 	public static class TestConfig {
+	}
+
+	@Configuration
+	@AutoConfigurationPackage
+	@EnableAutoConfiguration
+	public static class ConfigWithLoaderBean {
+
+		@Bean
+		FileSystemResourceLoader fileSystemResourceLoader() {
+			return new FileSystemResourceLoader("/some/random/path/");
+		}
+
 	}
 
 	@Entity

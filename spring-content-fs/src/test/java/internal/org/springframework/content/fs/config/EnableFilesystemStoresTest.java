@@ -1,11 +1,6 @@
 package internal.org.springframework.content.fs.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -18,12 +13,14 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.config.FilesystemStoreConverter;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,15 +48,11 @@ public class EnableFilesystemStoresTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				FIt("should have a ContentRepository bean", () -> {
+				It("should have a ContentRepository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 				});
 				It("should have a filesystem conversion service bean", () -> {
 					assertThat(context.getBean("filesystemStoreConverter"), is(not(nullValue())));
-				});
-				It("should have a FilesystemProperties bean", () -> {
-					assertThat(context.getBean(FilesystemProperties.class), is(not(nullValue())));
-					assertThat(context.getBean(FilesystemProperties.class).getFilesystemRoot(), endsWith("/a/b/c/"));
 				});
 				It("should have a FileSystemResourceLoader bean", () -> {
 					assertThat(context.getBean("fileSystemResourceLoader"), is(not(nullValue())));
@@ -103,7 +96,7 @@ public class EnableFilesystemStoresTest {
 		
 		Describe("EnableFilesystemContentRepositories", () -> {
 
-			Context("given a context and a configuartion with a filesystem content repository bean", () -> {
+			Context("given a context and a configuration with a filesystem content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
 					context.register(BackwardCompatibilityConfig.class);
@@ -135,12 +128,24 @@ public class EnableFilesystemStoresTest {
 	@EnableFilesystemStores
 	@PropertySource("classpath:/test.properties")
 	public static class TestConfig {
+
+		@Value("${spring.content.fs.filesystemRoot:#{null}}")
+		private String filesystemRoot;
+
+		@Bean
+		FileSystemResourceLoader fileSystemResourceLoader() {
+			return new FileSystemResourceLoader(filesystemRoot);
+		}
 	}
 
 	@Configuration
 	@EnableFilesystemStores
 	@PropertySource("classpath:/test.properties")
 	public static class ConverterConfig {
+
+		@Value("${spring.content.fs.filesystemRoot:#{null}}")
+		private String filesystemRoot;
+
 		@Bean
 		public FilesystemStoreConverter<UUID,String> uuidConverter() {
 			return new FilesystemStoreConverter<UUID,String>() {
@@ -152,11 +157,25 @@ public class EnableFilesystemStoresTest {
 				
 			};
 		}
+
+		@Bean
+		FileSystemResourceLoader fileSystemResourceLoader() {
+			return new FileSystemResourceLoader(filesystemRoot);
+		}
 	}
 
 	@EnableFilesystemContentRepositories
 	@PropertySource("classpath:/test.properties")
 	public static class BackwardCompatibilityConfig {
+
+		@Value("${spring.content.fs.filesystemRoot:#{null}}")
+		private String filesystemRoot;
+
+		@Bean
+		FileSystemResourceLoader fileSystemResourceLoader() {
+			return new FileSystemResourceLoader(filesystemRoot);
+		}
+
 	}
 
 	@Content
