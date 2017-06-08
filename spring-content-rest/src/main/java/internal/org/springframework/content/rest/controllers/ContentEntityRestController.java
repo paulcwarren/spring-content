@@ -39,6 +39,7 @@ import internal.org.springframework.content.rest.annotations.ContentRestControll
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import org.springframework.web.util.UrlPathHelper;
 
 @ContentRestController
 public class ContentEntityRestController extends AbstractContentPropertyController {
@@ -64,8 +65,9 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throws HttpRequestMethodNotSupportedException {
 		
 		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
-		
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, request.getPathInfo());
+
+		String path = new UrlPathHelper().getPathWithinApplication(request);
+		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, path);
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
