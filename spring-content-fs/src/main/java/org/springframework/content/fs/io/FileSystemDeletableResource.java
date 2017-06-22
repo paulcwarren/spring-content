@@ -63,6 +63,9 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 	}
 
 	public OutputStream getOutputStream() throws IOException {
+		if (!exists()) {
+			FileUtils.touch(this.getFile());
+		}
 		return resource.getOutputStream();
 	}
 

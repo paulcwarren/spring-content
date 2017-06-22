@@ -6,6 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -19,7 +20,9 @@ import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.ResourceProcessor;
+import org.springframework.hateoas.mvc.BasicLinkBuilder;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -98,7 +101,33 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 				
 		        ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
 				if (store != null) {
-					resource.add(new Link(resource.getLink("self").getHref() + "/" + field.getName(), field.getName()));
+					Object object = resource.getContent();
+					BeanWrapper wrapper = new BeanWrapperImpl(object);
+					Object value = null;
+					try {
+						value = wrapper.getPropertyValue(field.getName());
+					} catch (InvalidPropertyException ipe) {
+						try {
+							value = ReflectionUtils.getField(field, object);
+						} catch (IllegalStateException ise) {
+							log.trace(String.format("Didn't get value for property %s", field.getName()));
+						}
+					}
+					if (value != null) {
+						int i=0;
+						Iterator iter = ((Collection)value).iterator();
+						while (iter.hasNext()) {
+							Object o = iter.next();
+							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
+								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
+								resource.add(new Link(resource.getLink("self").getHref() + "/" + field.getName() + "/" + cid, field.getName() /*+ "#" + i*/));
+								
+								LinkBuilder lb = BasicLinkBuilder.linkToCurrentMapping();
+								int j = 0;
+							}
+							i++;
+						}
+					}
 				}
 		    }
 		} else {
@@ -124,5 +153,4 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 			}
 		}
 	}
-
 }

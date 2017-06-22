@@ -89,32 +89,62 @@ public class ContentPropertyRestControllerIntegrationTest {
 						.webAppContextSetup(context)
 						.build();
 			});
-			
-			Context("given an Entity with a content property", () -> {
+			Context("given an Entity with a simple content property", () -> {
 				BeforeEach(() -> {
 					testEntity2 = repository2.save(new TestEntity2());
 					repository2.save(testEntity2);
 				});
-				Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
-					It("should return 404", () -> {
-						mvc.perform(get("/files/" + testEntity2.id.toString() + "/child"))
-								.andExpect(status().isNotFound());
+				Context("given that is has no content", () -> {
+					Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
+						It("should return 404", () -> {
+							mvc.perform(get("/files/" + testEntity2.id.toString() + "/child"))
+									.andExpect(status().isNotFound());
+						});
+					});
+					Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
+						It("should create the content", () -> {
+							mvc.perform(put("/files/" + testEntity2.id.toString() + "/child")
+									.content("Hello New Spring Content World!")
+									.contentType("text/plain"))
+									.andExpect(status().is2xxSuccessful());
+							
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.child.contentId, is(not(nullValue())));
+							assertThat(fetched.child.contentLen, is(31L));
+							assertThat(fetched.child.mimeType, is("text/plain"));
+							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.child)), is("Hello New Spring Content World!"));
+						});
 					});
 				});
-				Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
-					It("should set the content and return 200", () -> {
-						mvc.perform(put("/files/" + testEntity2.id.toString() + "/child"))
-								.andExpect(status().isMethodNotAllowed());
-					});
-				});
-				Context("given the property has content", () -> {
+				Context("given that it has content", () -> {
 					BeforeEach(() -> {
-						TestEntityChild child = new TestEntityChild();
-						child.mimeType = "text/plain";
-						contentRepository2.setContent(child, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-						
-						testEntity2.child = child;
+						testEntity2.child = new TestEntityChild();
+						testEntity2.child.mimeType = "text/plain";
+						contentRepository2.setContent(testEntity2.child, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 						repository2.save(testEntity2);
+					});
+					Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child")
+									.accept("text/plain"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+						});
+					});
+					Context("a range GET to /{repository}/{id}/{contentProperty}", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child")
+									.accept("text/plain")
+									.header("range", "bytes=6-19"))
+									.andExpect(status().isPartialContent())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+
+							assertThat(response.getContentAsString(), is("Spring Content"));
+						});
 					});
 					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
 						It("should return the content", () -> {
@@ -139,6 +169,20 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Spring Content"));
 						});
 					});
+					Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
+						It("should create the content", () -> {
+							mvc.perform(put("/files/" + testEntity2.id.toString() + "/child")
+									.content("Hello New Spring Content World!")
+									.contentType("text/plain"))
+									.andExpect(status().is2xxSuccessful());
+							
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.child.contentId, is(not(nullValue())));
+							assertThat(fetched.child.contentLen, is(31L));
+							assertThat(fetched.child.mimeType, is("text/plain"));
+							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.child)), is("Hello New Spring Content World!"));
+						});
+					});
 					Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
 						It("should overwrite the content", () -> {
 							mvc.perform(put("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
@@ -149,71 +193,137 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(IOUtils.toString(contentRepository2.getContent(testEntity2.child)), is("Hello Modified Spring Content World!"));
 						});
 					});
+					Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
+						It("should delete the content", () -> {
+							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/child"))
+									.andExpect(status().isNoContent());
+							
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.child.contentId, is(nullValue()));
+							assertThat(fetched.child.contentLen, is(0L));
+							assertThat(fetched.child.mimeType, is(nullValue()));
+						});
+					});
+					Context("a DELETE to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
+						It("should delete the content", () -> {
+							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId))
+									.andExpect(status().isNoContent());
+							
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.child, is(nullValue()));
+						});
+					});
 				});
 			});
 			
-			Context("given an Entity with a content collection", () -> {
+			Context("given an Entity with a collection content property", () -> {
 				BeforeEach(() -> {
 					testEntity2 = repository2.save(new TestEntity2());
-					
-					child1 = new TestEntityChild();
-					child1.mimeType = "text/plain";
-					contentRepository2.setContent(child1, new ByteArrayInputStream("Hello".getBytes()));
-
-					child2 = new TestEntityChild();
-					child2.mimeType = "text/plain";
-					contentRepository2.setContent(child2, new ByteArrayInputStream("Spring Content World!".getBytes()));
-
-					testEntity2.children = new ArrayList<TestEntityChild>();
-					testEntity2.children.add(child1);
-					testEntity2.children.add(child2);
-					
-					repository2.save(testEntity2);
 				});
-				Context("a GET to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-					It("should return the content", () -> {
-						MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
-								.accept("text/plain"))
-								.andExpect(status().isOk())
-								.andReturn().getResponse();
-
-						assertThat(response, is(not(nullValue())));
-						assertThat(response.getContentAsString(), is("Spring Content World!"));
+				Context("given that is has no content", () -> {
+					Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
+						It("should return 406 MethodNotAllowed", () -> {
+							mvc.perform(get("/files/" + testEntity2.id.toString() + "/children/"))
+								.andExpect(status().isMethodNotAllowed());
+						});
 					});
-				});
-				Context("a PUT to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-					It("should set the content", () -> { 
-						mvc.perform(put("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
-								.content("Modified Content World!")
+					Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
+						It("should append the content to the entity's content property collection", () -> {
+							mvc.perform(put("/files/" + testEntity2.id.toString() + "/children/")
+								.content("Hello New Spring Content World!")
 								.contentType("text/plain"))
-								.andExpect(status().isOk());
-
-						assertThat(IOUtils.toString(contentRepository2.getContent(child2)), is("Modified Content World!"));
+								.andExpect(status().is2xxSuccessful());
+					
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.children.size(), is(1));
+							assertThat(fetched.children.get(0).contentLen, is(31L));
+							assertThat(fetched.children.get(0).mimeType, is("text/plain"));
+							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.getChildren().get(0))), is("Hello New Spring Content World!"));
+						});
 					});
-				});
-				Context("a POST to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-					It("should set the content", () -> { 
-						mvc.perform(post("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
-								.content("Modified Content World!")
+					Context("a POST to /{repository}/{id}/{contentProperty}", () -> {
+						It("should append the content to the entity's content property collection", () -> {
+							mvc.perform(post("/files/" + testEntity2.id.toString() + "/children/")
+								.content("Hello New Spring Content World!")
 								.contentType("text/plain"))
-								.andExpect(status().isOk());
-
-						assertThat(IOUtils.toString(contentRepository2.getContent(child2)), is("Modified Content World!"));
+								.andExpect(status().is2xxSuccessful());
+					
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.children.size(), is(1));
+							assertThat(fetched.children.get(0).contentLen, is(31L));
+							assertThat(fetched.children.get(0).mimeType, is("text/plain"));
+							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.getChildren().get(0))), is("Hello New Spring Content World!"));
+						});
+					});
+					Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
+						It("should return a 405 MethodNotAllowed", () -> {
+							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/children/"))
+								.andExpect(status().isMethodNotAllowed());
+						});
 					});
 				});
-				Context("a DELETE to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-					It("should delete the content", () -> { 
-						mvc.perform(delete("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId))
-								.andExpect(status().isNoContent());
-
-						assertThat(contentRepository2.getContent(child2), is(nullValue()));
-
-						TestEntity2 fetched = repository2.findOne(testEntity2.id);
-						assertThat(fetched.children.size(), is(2));
+				Context("given that is has content", () -> {
+					BeforeEach(() -> {
+						testEntity2 = repository2.save(new TestEntity2());
+						
+						child1 = new TestEntityChild();
+						child1.mimeType = "text/plain";
+						contentRepository2.setContent(child1, new ByteArrayInputStream("Hello".getBytes()));
+	
+						child2 = new TestEntityChild();
+						child2.mimeType = "text/plain";
+						contentRepository2.setContent(child2, new ByteArrayInputStream("Spring Content World!".getBytes()));
+	
+						testEntity2.children = new ArrayList<TestEntityChild>();
+						testEntity2.children.add(child1);
+						testEntity2.children.add(child2);
+						
+						repository2.save(testEntity2);
+					});
+					Context("a GET to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
+									.accept("text/plain"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+	
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("Spring Content World!"));
+						});
+					});
+					Context("a PUT to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
+						It("should set the content", () -> { 
+							mvc.perform(put("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
+									.content("Modified Content World!")
+									.contentType("text/plain"))
+									.andExpect(status().isOk());
+	
+							assertThat(IOUtils.toString(contentRepository2.getContent(child2)), is("Modified Content World!"));
+						});
+					});
+					Context("a POST to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
+						It("should set the content", () -> { 
+							mvc.perform(post("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId)
+									.content("Modified Content World!")
+									.contentType("text/plain"))
+									.andExpect(status().isOk());
+	
+							assertThat(IOUtils.toString(contentRepository2.getContent(child2)), is("Modified Content World!"));
+						});
+					});
+					Context("a DELETE to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
+						It("should delete the content", () -> { 
+							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/children/" + child2.contentId))
+									.andExpect(status().isNoContent());
+	
+							assertThat(contentRepository2.getContent(child2), is(nullValue()));
+	
+							TestEntity2 fetched = repository2.findOne(testEntity2.id);
+							assertThat(fetched.children.size(), is(2));
+						});
 					});
 				});
 			});
-			
 		});
 	}
 

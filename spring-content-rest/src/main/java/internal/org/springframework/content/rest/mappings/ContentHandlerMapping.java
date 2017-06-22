@@ -11,18 +11,12 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.rest.core.mapping.ResourceMappings;
-import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.method.HandlerMethod;
@@ -32,20 +26,14 @@ import org.springframework.web.util.UrlPathHelper;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
-import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
-import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 	
 	private static MediaType halJson = MediaType.parseMediaType("application/hal+json");
 
-	private Repositories repositories = null;
-	private ResourceMappings repositoryMappings;
 	private ContentStoreService contentStores;
 	
-	public ContentHandlerMapping(Repositories repositories, ResourceMappings repositoryMappings, ContentStoreService contentStores) {
-		this.repositories = repositories;
-		this.repositoryMappings = repositoryMappings;
+	public ContentHandlerMapping(ContentStoreService contentStores) {
 		this.contentStores = contentStores;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
 	}
@@ -71,61 +59,11 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		if (path.length < 3 )
 			return null;
 		
-		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, lookupPath);
+		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
 		if (info2 != null && isHalRequest(request) == false) {
 			return super.lookupHandlerMethod(lookupPath, request);
 		}
-
-		ResourceMetadata mapping = RepositoryUtils.findRepositoryMapping(repositories, repositoryMappings, path[1]);
-		if (mapping == null)
-			return null;
-		
-		Class<?> domainType = mapping.getDomainType();
-		
-		PersistentEntity<?,?> entity = PersistentEntityUtils.findPersistentEntity(repositories, domainType);
-		if (null == entity)
-			return null;
-		
-		if (isContentEntityRequestMapping(path)) {
-			if (isHalRequest(request)) {
-				return null;
-			} else {
-				ContentStoreInfo info = ContentStoreUtils.findContentStore(contentStores, entity.getType());
-				if (info != null) {
-					return super.lookupHandlerMethod(lookupPath, request);
-				}
-			}
-		} else if (isContentPropertyRequestMapping(path)) {
-			PersistentProperty<?> prop = entity.getPersistentProperty(path[3]);
-			if (null != prop) {
-				if (prop.isArray() || prop.isCollectionLike()) {
-					Class<?> fieldType = prop.getComponentType();
-					ContentStoreInfo info = ContentStoreUtils.findContentStore(contentStores, fieldType);
-					if (info != null) {
-						return super.lookupHandlerMethod(lookupPath, request);
-					}
-				} else {
-					Class<?> fieldType = prop.getRawType();
-					ContentStoreInfo info = ContentStoreUtils.findContentStore(contentStores, fieldType);
-					if (info != null) {
-						return super.lookupHandlerMethod(lookupPath, request);
-					}
-				}
-			} else {
-				if (entity.getType().isAnnotationPresent(Content.class)) {
-					return super.lookupHandlerMethod(lookupPath, request);
-				}
-			}
-		}
 		return null; 
-	}
-
-	private boolean isContentPropertyRequestMapping(String[] path) {
-		return path.length > 3;
-	}
-
-	private boolean isContentEntityRequestMapping(String[] path) {
-		return path.length == 3;
 	}
 
 	private boolean isHalRequest(HttpServletRequest request) {
@@ -207,7 +145,11 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		@Override
 		public StoreCondition getMatchingCondition(HttpServletRequest request) {
 			String path = new UrlPathHelper().getPathWithinApplication(request);
-			ContentStoreInfo info = ContentStoreUtils.findStore(stores, path);
+			String[] segments = path.split("/");
+			if (segments.length < 3) {
+				return null;
+			}
+			ContentStoreInfo info = ContentStoreUtils.findStore(stores, segments[1]);
 			if (info != null && 
 					(Store.class.isAssignableFrom(info.getInterface()) && "store".equals(storeType)) ||
 					(ContentStore.class.isAssignableFrom(info.getInterface()) && "contentstore".equals(storeType))
@@ -239,7 +181,11 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		
 		public boolean isMappingForRequest(HttpServletRequest request) {
 			String path = new UrlPathHelper().getPathWithinApplication(request);
-			ContentStoreInfo info = ContentStoreUtils.findStore(stores, path);
+			String[] segments = path.split("/");
+			if (segments.length < 3) {
+				return false;
+			}
+			ContentStoreInfo info = ContentStoreUtils.findStore(stores, segments[1]);
 			if (info != null && 
 					(Store.class.isAssignableFrom(info.getInterface()) && "store".equals(storeType)) ||
 					(ContentStore.class.isAssignableFrom(info.getInterface()) && "contentstore".equals(storeType))

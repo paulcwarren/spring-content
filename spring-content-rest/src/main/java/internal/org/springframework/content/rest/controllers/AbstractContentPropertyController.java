@@ -1,18 +1,23 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.rest.ResourceNotFoundException;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 public abstract class AbstractContentPropertyController {
 	
@@ -59,21 +64,6 @@ public abstract class AbstractContentPropertyController {
 		return contentPropertyObject;
 	}
 
-	protected Object getDomainObject(RepositoryInvoker invoker, String id) 
-			throws HttpRequestMethodNotSupportedException {
-		if (!invoker.hasFindOneMethod()) {
-			throw new HttpRequestMethodNotSupportedException("fineOne");
-		}
-
-		Object domainObj = invoker.invokeFindOne(id);
-
-		if (null == domainObj) {
-			throw new ResourceNotFoundException();
-		}
-
-		return domainObj;
-	}
-
 	protected PersistentProperty<?> getContentPropertyDefinition(PersistentEntity<?, ?> persistentEntity, String contentProperty) {
 		PersistentProperty<?> prop = persistentEntity.getPersistentProperty(contentProperty);
 		if (null == prop)
@@ -91,5 +81,77 @@ public abstract class AbstractContentPropertyController {
 			}
 		}
 		return null;
+	}
+
+	protected Object findOne(Repositories repositories, String repository, String id) 
+			throws HttpRequestMethodNotSupportedException {
+		
+		Object domainObj = null;
+		Class<?> domainObjClazz = null;
+		Class<?> idClazz = null;
+		
+		RepositoryInformation ri = null;
+		for (Class<?> clazz : repositories) {
+			ri = repositories.getRepositoryInformationFor(clazz);
+			if (ri == null) {
+				continue;
+			}
+			if (repository.equals(RepositoryUtils.repositoryPath(ri))) {
+				ri = repositories.getRepositoryInformationFor(clazz);
+				domainObjClazz = clazz;
+				idClazz = ri.getIdType();
+				break;
+			}
+		}
+
+		if (ri == null || domainObjClazz == null) {
+			throw new ResourceNotFoundException();
+		}
+		
+		Method findOneMethod = ri.getCrudMethods().getFindOneMethod();
+		if (findOneMethod == null) {
+			throw new HttpRequestMethodNotSupportedException("fineOne");
+		}
+		
+		Object oid = new DefaultConversionService().convert(id, idClazz);
+		domainObj = ReflectionUtils.invokeMethod(findOneMethod, repositories.getRepositoryFor(domainObjClazz), oid);
+		
+		if (null == domainObj) {
+			throw new ResourceNotFoundException();
+		}
+		
+		return domainObj;
+	}
+
+	protected Object save(Repositories repositories, String repository, Object domainObj) 
+			throws HttpRequestMethodNotSupportedException {
+
+		Class<?> domainObjClazz = null;
+		
+		RepositoryInformation ri = null;
+		for (Class<?> clazz : repositories) {
+			ri = repositories.getRepositoryInformationFor(clazz);
+			if (ri == null) {
+				continue;
+			}
+			if (repository.equals(RepositoryUtils.repositoryPath(ri))) {
+				ri = repositories.getRepositoryInformationFor(clazz);
+				domainObjClazz = clazz;
+			}
+		}
+
+		if (ri == null || domainObjClazz == null) {
+			throw new ResourceNotFoundException();
+		}
+		
+		if (domainObjClazz != null) {
+			Method saveMethod = ri.getCrudMethods().getSaveMethod();
+			if (saveMethod == null) {
+				throw new HttpRequestMethodNotSupportedException("save");
+			}
+			domainObj = ReflectionUtils.invokeMethod(saveMethod, repositories.getRepositoryFor(domainObjClazz), domainObj);
+		}
+
+		return domainObj;
 	}
 }

@@ -16,7 +16,6 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +35,12 @@ import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 
 import internal.org.springframework.content.rest.TestConfig;
-import internal.org.springframework.content.rest.TestEntity;
 import internal.org.springframework.content.rest.TestEntity2;
 import internal.org.springframework.content.rest.TestEntity2Repository;
 import internal.org.springframework.content.rest.TestEntityChild;
@@ -78,9 +75,7 @@ public class ContentLinksResourceProcessorIntegrationTest {
 
 	private MockMvc mvc;
 
-	private TestEntity testEntity;
 	private TestEntity2 testEntity2;
-	private TestEntityChild child2;
 
 	{
 		Describe("ContentLinksResourceProcessor", () -> {
@@ -153,29 +148,8 @@ public class ContentLinksResourceProcessorIntegrationTest {
 							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
 							assertThat(halResponse, is(not(nullValue())));
 							assertThat(halResponse.getLinksByRel("children"), is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("children").size(), is(1));
-							assertThat(halResponse.getLinksByRel("children").get(0).getHref(), is("http://localhost/files/"+testEntity2.id+"/children"));
+							assertThat(halResponse.getLinksByRel("children").size(), is(2));
 						});
-//						Context("a GET to /repository/id/collectionProperty", () -> {
-//							Ginkgo4jDSL.FIt("should return content collection links", () -> {
-//								MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id + "/children")
-//										.accept("application/hal+json"))
-//										.andExpect(status().isOk())
-//										.andReturn().getResponse();
-//								assertThat(response, is(not(nullValue())));
-//								
-//								RepresentationFactory representationFactory = new StandardRepresentationFactory();
-//								ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
-//								assertThat(halResponse, is(not(nullValue())));
-//								assertThat(halResponse.getResources().size(), is(2));
-//								for (Entry<String, ReadableRepresentation> entry : halResponse.getResources()) {
-//									
-//									// attempting to assert links
-//									
-//									assertThat(entry.getValue().getLinkByRel("self"), startsWith("http://localhost/files/"+testEntity2.id+"/children/"));
-//								}
-//							});
-//						});
 					});
 				});
 			});

@@ -1,46 +1,21 @@
 package internal.org.springframework.content.rest.utils;
 
-import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
-import org.springframework.data.rest.core.mapping.ResourceMappings;
-import org.springframework.data.rest.core.mapping.ResourceMetadata;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.atteo.evo.inflector.English;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.util.StringUtils;
 
 public final class RepositoryUtils {
 
 	private RepositoryUtils() {}
 
-	public static ResourceMetadata findRepositoryMapping(Repositories repositories, ResourceMappings repositoryMappings, String repository) {
-		
-		ResourceMetadata mapping = null;
-		for (Class<?> domainType : repositories) {
-			ResourceMetadata candidate = repositoryMappings.getMetadataFor(domainType);
-			if (candidate.getPath().matches(repository)
-					&& candidate.isExported()) {
-				mapping = candidate;
-				break;
-			}
-		}
-		return mapping;
+	public static String repositoryPath(RepositoryInformation info) {
+		Class<?> clazz = info.getRepositoryInterface();
+		RepositoryRestResource annotation = AnnotationUtils.findAnnotation(clazz, RepositoryRestResource.class);
+		String path = annotation == null ? null : annotation.path().trim();
+		path = StringUtils.hasText(path) ? path : English.plural(StringUtils.uncapitalize(info.getDomainType().getSimpleName()));
+		return path;
 	}
 	
-	public static Object findDomainObject(RepositoryInvokerFactory repositoryInvokerFactory, Class<?> domainType, String id)
-			throws HttpRequestMethodNotSupportedException {
-
-		RepositoryInvoker repositoryInvoker = repositoryInvokerFactory.getInvokerFor(domainType);
-
-		if (!repositoryInvoker.hasFindOneMethod()) {
-			throw new HttpRequestMethodNotSupportedException("fineOne");
-		}
-
-		Object domainObj = repositoryInvoker.invokeFindOne(id);
-
-		if (null == domainObj) {
-			throw new ResourceNotFoundException();
-		}
-
-		return domainObj;
-	}
 }

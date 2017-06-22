@@ -19,11 +19,12 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.rest.ResourceNotFoundException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
@@ -46,26 +48,36 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 
 	private static final String BASE_MAPPING = "/{repository}/{id}/{contentProperty}/{contentId}";
 
+	private Repositories repositories;
 	private ContentStoreService storeService;
 	private ContentRestByteRangeHttpRequestHandler handler;
 	
-	@Autowired 
-	public ContentPropertyRestController(ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+	@Autowired(required=false)
+	public ContentPropertyRestController(ApplicationContext context, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
 		super();
+		this.repositories = new Repositories(context);
 		this.storeService = storeService;
 		this.handler = handler;
 	}
 
+	@Autowired(required=false)
+	public ContentPropertyRestController(Repositories repositories, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+		super();
+		this.repositories = repositories;
+		this.storeService = storeService;
+		this.handler = handler;
+	}
+
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", "range"})
 	public void getContent(HttpServletRequest request, HttpServletResponse response,
-						   final RootResourceInformation rootInfo,
 						   @PathVariable String repository, 
 						   @PathVariable String id, 
 						   @PathVariable String contentProperty,
 						   @PathVariable String contentId) 
 			throws HttpRequestMethodNotSupportedException {
 		
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
+		Object domainObj = findOne(repositories, repository, id);
 
 		Object contentPropertyValue = null;
 		Class<?> contentEntityClass = null;
@@ -74,7 +86,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 			contentPropertyValue = domainObj;
 			contentEntityClass = domainObj.getClass();
 		} else {
-			PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
+			PersistentProperty<?> property = getContentPropertyDefinition(repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
 			contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 			contentPropertyValue = getContentProperty(domainObj, property, contentId);
 		}
@@ -107,17 +119,17 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		return;
 	}
 	
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json"})
-	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
-														  @PathVariable String repository, 
+	public ResponseEntity<InputStreamResource> getContent(@PathVariable String repository, 
 														  @PathVariable String id, 
 														  @PathVariable String contentProperty,
 														  @PathVariable String contentId,
 														  @RequestHeader("Accept") String mimeType) 
 			throws HttpRequestMethodNotSupportedException {
 		
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
-
+		Object domainObj = findOne(repositories, repository, id);
+		
 		Object contentPropertyValue = null;
 		Class<?> contentEntityClass = null;
 		
@@ -125,7 +137,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 			contentPropertyValue = domainObj;
 			contentEntityClass = domainObj.getClass();
 		} else {
-			PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
+			PersistentProperty<?> property = getContentPropertyDefinition(repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
 			contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 			contentPropertyValue = getContentProperty(domainObj, property, contentId);
 		}
@@ -170,57 +182,57 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		return null;
 	}
 
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT)
 	@ResponseBody
-	public void setContent(final HttpServletRequest request,
-									final RootResourceInformation rootInfo,
-			        				@PathVariable String repository, 
-									@PathVariable String id, 
-									@PathVariable String contentProperty,
-									@PathVariable String contentId) 
+	public void setContent(HttpServletRequest request,
+	        			   @PathVariable String repository, 
+						   @PathVariable String id, 
+						   @PathVariable String contentProperty,
+						   @PathVariable String contentId) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		this.replaceContentInternal(rootInfo, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
 	}	
 	
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type!=multipart/form-data")
 	@ResponseBody
-	public void postContent(final HttpServletRequest request,
-									final RootResourceInformation rootInfo,
-			        				@PathVariable String repository, 
-									@PathVariable String id, 
-									@PathVariable String contentProperty,
-									@PathVariable String contentId) 
+	public void postContent(HttpServletRequest request,
+							@PathVariable String repository, 
+							@PathVariable String id, 
+							@PathVariable String contentProperty,
+							@PathVariable String contentId) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		this.replaceContentInternal(rootInfo, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
 	}	
 
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(RootResourceInformation rootInfo,
-									 @PathVariable String repository, 
+	public void postMultipartContent(@PathVariable String repository, 
 									 @PathVariable String id, 
 									 @PathVariable String contentProperty,
 									 @PathVariable String contentId,
 									 @RequestParam("file") MultipartFile multiPart)
 										throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 
-		this.replaceContentInternal(rootInfo, repository, id, contentProperty, contentId, multiPart.getContentType(), multiPart.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, multiPart.getContentType(), multiPart.getInputStream());
 	}
 
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE)
 	@ResponseBody
-	public ResponseEntity<?> deleteContent(final RootResourceInformation rootInfo, 
-									@PathVariable String repository, 
-									@PathVariable String id, 
-									@PathVariable String contentProperty,
-									@PathVariable String contentId) 
+	public ResponseEntity<?> deleteContent(@PathVariable String repository, 
+										   @PathVariable String id, 
+										   @PathVariable String contentProperty,
+										   @PathVariable String contentId) 
 					throws IOException, HttpRequestMethodNotSupportedException {
 
-		PersistentProperty<?> property = getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
-	
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
+		Object domainObj = findOne(repositories, repository, id);
+
+		PersistentProperty<?> property = this.getContentPropertyDefinition(repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
 
 		Object contentPropertyValue = getContentProperty(domainObj, property, contentId); 
 		
@@ -232,12 +244,13 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		// remove the content property reference from the data object
 		setContentProperty(domainObj, property, contentId, null);
 		
-		rootInfo.getInvoker().invokeSave(domainObj);
+		save(repositories, repository, domainObj);
 		
 		return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
 	}
 
-	private void replaceContentInternal(RootResourceInformation rootInfo,
+	private void replaceContentInternal(Repositories repositories,
+										ContentStoreService stores,
 										String repository,
 										String id, 
 										String contentProperty, 
@@ -246,10 +259,10 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 										InputStream stream) 
 			throws HttpRequestMethodNotSupportedException {
 
-		PersistentProperty<?> property = this.getContentPropertyDefinition(rootInfo.getPersistentEntity(), contentProperty);
-		
-		Object domainObj = this.getDomainObject(rootInfo.getInvoker(), id);
+		Object domainObj = findOne(repositories, repository, id);
 
+		PersistentProperty<?> property = this.getContentPropertyDefinition(repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
+		
 		Object contentPropertyValue = this.getContentProperty(domainObj, property, contentId); 
 		
 		if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
@@ -261,6 +274,6 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
 		info.getImpementation().setContent(contentPropertyValue, stream);
 		
-		rootInfo.getInvoker().invokeSave(domainObj);
+		save(repositories, repository, domainObj);
 	}
 }

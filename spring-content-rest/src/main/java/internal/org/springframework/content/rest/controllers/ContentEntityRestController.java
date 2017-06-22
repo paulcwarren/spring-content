@@ -18,11 +18,12 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.rest.ResourceNotFoundException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,35 +40,44 @@ import internal.org.springframework.content.rest.annotations.ContentRestControll
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
-import org.springframework.web.util.UrlPathHelper;
 
 @ContentRestController
 public class ContentEntityRestController extends AbstractContentPropertyController {
 
 	private static final String BASE_MAPPING = "/{repository}/{id}";
 
+	private Repositories repositories;
 	private ContentStoreService storeService;
 	private ContentRestByteRangeHttpRequestHandler handler;
-	
-	@Autowired 
-	public ContentEntityRestController(ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+
+	@Autowired(required=false) 
+	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
 		super();
+		this.repositories = new Repositories(context);
+		this.storeService = storeService;
+		this.handler = handler;
+	}
+
+	@Autowired(required=false)
+	public ContentEntityRestController(Repositories repositories, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler, DefaultFormattingConversionService conversionService) {
+		super();
+		this.repositories = repositories; 
 		this.storeService = storeService;
 		this.handler = handler;
 	}
 
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", "range"})
-	public void getContent(HttpServletRequest request, HttpServletResponse response,
-														  final RootResourceInformation rootInfo,
-														  @PathVariable String repository, 
-														  @PathVariable String id) 
+	public void getContent(HttpServletRequest request, 
+						   HttpServletResponse response,
+						   @PathVariable String repository, 
+						   @PathVariable String id) 
 			throws HttpRequestMethodNotSupportedException {
 		
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
+		Object domainObj = findOne(repositories, repository, id);
+		
+		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, repository);
 
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, path);
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
@@ -96,14 +106,13 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	}
 	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers="accept!=application/hal+json")
-	public ResponseEntity<InputStreamResource> getContent(final RootResourceInformation rootInfo,
-														  @PathVariable String repository, 
+	public ResponseEntity<InputStreamResource> getContent(@PathVariable String repository, 
 														  @PathVariable String id, 
 														  @RequestHeader(value="Accept", required=false) String mimeType) 
 			throws HttpRequestMethodNotSupportedException {
 		
-		Object domainObj = getDomainObject(rootInfo.getInvoker(), id);
-
+		Object domainObj = findOne(repositories, repository, id);
+		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
@@ -147,17 +156,16 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		return null;
 	}
 	
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers={"content-type!=multipart/form-data", "accept!=application/hal+json"})
 	@ResponseBody
-	public void putContent(final HttpServletRequest request,
-									final RootResourceInformation rootInfo,
-			        				@PathVariable String repository, 
-									@PathVariable String id) 
+	public void putContent(HttpServletRequest request,
+        				   @PathVariable String repository, 
+						   @PathVariable String id) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 
-		RepositoryInvoker invoker = rootInfo.getInvoker();
-		Object domainObj = getDomainObject(invoker, id);
-
+		Object domainObj = findOne(repositories, repository, id);
+		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
@@ -169,38 +177,35 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, request.getHeader("Content-Type"));
 		}
 		
-		invoker.invokeSave(domainObj);
+		save(repositories, repository, domainObj);
 	}
 	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void putMultipartContent(RootResourceInformation rootInfo,
-									 @PathVariable String repository, 
-									 @PathVariable String id, 
-									 @RequestParam("file") MultipartFile multiPart)
+	public void putMultipartContent(@PathVariable String repository, 
+									@PathVariable String id, 
+									@RequestParam("file") MultipartFile multiPart)
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
-		handleMultipart(rootInfo, id, multiPart);
+		handleMultipart(repository, id, multiPart);
 	}
 	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(RootResourceInformation rootInfo,
-									 @PathVariable String repository, 
+	public void postMultipartContent(@PathVariable String repository, 
 									 @PathVariable String id, 
 									 @RequestParam("file") MultipartFile multiPart)
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
-		handleMultipart(rootInfo, id, multiPart);
+		handleMultipart(repository, id, multiPart);
 	}
 	
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers="accept!=application/hal+json")
-	public void deleteContent(final RootResourceInformation rootInfo,
-														  @PathVariable String repository, 
-														  @PathVariable String id) 
+	public void deleteContent(@PathVariable String repository, 
+							  @PathVariable String id) 
 			throws HttpRequestMethodNotSupportedException {
 
-		RepositoryInvoker invoker = rootInfo.getInvoker();
-		Object domainObj = getDomainObject(invoker, id);
-
+		Object domainObj = findOne(repositories, repository, id);
+		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
@@ -216,14 +221,14 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
 		}
 		
-		invoker.invokeSave(domainObj);
+		save(repositories, repository, domainObj);
 	}
 
-	protected void handleMultipart(RootResourceInformation rootInfo, String id, MultipartFile multiPart)
+	protected void handleMultipart(String repository, String id, MultipartFile multiPart)
 			throws HttpRequestMethodNotSupportedException, IOException {
-		RepositoryInvoker invoker = rootInfo.getInvoker();
-		Object domainObj = getDomainObject(invoker, id);
 
+		Object domainObj = findOne(repositories, repository, id);
+		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, domainObj.getClass());
 		if (info == null) {
 			throw new IllegalArgumentException("Entity not a content repository");
@@ -235,6 +240,6 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
 		
-		invoker.invokeSave(domainObj);
+		save(repositories, repository, domainObj);
 	}
 }
