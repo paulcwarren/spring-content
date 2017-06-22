@@ -28,7 +28,7 @@ public class ContentRestConfiguration extends HateoasAwareSpringDataWebConfigura
 	
 	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
-		return new ContentHandlerMapping(repositories, stores);
+		return new ContentHandlerMapping(stores);
 	}
 	
 	@Bean
