@@ -7,37 +7,42 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.StoreEventHandler;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestOperations;
+
+import internal.org.springframework.content.elasticsearch.StreamConverter;
 
 @StoreEventHandler
 public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 
 	private RestOperations template;
-	
-	public ElasticsearchIndexer(RestOperations template) {
+	private StreamConverter streamConverter;
+	public ElasticsearchIndexer(RestOperations template, StreamConverter streamConverter) {
 		this.template = template;
+		this.streamConverter = streamConverter;
 	}
 	
 	@Override
 	protected void onAfterSetContent(AfterSetContentEvent event) {
 		String id = BeanUtils.getFieldWithAnnotation(event.getSource(), ContentId.class).toString();
 		InputStream stream = event.getStore().getContent(event.getSource());
-		String content = null;
+		byte[] bytes = null;
 		try {
-			byte[] bytes = IOUtils.toByteArray(stream);
-			byte[] encoded = Base64.getEncoder().encode(bytes);
-			content = new String(encoded);
+			bytes = streamConverter.convert(stream);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new StoreAccessException(String.format("IOException error while converting stream to byte array for content ID:%s", id), e.getCause());
 		}
+		byte[] encoded = Base64.getEncoder().encode(bytes);
+		String content = new String(encoded);
 		
 		JSONObject request = new JSONObject();
 		request.put("original-content", content)
@@ -48,6 +53,12 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 		HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
 
 		ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.PUT, entity, String.class);
+		
+		HttpStatus httpStatus=response.getStatusCode();
+		if(httpStatus.is5xxServerError() || httpStatus.is4xxClientError() ) {
+			throw new StoreAccessException(String.format("Indexing error while storing content for contentId %s", id));
+		}
+		
 	}
 
 }
