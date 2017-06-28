@@ -7,7 +7,6 @@
     <version>0.0.5-SNAPSHOT</version>
   </parent>
   
-  <groupId>org.springframework.content</groupId>
   <artifactId>spring-content-elasticsearch</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   
