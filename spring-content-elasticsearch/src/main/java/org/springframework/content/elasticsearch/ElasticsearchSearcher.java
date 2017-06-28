@@ -5,7 +5,6 @@ import com.google.gson.JsonParser;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
-import org.json.JSONObject;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 

@@ -1,34 +1,40 @@
 package org.springframework.content.elasticsearch;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import io.searchbox.action.Action;
-import io.searchbox.client.JestClient;
-import io.searchbox.core.SearchResult;
-import org.assertj.core.api.filter.NotFilter;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.StoreAccessException;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.List;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.Serializable;
+
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.springframework.content.commons.repository.StoreAccessException;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import io.searchbox.action.Action;
+import io.searchbox.client.JestClient;
+import io.searchbox.core.SearchResult;
+
 @RunWith(Ginkgo4jRunner.class)
-public class ElasticsearchSearcherTests {
+public class ElasticsearchSearcherTest {
 
     private ElasticsearchSearcher searcher;
 
