@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -83,7 +84,7 @@ public class ElasticSearchIndexTest {
 					It("should send the content for indexing", () -> {
 						ArgumentCaptor<HttpEntity> argument = ArgumentCaptor.forClass(HttpEntity.class);
 						
-						verify(template).exchange((String)anyObject(), (HttpMethod)anyObject(), argument.capture(), (Class<Object>)anyObject());
+						verify(template).exchange(argThat(CoreMatchers.endsWith("/some-id")), eq(HttpMethod.PUT), argument.capture(), (Class<Object>)anyObject());
 						
 						HttpEntity entity = argument.getValue();
 						assertTrue(((String)entity.getBody()).contains("\"contentId\":\"some-id\""));
@@ -151,6 +152,10 @@ public class ElasticSearchIndexTest {
 			Context("#onBeforeUnsetContent", () -> {
 				BeforeEach(() -> {
 					unsetEvent = mock(BeforeUnsetContentEvent.class);
+
+					TestContent content = new TestContent();
+					content.contentId = "some-id";
+					when(unsetEvent.getSource()).thenReturn(content);
 				});
 				JustBeforeEach(() -> {
 					try {
@@ -161,7 +166,7 @@ public class ElasticSearchIndexTest {
 				});
 				Context("when elasticsearch is available", () -> {
 					It("should send a DELETE request", () -> {
-						verify(template).exchange((String)anyObject(), eq(HttpMethod.DELETE), eq(null), (Class<Object>)anyObject());
+						verify(template).exchange(argThat(CoreMatchers.endsWith("/some-id")), eq(HttpMethod.DELETE), eq(null), (Class<Object>)anyObject());
 					});
 					Context("when removing index failed", () -> {
 						It("should throw a StoreAccessException", () -> {

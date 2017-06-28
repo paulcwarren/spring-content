@@ -55,7 +55,7 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 		HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
 
 		try {
-			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.PUT, entity, String.class);
+			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/" + id, HttpMethod.PUT, entity, String.class);
 			handleResponse(id, response.getStatusCode());
 		} catch (RestClientException rce) {
 			throw new StoreAccessException(String.format("Unexpected error attempting to index content for content id %s", id), rce);
@@ -64,9 +64,9 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 
 	@Override
 	protected void onBeforeUnsetContent(BeforeUnsetContentEvent event) {
-		String id = null;
+		String id = BeanUtils.getFieldWithAnnotation(event.getSource(), ContentId.class).toString();
 		try {
-			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.DELETE, null, String.class);
+			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/" + id, HttpMethod.DELETE, null, String.class);
 			handleResponse(id, response.getStatusCode());
 		} catch (RestClientException rce) {
 			throw new StoreAccessException(String.format("Unexpected error attempting to delete index for content id %s", id), rce);
