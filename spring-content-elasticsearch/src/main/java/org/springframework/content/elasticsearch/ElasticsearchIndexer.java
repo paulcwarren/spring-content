@@ -10,6 +10,7 @@ import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
 import internal.org.springframework.content.elasticsearch.StreamConverter;
@@ -52,13 +54,28 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
 
-		ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.PUT, entity, String.class);
-		
-		HttpStatus httpStatus=response.getStatusCode();
+		try {
+			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.PUT, entity, String.class);
+			handleResponse(id, response.getStatusCode());
+		} catch (RestClientException rce) {
+			throw new StoreAccessException(String.format("Unexpected error attempting to index content for content id %s", id), rce);
+		}
+	}
+
+	@Override
+	protected void onBeforeUnsetContent(BeforeUnsetContentEvent event) {
+		String id = null;
+		try {
+			ResponseEntity<String> response = template.exchange("http://search-spring-content-cc4bqyhqoiokxrakhfp4s2y3tm.us-east-1.es.amazonaws.com/docs/doc/1", HttpMethod.DELETE, null, String.class);
+			handleResponse(id, response.getStatusCode());
+		} catch (RestClientException rce) {
+			throw new StoreAccessException(String.format("Unexpected error attempting to delete index for content id %s", id), rce);
+		}
+	}
+
+	protected void handleResponse(String id, HttpStatus httpStatus) {
 		if(httpStatus.is5xxServerError() || httpStatus.is4xxClientError() ) {
 			throw new StoreAccessException(String.format("Indexing error while storing content for contentId %s", id));
 		}
-		
 	}
-
 }

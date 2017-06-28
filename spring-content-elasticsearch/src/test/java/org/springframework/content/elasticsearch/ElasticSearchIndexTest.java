@@ -18,10 +18,12 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -34,7 +36,8 @@ public class ElasticSearchIndexTest {
 
 	private ElasticsearchIndexer indexer;
 
-	private AfterSetContentEvent event;
+	private AfterSetContentEvent setEvent;
+	private BeforeUnsetContentEvent unsetEvent;
 	private Exception result;
 	
 	//mocks
@@ -43,27 +46,27 @@ public class ElasticSearchIndexTest {
 	private ContentStore<Object,Serializable> store;
 	{
 		Describe("ElasticsearchIndexer", () -> {
+			BeforeEach(() -> {
+				template = mock(RestOperations.class);
+				streamConverter=mock(StreamConverter.class);
+				
+				indexer = new ElasticsearchIndexer(template,streamConverter);
+			});
 			Context("#onAfterSetContent", () -> {
 				BeforeEach(() -> {
-					template = mock(RestOperations.class);
-					streamConverter=mock(StreamConverter.class);
-					
 					byte[] content = "Hello from Paul and Jigar!".getBytes();
-					
 					when(streamConverter.convert(anyObject())).thenReturn(content);
-					
-					indexer = new ElasticsearchIndexer(template,streamConverter);
-					
+
 					TestContent source = new TestContent();
 					source.contentId = "some-id";
 					store = mock(ContentStore.class);
-					event = new AfterSetContentEvent(source, store);
+					setEvent = new AfterSetContentEvent(source, store);
 					
 					when(store.getContent(eq(source))).thenReturn(new ByteArrayInputStream(content));
 				});
 				JustBeforeEach(() -> {
 					try {
-						indexer.onAfterSetContent(event);
+						indexer.onAfterSetContent(setEvent);
 					} catch (Exception e) {
 						result = e;
 					}
@@ -99,7 +102,7 @@ public class ElasticSearchIndexTest {
 	
 									try {
 										result = null;
-										indexer.onAfterSetContent(event);
+										indexer.onAfterSetContent(setEvent);
 									} catch (Exception e) {
 										result = e;
 									}
@@ -124,7 +127,7 @@ public class ElasticSearchIndexTest {
 
 								try {
 									result = null;
-									indexer.onAfterSetContent(event);
+									indexer.onAfterSetContent(setEvent);
 								} catch (Exception e) {
 									result = e;
 								}
@@ -137,16 +140,59 @@ public class ElasticSearchIndexTest {
 				});
 				Context("when elasticsearch isnt available", () -> {
 					BeforeEach(() -> {
-						when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenThrow(StoreAccessException.class);
+						when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenThrow(RestClientException.class);
 					});
 					It("should throw a StoreAccessException", () -> {
 						assertThat(result, is(not(nullValue())));
+						assertThat(result, is(instanceOf(StoreAccessException.class)));
 					});
 				});
 			});
 			Context("#onBeforeUnsetContent", () -> {
-				It("", () -> {
-					
+				BeforeEach(() -> {
+					unsetEvent = mock(BeforeUnsetContentEvent.class);
+				});
+				JustBeforeEach(() -> {
+					try {
+						indexer.onBeforeUnsetContent(unsetEvent);
+					} catch (Exception e) {
+						result = e;
+					}
+				});
+				Context("when elasticsearch is available", () -> {
+					It("should send a DELETE request", () -> {
+						verify(template).exchange((String)anyObject(), eq(HttpMethod.DELETE), eq(null), (Class<Object>)anyObject());
+					});
+					Context("when removing index failed", () -> {
+						It("should throw a StoreAccessException", () -> {
+							for (int i=400; i<=511; i++) {
+								try {
+									HttpStatus status = HttpStatus.valueOf(i);
+									ResponseEntity<Object> response = new ResponseEntity(status);
+									when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenReturn(response);
+									
+									try {
+										result = null;
+										indexer.onBeforeUnsetContent(unsetEvent);
+									} catch (Exception e) {
+										result = e;
+									}
+
+									assertThat(result, is(instanceOf(StoreAccessException.class)));
+								} catch (IllegalArgumentException iae) {
+									// ignore
+								}
+							}
+						});
+					});
+				});
+				Context("when elasticsearch is not available", () -> {
+					BeforeEach(() -> {
+						when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenThrow(RestClientException.class);
+					});
+					It("should throw a StoreAccessException", () -> {
+						assertThat(result, is(instanceOf(StoreAccessException.class)));
+					});
 				});
 			});
 		});
