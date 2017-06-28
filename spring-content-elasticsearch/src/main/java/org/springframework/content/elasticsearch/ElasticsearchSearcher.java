@@ -1,8 +1,11 @@
 package org.springframework.content.elasticsearch;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
+import org.json.JSONObject;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 
@@ -22,7 +25,10 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
 
     @Override
     public Iterable<Serializable> findKeyword(String query) {
-        Search search = new Search.Builder(query)
+        JsonParser parser = new JsonParser();
+        JsonObject payload = parser.parse(String.format("{\"query\":{\"query_string\":{\"query\":\"%s\"}}}", query)).getAsJsonObject();
+
+        Search search = new Search.Builder(payload.toString())
                 .addIndex("docs")
                 .addType("doc")
                 .build();

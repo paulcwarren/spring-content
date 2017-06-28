@@ -5,10 +5,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.searchbox.action.Action;
 import io.searchbox.client.JestClient;
 import io.searchbox.core.SearchResult;
 import org.assertj.core.api.filter.NotFilter;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.content.commons.repository.StoreAccessException;
 
 import java.io.IOException;
@@ -18,6 +20,7 @@ import java.util.List;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
@@ -42,7 +45,7 @@ public class ElasticsearchSearcherTests {
                 client = mock(JestClient.class);
 
                 searcher = new ElasticsearchSearcher(client);
-                keywords = "somehting";
+                keywords = "something";
             });
             Context("#findKeyword", () -> {
                 JustBeforeEach(() -> {
@@ -63,9 +66,12 @@ public class ElasticsearchSearcherTests {
                         when(client.execute(anyObject())).thenReturn(result);
                     });
                     It("should return a result", () -> {
-                        verify(client).execute(anyObject());
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(argumentCaptor.getValue().getData(new GsonBuilder().create()) , containsString("\"query\":\"something\""));
                     });
                 });
                 Context("given elasticsearch errors", () -> {
