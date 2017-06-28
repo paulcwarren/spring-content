@@ -81,6 +81,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<module>./spring-content-s3-boot-starter</module>
 		<module>./spring-content-solr</module>
 		<module>./spring-content-solr-boot-starter</module>
+		<module>./spring-content-elasticsearch</module>
 	</modules>
 
 	<build>
