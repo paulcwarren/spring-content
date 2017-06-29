@@ -64,7 +64,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"hits\":{\"total\":1,\"max_score\":0.5338346,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.5338346,\"_source\":{\"original-content\":\"UWJveCBt\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -76,6 +76,7 @@ public class ElasticsearchSearcherTest {
                         verify(client).execute(argumentCaptor.capture());
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                         assertThat(argumentCaptor.getValue().getData(new GsonBuilder().create()) , containsString("\"query\":\"something\""));
                     });
                 });
@@ -101,7 +102,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"hits\":{\"total\":1,\"max_score\":0.5338346,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.5338346,\"_source\":{\"original-content\":\"UWJveCBt\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -116,6 +117,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, containsString("\"query\":\"one AND two AND three\""));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elasticsearch throws an IOException", () -> {
                         BeforeEach(() -> {
@@ -140,7 +142,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"hits\":{\"total\":1,\"max_score\":0.5338346,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.5338346,\"_source\":{\"original-content\":\"UWJveCBt\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -155,6 +157,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, containsString("\"query\":\"one OR two OR three\""));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elasticsearch throws an IOException", () -> {
                         BeforeEach(() -> {
@@ -179,7 +182,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -194,6 +197,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"\\\"one two three\\\"~10\"}}}"));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elastic search throws an IOException", () -> {
                         BeforeEach(() -> {
@@ -218,7 +222,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -233,6 +237,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one*\"}}}"));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elastic search throws an IOException", () -> {
                         BeforeEach(() -> {
@@ -258,7 +263,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -273,6 +278,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one^2.0 two^3.0\"}}}"));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elastic search throws an IOException", () -> {
                         BeforeEach(() -> {
@@ -298,7 +304,7 @@ public class ElasticsearchSearcherTest {
                     BeforeEach(() -> {
                         SearchResult result = new SearchResult(new GsonBuilder().create());
                         JsonParser parser = new JsonParser();
-                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":2,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJv\",\"id\":\"12345\"}},{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"2\",\"_score\":0.73642,\"_source\":{\"original-content\":\"pb24u\",\"id\":\"67890\"}}]}}").getAsJsonObject();
                         result.setJsonObject(obj);
                         result.setPathToResult("hits/hits/_source");
 
@@ -313,6 +319,7 @@ public class ElasticsearchSearcherTest {
                         assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one*two\"}}}"));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
+                        assertThat(result, hasItem("67890"));
                     });
                     Context("given elastic search throws an IOException", () -> {
                         BeforeEach(() -> {
