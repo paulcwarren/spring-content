@@ -1,10 +1,6 @@
 package org.springframework.content.elasticsearch;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -20,8 +16,10 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.Serializable;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -34,6 +32,7 @@ import io.searchbox.client.JestClient;
 import io.searchbox.core.SearchResult;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads=1)
 public class ElasticsearchSearcherTest {
 
     private ElasticsearchSearcher searcher;
@@ -90,7 +89,121 @@ public class ElasticsearchSearcherTest {
                 });
             });
             Context("#findAllKeywords", () -> {
+                JustBeforeEach(() -> {
+                    String[] keywords = {"one", "two", "three"};
+                    try {
+                        result = searcher.findAllKeywords(keywords);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given elastic search is available", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"hits\":{\"total\":1,\"max_score\":0.5338346,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.5338346,\"_source\":{\"original-content\":\"UWJveCBt\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
 
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, containsString("\"query\":\"one AND two AND three\""));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elasticsearch throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
+            });
+            Context("#findAnyKeywords", () -> {
+                JustBeforeEach(() -> {
+                    String[] keywords = {"one", "two", "three"};
+                    try {
+                        result = searcher.findAnyKeywords(keywords);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given an elastic search", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"hits\":{\"total\":1,\"max_score\":0.5338346,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.5338346,\"_source\":{\"original-content\":\"UWJveCBt\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
+
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, containsString("\"query\":\"one OR two OR three\""));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elasticsearch throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
+            });
+            Context("#findKeywordsNear", () -> {
+                JustBeforeEach(() -> {
+                    String[] keywords = {"one", "two", "three"};
+                    try {
+                        result = searcher.findKeywordsNear(10, keywords);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given an elastic search", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
+
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, containsString("\"query\": \"\\\"one two three\\\"~10\""));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elastic search throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
             });
         });
     }

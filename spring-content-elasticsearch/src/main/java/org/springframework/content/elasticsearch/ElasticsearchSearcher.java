@@ -24,15 +24,9 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
 
     @Override
     public Iterable<Serializable> findKeyword(String query) {
-        JsonParser parser = new JsonParser();
-        JsonObject payload = parser.parse(String.format("{\"query\":{\"query_string\":{\"query\":\"%s\"}}}", query)).getAsJsonObject();
+        Search search = getSearch(query);
 
-        Search search = new Search.Builder(payload.toString())
-                .addIndex("docs")
-                .addType("doc")
-                .build();
-
-        SearchResult result = null;
+        SearchResult result;
 
         try {
             result = client.execute(search);
@@ -40,31 +34,63 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
             throw new StoreAccessException(String.format("Exception while searching for %s", query), e);
         }
 
-        List<Serializable> contents = new ArrayList<>();
-
-        if (result != null) {
-            List<SearchResult.Hit<Content, Void>> hits = result.getHits(Content.class);
-
-            contents = hits.stream()
-                    .map(hit -> hit.source.getId())
-                    .collect(Collectors.toList());
-        }
-        return contents;
+        return getIDs(result);
     }
 
     @Override
     public Iterable<Serializable> findAllKeywords(String... terms) {
-        return null;
+        StringBuilder qb = join("AND", terms);
+
+        Search search = getSearch(qb.toString());
+
+        SearchResult result;
+
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for %s", qb), e);
+        }
+
+        return getIDs(result);
     }
 
     @Override
     public Iterable<Serializable> findAnyKeywords(String... terms) {
-        return null;
+
+        StringBuilder qb = join("OR", terms);
+        Search search = getSearch(qb.toString());
+
+        SearchResult result;
+
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for %s", qb), e);
+        }
+
+        return getIDs(result);
     }
 
     @Override
     public Iterable<Serializable> findKeywordsNear(int proximity, String... terms) {
-        return null;
+        StringBuilder sb = join("", terms);
+        String query = String.format("{\"query\": {\"query_string\": {\"query\": \"\\\"%s\\\"%s\"}}}", sb.toString(), "~"+proximity);
+
+        Search search = new Search.Builder(query)
+                .addIndex("docs")
+                .addType("doc")
+                .build();
+
+        SearchResult result;
+
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for keywords %s near %s",
+                    sb.toString(), proximity), e);
+        }
+
+        return getIDs(result);
     }
 
     @Override
@@ -80,5 +106,43 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
     @Override
     public Iterable<Serializable> findAllKeywordsWithWeights(String[] terms, double[] weights) {
         return null;
+    }
+
+    private Search getSearch(String query) {
+        JsonParser parser = new JsonParser();
+        JsonObject payload = parser.parse(String.format("{\"query\":{\"query_string\":{\"query\":\"%s\"}}}", query)).getAsJsonObject();
+
+        return new Search.Builder(payload.toString())
+                .addIndex("docs")
+                .addType("doc")
+                .build();
+    }
+
+    private List<Serializable> getIDs(SearchResult result) {
+        List<Serializable> contents = new ArrayList<>();
+
+        if (result != null) {
+            List<SearchResult.Hit<Content, Void>> hits = result.getHits(Content.class);
+
+            contents = hits.stream()
+                    .map(hit -> hit.source.getId())
+                    .collect(Collectors.toList());
+        }
+        return contents;
+    }
+
+    private StringBuilder join(String delimiter, String... terms) {
+        StringBuilder qb = new StringBuilder();
+        for (int i = 0; i < terms.length; i++) {
+            if (i > 0) {
+                if(delimiter.isEmpty()){
+                    qb.append(" ");
+                } else {
+                    qb.append(String.format(" %s ", delimiter));
+                }
+            }
+            qb.append(terms[i]);
+        }
+        return qb;
     }
 }
