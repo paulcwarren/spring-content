@@ -191,7 +191,126 @@ public class ElasticsearchSearcherTest {
                         verify(client).execute(argumentCaptor.capture());
 
                         String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
-                        assertThat(query, containsString("\"query\": \"\\\"one two three\\\"~10\""));
+                        assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"\\\"one two three\\\"~10\"}}}"));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elastic search throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
+            });
+            Context("#findKeywordsStartsWith", () -> {
+                JustBeforeEach(() -> {
+                    String keyword = "one";
+                    try {
+                        result = searcher.findKeywordStartsWith(keyword);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given an elastic search", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
+
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one*\"}}}"));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elastic search throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
+            });
+            Context("#findAllKeywordsWithWeights", () -> {
+                JustBeforeEach(() -> {
+                    String[] keywrods = {"one", "two"};
+                    double[] weights = {2, 3};
+                    try {
+                        result = searcher.findAllKeywordsWithWeights(keywrods, weights);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given an elastic search", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
+
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one^2.0 two^3.0\"}}}"));
+                        assertThat(result, is(not(nullValue())));
+                        assertThat(result, hasItem("12345"));
+                    });
+                    Context("given elastic search throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            when(client.execute(anyObject())).thenThrow(IOException.class);
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(exception, is(instanceOf(StoreAccessException.class)));
+                        });
+                    });
+                });
+            });
+            Context("#findKeywordsStartsWithAndEndsWith", () -> {
+                JustBeforeEach(() -> {
+                    String startsWith = "one";
+                    String endsWith = "two";
+                    try {
+                        result = searcher.findKeywordStartsWithAndEndsWith(startsWith, endsWith);
+                    } catch (Exception e) {
+                        exception = e;
+                    }
+                });
+                Context("given an elastic search", () -> {
+                    BeforeEach(() -> {
+                        SearchResult result = new SearchResult(new GsonBuilder().create());
+                        JsonParser parser = new JsonParser();
+                        JsonObject obj = parser.parse("{\"took\":3,\"timed_out\":false,\"_shards\":{\"total\":5,\"successful\":5,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":0.221545,\"hits\":[{\"_index\":\"docs\",\"_type\":\"doc\",\"_id\":\"1\",\"_score\":0.221545,\"_source\":{\"original-content\":\"UWJveCBtYWtlcyBpdCBlYXN5IGZvciB1cyB0byBwcm92aXNpb24gYW4gRWxhc3RpY3NlYXJjaCBjbHVzdGVyIHdpdGhvdXQgd2FzdGluZyB0aW1lIG9uIGFsbCB0aGUgZGV0YWlscyBvZiBjbHVzdGVyIGNvbmZpZ3VyYXRpb24u\",\"id\":\"12345\"}}]}}").getAsJsonObject();
+                        result.setJsonObject(obj);
+                        result.setPathToResult("hits/hits/_source");
+
+                        when(client.execute(anyObject())).thenReturn(result);
+                    });
+                    It("should call the client with a correctly formed query", () -> {
+                        Class<Action<SearchResult>> actionClass = (Class<Action<SearchResult>>)(Class)Action.class;
+                        ArgumentCaptor<Action<SearchResult>> argumentCaptor = ArgumentCaptor.forClass(actionClass);
+                        verify(client).execute(argumentCaptor.capture());
+
+                        String query = argumentCaptor.getValue().getData(new GsonBuilder().create());
+                        assertThat(query, is("{\"query\":{\"query_string\":{\"query\":\"one*two\"}}}"));
                         assertThat(result, is(not(nullValue())));
                         assertThat(result, hasItem("12345"));
                     });

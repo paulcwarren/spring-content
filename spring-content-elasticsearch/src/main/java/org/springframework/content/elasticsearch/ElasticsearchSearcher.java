@@ -74,12 +74,8 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
     @Override
     public Iterable<Serializable> findKeywordsNear(int proximity, String... terms) {
         StringBuilder sb = join("", terms);
-        String query = String.format("{\"query\": {\"query_string\": {\"query\": \"\\\"%s\\\"%s\"}}}", sb.toString(), "~"+proximity);
-
-        Search search = new Search.Builder(query)
-                .addIndex("docs")
-                .addType("doc")
-                .build();
+        String finalString = String.format("\\\"%s\\\"~%s", sb.toString(), proximity);
+        Search search = getSearch(finalString);
 
         SearchResult result;
 
@@ -95,17 +91,54 @@ public class ElasticsearchSearcher implements Searchable<Serializable> {
 
     @Override
     public Iterable<Serializable> findKeywordStartsWith(String term) {
-        return null;
+        String finalString = String.format("%s*",term);
+        Search search = getSearch(finalString);
+        SearchResult result;
+
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for keyword %s that start with %s",
+                    finalString, term), e);
+        }
+
+        return getIDs(result);
     }
 
     @Override
     public Iterable<Serializable> findKeywordStartsWithAndEndsWith(String a, String b) {
-        return null;
+        String finalString = String.format("%s*%s",a,b);
+        Search search = getSearch(finalString);
+        SearchResult result;
+
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for keyword %s that start with %s and ends with %s",
+                    finalString, a, b), e);
+        }
+
+        return getIDs(result);
     }
 
     @Override
     public Iterable<Serializable> findAllKeywordsWithWeights(String[] terms, double[] weights) {
-        return null;
+        String finalString = "";
+        for(int i =0; i< weights.length; i++) {
+            finalString = String.format("%s%s^%s ", finalString, terms[i], weights[i]);
+        }
+        finalString = finalString.substring(0, finalString.length() - 1);
+
+        Search search = getSearch(finalString);
+
+        SearchResult result;
+        try {
+            result = client.execute(search);
+        } catch (IOException e) {
+            throw new StoreAccessException(String.format("Exception while searching for %s.", finalString), e);
+        }
+
+        return getIDs(result);
     }
 
     private Search getSearch(String query) {
