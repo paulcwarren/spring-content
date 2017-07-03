@@ -3,7 +3,8 @@ package internal.org.springframework.content.rest.utils;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+
+import internal.org.springframework.content.rest.controllers.ResourceNotFoundException;
 
 public final class PersistentEntityUtils {
 

@@ -20,7 +20,6 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.content.rest.ResourceNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
@@ -41,7 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
 
@@ -52,17 +51,17 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 
 	private Repositories repositories;
 	private ContentStoreService storeService;
-	private ContentRestByteRangeHttpRequestHandler handler;
+	private StoreByteRangeHttpRequestHandler handler;
 	
 	@Autowired(required=false)
-	public ContentPropertyCollectionRestController(ApplicationContext context, ContentStoreService stores, ContentRestByteRangeHttpRequestHandler handler) {
+	public ContentPropertyCollectionRestController(ApplicationContext context, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler) {
 		this.repositories = new Repositories(context);
 		this.storeService = stores;
 		this.handler = handler;
 	}
 	
 	@Autowired(required=false)
-	public ContentPropertyCollectionRestController(Repositories repositories, ContentStoreService stores, ContentRestByteRangeHttpRequestHandler handler) {
+	public ContentPropertyCollectionRestController(Repositories repositories, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler) {
 		this.repositories = repositories;
 		this.storeService = stores;
 		this.handler = handler;
@@ -100,6 +99,10 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 		}
 		
 		Serializable cid = (Serializable) BeanUtils.getFieldWithAnnotation(propVal,ContentId.class);
+		if (cid == null) {
+			response.setStatus(HttpStatus.NOT_FOUND.value());
+			return;
+		}
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, propVal.getClass());
 		if (info == null)

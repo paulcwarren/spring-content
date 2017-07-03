@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -40,12 +41,11 @@ import internal.org.springframework.content.rest.TestConfig;
 import internal.org.springframework.content.rest.TestEntityContentRepository;
 import internal.org.springframework.content.rest.TestEntityRepository;
 import internal.org.springframework.content.rest.TestStore;
-import internal.org.springframework.content.rest.config.ContentRestConfiguration;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
-@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, ContentRestConfiguration.class})
+@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class})
 @Transactional
 public class StoreRestControllerIntegrationTest {
 	

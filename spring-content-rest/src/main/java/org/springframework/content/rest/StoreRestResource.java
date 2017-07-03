@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.annotations;
+package org.springframework.content.rest;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -6,11 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Deprecated
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-public @interface ContentStoreRestResource {
+public @interface StoreRestResource {
 
 	/**
 	 * The path segment under which this resource is to be exported.
@@ -20,3 +19,4 @@ public @interface ContentStoreRestResource {
 	String path() default "";
 
 }
+

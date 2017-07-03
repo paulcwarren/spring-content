@@ -8,9 +8,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
-public class ContentRestByteRangeHttpRequestHandler extends ResourceHttpRequestHandler {
+public class StoreByteRangeHttpRequestHandler extends ResourceHttpRequestHandler {
 
-	public ContentRestByteRangeHttpRequestHandler() {
+	public StoreByteRangeHttpRequestHandler() {
 	}
 
     @Override

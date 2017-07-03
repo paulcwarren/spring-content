@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 
 import org.springframework.stereotype.Component;
 
-// so we can identify controllers handling content
-
 @Documented
 @Component
 @Retention(RetentionPolicy.RUNTIME)

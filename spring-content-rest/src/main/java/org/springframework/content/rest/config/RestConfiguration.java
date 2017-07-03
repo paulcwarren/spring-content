@@ -1,5 +1,5 @@
 
-package internal.org.springframework.content.rest.config;
+package org.springframework.content.rest.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.ContentStoreService;
@@ -7,18 +7,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.web.config.HateoasAwareSpringDataWebConfiguration;
-import org.springframework.hateoas.ResourceProcessor;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import internal.org.springframework.content.rest.links.ContentLinksResourceProcessor;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
-import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
 @Configuration
 @ComponentScan("internal.org.springframework.content.rest.controllers")
-public class ContentRestConfiguration extends HateoasAwareSpringDataWebConfiguration {
+public class RestConfiguration extends HateoasAwareSpringDataWebConfiguration {
 	
 	@Autowired(required=false)
 	Repositories repositories;
@@ -32,13 +29,7 @@ public class ContentRestConfiguration extends HateoasAwareSpringDataWebConfigura
 	}
 	
 	@Bean
-	ContentRestByteRangeHttpRequestHandler ascRestRequestHandler() {
-		return new ContentRestByteRangeHttpRequestHandler();
+	StoreByteRangeHttpRequestHandler ascRestRequestHandler() {
+		return new StoreByteRangeHttpRequestHandler();
 	}
-
-	@Bean 
-	public ResourceProcessor<PersistentEntityResource> contentLinksProcessor() {
-        return new ContentLinksResourceProcessor(stores);
-    }
-
 }

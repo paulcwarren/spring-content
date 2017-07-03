@@ -33,7 +33,7 @@ import internal.org.springframework.content.elasticsearch.StreamConverter;
 import internal.org.springframework.content.elasticsearch.StreamConverterImpl;
 
 @RunWith(Ginkgo4jRunner.class)
-public class ElasticSearchIndexTest {
+public class ElasticsearchIndexerTest {
 
 	private ElasticsearchIndexer indexer;
 

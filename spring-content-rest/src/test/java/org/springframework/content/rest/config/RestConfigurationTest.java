@@ -1,14 +1,20 @@
-package internal.org.springframework.content.rest.config;
+package org.springframework.content.rest.config;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import java.util.Arrays;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
-import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
@@ -23,39 +29,45 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
-import internal.org.springframework.content.rest.config.ContentRestConfiguration;
-
-//@RunWith(Ginkgo4jSpringRunner.class)
+@RunWith(Ginkgo4jRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
-public class ContentRestConfigurationTest {
+public class RestConfigurationTest {
 
-	@Test
-	public void contextLoads() {
-		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-		context.setServletContext(new MockServletContext());
-		context.register(TestConfig.class,
-						 DelegatingWebMvcConfiguration.class,
-						 RepositoryRestMvcConfiguration.class,
-						 ContentRestConfiguration.class/*,
-						 WebMvcAutoConfiguration.class,
-						 MongoRepositoriesAutoConfiguration.class,
-						 MongoContentAutoConfiguration.class,
-						 ContentRestAutoConfiguration.class*/);
-		context.refresh();
-
-		MatcherAssert.assertThat(context.getBean("contentHandlerMapping"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-		MatcherAssert.assertThat(context.getBean("contentLinksProcessor"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-
-		MatcherAssert.assertThat(context.getBean("contentPropertyRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-
-		context.close();
+	private AnnotationConfigWebApplicationContext context;
+	
+	{
+		Describe("RestConfiguration", () -> {
+			Context("given a context with a ContentRestConfiguration", () -> {
+				BeforeEach(() -> {
+					context = new AnnotationConfigWebApplicationContext();
+					context.setServletContext(new MockServletContext());
+					context.register(TestConfig.class,
+							DelegatingWebMvcConfiguration.class,
+							RepositoryRestMvcConfiguration.class,
+							RestConfiguration.class);
+					context.refresh();
+				});
+				
+				It("should have a content handler mapping bean", () -> {
+					MatcherAssert.assertThat(context.getBean("contentHandlerMapping"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+				});
+				
+				It("should have the content rest controllers", () -> {
+					MatcherAssert.assertThat(context.getBean("contentEntityRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("contentPropertyCollectionRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("contentPropertyRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("storeRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+				});
+			});
+		});
 	}
-
+	
 	@Configuration
 	@EnableMongoContentRepositories
 	public static class TestConfig extends AbstractMongoConfiguration {

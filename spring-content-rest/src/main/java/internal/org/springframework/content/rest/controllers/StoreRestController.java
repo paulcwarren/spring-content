@@ -16,7 +16,6 @@ import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +27,7 @@ import org.springframework.web.util.UrlPathHelper;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
 @ContentRestController
@@ -37,10 +36,10 @@ public class StoreRestController extends AbstractContentPropertyController {
 	private static final String BASE_MAPPING = "/{store}/**";
 	
 	private ContentStoreService storeService;
-	private ContentRestByteRangeHttpRequestHandler handler;
+	private StoreByteRangeHttpRequestHandler handler;
 	
 	@Autowired 
-	public StoreRestController(ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+	public StoreRestController(ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();
 		this.storeService = storeService;
 		this.handler = handler;

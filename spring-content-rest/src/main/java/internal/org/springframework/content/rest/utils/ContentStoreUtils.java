@@ -5,6 +5,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.rest.StoreRestResource;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.StringUtils;
 
@@ -19,6 +20,9 @@ public final class ContentStoreUtils {
 		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
 			ContentStoreRestResource restResource = (ContentStoreRestResource) info.getInterface().getAnnotation(ContentStoreRestResource.class);
 			if (restResource != null && contentEntityClass.equals(info.getDomainObjectClass()))
+				return info;
+			StoreRestResource storeRestResource = (StoreRestResource) info.getInterface().getAnnotation(StoreRestResource.class);
+			if (storeRestResource != null && contentEntityClass.equals(info.getDomainObjectClass()))
 				return info;
 		}
 		return null;
@@ -45,8 +49,15 @@ public final class ContentStoreUtils {
 	
 	public static String storePath(ContentStoreInfo info) {
 		Class<?> clazz = info.getInterface();
-		ContentStoreRestResource annotation = AnnotationUtils.findAnnotation(clazz, ContentStoreRestResource.class);
-		String path = annotation == null ? null : annotation.path().trim();
+		String path = null;
+
+		ContentStoreRestResource oldAnnotation = AnnotationUtils.findAnnotation(clazz, ContentStoreRestResource.class);
+		if (oldAnnotation != null) {
+			path = oldAnnotation == null ? null : oldAnnotation.path().trim();
+		} else {
+			StoreRestResource newAnnotation = AnnotationUtils.findAnnotation(clazz, StoreRestResource.class);
+			path = newAnnotation == null ? null : newAnnotation.path().trim();
+		}
 		path = StringUtils.hasText(path) ? path : English.plural(StringUtils.uncapitalize(getSimpleName(info)));
 		return path;
 	}

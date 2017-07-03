@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.content.rest.ResourceNotFoundException;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;

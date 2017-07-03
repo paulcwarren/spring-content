@@ -19,7 +19,6 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.content.rest.ResourceNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -39,7 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.mappings.ContentRestByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
@@ -50,10 +49,10 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 
 	private Repositories repositories;
 	private ContentStoreService storeService;
-	private ContentRestByteRangeHttpRequestHandler handler;
+	private StoreByteRangeHttpRequestHandler handler;
 	
 	@Autowired(required=false)
-	public ContentPropertyRestController(ApplicationContext context, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+	public ContentPropertyRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();
 		this.repositories = new Repositories(context);
 		this.storeService = storeService;
@@ -61,7 +60,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	}
 
 	@Autowired(required=false)
-	public ContentPropertyRestController(Repositories repositories, ContentStoreService storeService, ContentRestByteRangeHttpRequestHandler handler) {
+	public ContentPropertyRestController(Repositories repositories, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();
 		this.repositories = repositories;
 		this.storeService = storeService;

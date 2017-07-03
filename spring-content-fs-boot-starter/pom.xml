@@ -16,7 +16,7 @@
 			<artifactId>spring-content-fs</artifactId>
 			<version>0.0.5-SNAPSHOT</version>
 		</dependency>
-		<dependency>
+ 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-autoconfigure</artifactId>
 			<version>0.0.5-SNAPSHOT</version>

@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
@@ -37,12 +38,11 @@ import internal.org.springframework.content.rest.TestEntity4;
 import internal.org.springframework.content.rest.TestEntity4ContentRepository;
 import internal.org.springframework.content.rest.TestEntity4Repository;
 import internal.org.springframework.content.rest.TestStore;
-import internal.org.springframework.content.rest.config.ContentRestConfiguration;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
-@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, ContentRestConfiguration.class})
+@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RestConfiguration.class})
 @Transactional
 public class SpringDataRestlessContentEntityRestControllerIntegrationTest {
 	

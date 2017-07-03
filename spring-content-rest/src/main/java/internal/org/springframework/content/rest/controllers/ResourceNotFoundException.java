@@ -1,4 +1,4 @@
-package org.springframework.content.rest;
+package internal.org.springframework.content.rest.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
