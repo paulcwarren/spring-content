@@ -275,6 +275,7 @@ NOTE: The JPA and S3 namespaces are used in this example.  If you are using the 
 ====
 [source, java]
 ----
+@Component
 public class SomeClass {
 	@Autowired private SopDocumentRepository repo;
   	@Autowired private SopDocumentContentStore contentStore;
@@ -297,4 +298,133 @@ public class SomeClass {
 }
 ----
 <1> Spring Content will update the `@ContentId` and `@ContentLength` fields
+====
+
+== Patterns of Content Association
+
+Content can be associated with a Spring Data Entity in several ways.  
+
+=== Entity Association
+
+The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.
+
+The following example shows a Resource associated with an Entity `Dvd`. 
+
+====
+[source, java]
+----
+@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+	
+	...
+}
+
+public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+
+=== Property Association
+
+Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.
+
+The following example shows two Resources associated with a `Dvd` entity.  The first Resource is the Dvd's cover Image and the second is the Dvd's Stream.  
+
+====
+[source, java]
+----
+@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "image_id")
+	private Image image;
+	
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "stream_id")
+	private Stream stream;
+	
+	...
+}
+
+@Entity
+public class Image {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+@Entity
+public class Stream {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+public interface ImageStore extends ContentStore<Image, UUID> {}
+
+public interface StreamStore extends ContentStore<Stream, UUID> {}
+----
+====
+ 
+Note how the Content attributes are placed on each property object of on the Entity itself.  
+
+When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
+
+==== One to Many Property Associations
+
+In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a `java.util.Collection` property, as the following example shows.
+
+====
+[source, java]
+----
+@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToMany
+	@JoinColumn(name = "chapter_id")
+	private List<Chapter> chapters;
+	
+	...
+}
+
+@Entity
+public class Chapter {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+public interface ChapterStore extends ContentStore<Chapter, UUID> {}
+----
 ====

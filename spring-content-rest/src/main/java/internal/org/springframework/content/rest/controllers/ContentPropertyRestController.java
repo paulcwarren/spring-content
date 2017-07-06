@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
@@ -54,15 +55,11 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	@Autowired(required=false)
 	public ContentPropertyRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();
-		this.repositories = new Repositories(context);
-		this.storeService = storeService;
-		this.handler = handler;
-	}
-
-	@Autowired(required=false)
-	public ContentPropertyRestController(Repositories repositories, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
-		super();
-		this.repositories = repositories;
+		try {
+			this.repositories = context.getBean(Repositories.class);
+		} catch (BeansException be) {
+			this.repositories = new Repositories(context);
+		}
 		this.storeService = storeService;
 		this.handler = handler;
 	}
@@ -155,7 +152,11 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
 			
 			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			InputStreamResource inputStreamResource = new InputStreamResource(info.getImpementation().getContent(contentPropertyValue));
+			InputStream is = info.getImpementation().getContent(contentPropertyValue);
+			if (is == null) {
+				throw new ResourceNotFoundException();
+			}
+			InputStreamResource inputStreamResource = new InputStreamResource(is);
 			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
 		} else {
 			final HttpHeaders headers = new HttpHeaders();
@@ -241,7 +242,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		info.getImpementation().unsetContent(contentPropertyValue);
 		
 		// remove the content property reference from the data object
-		setContentProperty(domainObj, property, contentId, null);
+		// setContentProperty(domainObj, property, contentId, null);
 		
 		save(repositories, repository, domainObj);
 		

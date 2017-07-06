@@ -1,0 +1,163 @@
+= Introduction
+
+REST web services have become the number one means for application integration on the web. In its core, REST defines that a system consists of resources that clients interact with. These resources are often also implemented in a hypermedia driven way.  Spring MVC offers a solid foundation to build theses kinds of services.  But implementing even the simplest REST web services for a multi-domain object system can be quite tedious and result in a lot of boilerplate code.
+
+Spring Content REST builds on top of Spring Content `Store`s and automatically exports those as REST resources.  It leverages REST to expose end-points for each content resource and it also optionally integrates with Spring Data REST's hypermedia API to allow clients to find content resources that have been associated with Spring Data entities.
+
+= Getting Started
+
+== Introduction
+
+Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort. 
+
+== Adding Spring Content REST to a Spring Boot project
+
+The simplest way to get to started is if you are building a Spring Boot application. That’s because Spring Content REST has both a starter as well as auto-configuration.
+
+.Spring Boot configuration with Gradle
+====
+[source, java]
+----
+dependencies {
+    ...
+    compile("comn.github.paulcwarren:spring-content-rest-boot-starter:${version}")
+... }
+----
+====
+
+.Spring Boot configuration with Maven
+====
+[source, java]
+----
+ <dependencies>
+...
+    <dependency>
+      <groupId>com.github.paulcwarren</groupId>
+      <artifactId>spring-content-rest-boot-starter</artifactId>
+      <version>${version}</version>
+    </dependency>
+...
+  </dependencies>
+----
+====
+
+When using Spring Boot, Spring Content REST gets configured automatically.
+
+== Adding Spring Content REST to a Gradle Project
+
+To add Spring Content REST to a Gradle-based project, add the spring-content-rest artifact to your compile-time dependencies:
+
+====
+[source, java]
+----
+dependencies {
+    ...
+    compile("comn.github.paulcwarren:spring-content-rest:${version}")
+... }
+----
+====
+
+== Adding Spring Content REST to a Maven Project
+
+To add Spring Content REST to a Maven-based project, add the spring-content-rest artifact to your compile-time dependencies:
+====
+[source, java]
+----
+ <dependencies>
+...
+    <dependency>
+      <groupId>com.github.paulcwarren</groupId>
+      <artifactId>spring-content-rest</artifactId>
+      <version>${version}</version>
+    </dependency>
+...
+  </dependencies>
+----
+====
+
+== Configuring Spring Content REST
+
+To install Spring Content REST alongside your existing Spring MVC application, you need to include the appropriate MVC configuration.  Spring Content REST configuration is defined in two classes  called; `RestConfiguration` and `HypermediaConfiguration` and they can just be imported into your applications configuration.
+
+IMPORTANT: This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically enable Spring Content REST when you include spring-content-rest-boot-starter and your app is flagged as a `@SpringBootApplication`.
+
+Make sure you also configure Spring Content stores for the store you wish to use.  For details on that, please consult the reference documentation for the corresponding Spring Contnt module.
+
+
+
+
+
+
+
+Spring Content Filesystem Stores are enabled with the following Java Config.
+
+.Spring Content Filesystem Stores using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableFilesystemContentRepositories
+public static class ApplicationConfig {
+}
+----
+====
+
+By default content will be stored in a randomly chosen (at application startup) folder under `java.io.tmdir`.
+
+== Configuring
+
+The following configuration properties (prefix `spring.content.fs`) are supported.
+
+[cols="2*", options="header"]
+|=========
+| Property | Description
+| filesystemRoot | content store location (defaults to `java.io.tmpdir/<random>/`.  
+|=========
+
+== Accessing Content
+
+=== Storage Customization
+
+By default Spring Content Filesystem will store all content at the root of the content store location.  
+
+The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.content.fs.config.FilesytemStoreConverter` it is possible to configure the Store to use other more sophisticated storage models.  
+
+For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.       
+ 
+.Configuring the Filesystem Store  
+====
+[source, java]
+----
+@Configuration
+public class FilesystemStoreConfiguration  {
+
+	@Bean
+	public FilesystemStoreConverter<UUID,String> uuidConverter() {
+		return new FilesystemStoreConverter<UUID,String>() {
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-","/"));
+			}
+		};
+	}
+}
+----
+====   
+
+=== Setting Content
+
+Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
+
+If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on `java.util.UUID`.  
+
+The @ContentId and @ContentLength annotations will be updated on `entity`.  
+
+If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+
+=== Getting Content
+
+Content can be accessed using the `ContentStore.getContent(entity)` method.  
+
+=== Unsetting Content
+
+Content can be removed using the `ContentStore.unsetContent(entity)` method.

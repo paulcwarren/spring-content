@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -22,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,18 +49,14 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
 
-	@Autowired(required=false) 
+	@Autowired 
 	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();
-		this.repositories = new Repositories(context);
-		this.storeService = storeService;
-		this.handler = handler;
-	}
-
-	@Autowired(required=false)
-	public ContentEntityRestController(Repositories repositories, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler, DefaultFormattingConversionService conversionService) {
-		super();
-		this.repositories = repositories; 
+		try {
+			this.repositories = context.getBean(Repositories.class);
+		} catch (BeansException be) {
+			this.repositories = new Repositories(context);
+		}
 		this.storeService = storeService;
 		this.handler = handler;
 	}

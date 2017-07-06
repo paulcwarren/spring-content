@@ -15,6 +15,4 @@ public class HypermediaConfiguration {
 	public ResourceProcessor<PersistentEntityResource> contentLinksProcessor(ContentStoreService stores) {
         return new ContentLinksResourceProcessor(stores);
     }
-
-
 }

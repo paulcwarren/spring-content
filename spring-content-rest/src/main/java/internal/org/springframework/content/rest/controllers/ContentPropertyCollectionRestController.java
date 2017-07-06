@@ -55,14 +55,12 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 	
 	@Autowired(required=false)
 	public ContentPropertyCollectionRestController(ApplicationContext context, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler) {
-		this.repositories = new Repositories(context);
-		this.storeService = stores;
-		this.handler = handler;
-	}
-	
-	@Autowired(required=false)
-	public ContentPropertyCollectionRestController(Repositories repositories, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler) {
-		this.repositories = repositories;
+		super();
+		try {
+			this.repositories = context.getBean(Repositories.class);
+		} catch (BeansException be) {
+			this.repositories = new Repositories(context);
+		}
 		this.storeService = stores;
 		this.handler = handler;
 	}

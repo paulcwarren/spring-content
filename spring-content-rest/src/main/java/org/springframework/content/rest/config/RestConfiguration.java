@@ -1,4 +1,3 @@
-
 package org.springframework.content.rest.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,7 +5,6 @@ import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.web.config.HateoasAwareSpringDataWebConfiguration;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -17,9 +15,6 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 @ComponentScan("internal.org.springframework.content.rest.controllers")
 public class RestConfiguration extends HateoasAwareSpringDataWebConfiguration {
 	
-	@Autowired(required=false)
-	Repositories repositories;
-	
 	@Autowired 
 	ContentStoreService stores;
 	
@@ -29,7 +24,7 @@ public class RestConfiguration extends HateoasAwareSpringDataWebConfiguration {
 	}
 	
 	@Bean
-	StoreByteRangeHttpRequestHandler ascRestRequestHandler() {
+	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
 		return new StoreByteRangeHttpRequestHandler();
 	}
 }
