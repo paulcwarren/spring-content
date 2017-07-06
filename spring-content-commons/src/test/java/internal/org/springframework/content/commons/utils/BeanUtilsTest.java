@@ -7,12 +7,13 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.utils.BeanUtils;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -61,6 +62,18 @@ public class BeanUtilsTest {
 				});
 				It("should return true for annotated private fields with getter", () -> {
 					assertThat(BeanUtils.hasFieldWithAnnotation(testEntity, ContentLength.class), is(true));
+				});
+			});
+			
+			Context("getFieldWithAnnotationType", () -> {
+				BeforeEach(() -> {
+					testEntity = new TestEntity();
+				});
+				It("should return true for annotated public fields", () -> {
+					assertThat(BeanUtils.getFieldWithAnnotationType(testEntity, ContentId.class), is(CoreMatchers.<Class<?>>equalTo(String.class)));
+				});
+				It("should return true for annotated private fields with getter", () -> {
+					assertThat(BeanUtils.getFieldWithAnnotationType(testEntity, ContentLength.class), is(CoreMatchers.<Class<?>>equalTo(String.class)));
 				});
 			});
 		});

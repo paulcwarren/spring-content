@@ -41,6 +41,38 @@ public final class BeanUtils {
 		return false;
 	}
 
+	public static Class<?> getFieldWithAnnotationType(Object domainObj, Class<? extends Annotation> annotationClass)
+			throws SecurityException, BeansException {
+		Class<?> type = null;
+		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
+		for (PropertyDescriptor descriptor : descriptors) {
+			String prop = descriptor.getName();
+			Field theField = null;
+			try {
+				theField = domainObj.getClass().getDeclaredField(prop);
+				if (theField != null && theField.getAnnotation(annotationClass) != null) {
+					type = theField.getType();
+					break;
+				}
+			} catch (NoSuchFieldException ex) {
+				continue;
+			}
+		}
+
+		if (type == null) {
+			for (Field field : domainObj.getClass().getFields()) {
+				if (field.getAnnotation(annotationClass) != null) {
+					try {
+						type = field.getType();
+					} catch (IllegalArgumentException iae) {}
+				}
+			}
+		}
+		
+		return type;
+	}
+
 	public static Object getFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Object value = null;

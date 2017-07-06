@@ -1,11 +1,5 @@
 package internal.org.springframework.content.fs.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.UUID;
@@ -19,16 +13,31 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
 import org.springframework.content.fs.config.EnableFilesystemStores;
+import org.springframework.content.fs.config.FilesystemStoreConfigurer;
 import org.springframework.content.fs.config.FilesystemStoreConverter;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.convert.ConversionService;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 @SuppressWarnings("deprecation")
 @RunWith(Ginkgo4jRunner.class)
@@ -36,6 +45,10 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class EnableFilesystemStoresTest {
 
 	private AnnotationConfigApplicationContext context;
+	
+	// mocks
+	static FilesystemStoreConfigurer configurer;
+	
 	{
 		Describe("EnableFilesystemStores", () -> {
 
@@ -59,8 +72,10 @@ public class EnableFilesystemStoresTest {
 				});
 			});
 
-			Context("given a context with a custom converter", () -> {
+			Context("given a context with a configurer", () -> {
 				BeforeEach(() -> {
+					configurer = mock(FilesystemStoreConfigurer.class);
+					
 					context = new AnnotationConfigApplicationContext();
 					context.register(ConverterConfig.class);
 					context.refresh();
@@ -68,9 +83,8 @@ public class EnableFilesystemStoresTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should use that converter", () -> {
-					ConversionService converters = (ConversionService) context.getBean("filesystemStoreConverter");
-					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+				It("should call that configurer to help customize the store", () -> {
+					verify(configurer).configureFilesystemStoreConverters(anyObject());
 				});
 			});
 			
@@ -154,8 +168,12 @@ public class EnableFilesystemStoresTest {
 				public String convert(UUID source) {
 					return String.format("/%s", source.toString().replaceAll("-","/"));
 				}
-				
 			};
+		}
+		
+		@Bean 
+		public FilesystemStoreConfigurer configurer() {
+			return configurer;
 		}
 
 		@Bean

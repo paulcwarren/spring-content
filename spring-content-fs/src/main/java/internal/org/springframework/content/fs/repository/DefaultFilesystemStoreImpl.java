@@ -20,6 +20,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -68,7 +69,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
 			contentId = UUID.randomUUID();
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
+			contentId = convertToExternalContentIdType(property, contentId);
+			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId);
 		}
 
 		String location = conversion.convert(contentId, String.class);
@@ -144,5 +146,13 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		// reset content fields
 		BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+	}
+	
+	private Object convertToExternalContentIdType(S property, Object contentId) {
+		if (conversion.canConvert(TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)))) {
+			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
+			return contentId;
+		}
+		return contentId.toString();
 	}
 }
