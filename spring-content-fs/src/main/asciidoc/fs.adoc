@@ -33,7 +33,7 @@ The following configuration properties (prefix `spring.content.fs`) are supporte
 
 By default Spring Content Filesystem will store all content at the root of the content store location.  
 
-The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.content.fs.config.FilesytemStoreConverter` it is possible to configure the Store to use other more sophisticated storage models.  
+The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.core.conmvert.converter.Converter` it is possible to configure the Store to use other more sophisticated storage models.  
 
 For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.       
  
@@ -44,12 +44,23 @@ For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be m
 @Configuration
 public class FilesystemStoreConfiguration  {
 
-	@Bean
-	public FilesystemStoreConverter<UUID,String> uuidConverter() {
+   	public Converter<UUID,String> converter() {
 		return new FilesystemStoreConverter<UUID,String>() {
+
 			@Override
 			public String convert(UUID source) {
-				return String.format("/%s", source.toString().replaceAll("-","/"));
+				return String.format("/%s", source.toString().replaceAll("-", "/"));
+			}
+		};
+	}
+	
+	@Bean
+	public FilesystemStoreConfigurer configurer() {
+		return new FilesystemStoreConfigurer() {
+
+			@Override
+			public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
 			}
 		};
 	}
@@ -61,7 +72,7 @@ public class FilesystemStoreConfiguration  {
 
 Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
 
-If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on `java.util.UUID`.  
+If content has not yet been associated with this entity before and an ID has not been assigned by the application, one will be generated based on `java.util.UUID` and converted to the type of the @ContentId field.  
 
 The @ContentId and @ContentLength annotations will be updated on `entity`.  
 
