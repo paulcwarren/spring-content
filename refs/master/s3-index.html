@@ -1117,21 +1117,20 @@ public static class ApplicationConfig {
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">Property</th>
 <th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
 </tr>
@@ -1146,7 +1145,7 @@ public static class ApplicationConfig {
 <p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.</p>
 </div>
 <div class="paragraph">
-<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.content.fs.config.S3StoreConverter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
+<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) instances of <code>org.springframework.core.concert.converter.Converter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
 </div>
 <div class="paragraph">
 <p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.</p>
@@ -1159,12 +1158,23 @@ public static class ApplicationConfig {
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 public class S3StoreConfiguration  {
 
-	@Bean
-	public S3StoreConverter&lt;UUID,String&gt; uuidConverter() {
-		return new S3StoreConverter&lt;UUID,String&gt;() {
+	public Converter&lt;String,String&gt; converter() {
+		return new S3StoreConverter&lt;String,String&gt;() {
+
 			@Override
-			public String convert(UUID source) {
-				return String.format("/%s", source.toString().replaceAll("-","/"));
+			public String convert(String source) {
+				return String.format("/%s", source.replaceAll("-", "/"));
+			}
+		};
+	}
+
+	@Bean
+	public S3StoreConfigurer configurer() {
+		return new S3StoreConfigurer() {
+
+			@Override
+			public void configureS3StoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
 			}
 		};
 	}
@@ -1312,7 +1322,7 @@ public class S3StoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.5-SNAPSHOT<br>
-Last updated 2017-07-07 06:35:58 UTC
+Last updated 2017-07-07 17:45:13 UTC
 </div>
 </div>
 </body>
