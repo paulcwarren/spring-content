@@ -43,8 +43,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	public void setContent(S property, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
+			contentId = UUID.randomUUID().toString();
+			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId);
 		}
 
 		String location = converter.convert(contentId, String.class);

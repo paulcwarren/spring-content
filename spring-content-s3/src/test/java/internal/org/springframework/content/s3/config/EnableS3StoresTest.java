@@ -1,17 +1,6 @@
 package internal.org.springframework.content.s3.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-
-import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,12 +11,11 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.content.s3.config.S3StoreConverter;
+import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.convert.ConversionService;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -35,10 +23,28 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+
 @RunWith(Ginkgo4jRunner.class)
 public class EnableS3StoresTest {
 
 	private AnnotationConfigApplicationContext context;
+
+	// mocks
+	static S3StoreConfigurer configurer;
 	{
 		Describe("EnableS3Stores", () -> {
 			Context("given a context and a configuartion with an S3 content repository bean", () -> {
@@ -58,8 +64,10 @@ public class EnableS3StoresTest {
 				});
 			});
 			
-			Context("given a context with a custom converter", () -> {
+			Context("given a context with a configurer", () -> {
 				BeforeEach(() -> {
+					configurer = mock(S3StoreConfigurer.class);
+					
 					context = new AnnotationConfigApplicationContext();
 					context.register(ConverterConfig.class);
 					context.refresh();
@@ -67,9 +75,8 @@ public class EnableS3StoresTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should use that converter", () -> {
-					ConversionService converters = (ConversionService) context.getBean("s3StoreConverter");
-					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+				It("should call that configurer to help setup the store", () -> {
+					verify(configurer).configureS3StoreConverters(anyObject());
 				});
 			});
 
@@ -138,15 +145,8 @@ public class EnableS3StoresTest {
 	@Import(InfrastructureConfig.class)
 	public static class ConverterConfig {
 		@Bean
-		public S3StoreConverter<UUID,String> uuidConverter() {
-			return new S3StoreConverter<UUID,String>() {
-
-				@Override
-				public String convert(UUID source) {
-					return String.format("/%s", source.toString().replaceAll("-","/"));
-				}
-
-			};
+		public S3StoreConfigurer configurer() {
+			return configurer;
 		}
 	}
 

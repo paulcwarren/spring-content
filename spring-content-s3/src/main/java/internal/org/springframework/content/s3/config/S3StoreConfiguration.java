@@ -3,27 +3,29 @@ package internal.org.springframework.content.s3.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.s3.config.S3StoreConverter;
+import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
 public class S3StoreConfiguration {
 	
-	@Autowired(required=false) private List<S3StoreConverter<?,String>> customConverters;
+	@Autowired(required=false) private List<S3StoreConfigurer> configurers;
 
 	@Bean
 	public ConversionService s3StoreConverter() {
 		DefaultConversionService conversion = new DefaultConversionService();
-		if (customConverters != null) {
-			for (Converter<?,String> converter : customConverters) {
-				conversion.addConverter(converter);
-			}
-		}
+		addConverters(conversion);
 		return conversion;
 	}
-	
+
+	private void addConverters(DefaultConversionService conversion) {
+		if (configurers == null)
+			return;
+		for (S3StoreConfigurer configurer : configurers) {
+			configurer.configureS3StoreConverters(conversion);
+		}
+	}
 }
