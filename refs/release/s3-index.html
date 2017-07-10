@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.5-SNAPSHOT,</span>
-<span id="revdate">2017-06-06</span>
+<span id="revdate">2017-07-10</span>
 </div>
 </div>
 <div id="content">
@@ -456,6 +456,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <ul class="sectlevel2">
 <li><a href="#content-repositories.core-concepts">2.1. Core concepts</a></li>
 <li><a href="#content-repositories.creation">2.2. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">2.3. Patterns of Content Association</a></li>
 </ul>
 </li>
 <li><a href="#_s3_content_stores">3. S3 Content Stores</a>
@@ -879,7 +880,8 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class SomeClass {
+<pre class="highlight"><code class="language-java" data-lang="java">@Component
+public class SomeClass {
 	@Autowired private SopDocumentRepository repo;
   	@Autowired private SopDocumentContentStore contentStore;
 
@@ -912,6 +914,153 @@ The JPA and S3 namespaces are used in this example.  If you are using the reposi
 </div>
 </li>
 </ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_patterns_of_content_association">2.3. Patterns of Content Association</h3>
+<div class="paragraph">
+<p>Content can be associated with a Spring Data Entity in several ways.</p>
+</div>
+<div class="sect3">
+<h4 id="_entity_association">2.3.1. Entity Association</h4>
+<div class="paragraph">
+<p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a Resource associated with an Entity <code>Dvd</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+
+	...
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_property_association">2.3.2. Property Association</h4>
+<div class="paragraph">
+<p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows two Resources associated with a <code>Dvd</code> entity.  The first Resource is the Dvd&#8217;s cover Image and the second is the Dvd&#8217;s Stream.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "image_id")
+	private Image image;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "stream_id")
+	private Stream stream;
+
+	...
+}
+
+@Entity
+public class Image {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+@Entity
+public class Stream {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ImageStore extends ContentStore&lt;Image, UUID&gt; {}
+
+public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Note how the Content attributes are placed on each property object of on the Entity itself.</p>
+</div>
+<div class="paragraph">
+<p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
+</div>
+<div class="sect4">
+<h5 id="_property_collection_associations">Property Collection Associations</h5>
+<div class="paragraph">
+<p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToMany
+	@JoinColumn(name = "chapter_id")
+	private List&lt;Chapter&gt; chapters;
+
+	...
+}
+
+@Entity
+public class Chapter {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -968,21 +1117,20 @@ public static class ApplicationConfig {
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">Property</th>
 <th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
 </tr>
@@ -997,7 +1145,7 @@ public static class ApplicationConfig {
 <p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.</p>
 </div>
 <div class="paragraph">
-<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.content.fs.config.S3StoreConverter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
+<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) instances of <code>org.springframework.core.concert.converter.Converter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
 </div>
 <div class="paragraph">
 <p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.</p>
@@ -1010,12 +1158,23 @@ public static class ApplicationConfig {
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 public class S3StoreConfiguration  {
 
-	@Bean
-	public S3StoreConverter&lt;UUID,String&gt; uuidConverter() {
-		return new S3StoreConverter&lt;UUID,String&gt;() {
+	public Converter&lt;String,String&gt; converter() {
+		return new S3StoreConverter&lt;String,String&gt;() {
+
 			@Override
-			public String convert(UUID source) {
-				return String.format("/%s", source.toString().replaceAll("-","/"));
+			public String convert(String source) {
+				return String.format("/%s", source.replaceAll("-", "/"));
+			}
+		};
+	}
+
+	@Bean
+	public S3StoreConfigurer configurer() {
+		return new S3StoreConfigurer() {
+
+			@Override
+			public void configureS3StoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
 			}
 		};
 	}

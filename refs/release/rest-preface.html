@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.5">
-<title>S3 Content Stores</title>
+<title>Preface</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -418,174 +418,36 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="book">
+<body id="preface" class="book">
 <div id="header">
-<h1>S3 Content Stores</h1>
+<h1>Preface</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="project">Project metadata</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content S3 is enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 1. Enabling Spring Content S3 using Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableS3Stores
-public static class ApplicationConfig {
-
-	@Bean
-	public AmazonS3 client() {	<b class="conum">(1)</b>
-		BasicAWSCredentials creds = new BasicAWSCredentials(...)
-		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
-		return amazonS3Client;
-	}
-
-	@Bean
-	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<b class="conum">(2)</b>
-		return new SimpleStorageResourceLoader(client);
-	}
-
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
+<div class="ulist">
+<ul>
 <li>
-<p>The Amazon S3 client used by the S3 ResourceLoader</p>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
 </li>
 <li>
-<p>The S3 ResourceLoader used by the S3 Store</p>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
 </li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_configuring">Configuring</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.s3</code>) are supported.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Required</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_storage_customization">Storage Customization</h3>
-<div class="paragraph">
-<p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.</p>
-</div>
-<div class="paragraph">
-<p>However, the S3 Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) instances of <code>org.springframework.core.concert.converter.Converter</code> it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
-</div>
-<div class="paragraph">
-<p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. Configuring the S3 Store</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class S3StoreConfiguration  {
-
-	public Converter&lt;String,String&gt; converter() {
-		return new S3StoreConverter&lt;String,String&gt;() {
-
-			@Override
-			public String convert(String source) {
-				return String.format("/%s", source.replaceAll("-", "/"));
-			}
-		};
-	}
-
-	@Bean
-	public S3StoreConfigurer configurer() {
-		return new S3StoreConfigurer() {
-
-			@Override
-			public void configureS3StoreConverters(ConverterRegistry registry) {
-				registry.addConverter(converter());
-			}
-		};
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_storage_model">Storage Model</h3>
-<div class="paragraph">
-<p>Accordingly by default Spring Content S3 will store content entities in the root of the store&#8217;s bucket using the @ContentId field value as the key.</p>
-</div>
-<div class="paragraph">
-<p>If you wish to take advantage of S3&#8217;s console folder concept you can create your content entities with hierarchical @ContentId field types like <code>java.net.URI</code> or field types that can be mapped to a hierarchy like <code>java.util.UUID</code> and create a corresponding <code>org.springframework.content.commons.placement.PlacementStrategy</code>.  See <a href="#content-repositories.storage">Storage Model</a> for more information.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based in <code>java.util.UUID</code>.</p>
-</div>
-<div class="paragraph">
-<p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
-</div>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-07-07 08:02:17 PDT
+Last updated 2017-05-23 16:26:37 PDT
 </div>
 </div>
 </body>
