@@ -482,7 +482,7 @@ public static class ApplicationConfig {
 <p>By default Spring Content Filesystem will store all content at the root of the content store location.</p>
 </div>
 <div class="paragraph">
-<p>The Filesystem Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.content.fs.config.FilesytemStoreConverter</code> it is possible to configure the Store to use other more sophisticated storage models.</p>
+<p>The Filesystem Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.core.conmvert.converter.Converter</code> it is possible to configure the Store to use other more sophisticated storage models.</p>
 </div>
 <div class="paragraph">
 <p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.</p>
@@ -495,12 +495,23 @@ public static class ApplicationConfig {
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 public class FilesystemStoreConfiguration  {
 
-	@Bean
-	public FilesystemStoreConverter&lt;UUID,String&gt; uuidConverter() {
+   	public Converter&lt;UUID,String&gt; converter() {
 		return new FilesystemStoreConverter&lt;UUID,String&gt;() {
+
 			@Override
 			public String convert(UUID source) {
-				return String.format("/%s", source.toString().replaceAll("-","/"));
+				return String.format("/%s", source.toString().replaceAll("-", "/"));
+			}
+		};
+	}
+
+	@Bean
+	public FilesystemStoreConfigurer configurer() {
+		return new FilesystemStoreConfigurer() {
+
+			@Override
+			public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
 			}
 		};
 	}
@@ -516,7 +527,7 @@ public class FilesystemStoreConfiguration  {
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on <code>java.util.UUID</code>.</p>
+<p>If content has not yet been associated with this entity before and an ID has not been assigned by the application, one will be generated based on <code>java.util.UUID</code> and converted to the type of the @ContentId field.</p>
 </div>
 <div class="paragraph">
 <p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
@@ -542,7 +553,7 @@ public class FilesystemStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-05-19 05:35:23 UTC
+Last updated 2017-07-06 17:09:32 PDT
 </div>
 </div>
 </body>
