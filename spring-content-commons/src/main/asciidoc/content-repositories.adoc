@@ -394,7 +394,7 @@ Note how the Content attributes are placed on each property object of on the Ent
 
 When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
 
-==== One to Many Property Associations
+==== Property Collection Associations
 
 In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a `java.util.Collection` property, as the following example shows.
 

@@ -155,6 +155,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers={"content-type!=multipart/form-data", "accept!=application/hal+json"})
 	@ResponseBody
 	public void putContent(HttpServletRequest request,
+						   HttpServletResponse response,
         				   @PathVariable String repository, 
 						   @PathVariable String id) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
@@ -166,6 +167,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new IllegalArgumentException("Entity not a content repository");
 		}
 
+		boolean isNew = true;
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
+			isNew = (BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class) == null);
+		}
+		
 		info.getImpementation().setContent(domainObj, request.getInputStream());
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
@@ -173,29 +179,38 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 		
 		save(repositories, repository, domainObj);
+		
+		if (isNew) {
+			response.setStatus(HttpStatus.CREATED.value());
+		} else {
+			response.setStatus(HttpStatus.OK.value());
+		}
 	}
 	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void putMultipartContent(@PathVariable String repository, 
+	public void putMultipartContent(HttpServletResponse response,
+									@PathVariable String repository, 
 									@PathVariable String id, 
 									@RequestParam("file") MultipartFile multiPart)
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
-		handleMultipart(repository, id, multiPart);
+		handleMultipart(response, repository, id, multiPart);
 	}
 	
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(@PathVariable String repository, 
+	public void postMultipartContent(HttpServletResponse response,
+									 @PathVariable String repository, 
 									 @PathVariable String id, 
 									 @RequestParam("file") MultipartFile multiPart)
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
-		handleMultipart(repository, id, multiPart);
+		handleMultipart(response, repository, id, multiPart);
 	}
 	
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers="accept!=application/hal+json")
-	public void deleteContent(@PathVariable String repository, 
+	public void deleteContent(HttpServletResponse response,
+							  @PathVariable String repository, 
 							  @PathVariable String id) 
 			throws HttpRequestMethodNotSupportedException {
 
@@ -217,9 +232,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 		
 		save(repositories, repository, domainObj);
+		
+		response.setStatus(HttpStatus.NO_CONTENT.value());
 	}
 
-	protected void handleMultipart(String repository, String id, MultipartFile multiPart)
+	protected void handleMultipart(HttpServletResponse response, String repository, String id, MultipartFile multiPart)
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		Object domainObj = findOne(repositories, repository, id);
@@ -235,6 +252,17 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
 		
+		boolean isNew = true;
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
+			isNew = (BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class) == null);
+		}
+		
 		save(repositories, repository, domainObj);
+		
+		if (isNew) {
+			response.setStatus(HttpStatus.CREATED.value());
+		} else {
+			response.setStatus(HttpStatus.OK.value());
+		}
 	}
 }

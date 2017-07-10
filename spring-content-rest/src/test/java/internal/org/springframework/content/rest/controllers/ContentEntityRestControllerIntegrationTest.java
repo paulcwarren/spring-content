@@ -1,13 +1,5 @@
 package internal.org.springframework.content.rest.controllers;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,6 +29,16 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import internal.org.springframework.content.rest.TestConfig;
 import internal.org.springframework.content.rest.TestEntity;
@@ -93,11 +95,11 @@ public class ContentEntityRestControllerIntegrationTest {
 					});
 				});
 				Context("a PUT to /{repository}/{id} with a content body", () -> {
-					It("should set the content and return 200", () -> {
+					It("should set the content and return 201", () -> {
 						mvc.perform(put("/testEntities/" + testEntity.id.toString())
 						.content("Hello New Spring Content World!")
 						.contentType("text/plain"))
-						.andExpect(status().isOk());
+						.andExpect(status().isCreated());
 
 						TestEntity fetched = repository.findOne(testEntity.id);
 						assertThat(fetched.contentId, is(not(nullValue())));
@@ -204,7 +206,7 @@ public class ContentEntityRestControllerIntegrationTest {
 						It("should delete the content and return a 200 response", () -> {
 							mvc.perform(delete("/testEntities/" + testEntity.id)
 									.contentType("text/plain"))
-									.andExpect(status().isOk());
+									.andExpect(status().isNoContent());
 
 							assertThat(contentRepository.getContent(testEntity), is(nullValue()));
 						});

@@ -2,7 +2,12 @@
 
 REST web services have become the number one means for application integration on the web. In its core, REST defines that a system consists of resources that clients interact with. These resources are often also implemented in a hypermedia driven way.  Spring MVC offers a solid foundation to build theses kinds of services.  But implementing even the simplest REST web services for a multi-domain object system can be quite tedious and result in a lot of boilerplate code.
 
-Spring Content REST builds on top of Spring Content `Store`s and automatically exports those as REST resources.  It leverages REST to expose end-points for each content resource and it also optionally integrates with Spring Data REST's hypermedia API to allow clients to find content resources that have been associated with Spring Data entities.
+Spring Content REST builds on top of Spring Content stores and automatically exports those as REST resources.  It leverages REST to expose end-points for each content resource and it also optionally integrates with Spring Data REST's hypermedia API to allow clients to find content resources that have been associated with Spring Data entities.
+
+Spring Content REST officially supports:
+
+- https://github.com/paulcwarren/spring-content/spring-content-fs[Spring Content Filesystem]
+- https://github.com/paulcwarren/spring-content/spring-content-s3[Spring Content S3]
 
 = Getting Started
 
@@ -21,7 +26,8 @@ The simplest way to get to started is if you are building a Spring Boot applicat
 dependencies {
     ...
     compile("comn.github.paulcwarren:spring-content-rest-boot-starter:${version}")
-... }
+	... 
+}
 ----
 ====
 
@@ -30,13 +36,13 @@ dependencies {
 [source, java]
 ----
  <dependencies>
-...
+	...
     <dependency>
       <groupId>com.github.paulcwarren</groupId>
       <artifactId>spring-content-rest-boot-starter</artifactId>
       <version>${version}</version>
     </dependency>
-...
+	...
   </dependencies>
 ----
 ====
@@ -53,7 +59,8 @@ To add Spring Content REST to a Gradle-based project, add the spring-content-res
 dependencies {
     ...
     compile("comn.github.paulcwarren:spring-content-rest:${version}")
-... }
+	... 
+}
 ----
 ====
 
@@ -64,13 +71,13 @@ To add Spring Content REST to a Maven-based project, add the spring-content-rest
 [source, java]
 ----
  <dependencies>
-...
+	...
     <dependency>
       <groupId>com.github.paulcwarren</groupId>
       <artifactId>spring-content-rest</artifactId>
       <version>${version}</version>
     </dependency>
-...
+	...
   </dependencies>
 ----
 ====
@@ -79,85 +86,218 @@ To add Spring Content REST to a Maven-based project, add the spring-content-rest
 
 To install Spring Content REST alongside your existing Spring MVC application, you need to include the appropriate MVC configuration.  Spring Content REST configuration is defined in two classes  called; `RestConfiguration` and `HypermediaConfiguration` and they can just be imported into your applications configuration.
 
-IMPORTANT: This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically enable Spring Content REST when you include spring-content-rest-boot-starter and your app is flagged as a `@SpringBootApplication`.
+IMPORTANT: This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically enable Spring Content REST when you include `com.github.paulcwarren:spring-content-rest-boot-starter` and your app is flagged as a `@SpringBootApplication`.
 
-Make sure you also configure Spring Content stores for the store you wish to use.  For details on that, please consult the reference documentation for the corresponding Spring Contnt module.
+Make sure you also configure Spring Content stores for the store you wish to use.  For details on that, please consult the reference documentation for the corresponding Spring Content module.
 
+= Store Resources
 
+== Fundamentals
 
+The core functionality of Spring Content REST, enabled through `@Import(RestConfiguration.class)`, is to export resources for Spring Content stores.  This is usually closely related to Spring Data repositories.  Thus, the core artifacts to look at and potentially tweak to customize the way the exporting works are the repository and store interfaces.  
 
+=== Entity Association
 
-
-
-Spring Content Filesystem Stores are enabled with the following Java Config.
-
-.Spring Content Filesystem Stores using Java Config
+With Entity Association, as the name suggest, one Entity has one Resource associated with it.  Assume the following repository and store interfaces and Entity model:
+  
 ====
 [source, java]
 ----
-@Configuration
-@EnableFilesystemContentRepositories
-public static class ApplicationConfig {
+  @Entity
+  public class Dvd {
+  	@Id
+  	@ContentId
+  	private UUID id;
+  	
+  	@ContentLength
+  	private Long contentLength;
+  	
+  	@MimeType
+  	private String mimeType;
+  	
+  	// getters and setters
+  }
+  
+  public interface DvdRepository extends CrudRepository<Dvd, UUID> {}
+
+  public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+  
+In this example a single Resource (the actual Dvd video stream) can be associated with a Dvd Entity.  For this repository, Spring Data REST exposes a collection resource at `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being managed.  It also exposes an item resource for each of the items managed by the repository under the URI `/dvds/{id}`.  The HTTP methods to interact with Dvd resources map to the according methods of CrudRepository.
+
+Similarly, for each Spring Data REST item resource, Spring Content REST exposes a content resource managed by the store also under the URI `/dvds/{id}`.  By default the HTTP methods to interact with the Dvd's content resource maps onto the methods on `ContentStore` as follows:-
+
+- GET -> getContent
+- POST/PUT -> setContent
+- DELETE -> unsetContent
+
+=== Property Association
+
+The second type of association is Property Association.  With property association a property of an Entity is associated with one Resource.  Assume the following repository/store interfaces and Entity model.
+
+====
+[source, java]
+----
+@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "image_id")
+	private Image image;
+	
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "stream_id")
+	private Stream stream;
+	
+	...
 }
+
+@Entity
+public class Image {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+@Entity
+public class Stream {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+public interface ImageStore extends ContentStore<Image, UUID> {}
+
+public interface StreamStore extends ContentStore<Stream, UUID> {}
+----
+====  
+
+In this example separate Resources can be associated with the image and stream properties of the `Dvd` Entity.   
+
+When using JPA with a relational database these associations are typically (but not always) also Entity associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
+
+As before Spring Data REST will expose an item resource under the URI `/dvds/{id}`.  However, this time Spring Content REST will expose content resources under the URIs `/dvds/{id}/image/{contentId}` and `/dvds/{id}/stream/{contentId}` managed by their respective stores.  A new image (or a new stream) can be created by POSTing to `/dvds/{id}/image` (or `/dvds/{id}/stream`) resource.
+
+NOTE: as these properties are both single values Spring Content REST content resources are also available under the simplified `/dvds/{id}/image` and `/dvds/{id}/stream` where the `{contentId}` can be omitted for convenience.
+
+=== Property Collection Associations
+
+The final type association is the Property Collection Association.  Unsurprisingly, closely related to Property Association, it allows a property of an Entity to be associated with many Resources.  Consider the following example:-
+
+====
+[source, java]
+----
+@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToMany
+	@JoinColumn(name = "chapter_id")
+	private List<Chapter> chapters;
+	
+	...
+}
+
+@Entity
+public class Chapter {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;  	
+	private @ContentLength Long contentLen;	
+}
+
+public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+public interface ChapterStore extends ContentStore<Chapter, UUID> {}
 ----
 ====
 
-By default content will be stored in a randomly chosen (at application startup) folder under `java.io.tmdir`.
+In this example many Resources can be associated with the chapters property of the `Dvd` Entity.
 
-== Configuring
+As with Property Association the content resources are exposed under the URI `/dvds/{id}/chapters/{contentId}`.  In this case POSTing to `/dvds/{id}/chapters` a new content resource to be *appended* to the 'Chapters' collection.  This resource supports both POST and PUT HTTP methods.
 
-The following configuration properties (prefix `spring.content.fs`) are supported.
+=== Default status codes
 
-[cols="2*", options="header"]
-|=========
-| Property | Description
-| filesystemRoot | content store location (defaults to `java.io.tmpdir/<random>/`.  
-|=========
+For the content resources exposed, we use a set of default status codes:
 
-== Accessing Content
+- 200 OK - for plain GET requests and POST and PUT requests that overwrite existing content resources
+- 201 Created - for POST and PUT requests that create new content resources
+- 204 No Content - for DELETE requests 
+- 206 Partial Content - for range GET requests
 
-=== Storage Customization
+=== Resource Discoverability
 
-By default Spring Content Filesystem will store all content at the root of the content store location.  
+A core principle of HATEOAS is that resources should be discoverable through the publication of links that point to the available resources.  There are a few competing de-facto standards of how to represent links in JSON.  By default, Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.
 
-The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.content.fs.config.FilesytemStoreConverter` it is possible to configure the Store to use other more sophisticated storage models.  
+Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that represent the next level of resources that are available to the client.
 
-For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.       
+When enabled through `@Import(HypermediaConfiguration.class)` Spring Content REST will inject content resource and content collection resource links for both content and content collection associations into t	he HAL responses created by Spring Data REST. 
+
+== The Content Resource
+
+Spring Content REST exposes a content resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the `@StoreRestResource` on the store interface.
  
-.Configuring the Filesystem Store  
-====
-[source, java]
-----
-@Configuration
-public class FilesystemStoreConfiguration  {
+=== Supported HTTP Methods
 
-	@Bean
-	public FilesystemStoreConverter<UUID,String> uuidConverter() {
-		return new FilesystemStoreConverter<UUID,String>() {
-			@Override
-			public String convert(UUID source) {
-				return String.format("/%s", source.toString().replaceAll("-","/"));
-			}
-		};
-	}
-}
-----
-====   
+Content resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not Allowed`.
 
-=== Setting Content
+==== GET
 
-Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
+Returns the Resource's content 
 
-If content has not yet been stored with this entity before and an ID has not been assigned by the application one will be generated based on `java.util.UUID`.  
+===== Supported media types
 
-The @ContentId and @ContentLength annotations will be updated on `entity`.  
+All content types except `application/json`
 
-If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+==== PUT/POST
 
-=== Getting Content
+Sets the Resources's content
 
-Content can be accessed using the `ContentStore.getContent(entity)` method.  
+===== Supported media types
 
-=== Unsetting Content
+All content types except `application/json`
+ 
+==== DELETE
 
-Content can be removed using the `ContentStore.unsetContent(entity)` method.
+Removes the Resource's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+== The Content Collection Resource
+
+Spring Content REST exposes a content collection resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the `@StoreRestResource` on the store interface.
+ 
+=== Supported HTTP Methods
+
+Content collection resources support `PUT` and `POST`.
+
+==== PUT/POST
+
+Appends new content to the collection of Resources
+
+===== Supported media types
+
+All content types except `application/json`
+ 
