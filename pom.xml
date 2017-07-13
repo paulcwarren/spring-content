@@ -50,7 +50,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<!-- Import dependency management from Spring Boot -->
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
-				<version>1.4.1.RELEASE</version>
+				<version>${springboot-version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -59,6 +59,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
 	<properties>
 		<ginkgo4j-version>1.0.9</ginkgo4j-version>
+		<springboot-version>1.5.4.RELEASE</springboot-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<docs.type>${env.TRAVIS_BRANCH}</docs.type>

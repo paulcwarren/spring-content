@@ -24,7 +24,11 @@
  			<artifactId>spring-cloud-aws-context</artifactId>
  			<version>1.0.2.RELEASE</version>
  		</dependency>
- 		
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk</artifactId>
+		    <version>1.11.160</version>
+		</dependency>
  				
 		<!-- Test Dependencies -->
 		<dependency>
