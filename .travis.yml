@@ -10,9 +10,11 @@ before_install:
 - ./scripts/before-install.sh
 install:
   - mvn --settings settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+after_success:
+- mvn scm-publish:publish-scm
 deploy:
   - provider: script
-    script: .travis/deploy.sh
+    script: scripts/deploy.sh
     skip_cleanup: true
     on:
       repo: paulcwarren/spring-content
@@ -27,5 +29,3 @@ deploy:
 #- mvn deploy --settings settings.xml -P $MAVEN_PROFILE jacoco:report coveralls:report 
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
-after_success:
-- mvn scm-publish:publish-scm
