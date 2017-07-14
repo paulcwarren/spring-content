@@ -8,6 +8,8 @@ env:
 - MAVEN_PROFILE=master
 before_install:
 - ./scripts/before-install.sh
+install:
+  - mvn --settings settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 deploy:
   - provider: script
     script: .travis/deploy.sh
