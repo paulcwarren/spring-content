@@ -24,14 +24,14 @@ public interface ContentStoreInfo {
 	/**
 	 * Returns the Store's implementation
 	 * 
-	 * @see #getImplementation(Class<? extends T>) getImplmentation
+	 * @param clazz the type of the implementation
+	 * @return the implementation, or null
 	 */
 	public <T> T getImplementation(Class<? extends T> clazz);
 
 	/**
 	 * Returns the Store's implementation
-	 * 
-	 * @see #getImplementation(Class<? extends T>) getImplmentation
+	 * @return the store's implementation (implementing ContentStore), or null 
 	 */
 	@Deprecated
 	public ContentStore<Object, Serializable> getImpementation();
