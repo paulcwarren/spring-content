@@ -4,6 +4,8 @@ branches:
 language: java
 jdk:
 - oraclejdk8
+env:
+- MAVEN_PROFILE=master
 before_install:
 - ./scripts/before-install.sh
 script:
