@@ -20,7 +20,7 @@ deploy:
       repo: paulcwarren/spring-content
       branch: master
   - provider: script
-    script: .travis/deploy.sh
+    script: scripts/deploy.sh
     skip_cleanup: true
     on:
       repo: paulcwarren/spring-content
