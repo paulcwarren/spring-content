@@ -13,11 +13,13 @@ deploy:
     script: .travis/deploy.sh
     skip_cleanup: true
     on:
+      repo: paulcwarren/spring-content
       branch: master
   - provider: script
     script: .travis/deploy.sh
     skip_cleanup: true
     on:
+      repo: paulcwarren/spring-content
       tags: true
 #script:
 #- mvn deploy --settings settings.xml -P $MAVEN_PROFILE jacoco:report coveralls:report 
