@@ -7,7 +7,7 @@ jdk:
 before_install:
 - ./scripts/before-install.sh
 script:
-- mvn deploy --settings settings.xml -P $TRAVIS_BRANCH jacoco:report coveralls:report 
+- mvn deploy --settings settings.xml -P $MAVEN_PROFILE jacoco:report coveralls:report 
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
 after_success:

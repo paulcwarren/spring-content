@@ -62,7 +62,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<springboot-version>1.5.4.RELEASE</springboot-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<docs.type>${env.TRAVIS_BRANCH}</docs.type>
+		<docs.type>${env.MAVEN_PROFILE}</docs.type>
 		<docs.output.dir>../target/generated-docs/refs/${docs.type}/</docs.output.dir>
 	</properties>
 
