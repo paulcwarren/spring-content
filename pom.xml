@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.paulcwarren</groupId>
 	<artifactId>spring-content</artifactId>
-	<version>0.0.5</version>
+	<version>0.0.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Content</name>
@@ -117,16 +117,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<serverId>ossrh</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>true</autoReleaseAfterClose>
-				</configuration>
-			</plugin>
+			
+			<!-- unit test/coverage -->
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
@@ -158,7 +150,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				</executions>
 			</plugin>
 			<plugin>
-				<!-- UNIT TEST RUNNER -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.18.1</version>
@@ -172,6 +163,57 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 							<goal>test</goal>
 						</goals>
 
+					</execution>
+				</executions>
+			</plugin>
+			
+			<!-- Releasing to maven -->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -256,7 +298,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
+<!-- 					<plugin>
 						<groupId>org.eluder.coveralls</groupId>
 						<artifactId>coveralls-maven-plugin</artifactId>
 						<version>3.1.0</version>
@@ -266,7 +308,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 						<artifactId>jacoco-maven-plugin</artifactId>
 						<version>0.7.8</version>
 						<executions>
-							<!-- Prepare execution with Surefire -->
+							Prepare execution with Surefire
 							<execution>
 								<id>pre-unit-test</id>
 								<goals>
@@ -276,7 +318,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 									<propertyName>surefireArgLine</propertyName>
 								</configuration>
 							</execution>
-							<!-- Generate report after tests are run -->
+							Generate report after tests are run
 							<execution>
 								<id>post-unit-test</id>
 								<phase>test</phase>
@@ -286,7 +328,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 							</execution>
 						</executions>
 					</plugin>
-				</plugins>
+ -->				</plugins>
 			</build>
 		</profile>
 	</profiles>
