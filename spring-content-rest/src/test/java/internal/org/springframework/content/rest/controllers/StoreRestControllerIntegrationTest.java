@@ -4,6 +4,12 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+
+import internal.org.springframework.content.rest.support.TestConfig;
+import internal.org.springframework.content.rest.support.TestEntityContentRepository;
+import internal.org.springframework.content.rest.support.TestEntityRepository;
+import internal.org.springframework.content.rest.support.TestStore;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -36,11 +42,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-
-import internal.org.springframework.content.rest.TestConfig;
-import internal.org.springframework.content.rest.TestEntityContentRepository;
-import internal.org.springframework.content.rest.TestEntityRepository;
-import internal.org.springframework.content.rest.TestStore;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)

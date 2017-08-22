@@ -3,6 +3,7 @@ package internal.org.springframework.content.rest.controllers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -12,9 +13,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
@@ -27,6 +26,7 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -116,7 +116,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	}
 	
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json"})
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<InputStreamResource> getContent(@PathVariable String repository, 
 														  @PathVariable String id, 
 														  @PathVariable String contentProperty,
@@ -138,48 +138,25 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 			contentPropertyValue = getContentProperty(domainObj, property, contentId);
 		}
 
-		// get content prop content-type
-		// if content-type == Accept header then usual getContent, 
-		// else getRendition
-		Object contentTypeObj = BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class);
-		String contentType = contentTypeObj != null ? contentTypeObj.toString() : null;
-		if (mimeType == null || mimeType.contains("*/*") || mimeType.equals(contentType)) {
-			final HttpHeaders headers = new HttpHeaders();
-			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
-				headers.add("Content-Type", BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class).toString());
-			}
-			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, ContentLength.class))
-				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
-			
-			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			InputStream is = info.getImpementation().getContent(contentPropertyValue);
-			if (is == null) {
-				throw new ResourceNotFoundException();
-			}
-			InputStreamResource inputStreamResource = new InputStreamResource(is);
-			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
-		} else {
-			final HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Type", mimeType);
-//			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, ContentLength.class))
-//				headers.add("Content-Length", BeanUtils.getFieldWithAnnotation(contentPropertyValue, ContentLength.class).toString());
-			
-			ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
-			ContentStore<Object,Serializable> impl = info.getImpementation();
-			
-			if (impl instanceof Renderable) {
-				InputStream is = ((Renderable)impl).getRendition(contentPropertyValue, mimeType);
-				if (is != null) {
-					InputStreamResource inputStreamResource = new InputStreamResource(is);
-					return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
-				} else {
-					return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.NOT_ACCEPTABLE);
-				}
-			}
-			
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
+		if (info == null) {
+			throw new IllegalArgumentException(String.format("Store for entity class %s not found", contentEntityClass.getCanonicalName()));
+		}
+
+		List<MediaType> mimeTypes = MediaType.parseMediaTypes(mimeType);
+		if (mimeTypes.size() == 0) {
+			mimeTypes.add(MediaType.ALL);
 		}
 		
-		return null;
+		final HttpHeaders headers = new HttpHeaders();
+		ContentStore<Object,Serializable> store = info.getImpementation();
+		InputStream content = ContentStoreUtils.getContent(store, contentPropertyValue, mimeTypes, headers);
+		if (content != null) {		
+			InputStreamResource inputStreamResource = new InputStreamResource(content);
+			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.NOT_ACCEPTABLE);
+		}
 	}
 
 	@StoreType("contentstore")

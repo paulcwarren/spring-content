@@ -1,12 +1,21 @@
 package internal.org.springframework.content.rest.utils;
 
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
+
 import org.atteo.evo.inflector.English;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
@@ -15,14 +24,55 @@ public final class ContentStoreUtils {
 
 	private ContentStoreUtils() {}
 	
+	/**
+	 * Given a store and a collection of mime types this method will iterate the mime-types returning the
+	 * first input stream that it can find from the store itself or, if the store implements Renderable
+	 * from a rendition.
+	 * 
+	 * @param store		store the store to fetch the content from
+	 * @param mimeTypes	the mime types requested
+	 * @param entity 	the entity whose content is being fetched
+	 * @param headers 	headers that will be sent back to the client
+	 * 
+	 * @return input stream
+	 */
+	@SuppressWarnings("unchecked")
+	public static InputStream getContent(ContentStore<Object,Serializable> store, Object entity, List<MediaType> mimeTypes, HttpHeaders headers) {
+		InputStream content = null;
+		
+		Object entityMimeType = BeanUtils.getFieldWithAnnotation(entity, org.springframework.content.commons.annotations.MimeType.class);
+		if (entityMimeType == null)
+			return content;
+		
+		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
+		
+		MediaType.sortBySpecificityAndQuality(mimeTypes);
+		
+		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
+		
+		for (int i=0; i < arrMimeTypes.length && content == null; i++) {
+			MediaType mimeType = arrMimeTypes[i];
+			if (mimeType.includes(targetMimeType)) {
+				headers.setContentType(targetMimeType);
+				
+				long contentLength = 0L;
+				Object len = BeanUtils.getFieldWithAnnotation(entity, ContentLength.class);
+				if (len != null)
+					headers.setContentLength(Long.parseLong(len.toString()));
+				
+				content = store.getContent(entity);
+				break;
+			} else if (store instanceof Renderable) {
+				content = ((Renderable<Object>)store).getRendition(entity, mimeType.toString());
+			}
+		}
+		return content;
+	}
+	
 	public static ContentStoreInfo findContentStore(ContentStoreService stores, Class<?> contentEntityClass) {
 		
 		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
-			ContentStoreRestResource restResource = (ContentStoreRestResource) info.getInterface().getAnnotation(ContentStoreRestResource.class);
-			if (restResource != null && contentEntityClass.equals(info.getDomainObjectClass()))
-				return info;
-			StoreRestResource storeRestResource = (StoreRestResource) info.getInterface().getAnnotation(StoreRestResource.class);
-			if (storeRestResource != null && contentEntityClass.equals(info.getDomainObjectClass()))
+			if (contentEntityClass.equals(info.getDomainObjectClass()))
 				return info;
 		}
 		return null;

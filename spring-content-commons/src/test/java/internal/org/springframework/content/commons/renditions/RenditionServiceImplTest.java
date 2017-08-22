@@ -23,7 +23,6 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Set;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +31,7 @@ import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.repository.StoreInvoker;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -63,18 +63,23 @@ public class RenditionServiceImplTest {
 				Context("given a provider", () -> {
 					BeforeEach(() -> {
 						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("something");
+						when(mockProvider.consumes()).thenReturn("one/thing");
 						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
 						renditionService.setProviders(mockProvider);
 					});
 					It("should return true for a consumes/produces match", () -> {
-						assertThat(renditionService.canConvert("something", "something/else"), is(true));
+						assertThat(renditionService.canConvert("one/thing", "something/else"), is(true));
 					});
 					It("should return false if only consumes matches", () -> {
-						assertThat(renditionService.canConvert("something", "no-match-here"), is(false));
+						assertThat(renditionService.canConvert("one/thing", "no-match/here"), is(false));
 					});
 					It("should return false if only produces matches", () -> {
-						assertThat(renditionService.canConvert("no-match-here", "something/else"), is(false));
+						assertThat(renditionService.canConvert("no-match/here", "something/else"), is(false));
+					});
+					Context("given a wildcard request", () -> {
+						It("should return true", () -> {
+							assertThat(renditionService.canConvert("one/thing", "something/*"), is(true));
+						});
 					});
 				});
 			});
@@ -84,27 +89,33 @@ public class RenditionServiceImplTest {
 				});
 				Context("given no providers", () -> {
 					It("should always return null", () -> {
-						assertThat(renditionService.convert("something", null, "something/else"), is(nullValue()));
+						assertThat(renditionService.convert("one/thing", null, "something/else"), is(nullValue()));
 					});
 				});
 				Context("given a provider", () -> {
 					BeforeEach(() -> {
 						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("something");
+						when(mockProvider.consumes()).thenReturn("one/thing");
 						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
 						renditionService.setProviders(mockProvider);
 					});
 					It("should return true for a consumes/produces match", () -> {
-						renditionService.convert("something", null, "something/else");
+						renditionService.convert("one/thing", null, "something/else");
 						verify(mockProvider).convert(anyObject(), eq("something/else"));
 					});
 					It("should return false if only consumes matches", () -> {
-						renditionService.convert("something", null, "no-match-here");
-						verify(mockProvider, never()).convert(anyObject(), eq("something/else"));
+						renditionService.convert("one/thing", null, "no-match/here");
+						verify(mockProvider, never()).convert(anyObject(), anyObject());
 					});
 					It("should return false if only produces matches", () -> {
-						renditionService.convert("no-match-here", null, "something/else");
-						verify(mockProvider, never()).convert(anyObject(), eq("something/else"));
+						renditionService.convert("no-match/here", null, "something/else");
+						verify(mockProvider, never()).convert(anyObject(), anyObject());
+					});
+					Context("given a wildcard request", () -> {
+						It("should return true", () -> {
+							renditionService.convert("one/thing", null, "something/*");
+							verify(mockProvider).convert(anyObject(), eq("something/*"));
+						});
 					});
 				});
 			});
@@ -131,7 +142,7 @@ public class RenditionServiceImplTest {
 				Context("given a provider", ()->{
 					BeforeEach(() -> {
 						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("something");
+						when(mockProvider.consumes()).thenReturn("one/thing");
 						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
 						renditionService.setProviders(mockProvider);
 					});
@@ -143,7 +154,7 @@ public class RenditionServiceImplTest {
 							
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("something"), "something/else"});
+							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("one/thing"), "something/else"});
 							
 							repoInvoker = mock(StoreInvoker.class);
 							when(repoInvoker.invokeGetContent()).thenReturn(new ByteArrayInputStream("some content".getBytes()));
@@ -193,7 +204,7 @@ public class RenditionServiceImplTest {
 							
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("somehting"), "something/bad"});
+							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("one/thing"), "something/bad"});
 						});
 						
 						It("should not convert the content and return null", () -> {

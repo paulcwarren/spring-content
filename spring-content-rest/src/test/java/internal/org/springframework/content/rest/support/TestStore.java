@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest;
+package internal.org.springframework.content.rest.support;
 
 import org.springframework.content.commons.repository.Store;
 

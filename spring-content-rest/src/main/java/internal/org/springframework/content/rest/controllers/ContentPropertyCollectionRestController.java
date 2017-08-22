@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -21,17 +22,21 @@ import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,8 +71,8 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 	}
 	
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers = "accept!=application/hal+json")
-	public void get(HttpServletRequest request, 
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers = "range")
+	public void getRange(HttpServletRequest request, 
 			   		HttpServletResponse response,
 				    @PathVariable String repository, 
 			  	    @PathVariable String id, 
@@ -126,6 +131,62 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 			e.printStackTrace();
 		}
 		return;
+	}
+
+	@StoreType("contentstore")
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
+	public ResponseEntity<InputStreamResource>  get(HttpServletRequest request, 
+			   		HttpServletResponse response,
+				    @PathVariable String repository, 
+			  	    @PathVariable String id, 
+			  	    @PathVariable String contentProperty,
+			  	    @RequestHeader(value="Accept", required=false) String mimeType) 
+			throws HttpRequestMethodNotSupportedException {
+		
+		Object domainObj = findOne(repositories, repository, id);
+				
+		PersistentEntity<?,?> entity = repositories.getPersistentEntity(domainObj.getClass());
+		if (null == entity)
+			throw new ResourceNotFoundException();
+		
+		PersistentProperty<?> property = this.getContentPropertyDefinition(entity, contentProperty);
+		if (PersistentEntityUtils.isPropertyMultiValued(property)) {
+			final HttpHeaders headers = new HttpHeaders();
+			return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.METHOD_NOT_ALLOWED);
+		} 
+
+		PersistentPropertyAccessor accessor = property.getOwner().getPropertyAccessor(domainObj);
+		Object propVal = accessor.getProperty(property);
+		if (propVal == null)
+			throw new ResourceNotFoundException("No content");
+		
+		if (!BeanUtils.hasFieldWithAnnotation(propVal,ContentId.class)) {
+			throw new ResourceNotFoundException("Missing @ContentId");
+		}
+		
+		Serializable cid = (Serializable) BeanUtils.getFieldWithAnnotation(propVal,ContentId.class);
+		if (cid == null) {
+			throw new ResourceNotFoundException();
+		}
+
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, propVal.getClass());
+		if (info == null)
+			throw new IllegalStateException(String.format("Unable to find a content store for %s", repository));
+		
+		List<MediaType> mimeTypes = MediaType.parseMediaTypes(mimeType);
+		if (mimeTypes.size() == 0) {
+			mimeTypes.add(MediaType.ALL);
+		}
+		
+		final HttpHeaders headers = new HttpHeaders();
+		ContentStore<Object,Serializable> store = info.getImpementation();
+		InputStream content = ContentStoreUtils.getContent(store, propVal, mimeTypes, headers);
+		if (content != null) {		
+			InputStreamResource inputStreamResource = new InputStreamResource(content);
+			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.NOT_ACCEPTABLE);
+		}
 	}
 
 	@StoreType("contentstore")

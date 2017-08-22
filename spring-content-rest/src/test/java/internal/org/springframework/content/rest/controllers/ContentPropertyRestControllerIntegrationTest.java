@@ -42,14 +42,13 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
-import internal.org.springframework.content.rest.TestConfig;
-import internal.org.springframework.content.rest.TestEntity;
-import internal.org.springframework.content.rest.TestEntity2;
-import internal.org.springframework.content.rest.TestEntity2Repository;
-import internal.org.springframework.content.rest.TestEntityChild;
-import internal.org.springframework.content.rest.TestEntityChildContentRepository;
-import internal.org.springframework.content.rest.TestEntityContentRepository;
-import internal.org.springframework.content.rest.TestEntityRepository;
+import internal.org.springframework.content.rest.support.TestEntity;
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntity2Repository;
+import internal.org.springframework.content.rest.support.TestEntityChild;
+import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
+import internal.org.springframework.content.rest.support.TestEntityContentRepository;
+import internal.org.springframework.content.rest.support.TestEntityRepository;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
@@ -136,7 +135,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 						});
 					});
-					Context("a range GET to /{repository}/{id}/{contentProperty}", () -> {
+					Context("a GET to /{repository}/{id}/{contentProperty} with a range", () -> {
 						It("should return the content", () -> {
 							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child")
 									.accept("text/plain")
@@ -148,27 +147,26 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Spring Content"));
 						});
 					});
-					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-						It("should return the content", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
-									.accept("text/plain"))
+					Context("a GET to /{repository}/{id}/{contentProperty} with a mime type that matches a renderer", () -> {
+						It("should return the rendition and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child")
+									.accept("text/html"))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
-							assertThat(response, is(not(nullValue())));
 
-							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
 						});
 					});
-					Context("a range GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-						It("should return the content", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
-									.accept("text/plain")
-									.header("range", "bytes=6-19"))
-									.andExpect(status().isPartialContent())
+					Context("a GET to /{repository}/{id}/{contentProperty} with multiple mime types the last of which matches the content", () -> {
+						It("should return the original content and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child")
+									.accept(new String[] {"text/xml","text/*"}))
+									.andExpect(status().isOk())
 									.andReturn().getResponse();
-							assertThat(response, is(not(nullValue())));
 
-							assertThat(response.getContentAsString(), is("Spring Content"));
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 						});
 					});
 					Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
@@ -185,16 +183,6 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.child)), is("Hello New Spring Content World!"));
 						});
 					});
-					Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-						It("should overwrite the content", () -> {
-							mvc.perform(put("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
-									.content("Hello Modified Spring Content World!")
-									.contentType("text/plain"))
-									.andExpect(status().isOk());
-
-							assertThat(IOUtils.toString(contentRepository2.getContent(testEntity2.child)), is("Hello Modified Spring Content World!"));
-						});
-					});
 					Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
 						It("should delete the content", () -> {
 							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/child"))
@@ -204,6 +192,61 @@ public class ContentPropertyRestControllerIntegrationTest {
 							assertThat(fetched.child.contentId, is(nullValue()));
 							assertThat(fetched.child.contentLen, is(0L));
 							assertThat(fetched.child.mimeType, is(nullValue()));
+						});
+					});
+					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.accept("text/plain"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+
+							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+						});
+					});
+					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with a range", () -> {
+						It("should return the content", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.accept("text/plain")
+									.header("range", "bytes=6-19"))
+									.andExpect(status().isPartialContent())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+
+							assertThat(response.getContentAsString(), is("Spring Content"));
+						});
+					});
+					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with a mime type that matches a renderer", () -> {
+						It("should return the rendition and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.accept("text/html"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+						});
+					});
+					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with multiple mime types the last of which matches the content", () -> {
+						It("should return the original content and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.accept(new String[] {"text/xml","text/*"}))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+						});
+					});
+					Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
+						It("should overwrite the content", () -> {
+							mvc.perform(put("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId)
+									.content("Hello Modified Spring Content World!")
+									.contentType("text/plain"))
+									.andExpect(status().isOk());
+
+							assertThat(IOUtils.toString(contentRepository2.getContent(testEntity2.child)), is("Hello Modified Spring Content World!"));
 						});
 					});
 					Context("a DELETE to /{repository}/{id}/{contentProperty}/{contentId}", () -> {

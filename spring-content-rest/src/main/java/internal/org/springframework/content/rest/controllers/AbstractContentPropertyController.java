@@ -20,6 +20,9 @@ import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 public abstract class AbstractContentPropertyController {
 	
+	public AbstractContentPropertyController() {
+	}
+
 	protected void setContentProperty(Object domainObj, PersistentProperty<?> property, String contentId, Object newValue) {
 
 		PersistentPropertyAccessor accessor = property.getOwner().getPropertyAccessor(domainObj);

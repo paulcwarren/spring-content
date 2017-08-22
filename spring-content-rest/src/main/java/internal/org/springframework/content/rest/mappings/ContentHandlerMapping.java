@@ -19,6 +19,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -56,7 +57,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		
 		// is a content property, if so look up a handler method?
 		String[] path = lookupPath.split("/");
-		if (path.length < 3 )
+		if (path.length < 3)
 			return null;
 		
 		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
@@ -64,6 +65,27 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 			return super.lookupHandlerMethod(lookupPath, request);
 		}
 		return null; 
+	}
+
+	@Override
+	protected CorsConfiguration getCorsConfiguration(Object handler, HttpServletRequest request) {
+		CorsConfiguration corsConfiguration = super.getCorsConfiguration(handler, request);
+		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
+
+		String[] path = lookupPath.split("/");
+		if (path.length < 3)
+			return corsConfiguration;
+		
+		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
+		if (info2 == null) {
+			return corsConfiguration;
+		}
+
+		CorsConfigurationBuilder builder = new CorsConfigurationBuilder();
+		CorsConfiguration storeCorsConfiguration = builder.build(info2.getInterface());  
+		
+		return corsConfiguration == null ? storeCorsConfiguration
+				: corsConfiguration.combine(storeCorsConfiguration);
 	}
 
 	private boolean isHalRequest(HttpServletRequest request) {

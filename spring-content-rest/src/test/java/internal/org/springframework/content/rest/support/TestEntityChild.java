@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest;
+package internal.org.springframework.content.rest.support;
 
 import java.util.UUID;
 

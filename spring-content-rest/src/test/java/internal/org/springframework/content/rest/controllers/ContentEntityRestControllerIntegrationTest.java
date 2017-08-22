@@ -3,7 +3,9 @@ package internal.org.springframework.content.rest.controllers;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
@@ -40,11 +42,10 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
-import internal.org.springframework.content.rest.TestConfig;
-import internal.org.springframework.content.rest.TestEntity;
-import internal.org.springframework.content.rest.TestEntityContentRepository;
-import internal.org.springframework.content.rest.TestEntityRepository;
-import internal.org.springframework.content.rest.TestStore;
+import internal.org.springframework.content.rest.support.TestEntity;
+import internal.org.springframework.content.rest.support.TestEntityContentRepository;
+import internal.org.springframework.content.rest.support.TestEntityRepository;
+import internal.org.springframework.content.rest.support.TestStore;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
@@ -73,6 +74,23 @@ public class ContentEntityRestControllerIntegrationTest {
 			Context("given an Entity is a ContentRepository", () -> {
 				BeforeEach(() -> {
 					testEntity = repository.save(new TestEntity());
+				});
+				Context("an OPTIONS request from a known host", () -> {
+					It("should return the relevant cors headers and OK", () -> {
+						mvc.perform(options("/testEntities/" + testEntity.id)
+						   .header("Access-Control-Request-Method", "GET")
+						   .header("Origin", "http://www.someurl.com"))
+						.andExpect(status().isOk())
+						.andExpect(header().string("Access-Control-Allow-Origin", "http://www.someurl.com"));
+					});
+				});
+				Context("an OPTIONS request from an unknown host", () -> {
+					It("should be forbidden", () -> {
+						mvc.perform(options("/testEntities/" + testEntity.id)
+						   .header("Access-Control-Request-Method", "GET")
+						   .header("Origin", "http://www.someotherurl.com"))
+						.andExpect(status().isForbidden());
+					});
 				});
 				Context("a GET to /{repository}/{id} accepting a content mime-type", () -> {
 					It("should return 404", () -> {
@@ -154,9 +172,31 @@ public class ContentEntityRestControllerIntegrationTest {
 						testEntity = repository.save(testEntity);
 					});
 					Context("a GET to /{repository}/{id}", () -> {
-						It("should return the content and 200", () -> {
+						It("should return the original content and 200", () -> {
 							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
 									.accept("text/plain"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+						});
+					});
+					Context("a GET to /{repository}/{id} with a mime type that matches a renderer", () -> {
+						It("should return the rendition and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+									.accept("text/html"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+
+							assertThat(response, is(not(nullValue())));
+							assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+						});
+					});
+					Context("a GET to /{repository}/{id} with multiple mime types the last of which matches the content", () -> {
+						It("should return the original content and 200", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+									.accept(new String[] {"text/xml","text/*"}))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
 

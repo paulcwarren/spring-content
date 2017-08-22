@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest;
+package internal.org.springframework.content.rest.support;
 
 import java.util.UUID;
 
@@ -13,7 +13,7 @@ import org.springframework.content.commons.annotations.MimeType;
 
 @Entity
 @Content
-public class TestEntity3 {
+public class TestEntity4 {
 	public @Id @GeneratedValue Long id;
 	public String name;
 	public @ContentId UUID contentId;

@@ -18,7 +18,8 @@ public class SolrExtensionAutoConfiguration {
 
     @Autowired private SolrProperties props;
     @Autowired private SolrClient solrClient;
-    @Autowired private ConversionService contentConversionService;
+    @Autowired
+    private ConversionService s3StoreConverter;
 
 	public SolrExtensionAutoConfiguration() {
 	}
@@ -30,7 +31,7 @@ public class SolrExtensionAutoConfiguration {
 
     @Bean
     public StoreExtension solrFulltextSearcher() {
-        return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), contentConversionService, props);
+        return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), s3StoreConverter, props);
     }
 
 }

@@ -13,13 +13,13 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.util.MimeType;
 
 public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	
@@ -40,8 +40,12 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	@Override
     public boolean canConvert(String fromMimeType, String toMimeType) {
 		for (RenditionProvider provider : providers) {
-			if (fromMimeType.startsWith(provider.consumes()) && Arrays.asList(provider.produces()).contains(toMimeType)) {
-				return true;
+			if (MimeType.valueOf(fromMimeType).equals(MimeType.valueOf(provider.consumes()))) {
+				for (String produce : provider.produces()) {
+					if (MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce))) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -61,8 +65,12 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	@Override
 	public InputStream convert(String fromMimeType, InputStream fromInputSource, String toMimeType) {
 		for (RenditionProvider provider : providers) {
-			if (provider.consumes().equals(fromMimeType) && Arrays.asList(provider.produces()).contains(toMimeType)) {
-				return provider.convert(fromInputSource, toMimeType);
+			if (MimeType.valueOf(fromMimeType).equals(MimeType.valueOf(provider.consumes()))) {
+				for (String produce : provider.produces()) {
+					if (MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce))) {
+						return provider.convert(fromInputSource, toMimeType);
+					}
+				}
 			}
 		}
 		return null;
@@ -85,7 +93,7 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	@Override
 	public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
 		String fromMimeType = null;
-		fromMimeType = (String)BeanUtils.getFieldWithAnnotation(invocation.getArguments()[0], MimeType.class);
+		fromMimeType = (String)BeanUtils.getFieldWithAnnotation(invocation.getArguments()[0], org.springframework.content.commons.annotations.MimeType.class);
 		if (fromMimeType == null) {
 			return null;
 		}
