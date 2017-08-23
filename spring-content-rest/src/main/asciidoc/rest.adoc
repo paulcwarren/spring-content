@@ -301,15 +301,15 @@ Appends new content to the collection of Resources
 
 All content types except `application/json`
  
-== Customizing Spring Content REST
+== Customizing Store Resources
 
-=== Configuring CORS
+== Configuring CORS
 
 For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.
 
 Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.
 
-==== Store interface CORS configuration
+=== Store interface CORS configuration
 
 You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:
 
