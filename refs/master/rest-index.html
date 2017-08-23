@@ -467,6 +467,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_fundamentals">4.1. Fundamentals</a></li>
 <li><a href="#_the_content_resource">4.2. The Content Resource</a></li>
 <li><a href="#_the_content_collection_resource">4.3. The Content Collection Resource</a></li>
+<li><a href="#_customizing_spring_content_rest">4.4. Customizing Spring Content REST</a></li>
 </ul>
 </li>
 </ul>
@@ -929,13 +930,59 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_customizing_spring_content_rest">4.4. Customizing Spring Content REST</h3>
+<div class="sect3">
+<h4 id="_configuring_cors">4.4.1. Configuring CORS</h4>
+<div class="paragraph">
+<p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
+</div>
+<div class="paragraph">
+<p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
+</div>
+<div class="sect4">
+<h5 id="_store_interface_cors_configuration">Store interface CORS configuration</h5>
+<div class="paragraph">
+<p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@CrossOrigin
+interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform more granular configuration.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@CrossOrigin(origins = "http://mydomain.com",
+  methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE },
+  maxAge = 3600)
+interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE methods with a max age of 3600 seconds.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.0.6-SNAPSHOT<br>
-Last updated 2017-08-23 00:53:46 UTC
+Last updated 2017-08-23 14:57:38 UTC
 </div>
 </div>
 </body>
