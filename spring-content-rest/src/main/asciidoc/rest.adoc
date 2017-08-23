@@ -301,7 +301,7 @@ Appends new content to the collection of Resources
 
 All content types except `application/json`
  
-== Customizing Store Resources
+= Customizing Store Resources
 
 == Configuring CORS
 
