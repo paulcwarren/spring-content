@@ -50,8 +50,6 @@ public abstract class AbstractContentPropertyController {
 
 		PersistentPropertyAccessor accessor = property.getOwner().getPropertyAccessor(domainObj);
 		Object contentPropertyObject = accessor.getProperty(property);
-		if (contentPropertyObject == null) 
-			throw new ResourceNotFoundException();
 
 		// multi-valued property?
 		if (PersistentEntityUtils.isPropertyMultiValued(property)) {
@@ -59,10 +57,19 @@ public abstract class AbstractContentPropertyController {
 				throw new UnsupportedOperationException();
 			} else if (property.isCollectionLike()) {
 				contentPropertyObject = findContentPropertyObjectInSet(contentId, (Collection<?>)contentPropertyObject);
-				if (contentPropertyObject == null)
-					throw new ResourceNotFoundException();
 			}
 		}
+		
+		if (contentPropertyObject == null) {
+			throw new ResourceNotFoundException();
+		}
+
+		if (BeanUtils.hasFieldWithAnnotation(contentPropertyObject, ContentId.class)) {
+			if (BeanUtils.getFieldWithAnnotation(contentPropertyObject, ContentId.class) == null) {
+				throw new ResourceNotFoundException();
+			}
+		}
+		
 		return contentPropertyObject;
 	}
 

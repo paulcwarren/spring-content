@@ -146,7 +146,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		List<MediaType> mimeTypes = MediaType.parseMediaTypes(mimeType);
 		if (mimeTypes.size() == 0) {
 			mimeTypes.add(MediaType.ALL);
-		}
+		}		
 		
 		final HttpHeaders headers = new HttpHeaders();
 		ContentStore<Object,Serializable> store = info.getImpementation();
