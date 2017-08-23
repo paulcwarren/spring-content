@@ -865,18 +865,22 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_customizing_spring_content_rest">Customizing Spring Content REST</h2>
+<h2 id="_customizing_store_resources">Customizing Store Resources</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_configuring_cors">Configuring CORS</h3>
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuring_cors">Configuring CORS</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
 </div>
 <div class="paragraph">
 <p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
 </div>
-<div class="sect3">
-<h4 id="_store_interface_cors_configuration">Store interface CORS configuration</h4>
+<div class="sect2">
+<h3 id="_store_interface_cors_configuration">Store interface CORS configuration</h3>
 <div class="paragraph">
 <p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:</p>
 </div>
@@ -912,10 +916,9 @@ interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 </div>
-</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-08-23 14:57:38 UTC
+Last updated 2017-08-23 16:06:05 UTC
 </div>
 </div>
 </body>
