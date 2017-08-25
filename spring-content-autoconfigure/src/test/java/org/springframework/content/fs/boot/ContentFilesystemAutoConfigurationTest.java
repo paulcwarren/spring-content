@@ -1,15 +1,5 @@
 package org.springframework.content.fs.boot;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -27,11 +17,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads=1)
 public class ContentFilesystemAutoConfigurationTest {
 
 	{

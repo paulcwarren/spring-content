@@ -21,7 +21,7 @@ public class JpaContentAutoConfigureRegistrar extends JpaStoresRegistrar {
 	@Override
 	protected void registerContentStoreBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
-		AnnotationMetadata metadata = new StandardAnnotationMetadata(EnableMongoContentAutoConfiguration.class);
+		AnnotationMetadata metadata = new StandardAnnotationMetadata(EnableJpaContentAutoConfiguration.class);
 		AnnotationAttributes attributes = new AnnotationAttributes(metadata.getAnnotationAttributes(this.getAnnotation().getName()));
 
 		String[] basePackages = this.getBasePackages();
@@ -46,6 +46,6 @@ public class JpaContentAutoConfigureRegistrar extends JpaStoresRegistrar {
 	}
 
 	@EnableJpaStores
-	private static class EnableMongoContentAutoConfiguration {
+	private static class EnableJpaContentAutoConfiguration {
 	}
 }
