@@ -424,7 +424,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Spring Content Filesystem Stores are enabled with the following Java Config.</p>
@@ -435,23 +435,40 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableFilesystemContentRepositories
+@EnableFilesystemStores
 public static class ApplicationConfig {
+
+    @Bean
+    File filesystemRoot() {
+        try {
+            return Files.createTempDirectory("").toFile();
+        } catch (IOException ioe) {}
+        return null;
+    }
+
+    @Bean
+    FileSystemResourceLoader fileSystemResourceLoader() {
+        return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+    }
+
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
+<p>By default content will be stored in a randomly chosen (at application startup) folder</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_configuring">Configuring</h2>
+<h2 id="_spring_boot_configuration">Spring Boot Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
+<p>When using <code>content-fs-spring-boot-starter</code> the root for all file system stores will be a randomly chosen folder (at application start-up) under <code>java.io.tmdir</code>.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix <code>content.fs</code>) are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -467,7 +484,7 @@ public static class ApplicationConfig {
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content store location (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The root location where file system stores place their content (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -553,7 +570,7 @@ public class FilesystemStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-08-24 15:50:14 UTC
+Last updated 2017-08-29 21:39:13 UTC
 </div>
 </div>
 </body>

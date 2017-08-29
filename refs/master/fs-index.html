@@ -425,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.6-SNAPSHOT,</span>
-<span id="revdate">2017-08-24</span>
+<span id="revdate">2017-08-29</span>
 </div>
 </div>
 <div id="content">
@@ -461,8 +461,8 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_filesystem_content_stores">3. Filesystem Content Stores</a>
 <ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">3.1. Annotation based configuration</a></li>
-<li><a href="#_configuring">3.2. Configuring</a></li>
+<li><a href="#_annotation_based_configuration">3.1. Annotation-based Configuration</a></li>
+<li><a href="#_spring_boot_configuration">3.2. Spring Boot Configuration</a></li>
 <li><a href="#_accessing_content">3.3. Accessing Content</a></li>
 </ul>
 </li>
@@ -471,7 +471,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_overview">4.1. Overview</a></li>
 <li><a href="#_dependencies">4.2. Dependencies</a></li>
 <li><a href="#_enabling">4.3. Enabling</a></li>
-<li><a href="#_configuring_2">4.4. Configuring</a></li>
+<li><a href="#_configuring">4.4. Configuring</a></li>
 </ul>
 </li>
 </ul>
@@ -1069,7 +1069,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <h2 id="_filesystem_content_stores">3. Filesystem Content Stores</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_annotation_based_configuration">3.1. Annotation based configuration</h3>
+<h3 id="_annotation_based_configuration">3.1. Annotation-based Configuration</h3>
 <div class="paragraph">
 <p>Spring Content Filesystem Stores are enabled with the following Java Config.</p>
 </div>
@@ -1079,21 +1079,38 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableFilesystemContentRepositories
+@EnableFilesystemStores
 public static class ApplicationConfig {
+
+    @Bean
+    File filesystemRoot() {
+        try {
+            return Files.createTempDirectory("").toFile();
+        } catch (IOException ioe) {}
+        return null;
+    }
+
+    @Bean
+    FileSystemResourceLoader fileSystemResourceLoader() {
+        return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+    }
+
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>By default content will be stored in a randomly chosen (at application startup) folder under <code>java.io.tmdir</code>.</p>
+<p>By default content will be stored in a randomly chosen (at application startup) folder</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring">3.2. Configuring</h3>
+<h3 id="_spring_boot_configuration">3.2. Spring Boot Configuration</h3>
 <div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
+<p>When using <code>content-fs-spring-boot-starter</code> the root for all file system stores will be a randomly chosen folder (at application start-up) under <code>java.io.tmdir</code>.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix <code>content.fs</code>) are supported.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1109,7 +1126,7 @@ public static class ApplicationConfig {
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content store location (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The root location where file system stores place their content (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -1250,7 +1267,7 @@ public class FilesystemStoreConfiguration  {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring_2">4.4. Configuring</h3>
+<h3 id="_configuring">4.4. Configuring</h3>
 <div class="paragraph">
 <p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
 </div>
@@ -1290,7 +1307,7 @@ public class FilesystemStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.6-SNAPSHOT<br>
-Last updated 2017-08-24 15:50:14 UTC
+Last updated 2017-08-29 21:39:13 UTC
 </div>
 </div>
 </body>
