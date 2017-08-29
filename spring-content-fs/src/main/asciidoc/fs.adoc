@@ -1,6 +1,6 @@
 = Filesystem Content Stores
 
-== Annotation based configuration
+== Annotation-based Configuration
 
 Spring Content Filesystem Stores are enabled with the following Java Config.
 
@@ -9,22 +9,38 @@ Spring Content Filesystem Stores are enabled with the following Java Config.
 [source, java]
 ----
 @Configuration
-@EnableFilesystemContentRepositories
+@EnableFilesystemStores
 public static class ApplicationConfig {
+
+    @Bean
+    File filesystemRoot() {
+        try {
+            return Files.createTempDirectory("").toFile();
+        } catch (IOException ioe) {}
+        return null;
+    }
+
+    @Bean
+    FileSystemResourceLoader fileSystemResourceLoader() {
+        return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+    }
+    
 }
 ----
 ====
 
-By default content will be stored in a randomly chosen (at application startup) folder under `java.io.tmdir`.
+By default content will be stored in a randomly chosen (at application startup) folder 
 
-== Configuring
+== Spring Boot Configuration
 
-The following configuration properties (prefix `spring.content.fs`) are supported.
+When using `content-fs-spring-boot-starter` the root for all file system stores will be a randomly chosen folder (at application start-up) under `java.io.tmdir`.  
+
+The following configuration properties (prefix `content.fs`) are supported.
 
 [cols="2*", options="header"]
 |=========
 | Property | Description
-| filesystemRoot | content store location (defaults to `java.io.tmpdir/<random>/`.  
+| filesystemRoot | The root location where file system stores place their content (defaults to `java.io.tmpdir/<random>/`).  
 |=========
 
 == Accessing Content
