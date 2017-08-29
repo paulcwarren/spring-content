@@ -13,20 +13,58 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
 		</dependency>
+	  	<dependency>
+	  		<groupId>org.springframework.data</groupId>
+	  		<artifactId>spring-data-rest-webmvc</artifactId>
+	  		<optional>true</optional>
+	  	</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-jpa</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-mongo</artifactId>
+			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+	      	<groupId>com.github.paulcwarren</groupId>
+	  		<artifactId>spring-content-rest</artifactId>
+	  		<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
+  		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-s3</artifactId>
+			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-solr</artifactId>
+			<version>0.0.6-SNAPSHOT</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>
@@ -42,6 +80,13 @@
 					<groupId>log4j</groupId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<!-- Spring Boot Properties Metadata -->		
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-configuration-processor</artifactId>
+		    <optional>true</optional>
 		</dependency>
 
 		<!-- Test Dependencies -->

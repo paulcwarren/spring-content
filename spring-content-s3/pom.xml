@@ -22,7 +22,13 @@
  		<dependency>
  			<groupId>org.springframework.cloud</groupId>
  			<artifactId>spring-cloud-aws-context</artifactId>
- 			<version>1.0.2.RELEASE</version>
+ 			<version>1.2.1.RELEASE</version>
+ 			<exclusions>
+ 				<exclusion>
+				    <groupId>com.amazonaws</groupId>
+				    <artifactId>aws-java-sdk</artifactId>
+ 				</exclusion>
+ 			</exclusions>
  		</dependency>
 		<dependency>
 		    <groupId>com.amazonaws</groupId>

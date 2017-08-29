@@ -1,27 +1,19 @@
 package org.springframework.content.fs.boot;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.annotations.Content;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 
 @RunWith(Ginkgo4jRunner.class)
 public class FilesystemPropertiesTest {

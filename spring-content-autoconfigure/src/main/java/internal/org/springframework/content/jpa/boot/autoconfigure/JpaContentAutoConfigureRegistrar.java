@@ -2,9 +2,6 @@ package internal.org.springframework.content.jpa.boot.autoconfigure;
 
 import java.util.Set;
 
-import internal.org.springframework.content.commons.utils.StoreUtils;
-import internal.org.springframework.content.jpa.config.JpaStoresRegistrar;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -15,6 +12,9 @@ import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+
+import internal.org.springframework.content.commons.utils.StoreUtils;
+import internal.org.springframework.content.jpa.config.JpaStoresRegistrar;
 
 public class JpaContentAutoConfigureRegistrar extends JpaStoresRegistrar {
 

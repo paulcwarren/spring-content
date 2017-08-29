@@ -13,46 +13,8 @@
   <dependencies>
   	<dependency>
       <groupId>com.github.paulcwarren</groupId>
-  		<artifactId>spring-content-rest</artifactId>
+  		<artifactId>spring-content-autoconfigure</artifactId>
   		<version>0.0.6-SNAPSHOT</version>
   	</dependency>
-  	<dependency>
-  		<groupId>org.springframework.boot</groupId>
-  		<artifactId>spring-boot-autoconfigure</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.springframework.data</groupId>
-  		<artifactId>spring-data-rest-webmvc</artifactId>
-  		<optional>true</optional>
-  	</dependency>
-
-	<!--  Test Dependencies -->  	
-  	<!-- <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-actuator</artifactId>
-        <scope>test</scope>
-    </dependency> -->
-    <!-- <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-        <scope>test</scope>
-    </dependency> -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-rest</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>com.github.paulcwarren</groupId>
-        <artifactId>spring-content-mongo-boot-starter</artifactId>
-        <version>0.0.6-SNAPSHOT</version>
-        <scope>test</scope>
-    </dependency>
-  	
   </dependencies>
 </project>

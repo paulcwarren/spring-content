@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration,\
-internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration

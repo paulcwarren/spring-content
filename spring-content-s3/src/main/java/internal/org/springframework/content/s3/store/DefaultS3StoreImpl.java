@@ -1,4 +1,4 @@
-	package internal.org.springframework.content.s3.store;
+package internal.org.springframework.content.s3.store;
 
 import java.io.IOException;
 import java.io.InputStream;
