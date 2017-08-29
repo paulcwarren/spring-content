@@ -53,7 +53,7 @@ public class ContentFilesystemAutoConfigurationTest {
 
 			Context("given an environment specifying a filesystem root", () -> {
 				BeforeEach(() -> {
-					System.setProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/a/b/c/");
+					System.setProperty("CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/a/b/c/");
 				});
 				It("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();

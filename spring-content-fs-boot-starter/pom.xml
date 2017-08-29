@@ -21,10 +21,10 @@
 			<artifactId>spring-content-autoconfigure</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-	</dependencies>
+ -->	</dependencies>
 </project>
