@@ -68,7 +68,7 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 					handleField(field, resource);
 				}
 			} catch (NoSuchFieldException nsfe) {
-				log.warn(String.format("Unexpected error handling content links for property %s", descriptor.getName()));
+				log.trace(String.format("No field for property %s, ignoring", descriptor.getName()));
 			} catch (SecurityException se) {
 				log.warn(String.format("Unexpected security error while handling content links for property %s", descriptor.getName()));
 			}
