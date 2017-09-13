@@ -3,6 +3,9 @@ package org.springframework.content.commons.utils;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -39,6 +42,64 @@ public final class BeanUtils {
 		}
 		
 		return false;
+	}
+
+	public static Field findFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
+			throws SecurityException, BeansException {
+		return findFieldWithAnnotation(domainObj.getClass(), annotationClass);
+	}
+
+	public static Field findFieldWithAnnotation(Class<?> domainObjClass, Class<? extends Annotation> annotationClass)
+			throws SecurityException, BeansException {
+
+		BeanWrapper wrapper = new BeanWrapperImpl(domainObjClass);
+		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
+		for (PropertyDescriptor descriptor : descriptors) {
+			Field candidate = getField(domainObjClass, descriptor.getName());
+			if (candidate != null) {
+				if (candidate.getAnnotation(annotationClass) != null) {
+					return candidate;
+				}
+			}
+		}
+		
+		for (Field field : getAllFields(domainObjClass)) {
+			if (field.getAnnotation(annotationClass) != null) {
+				return field;
+			}
+		}
+		
+		return null;
+	}
+	
+	protected static List<Field> getAllFields(Class<?> type) {
+		List<Field> fields = new ArrayList<>();
+	    fields.addAll(Arrays.asList(type.getDeclaredFields()));
+
+	    if (type.getSuperclass() != null) {
+	        getAllFields(fields, type.getSuperclass());
+	    }
+
+	    return fields;
+	}
+
+	protected static List<Field> getAllFields(List<Field> fields, Class<?> type) {
+	    fields.addAll(Arrays.asList(type.getDeclaredFields()));
+
+	    if (type.getSuperclass() != null) {
+	        getAllFields(fields, type.getSuperclass());
+	    }
+
+	    return fields;
+	}
+	
+	protected static Field getField(Class<?> type, String fieldName) {
+		for (Field field : getAllFields(type)) {
+			if (field.getName().equals(fieldName)) {
+				return field;
+			}
+		}
+		return null;
 	}
 
 	public static Class<?> getFieldWithAnnotationType(Object domainObj, Class<? extends Annotation> annotationClass)

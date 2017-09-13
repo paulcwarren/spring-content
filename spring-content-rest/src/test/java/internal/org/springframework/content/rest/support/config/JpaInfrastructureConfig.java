@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.support;
+package internal.org.springframework.content.rest.support.config;
 
 import javax.sql.DataSource;
 
@@ -30,12 +30,16 @@ public class JpaInfrastructureConfig {
 
 		LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 		factory.setJpaVendorAdapter(vendorAdapter);
-		factory.setPackagesToScan("internal.org.springframework.content.rest.support");
+		factory.setPackagesToScan(packagesToScan());
 		factory.setPersistenceUnitName("spring-data-rest-webmvc");
 		factory.setDataSource(dataSource());
 		factory.afterPropertiesSet();
 
 		return factory;
+	}
+
+	protected String packagesToScan() {
+		return "internal.org.springframework.content.rest.support";
 	}
 
 	@Bean

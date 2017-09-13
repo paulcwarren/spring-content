@@ -11,15 +11,19 @@ import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
+
 @Configuration
-@EnableJpaRepositories
+@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
 @EnableTransactionManagement
 //@Import(RepositoryRestMvcConfiguration.class)
-@EnableFilesystemStores
-public class TestConfig extends JpaInfrastructureConfig {
+@EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.support")
+@Profile("store")
+public class StoreConfig extends JpaInfrastructureConfig {
 
 	@Bean
 	FileSystemResourceLoader fileSystemResourceLoader() {

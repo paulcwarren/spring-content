@@ -20,6 +20,7 @@ import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,7 +47,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import internal.org.springframework.content.rest.controllers.ContentPropertyCollectionRestController;
 import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
-import internal.org.springframework.content.rest.support.TestConfig;
+import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity2Repository;
 import internal.org.springframework.content.rest.support.TestEntityChild;
@@ -57,9 +58,10 @@ import internal.org.springframework.content.rest.support.TestEntityRepository;
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
-@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class, HypermediaConfiguration.class})
+@ContextConfiguration(classes = {StoreConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class, HypermediaConfiguration.class})
 //@WebIntegrationTest
 @Transactional
+@ActiveProfiles("store")
 public class ContentLinksResourceProcessorIntegrationTest {
 	
 	@Autowired Repositories repositories;

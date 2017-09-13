@@ -92,30 +92,19 @@ public abstract class AbstractContentPropertyController {
 		return null;
 	}
 
-	protected Object findOne(Repositories repositories, String repository, String id) 
+	public static Object findOne(Repositories repositories, String repository, String id) 
 			throws HttpRequestMethodNotSupportedException {
 		
 		Object domainObj = null;
-		Class<?> domainObjClazz = null;
-		Class<?> idClazz = null;
 		
-		RepositoryInformation ri = null;
-		for (Class<?> clazz : repositories) {
-			ri = repositories.getRepositoryInformationFor(clazz);
-			if (ri == null) {
-				continue;
-			}
-			if (repository.equals(RepositoryUtils.repositoryPath(ri))) {
-				ri = repositories.getRepositoryInformationFor(clazz);
-				domainObjClazz = clazz;
-				idClazz = ri.getIdType();
-				break;
-			}
-		}
+		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
 
-		if (ri == null || domainObjClazz == null) {
+		if (ri == null) {
 			throw new ResourceNotFoundException();
 		}
+		
+		Class<?> domainObjClazz = ri.getDomainType();
+		Class<?> idClazz = ri.getIdType();
 		
 		Method findOneMethod = ri.getCrudMethods().getFindOneMethod();
 		if (findOneMethod == null) {
@@ -132,26 +121,44 @@ public abstract class AbstractContentPropertyController {
 		return domainObj;
 	}
 
-	protected Object save(Repositories repositories, String repository, Object domainObj) 
+	public static Iterable findAll(Repositories repositories, String repository) 
 			throws HttpRequestMethodNotSupportedException {
-
-		Class<?> domainObjClazz = null;
 		
-		RepositoryInformation ri = null;
-		for (Class<?> clazz : repositories) {
-			ri = repositories.getRepositoryInformationFor(clazz);
-			if (ri == null) {
-				continue;
-			}
-			if (repository.equals(RepositoryUtils.repositoryPath(ri))) {
-				ri = repositories.getRepositoryInformationFor(clazz);
-				domainObjClazz = clazz;
-			}
-		}
+		Iterable entities = null;
+		
+		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
 
-		if (ri == null || domainObjClazz == null) {
+		if (ri == null) {
 			throw new ResourceNotFoundException();
 		}
+		
+		Class<?> domainObjClazz = ri.getDomainType();
+		Class<?> idClazz = ri.getIdType();
+		
+		Method findAllMethod = ri.getCrudMethods().getFindAllMethod();
+		if (findAllMethod == null) {
+			throw new HttpRequestMethodNotSupportedException("fineAll");
+		}
+		
+		entities = (Iterable)ReflectionUtils.invokeMethod(findAllMethod, repositories.getRepositoryFor(domainObjClazz));
+		
+		if (null == entities) {
+			throw new ResourceNotFoundException();
+		}
+		
+		return entities;
+	}
+
+	public static Object save(Repositories repositories, String repository, Object domainObj) 
+			throws HttpRequestMethodNotSupportedException {
+
+		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
+
+		if (ri == null) {
+			throw new ResourceNotFoundException();
+		}
+
+		Class<?> domainObjClazz = ri.getDomainType();
 		
 		if (domainObjClazz != null) {
 			Method saveMethod = ri.getCrudMethods().getSaveMethod();
@@ -162,5 +169,20 @@ public abstract class AbstractContentPropertyController {
 		}
 
 		return domainObj;
+	}
+	
+	public static RepositoryInformation findRepositoryInformation(Repositories repositories, String repository) {
+		RepositoryInformation ri = null;
+		for (Class<?> clazz : repositories) {
+			RepositoryInformation candidate = repositories.getRepositoryInformationFor(clazz);
+			if (candidate == null) {
+				continue;
+			}
+			if (repository.equals(RepositoryUtils.repositoryPath(candidate))) {
+				ri = repositories.getRepositoryInformationFor(clazz);
+				break;
+			}
+		}
+		return ri;
 	}
 }

@@ -5,6 +5,8 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.hamcrest.CoreMatchers;
@@ -76,12 +78,39 @@ public class BeanUtilsTest {
 					assertThat(BeanUtils.getFieldWithAnnotationType(testEntity, ContentLength.class), is(CoreMatchers.<Class<?>>equalTo(String.class)));
 				});
 			});
+			
+			Context("findFieldWithAnnotation", () -> {
+				Context("given a simple, non-inheriting class", () -> {
+					BeforeEach(() -> {
+						testEntity = new TestEntity();
+					});
+					It("should find fields", () -> {
+						assertThat(BeanUtils.findFieldWithAnnotation(testEntity, ContentId.class), is(not(nullValue())));
+					});
+					It("should find fields with getters", () -> {
+						assertThat(BeanUtils.findFieldWithAnnotation(testEntity, ContentLength.class), is(not(nullValue())));
+					});
+				});
+				Context("given a non-inheriting class", () -> {
+					BeforeEach(() -> {
+						testEntity = new InheritingTestEntity();
+					});
+					It("should find fields", () -> {
+						assertThat(BeanUtils.findFieldWithAnnotation(testEntity, ContentId.class), is(not(nullValue())));
+					});
+					It("should find fields with getters", () -> {
+						assertThat(BeanUtils.findFieldWithAnnotation(testEntity, ContentLength.class), is(not(nullValue())));
+					});
+				});
+			});
 		});
 	}
 	
-	public class TestEntity {
+	public static class TestEntity {
 		@ContentId public String fieldOnly;
 		@ContentLength private String fieldWithGetterSetter;
+		public TestEntity() {
+		}
 		public String getFieldWithGetterSetter() {
 			return fieldWithGetterSetter;
 		}
@@ -89,4 +118,6 @@ public class BeanUtilsTest {
 			this.fieldWithGetterSetter = fieldWithGetterSetter;
 		}
 	}
+	
+	public static class InheritingTestEntity extends TestEntity {}
 }

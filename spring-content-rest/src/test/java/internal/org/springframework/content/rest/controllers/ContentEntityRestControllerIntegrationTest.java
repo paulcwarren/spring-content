@@ -19,6 +19,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,6 +43,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
+import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntityContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityRepository;
@@ -50,8 +52,9 @@ import internal.org.springframework.content.rest.support.TestStore;
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
-@ContextConfiguration(classes = {TestConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class})
+@ContextConfiguration(classes = {StoreConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class})
 @Transactional
+@ActiveProfiles("store")
 public class ContentEntityRestControllerIntegrationTest {
 	
 	@Autowired TestEntityRepository repository;

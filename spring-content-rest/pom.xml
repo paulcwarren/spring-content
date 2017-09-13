@@ -26,6 +26,13 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-rest-webmvc</artifactId>
+			<!-- Spring Data REST is optional -->
+ 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.0.Final</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
