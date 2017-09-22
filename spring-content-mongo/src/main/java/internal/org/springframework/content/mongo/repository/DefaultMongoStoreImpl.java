@@ -6,6 +6,8 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilena
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import org.apache.commons.logging.Log;
@@ -14,6 +16,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.Condition;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
@@ -95,7 +98,17 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable> implements Conte
 				gridFs.delete(query(whereFilename().is(resource.getFilename())));
 
 				// reset content fields
-				BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
+				BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
+					@Override
+					public boolean matches(Field field) {
+						for (Annotation annotation : field.getAnnotations()) {
+							if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
+								"org.springframework.data.annotation".equals(annotation.annotationType().getCanonicalName())) {
+								return false;
+							}
+						}
+						return true;
+					}});
 				BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
 			}
 		} catch (Exception ase) {

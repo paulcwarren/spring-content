@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -17,6 +19,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
@@ -144,7 +147,17 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		}
 
 		// reset content fields
-		BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
+			@Override
+			public boolean matches(Field field) {
+				for (Annotation annotation : field.getAnnotations()) {
+					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
+						"org.springframework.data.annotation".equals(annotation.annotationType().getCanonicalName())) {
+						return false;
+					}
+				}
+				return true;
+			}});
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
 	}
 	
