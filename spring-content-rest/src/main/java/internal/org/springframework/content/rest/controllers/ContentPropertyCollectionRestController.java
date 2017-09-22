@@ -289,7 +289,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 			BeanUtils.setFieldWithAnnotation(propVal, MimeType.class, null);
 		}
 
-		save(repositories, repository, domainObj);
+		save(repositories, domainObj);
 		
 		response.setStatus(HttpStatus.NO_CONTENT.value());
 		return;
@@ -380,7 +380,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 		
 		info.getImpementation().setContent(propVal, stream);
 		
-		save(repositories, repository, domainObj);
+		save(repositories, domainObj);
 		
 		return propVal;
 	}

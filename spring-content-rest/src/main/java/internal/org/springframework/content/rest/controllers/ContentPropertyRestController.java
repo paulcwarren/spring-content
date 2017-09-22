@@ -221,7 +221,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		// remove the content property reference from the data object
 		// setContentProperty(domainObj, property, contentId, null);
 		
-		save(repositories, repository, domainObj);
+		save(repositories, domainObj);
 		
 		return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
 	}
@@ -251,6 +251,6 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
 		info.getImpementation().setContent(contentPropertyValue, stream);
 		
-		save(repositories, repository, domainObj);
+		save(repositories, domainObj);
 	}
 }

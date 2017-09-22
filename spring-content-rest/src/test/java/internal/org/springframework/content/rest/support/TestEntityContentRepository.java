@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
 
 @CrossOrigin(origins="http://www.someurl.com")
-@ContentStoreRestResource(path="testEntities")
+@ContentStoreRestResource(path="testEntitiesContent")
 public interface TestEntityContentRepository extends ContentStore<TestEntity, Long>, Renderable<TestEntity>, Searchable<Long> {
 }
 

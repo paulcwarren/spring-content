@@ -72,6 +72,8 @@ public class ContentLinksResourceProcessorIntegrationTest {
 	@Autowired TestEntityContentRepository contentRepository;
 	@Autowired TestEntity2Repository repository2;
 	@Autowired TestEntityChildContentRepository contentRepository2;
+	@Autowired TestEntity3Repository repository3;
+	@Autowired TestEntity3ContentRepository contentRepository3;
 	
 	@Autowired ContentPropertyCollectionRestController collectionCtrlr;
 	@Autowired ContentPropertyRestController propCtrlr;
@@ -80,7 +82,9 @@ public class ContentLinksResourceProcessorIntegrationTest {
 
 	private MockMvc mvc;
 
+	private TestEntity testEntity;
 	private TestEntity2 testEntity2;
+	private TestEntity3 testEntity3;
 
 	{
 		Describe("ContentLinksResourceProcessor", () -> {
@@ -90,7 +94,61 @@ public class ContentLinksResourceProcessorIntegrationTest {
 						.build();
 			});
 			
-			// TODO: Add tests for content entity
+			Context("given an Entity with associated content and a Store with a default store path", () -> {
+				BeforeEach(() -> {
+					testEntity3 = repository3.save(new TestEntity3());
+				});
+				Context("given content is associated", () -> {
+					BeforeEach(() -> {
+						contentRepository3.setContent(testEntity3, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						repository3.save(testEntity3);
+					});
+					Context("a GET to /repository/id", () -> {
+						It("should provide a response with a content link", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/testEntity3s/" + testEntity3.id)
+									.accept("application/hal+json"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+							
+							RepresentationFactory representationFactory = new StandardRepresentationFactory();
+							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+							assertThat(halResponse, is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntity3s"), is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntity3s").size(), is(1));
+							assertThat(halResponse.getLinksByRel("testEntity3s").get(0).getHref(), is("http://localhost/testEntity3s/"+testEntity3.contentId));
+						});
+					});
+				});
+			});
+
+			Context("given an Entity with associated content and a Store specifying a store path", () -> {
+				BeforeEach(() -> {
+					testEntity = repository.save(new TestEntity());
+				});
+				Context("given content is associated", () -> {
+					BeforeEach(() -> {
+						contentRepository.setContent(testEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						repository.save(testEntity);
+					});
+					Context("a GET to /repository/id", () -> {
+						It("should provide a response with a content link", () -> {
+							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+									.accept("application/hal+json"))
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
+							assertThat(response, is(not(nullValue())));
+							
+							RepresentationFactory representationFactory = new StandardRepresentationFactory();
+							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+							assertThat(halResponse, is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntitiesContent"), is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntitiesContent").size(), is(1));
+							assertThat(halResponse.getLinksByRel("testEntitiesContent").get(0).getHref(), is("http://localhost/testEntitiesContent/"+testEntity.contentId));
+						});
+					});
+				});
+			});
 
 			Context("given an Entity with content properties", () -> {
 				BeforeEach(() -> {

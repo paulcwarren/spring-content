@@ -121,6 +121,35 @@ public abstract class AbstractContentPropertyController {
 		return domainObj;
 	}
 
+	public static Object findOne(Repositories repositories, Class<?> domainObjClass, String id) 
+			throws HttpRequestMethodNotSupportedException {
+		
+		Object domainObj = null;
+		
+		RepositoryInformation ri = findRepositoryInformation(repositories, domainObjClass);
+
+		if (ri == null) {
+			throw new ResourceNotFoundException();
+		}
+		
+		Class<?> domainObjClazz = ri.getDomainType();
+		Class<?> idClazz = ri.getIdType();
+		
+		Method findOneMethod = ri.getCrudMethods().getFindOneMethod();
+		if (findOneMethod == null) {
+			throw new HttpRequestMethodNotSupportedException("fineOne");
+		}
+		
+		Object oid = new DefaultConversionService().convert(id, idClazz);
+		domainObj = ReflectionUtils.invokeMethod(findOneMethod, repositories.getRepositoryFor(domainObjClazz), oid);
+		
+		if (null == domainObj) {
+			throw new ResourceNotFoundException();
+		}
+		
+		return domainObj;
+	}
+
 	public static Iterable findAll(Repositories repositories, String repository) 
 			throws HttpRequestMethodNotSupportedException {
 		
@@ -149,10 +178,10 @@ public abstract class AbstractContentPropertyController {
 		return entities;
 	}
 
-	public static Object save(Repositories repositories, String repository, Object domainObj) 
+	public static Object save(Repositories repositories, Object domainObj) 
 			throws HttpRequestMethodNotSupportedException {
 
-		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
+		RepositoryInformation ri = findRepositoryInformation(repositories, domainObj.getClass());
 
 		if (ri == null) {
 			throw new ResourceNotFoundException();
@@ -181,6 +210,16 @@ public abstract class AbstractContentPropertyController {
 			if (repository.equals(RepositoryUtils.repositoryPath(candidate))) {
 				ri = repositories.getRepositoryInformationFor(clazz);
 				break;
+			}
+		}
+		return ri;
+	}
+
+	public static RepositoryInformation findRepositoryInformation(Repositories repositories, Class<?> domainObjectClass) {
+		RepositoryInformation ri = null;
+		for (Class<?> clazz : repositories) {
+			if (clazz.equals(domainObjectClass)) {
+				return repositories.getRepositoryInformationFor(clazz);
 			}
 		}
 		return ri;

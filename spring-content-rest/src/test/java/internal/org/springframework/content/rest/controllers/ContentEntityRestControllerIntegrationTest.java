@@ -80,7 +80,7 @@ public class ContentEntityRestControllerIntegrationTest {
 				});
 				Context("an OPTIONS request from a known host", () -> {
 					It("should return the relevant cors headers and OK", () -> {
-						mvc.perform(options("/testEntities/" + testEntity.id)
+						mvc.perform(options("/testEntitiesContent/" + testEntity.id)
 						   .header("Access-Control-Request-Method", "GET")
 						   .header("Origin", "http://www.someurl.com"))
 						.andExpect(status().isOk())
@@ -89,20 +89,20 @@ public class ContentEntityRestControllerIntegrationTest {
 				});
 				Context("an OPTIONS request from an unknown host", () -> {
 					It("should be forbidden", () -> {
-						mvc.perform(options("/testEntities/" + testEntity.id)
+						mvc.perform(options("/testEntitiesContent/" + testEntity.id)
 						   .header("Access-Control-Request-Method", "GET")
 						   .header("Origin", "http://www.someotherurl.com"))
 						.andExpect(status().isForbidden());
 					});
 				});
-				Context("a GET to /{repository}/{id} accepting a content mime-type", () -> {
+				Context("a GET to /{store}/{id} accepting a content mime-type", () -> {
 					It("should return 404", () -> {
-						mvc.perform(get("/testEntities/" + testEntity.id)
+						mvc.perform(get("/testEntitiesContent/" + testEntity.id)
 						.accept("text/plain"))
 						.andExpect(status().isNotFound());
 					});
 				});
-				Context("a GET to /{repository}/{id} accepting hal+json", () -> {
+				Context("a GET to /{store}/{id} accepting hal+json", () -> {
 					It("should return the entity", () -> {
 						MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
 								.accept("application/hal+json"))
@@ -115,9 +115,9 @@ public class ContentEntityRestControllerIntegrationTest {
 						assertThat(halResponse.getLinksByRel("testEntity"), is(not(nullValue())));
 					});
 				});
-				Context("a PUT to /{repository}/{id} with a content body", () -> {
+				Context("a PUT to /{store}/{id} with a content body", () -> {
 					It("should set the content and return 201", () -> {
-						mvc.perform(put("/testEntities/" + testEntity.id.toString())
+						mvc.perform(put("/testEntitiesContent/" + testEntity.id.toString())
 						.content("Hello New Spring Content World!")
 						.contentType("text/plain"))
 						.andExpect(status().isCreated());
@@ -129,19 +129,18 @@ public class ContentEntityRestControllerIntegrationTest {
 						assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is("Hello New Spring Content World!"));
 					});
 				});
-				Context("a DELETE to /{repsotiory}/{id} with a mime-type", () -> {
+				Context("a DELETE to /{store}/{id} with a mime-type", () -> {
 					It("should return 404", () -> {
-						mvc.perform(delete("/testEntities/" + testEntity.id)
+						mvc.perform(delete("/testEntitiesContent/" + testEntity.id)
 						.accept("text/plain"))
 						.andExpect(status().isNotFound());
 					});
 				});
-				Context("a POST to /{repository}/{id} with a multi-part form-data request", () -> {
+				Context("a POST to /{store}/{id} with a multi-part form-data request", () -> {
 					It("should set the content and return 200", () -> {
-
 						String content = "This is Spring Content!";
 						
-						mvc.perform(fileUpload("/testEntities/" + testEntity.id.toString())
+						mvc.perform(fileUpload("/testEntitiesContent/" + testEntity.id.toString())
 								.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
 						.andExpect(status().isOk());
 
@@ -174,9 +173,9 @@ public class ContentEntityRestControllerIntegrationTest {
 						testEntity.mimeType = "text/plain";
 						testEntity = repository.save(testEntity);
 					});
-					Context("a GET to /{repository}/{id}", () -> {
+					Context("a GET to /{store}/{id}", () -> {
 						It("should return the original content and 200", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+							MockHttpServletResponse response = mvc.perform(get("/testEntitiesContent/" + testEntity.id)
 									.accept("text/plain"))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
@@ -185,9 +184,9 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 						});
 					});
-					Context("a GET to /{repository}/{id} with a mime type that matches a renderer", () -> {
+					Context("a GET to /{store}/{id} with a mime type that matches a renderer", () -> {
 						It("should return the rendition and 200", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+							MockHttpServletResponse response = mvc.perform(get("/testEntitiesContent/" + testEntity.id)
 									.accept("text/html"))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
@@ -196,9 +195,9 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
 						});
 					});
-					Context("a GET to /{repository}/{id} with multiple mime types the last of which matches the content", () -> {
+					Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content", () -> {
 						It("should return the original content and 200", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+							MockHttpServletResponse response = mvc.perform(get("/testEntitiesContent/" + testEntity.id)
 									.accept(new String[] {"text/xml","text/*"}))
 									.andExpect(status().isOk())
 									.andReturn().getResponse();
@@ -207,9 +206,9 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 						});
 					});
-					Context("a GET to /{repository}/{id} with a range header", () -> {
+					Context("a GET to /{store}/{id} with a range header", () -> {
 						It("should return the content range and 206", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
+							MockHttpServletResponse response = mvc.perform(get("/testEntitiesContent/" + testEntity.id)
 									.accept("text/plain")
 									.header("range", "bytes=6-19"))
 									.andExpect(status().isPartialContent())
@@ -219,9 +218,9 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(response.getContentAsString(), is("Spring Content"));
 						});
 					});
-					Context("a PUT to /{repository}/{id}", () -> {
+					Context("a PUT to /{store}/{id}", () -> {
 						It("should overwrite the content and return 200", () -> {
-							mvc.perform(put("/testEntities/" + testEntity.id)
+							mvc.perform(put("/testEntitiesContent/" + testEntity.id)
 									.content("Hello Modified Spring Content World!")
 									.contentType("text/plain"))
 									.andExpect(status().isOk());
@@ -229,12 +228,12 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(IOUtils.toString(contentRepository.getContent(testEntity)), is("Hello Modified Spring Content World!"));
 						});
 					});
-					Context("a POST to /{repository}/{id} with a multi-part request", () -> {
+					Context("a POST to /{store}/{id} with a multi-part request", () -> {
 						It("should overwrite the content and return 200", () -> {
 
 							String content = "This is Modified Spring Content!";
 							
-							mvc.perform(fileUpload("/testEntities/" + testEntity.id.toString())
+							mvc.perform(fileUpload("/testEntitiesContent/" + testEntity.id.toString())
 									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
 							.andExpect(status().isOk());
 
@@ -245,9 +244,9 @@ public class ContentEntityRestControllerIntegrationTest {
 							assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is(content));
 						});
 					});
-					Context("a DELETE to /{repository}/{id} with the mimetype", () -> {
+					Context("a DELETE to /{store}/{id} with the mimetype", () -> {
 						It("should delete the content and return a 200 response", () -> {
-							mvc.perform(delete("/testEntities/" + testEntity.id)
+							mvc.perform(delete("/testEntitiesContent/" + testEntity.id)
 									.contentType("text/plain"))
 									.andExpect(status().isNoContent());
 
