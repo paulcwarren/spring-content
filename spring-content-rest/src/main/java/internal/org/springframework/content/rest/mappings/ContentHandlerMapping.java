@@ -30,7 +30,8 @@ import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
 public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 	
-	private static MediaType halJson = MediaType.parseMediaType("application/hal+json");
+	private static MediaType hal = MediaType.parseMediaType("application/hal+json");
+	private static MediaType json = MediaType.parseMediaType("application/json");
 
 	private ContentStoreService contentStores;
 	
@@ -61,7 +62,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 			return null;
 		
 		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
-		if (info2 != null && isHalRequest(request) == false) {
+		if (info2 != null && isHalOrJsonRequest(request) == false) {
 			return super.lookupHandlerMethod(lookupPath, request);
 		}
 		return null; 
@@ -88,7 +89,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 				: corsConfiguration.combine(storeCorsConfiguration);
 	}
 
-	private boolean isHalRequest(HttpServletRequest request) {
+	private boolean isHalOrJsonRequest(HttpServletRequest request) {
 		String method = request.getMethod();
 		if ("GET".equals(method) || "DELETE".equals(method)) {
 			String accept = request.getHeader("Accept");
@@ -96,7 +97,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 				try {
 					List<MediaType> mediaTypes = MediaType.parseMediaTypes(accept);
 					for (MediaType mediaType : mediaTypes) {
-						if (mediaType.equals(halJson)) {
+						if (mediaType.equals(hal) || mediaType.equals(json)) {
 							return true;
 						}
 					}
@@ -110,7 +111,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 				try {
 					List<MediaType> mediaTypes = MediaType.parseMediaTypes(contentType);
 						for (MediaType mediaType : mediaTypes) {
-						if (mediaType.equals(halJson)) {
+						if (mediaType.equals(hal) || mediaType.equals(json)) {
 							return true;
 						}
 					}
@@ -118,7 +119,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 					return true;
 				}
 			}
-		}
+		} 
 		return false;
 	}
 	
