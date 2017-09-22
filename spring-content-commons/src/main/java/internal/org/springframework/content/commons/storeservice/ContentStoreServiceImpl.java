@@ -13,6 +13,7 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreFilter;
 
 public class ContentStoreServiceImpl implements ContentStoreService {
 
@@ -62,9 +63,14 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 
 	@Override
 	public ContentStoreInfo[] getStores(Class<?> storeType) {
+		return this.getStores(storeType, MATCH_ALL);
+	}
+	
+	@Override
+	public ContentStoreInfo[] getStores(Class<?> storeType, StoreFilter filter) {
 		Set<ContentStoreInfo> storeInfos = new HashSet<>();
 		for (ContentStoreInfo info : contentStoreInfos) {
-			if (info.getImplementation(storeType) != null) {
+			if (info.getImplementation(storeType) != null && filter.matches(info)) {
 				storeInfos.add(info);
 			}
 		}

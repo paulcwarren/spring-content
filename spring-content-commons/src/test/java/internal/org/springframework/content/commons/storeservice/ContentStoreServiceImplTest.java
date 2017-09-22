@@ -21,6 +21,8 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
+import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreFilter;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -125,6 +127,47 @@ public class ContentStoreServiceImplTest {
 					assertThat(infos.length, is(1));
 				});
 			});
+			Context("given multiple stores", () -> {
+				BeforeEach(() -> {
+					List<StoreFactory> factories = new ArrayList<>();
+					mockFactory = mock(StoreFactory.class);
+					when(mockFactory.getStore()).thenReturn(mock(AssociativeStore.class));
+					when(mockFactory.getStoreInterface()).thenAnswer(new Answer<Object>() {
+						@Override
+						public Object answer(InvocationOnMock invocation)
+								throws Throwable {
+							return EntityStoreInterface.class;
+						}
+					});
+					factories.add(mockFactory);
+					
+					StoreFactory mockFactory2 = mock(StoreFactory.class);
+					when(mockFactory2.getStore()).thenReturn(mock(AssociativeStore.class));
+					when(mockFactory2.getStoreInterface()).thenAnswer(new Answer<Object>() {
+						@Override
+						public Object answer(InvocationOnMock invocation)
+								throws Throwable {
+							return OtherEntityStoreInterface.class;
+						}
+					});
+					factories.add(mockFactory2);
+
+					contentRepoService.setFactories(factories);
+				});
+				It("should return stores that match the filter", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(AssociativeStore.class, ContentStoreService.MATCH_ALL);
+					assertThat(infos.length, is(2));
+				});
+				It("should not return stores that dont match the filter", () -> {
+					ContentStoreInfo[] infos = contentRepoService.getStores(AssociativeStore.class, new StoreFilter() {
+						@Override
+						public boolean matches(ContentStoreInfo info) {
+							return false;
+						}
+					});
+					assertThat(infos.length, is(0));
+				});
+			});
 		});
 	}
 	
@@ -139,5 +182,14 @@ public class ContentStoreServiceImplTest {
 	}
 	
 	public interface ContentRepositoryInterface extends ContentStore<Object, String> {
+	}
+
+	public static class Entity {};
+	public static class OtherEntity {};
+	
+	public interface EntityStoreInterface extends AssociativeStore<Entity, String> {
+	}
+
+	public interface OtherEntityStoreInterface extends AssociativeStore<OtherEntity, String> {
 	}
 }
