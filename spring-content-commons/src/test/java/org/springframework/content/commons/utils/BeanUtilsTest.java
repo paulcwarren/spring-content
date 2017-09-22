@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.utils;
+package org.springframework.content.commons.utils;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -9,11 +9,12 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.lang.reflect.Field;
+
 import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.utils.BeanUtils;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -36,6 +37,28 @@ public class BeanUtilsTest {
 				It("should set field via its setter", () -> {
 					BeanUtils.setFieldWithAnnotation(testEntity, ContentLength.class, "b value");
 					assertThat(testEntity.getFieldWithGetterSetter(), is("b value"));
+				});
+			});
+
+			Context("setFieldWithAnnotationConditionally",  () -> {
+				BeforeEach(() -> {
+					testEntity = new TestEntity();
+				});
+				It("should set field if the condition matches", () -> {
+					BeanUtils.setFieldWithAnnotationConditionally(testEntity, ContentId.class, "a value", new MatchingCondition() {});
+					assertThat(testEntity.fieldOnly, is("a value"));
+				});
+				It("should set field via its setter if the condition matches", () -> {
+					BeanUtils.setFieldWithAnnotationConditionally(testEntity, ContentLength.class, "b value", new MatchingCondition() {});
+					assertThat(testEntity.getFieldWithGetterSetter(), is("b value"));
+				});
+				It("should not set field if the condition does not match", () -> {
+					BeanUtils.setFieldWithAnnotationConditionally(testEntity, ContentId.class, "a value", new UnmatchingCondition() {});
+					assertThat(testEntity.fieldOnly, is(nullValue()));
+				});
+				It("should not set field via its setter if the condition does not match", () -> {
+					BeanUtils.setFieldWithAnnotationConditionally(testEntity, ContentLength.class, "b value", new UnmatchingCondition() {});
+					assertThat(testEntity.getFieldWithGetterSetter(), is(nullValue()));
 				});
 			});
 
@@ -120,4 +143,18 @@ public class BeanUtilsTest {
 	}
 	
 	public static class InheritingTestEntity extends TestEntity {}
+	
+	public static class MatchingCondition implements Condition {
+		@Override
+		public boolean matches(Field field) {
+			return true;
+		}
+	}
+	
+	public static class UnmatchingCondition implements Condition {
+		@Override
+		public boolean matches(Field field) {
+			return false;
+		}
+	}
 }
