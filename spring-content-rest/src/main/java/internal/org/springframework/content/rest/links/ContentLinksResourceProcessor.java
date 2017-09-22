@@ -49,6 +49,14 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 		Object object = resource.getContent();
 		if (object == null)
 			return resource;
+
+		// entity
+	    ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
+		if (store != null) {
+			String id = BeanUtils.getFieldWithAnnotation(object, ContentId.class).toString();
+			resource.add(BasicLinkBuilder.linkToCurrentMapping().slash(ContentStoreUtils.storePath(store)).slash(id).withRel(ContentStoreUtils.storePath(store)));
+		}
+		
 		
 		List<Field> processed = new ArrayList<>();
 
