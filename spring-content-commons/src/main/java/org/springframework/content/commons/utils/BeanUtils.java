@@ -14,6 +14,13 @@ import org.springframework.util.ReflectionUtils;
 
 public final class BeanUtils {
 
+	private static final Condition MATCHING_CONDITION = new Condition() {
+		@Override
+		public boolean matches(Field field) {
+			return true;
+		}
+	};
+
 	private BeanUtils() {}
 	
 	public static boolean hasFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
@@ -178,11 +185,26 @@ public final class BeanUtils {
 	 * 					the value to set
 	 */
 	public static void setFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass, Object value) {
-
+		setFieldWithAnnotationConditionally(domainObj, annotationClass, value, MATCHING_CONDITION);
+	}
+	
+	/**
+	 * Sets object's field annotated with annotationClass to value only if the condition matches.
+	 *
+	 * @param domainObj
+	 * 					the object containing the field
+	 * @param annotationClass
+	 * 					the annotation to look for
+	 * @param value
+	 * 					the value to set
+	 * @param condition
+	 * 					the condition that must be satisfied to allow the match
+	 */
+	public static void setFieldWithAnnotationConditionally(Object domainObj, Class<? extends Annotation> annotationClass, Object value, Condition condition) {
 		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
 
 		for (Field field : domainObj.getClass().getFields()) {
-			if (field.getAnnotation(annotationClass) != null) {
+			if (field.getAnnotation(annotationClass) != null && condition.matches(field)) {
 				try {
 					ReflectionUtils.setField(field, domainObj, value);
 				} catch (IllegalArgumentException iae) {}
@@ -196,7 +218,7 @@ public final class BeanUtils {
 			try {
 				theField = domainObj.getClass().getDeclaredField(prop);
 				if (theField != null) {
-					if (theField.getAnnotation(annotationClass) != null) {
+					if (theField.getAnnotation(annotationClass) != null && condition.matches(theField)) {
 						wrapper.setPropertyValue(prop, value);
 					}
 				}
