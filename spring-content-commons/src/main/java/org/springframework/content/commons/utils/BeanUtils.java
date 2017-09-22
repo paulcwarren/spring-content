@@ -122,7 +122,7 @@ public final class BeanUtils {
 		}
 
 		if (type == null) {
-			for (Field field : domainObj.getClass().getFields()) {
+			for (Field field : BeanUtils.getAllFields(domainObj.getClass())) {
 				if (field.getAnnotation(annotationClass) != null) {
 					try {
 						type = field.getType();
@@ -155,9 +155,10 @@ public final class BeanUtils {
 		}
 
 		if (value == null) {
-			for (Field field : domainObj.getClass().getFields()) {
+			for (Field field : BeanUtils.getAllFields(domainObj.getClass())) {
 				if (field.getAnnotation(annotationClass) != null) {
 					try {
+						ReflectionUtils.makeAccessible(field);
 						value = ReflectionUtils.getField(field, domainObj);
 					} catch (IllegalArgumentException iae) {}
 				}
@@ -181,9 +182,10 @@ public final class BeanUtils {
 
 		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
 
-		for (Field field : domainObj.getClass().getFields()) {
+		for (Field field : BeanUtils.getAllFields(domainObj.getClass())) {
 			if (field.getAnnotation(annotationClass) != null) {
 				try {
+					ReflectionUtils.makeAccessible(field);
 					ReflectionUtils.setField(field, domainObj, value);
 				} catch (IllegalArgumentException iae) {}
 			}
