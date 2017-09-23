@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
 @RepositoryRestController
 public class ContentSearchRestController extends AbstractRepositoryRestController {
@@ -74,11 +73,21 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 									   	   @RequestParam(name="keyword") List<String> keywords)
 			throws HttpRequestMethodNotSupportedException {
 		
-		ContentStoreInfo info = ContentStoreUtils.findStore(stores, repository);
+		ContentStoreInfo[] infos = stores.getStores(ContentStore.class, new StoreFilter() {
+			@Override
+			public boolean matches(ContentStoreInfo info) {
+				return repoInfo.getDomainType().equals(info.getDomainObjectClass());
+			}});
 
-		if (info == null) {
+		if (infos.length == 0) {
 			throw new ResourceNotFoundException("Entity has no content associations");
 		}
+		
+		if (infos.length > 1) {
+			throw new IllegalStateException(String.format("Too many content assocation for Entity %s", repoInfo.getDomainType().getCanonicalName()));
+		}
+
+		ContentStoreInfo info = infos[0];
 		
 		ContentStore<Object,Serializable> store = info.getImpementation();
 		if (store instanceof Searchable == false) {
@@ -105,11 +114,13 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 			}
 			
 			Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType, ContentId.class);
-			
+			 
 			List<Object> results = new ArrayList<>();
 			if (idField.equals(contentIdField)) {
-				Object entity = repoInfo.getInvoker().invokeFindOne(contentIds.get(0).toString());
-				results = Collections.singletonList(entity);
+				for (Object contentId : contentIds) {
+					Object entity = repoInfo.getInvoker().invokeFindOne(contentId.toString());
+					results.add(entity);
+				}
 			} else {
 				Pageable pageable = null;
 				Iterable<?> entities = repoInfo.getInvoker().invokeFindAll(pageable);

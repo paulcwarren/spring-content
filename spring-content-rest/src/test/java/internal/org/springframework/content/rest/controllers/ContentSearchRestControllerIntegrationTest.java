@@ -5,7 +5,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -48,7 +50,9 @@ import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
 
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
@@ -80,8 +84,13 @@ public class ContentSearchRestControllerIntegrationTest {
 	private MockMvc mvc;
 	private RepresentationFactory representationFactory = new StandardRepresentationFactory();
 	
-	private AbstractTestEntity entity;
-	private TestEntityWithSeparateId entity2; 
+	private TestEntityWithSharedId entity;
+	private TestEntityWithSharedId entity2;
+	private List<UUID> sharedIds;
+	
+	private TestEntityWithSeparateId entity3;
+	private TestEntityWithSeparateId entity4;
+	private List<UUID> contentIds;
 	
 	// mocks
 	private static ReflectionService reflectionService;
@@ -149,7 +158,6 @@ public class ContentSearchRestControllerIntegrationTest {
 								.accept("application/hal+json"))
 								.andExpect(status().isOk()).andReturn();
 
-						
 						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(result.getResponse().getContentAsString()));
 						assertThat(halResponse.getResources().size(), is(0));
 					});
@@ -159,7 +167,14 @@ public class ContentSearchRestControllerIntegrationTest {
 						entity = new TestEntityWithSharedId();
 						repository.save((TestEntityWithSharedId)entity);
 						
-						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("two"))).thenReturn(Collections.singletonList(entity.getId()));
+						entity2 = new TestEntityWithSharedId();
+						repository.save((TestEntityWithSharedId)entity2);
+						
+						sharedIds = new ArrayList<>();
+						sharedIds.add(entity.getId());
+						sharedIds.add(entity2.getId());
+						
+						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("two"))).thenReturn(sharedIds);
 					});
 					It("should return a response entity with the entity", () -> {
 						MvcResult result = mvc.perform(get("/testEntityWithSharedIds/searchContent/findKeyword?keyword=two")
@@ -167,8 +182,12 @@ public class ContentSearchRestControllerIntegrationTest {
 								.andExpect(status().isOk()).andReturn();
 
 						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(result.getResponse().getContentAsString()));
-						assertThat(halResponse.getResourcesByRel("testEntityWithSharedIds").size(), is(1));
-						assertThat(halResponse.getResourcesByRel("testEntityWithSharedIds").get(0).getValue("contentId"), is(entity.getContentId().toString()));
+						assertThat(halResponse.getResourcesByRel("testEntityWithSharedIds").size(), is(2));
+						String id1 = halResponse.getResourcesByRel("testEntityWithSharedIds").get(0).getValue("contentId").toString();
+						String id2 = halResponse.getResourcesByRel("testEntityWithSharedIds").get(1).getValue("contentId").toString();
+						assertThat(sharedIds, hasItem(UUID.fromString(id1)));
+						assertThat(sharedIds, hasItem(UUID.fromString(id2)));
+						assertThat(id1, is(not(id2)));
 					});
 				});
 			});
@@ -193,10 +212,17 @@ public class ContentSearchRestControllerIntegrationTest {
 				});
 				Context("given results are found", () ->{
 					BeforeEach(() ->{
-						entity2 = new TestEntityWithSeparateId();
-						entityWithSeparateRepository.save(entity2);
+						entity3 = new TestEntityWithSeparateId();
+						entityWithSeparateRepository.save(entity3);
+
+						entity4 = new TestEntityWithSeparateId();
+						entityWithSeparateRepository.save(entity4);
+
+						contentIds = new ArrayList<>();
+						contentIds.add(entity3.getContentId());
+						contentIds.add(entity4.getContentId());
 						
-						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("else"))).thenReturn(Collections.singletonList(entity2.getContentId()));
+						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("else"))).thenReturn(contentIds);
 					});
 					It("should return a response entity with the entity", () -> {
 						MvcResult result = mvc.perform(get("/testEntityWithSeparateIds/searchContent/findKeyword?keyword=else")
@@ -204,8 +230,12 @@ public class ContentSearchRestControllerIntegrationTest {
 								.andExpect(status().isOk()).andReturn();
 
 						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(result.getResponse().getContentAsString()));
-						assertThat(halResponse.getResourcesByRel("testEntityWithSeparateIds").size(), is(1));
-						assertThat(halResponse.getResourcesByRel("testEntityWithSeparateIds").get(0).getValue("contentId"), is(entity2.getContentId().toString()));
+						assertThat(halResponse.getResourcesByRel("testEntityWithSeparateIds").size(), is(2));
+						String id1 = halResponse.getResourcesByRel("testEntityWithSeparateIds").get(0).getValue("contentId").toString();
+						String id2 = halResponse.getResourcesByRel("testEntityWithSeparateIds").get(1).getValue("contentId").toString();
+						assertThat(contentIds, hasItem(UUID.fromString(id1)));
+						assertThat(contentIds, hasItem(UUID.fromString(id2)));
+						assertThat(id1, is(not(id2)));
 					});
 				});
 			});

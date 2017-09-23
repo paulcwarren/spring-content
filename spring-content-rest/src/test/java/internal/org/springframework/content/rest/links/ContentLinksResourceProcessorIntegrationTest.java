@@ -48,18 +48,20 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import internal.org.springframework.content.rest.controllers.ContentPropertyCollectionRestController;
 import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
 import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity2Repository;
+import internal.org.springframework.content.rest.support.TestEntity3;
+import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
+import internal.org.springframework.content.rest.support.TestEntity3Repository;
 import internal.org.springframework.content.rest.support.TestEntityChild;
 import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-//@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {StoreConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class, HypermediaConfiguration.class})
-//@WebIntegrationTest
 @Transactional
 @ActiveProfiles("store")
 public class ContentLinksResourceProcessorIntegrationTest {
