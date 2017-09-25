@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.5">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
 <title>Spring Content REST - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -90,13 +90,12 @@ strong,b{font-weight:bold;line-height:inherit}
 small{font-size:60%;line-height:inherit}
 code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
-ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
 ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
 ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
-ul.no-bullet{list-style:none}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -132,7 +131,11 @@ strong strong{font-weight:400}
 kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
 .keyseq kbd:last-child{margin-right:0}
-.menuseq,.menu{color:rgba(0,0,0,.8)}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
 b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
 b.button:before{content:"[";padding:0 3px 0 2px}
 b.button:after{content:"]";padding:0 2px 0 3px}
@@ -199,7 +202,7 @@ table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
 table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
 .admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
 .admonitionblock>table td.icon{text-align:center;width:80px}
-.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon img{max-width:initial}
 .admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
@@ -255,13 +258,13 @@ table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
 table.tableblock{max-width:100%;border-collapse:separate}
 table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
 table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
-table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
-table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
-table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
-table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
-table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
-table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
-table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.grid-all>thead>tr>.tableblock,table.grid-all>tbody>tr>.tableblock{border-width:0 1px 1px 0}
+table.grid-all>tfoot>tr>.tableblock{border-width:1px 1px 0 0}
+table.grid-cols>*>tr>.tableblock{border-width:0 1px 0 0}
+table.grid-rows>thead>tr>.tableblock,table.grid-rows>tbody>tr>.tableblock{border-width:0 0 1px 0}
+table.grid-rows>tfoot>tr>.tableblock{border-width:1px 0 0 0}
+table.grid-all>*>tr>.tableblock:last-child,table.grid-cols>*>tr>.tableblock:last-child{border-right-width:0}
+table.grid-all>tbody>tr:last-child>.tableblock,table.grid-all>thead:last-child>tr>.tableblock,table.grid-rows>tbody>tr:last-child>.tableblock,table.grid-rows>thead:last-child>tr>.tableblock{border-bottom-width:0}
 table.frame-all{border-width:1px}
 table.frame-sides{border-width:0 1px}
 table.frame-topbot{border-width:1px 0}
@@ -282,10 +285,12 @@ ul li ol{margin-left:1.5em}
 dl dd{margin-left:1.125em}
 dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
-ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
-ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
 ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
 ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
 ul.inline>li>*{display:block}
@@ -302,7 +307,8 @@ ol.lowergreek{list-style-type:lower-greek}
 td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
 td.hdlist1{font-weight:bold;padding-bottom:1.25em}
 .literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
-.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:first-of-type{padding:.4em .75em 0 .75em;line-height:1;vertical-align:top}
+.colist>table tr>td:first-of-type img{max-width:initial}
 .colist>table tr>td:last-of-type{padding:.25em 0}
 .thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
 .imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
@@ -365,6 +371,7 @@ div.unbreakable{page-break-inside:avoid}
 .yellow{color:#bfbf00}
 .yellow-background{background-color:#fafa00}
 span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
 .admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
 .admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
@@ -425,7 +432,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.7-SNAPSHOT,</span>
-<span id="revdate">2017-09-23</span>
+<span id="revdate">2017-09-25</span>
 </div>
 </div>
 <div id="content">
@@ -451,27 +458,27 @@ Copies of this document may be made for your own use and for distribution to oth
 <ul class="sectlevel0">
 <li><a href="#preface">Preface</a>
 <ul class="sectlevel1">
-<li><a href="#project">1. Project metadata</a></li>
-<li><a href="#_introduction">2. Introduction</a></li>
-<li><a href="#_getting_started">3. Getting Started</a>
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#_introduction">1. Introduction</a></li>
+<li><a href="#_getting_started">2. Getting Started</a>
 <ul class="sectlevel2">
-<li><a href="#_introduction_2">3.1. Introduction</a></li>
-<li><a href="#_adding_spring_content_rest_to_a_spring_boot_project">3.2. Adding Spring Content REST to a Spring Boot project</a></li>
-<li><a href="#_adding_spring_content_rest_to_a_gradle_project">3.3. Adding Spring Content REST to a Gradle Project</a></li>
-<li><a href="#_adding_spring_content_rest_to_a_maven_project">3.4. Adding Spring Content REST to a Maven Project</a></li>
-<li><a href="#_configuring_spring_content_rest">3.5. Configuring Spring Content REST</a></li>
+<li><a href="#_introduction_2">2.1. Introduction</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_spring_boot_project">2.2. Adding Spring Content REST to a Spring Boot project</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_gradle_project">2.3. Adding Spring Content REST to a Gradle Project</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_maven_project">2.4. Adding Spring Content REST to a Maven Project</a></li>
+<li><a href="#_configuring_spring_content_rest">2.5. Configuring Spring Content REST</a></li>
 </ul>
 </li>
-<li><a href="#_store_resources">4. Store Resources</a>
+<li><a href="#_store_resources">3. Store Resources</a>
 <ul class="sectlevel2">
-<li><a href="#_fundamentals">4.1. Fundamentals</a></li>
-<li><a href="#_the_content_resource">4.2. The Content Resource</a></li>
-<li><a href="#_the_content_collection_resource">4.3. The Content Collection Resource</a></li>
+<li><a href="#_fundamentals">3.1. Fundamentals</a></li>
+<li><a href="#_the_content_resource">3.2. The Content Resource</a></li>
+<li><a href="#_the_content_collection_resource">3.3. The Content Collection Resource</a></li>
 </ul>
 </li>
-<li><a href="#_customizing_store_resources">5. Customizing Store Resources</a>
+<li><a href="#_customizing_store_resources">4. Customizing Store Resources</a>
 <ul class="sectlevel2">
-<li><a href="#_configuring_cors">5.1. Configuring CORS</a></li>
+<li><a href="#_configuring_cors">4.1. Configuring CORS</a></li>
 </ul>
 </li>
 </ul>
@@ -482,7 +489,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 <h1 id="preface" class="sect0">Preface</h1>
 <div class="sect1">
-<h2 id="project">1. Project metadata</h2>
+<h2 id="project">Project metadata</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -503,7 +510,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect1">
-<h2 id="_introduction">2. Introduction</h2>
+<h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>REST web services have become the number one means for application integration on the web. In its core, REST defines that a system consists of resources that clients interact with. These resources are often also implemented in a hypermedia driven way.  Spring MVC offers a solid foundation to build theses kinds of services.  But implementing even the simplest REST web services for a multi-domain object system can be quite tedious and result in a lot of boilerplate code.</p>
@@ -527,16 +534,16 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect1">
-<h2 id="_getting_started">3. Getting Started</h2>
+<h2 id="_getting_started">2. Getting Started</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_introduction_2">3.1. Introduction</h3>
+<h3 id="_introduction_2">2.1. Introduction</h3>
 <div class="paragraph">
 <p>Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adding_spring_content_rest_to_a_spring_boot_project">3.2. Adding Spring Content REST to a Spring Boot project</h3>
+<h3 id="_adding_spring_content_rest_to_a_spring_boot_project">2.2. Adding Spring Content REST to a Spring Boot project</h3>
 <div class="paragraph">
 <p>The simplest way to get to started is if you are building a Spring Boot application. That’s because Spring Content REST has both a starter as well as auto-configuration.</p>
 </div>
@@ -577,7 +584,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adding_spring_content_rest_to_a_gradle_project">3.3. Adding Spring Content REST to a Gradle Project</h3>
+<h3 id="_adding_spring_content_rest_to_a_gradle_project">2.3. Adding Spring Content REST to a Gradle Project</h3>
 <div class="paragraph">
 <p>To add Spring Content REST to a Gradle-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
 </div>
@@ -596,7 +603,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adding_spring_content_rest_to_a_maven_project">3.4. Adding Spring Content REST to a Maven Project</h3>
+<h3 id="_adding_spring_content_rest_to_a_maven_project">2.4. Adding Spring Content REST to a Maven Project</h3>
 <div class="paragraph">
 <p>To add Spring Content REST to a Maven-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
 </div>
@@ -619,7 +626,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring_spring_content_rest">3.5. Configuring Spring Content REST</h3>
+<h3 id="_configuring_spring_content_rest">2.5. Configuring Spring Content REST</h3>
 <div class="paragraph">
 <p>To install Spring Content REST alongside your existing Spring MVC application, you need to include the appropriate MVC configuration.  Spring Content REST configuration is defined in two classes  called; <code>RestConfiguration</code> and <code>HypermediaConfiguration</code> and they can just be imported into your applications configuration.</p>
 </div>
@@ -642,15 +649,15 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 </div>
 </div>
 <div class="sect1">
-<h2 id="_store_resources">4. Store Resources</h2>
+<h2 id="_store_resources">3. Store Resources</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_fundamentals">4.1. Fundamentals</h3>
+<h3 id="_fundamentals">3.1. Fundamentals</h3>
 <div class="paragraph">
 <p>The core functionality of Spring Content REST, enabled through <code>@Import(RestConfiguration.class)</code>, is to export resources for Spring Content stores.  This is usually closely related to Spring Data repositories.  Thus, the core artifacts to look at and potentially tweak to customize the way the exporting works are the repository and store interfaces.</p>
 </div>
 <div class="sect3">
-<h4 id="_entity_association">4.1.1. Entity Association</h4>
+<h4 id="_entity_association">3.1.1. Entity Association</h4>
 <div class="paragraph">
 <p>With Entity Association, as the name suggest, one Entity has one Resource associated with it.  Assume the following repository and store interfaces and Entity model:</p>
 </div>
@@ -701,7 +708,7 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_association">4.1.2. Property Association</h4>
+<h4 id="_property_association">3.1.2. Property Association</h4>
 <div class="paragraph">
 <p>The second type of association is Property Association.  With property association a property of an Entity is associated with one Resource.  Assume the following repository/store interfaces and Entity model.</p>
 </div>
@@ -783,7 +790,7 @@ as these properties are both single values Spring Content REST content resources
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_collection_associations">4.1.3. Property Collection Associations</h4>
+<h4 id="_property_collection_associations">3.1.3. Property Collection Associations</h4>
 <div class="paragraph">
 <p>The final type association is the Property Collection Association.  Unsurprisingly, closely related to Property Association, it allows a property of an Entity to be associated with many Resources.  Consider the following example:-</p>
 </div>
@@ -828,7 +835,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_default_status_codes">4.1.4. Default status codes</h4>
+<h4 id="_default_status_codes">3.1.4. Default status codes</h4>
 <div class="paragraph">
 <p>For the content resources exposed, we use a set of default status codes:</p>
 </div>
@@ -850,7 +857,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_resource_discoverability">4.1.5. Resource Discoverability</h4>
+<h4 id="_resource_discoverability">3.1.5. Resource Discoverability</h4>
 <div class="paragraph">
 <p>A core principle of HATEOAS is that resources should be discoverable through the publication of links that point to the available resources.  There are a few competing de-facto standards of how to represent links in JSON.  By default, Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.</p>
 </div>
@@ -863,12 +870,12 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_content_resource">4.2. The Content Resource</h3>
+<h3 id="_the_content_resource">3.2. The Content Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exposes a content resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the <code>@StoreRestResource</code> on the store interface.</p>
 </div>
 <div class="sect3">
-<h4 id="_supported_http_methods">4.2.1. Supported HTTP Methods</h4>
+<h4 id="_supported_http_methods">3.2.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Content resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not Allowed</code>.</p>
 </div>
@@ -911,12 +918,12 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_content_collection_resource">4.3. The Content Collection Resource</h3>
+<h3 id="_the_content_collection_resource">3.3. The Content Collection Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exposes a content collection resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the <code>@StoreRestResource</code> on the store interface.</p>
 </div>
 <div class="sect3">
-<h4 id="_supported_http_methods_2">4.3.1. Supported HTTP Methods</h4>
+<h4 id="_supported_http_methods_2">3.3.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
 </div>
@@ -937,10 +944,10 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_customizing_store_resources">5. Customizing Store Resources</h2>
+<h2 id="_customizing_store_resources">4. Customizing Store Resources</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_configuring_cors">5.1. Configuring CORS</h3>
+<h3 id="_configuring_cors">4.1. Configuring CORS</h3>
 <div class="paragraph">
 <p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
 </div>
@@ -948,7 +955,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
 </div>
 <div class="sect3">
-<h4 id="_store_interface_cors_configuration">5.1.1. Store interface CORS configuration</h4>
+<h4 id="_store_interface_cors_configuration">4.1.1. Store interface CORS configuration</h4>
 <div class="paragraph">
 <p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:</p>
 </div>
@@ -988,7 +995,7 @@ interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 <div id="footer">
 <div id="footer-text">
 Version 0.0.7-SNAPSHOT<br>
-Last updated 2017-09-23 00:05:36 UTC
+Last updated 2017-09-25 17:07:14 UTC
 </div>
 </div>
 </body>

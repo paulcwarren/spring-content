@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.5">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
 <title>Spring Content S3 - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -90,13 +90,12 @@ strong,b{font-weight:bold;line-height:inherit}
 small{font-size:60%;line-height:inherit}
 code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
-ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
 ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
 ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
-ul.no-bullet{list-style:none}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -132,7 +131,11 @@ strong strong{font-weight:400}
 kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
 .keyseq kbd:last-child{margin-right:0}
-.menuseq,.menu{color:rgba(0,0,0,.8)}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
 b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
 b.button:before{content:"[";padding:0 3px 0 2px}
 b.button:after{content:"]";padding:0 2px 0 3px}
@@ -199,7 +202,7 @@ table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
 table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
 .admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
 .admonitionblock>table td.icon{text-align:center;width:80px}
-.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon img{max-width:initial}
 .admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
@@ -255,13 +258,13 @@ table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
 table.tableblock{max-width:100%;border-collapse:separate}
 table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
 table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
-table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
-table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
-table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
-table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
-table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
-table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
-table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.grid-all>thead>tr>.tableblock,table.grid-all>tbody>tr>.tableblock{border-width:0 1px 1px 0}
+table.grid-all>tfoot>tr>.tableblock{border-width:1px 1px 0 0}
+table.grid-cols>*>tr>.tableblock{border-width:0 1px 0 0}
+table.grid-rows>thead>tr>.tableblock,table.grid-rows>tbody>tr>.tableblock{border-width:0 0 1px 0}
+table.grid-rows>tfoot>tr>.tableblock{border-width:1px 0 0 0}
+table.grid-all>*>tr>.tableblock:last-child,table.grid-cols>*>tr>.tableblock:last-child{border-right-width:0}
+table.grid-all>tbody>tr:last-child>.tableblock,table.grid-all>thead:last-child>tr>.tableblock,table.grid-rows>tbody>tr:last-child>.tableblock,table.grid-rows>thead:last-child>tr>.tableblock{border-bottom-width:0}
 table.frame-all{border-width:1px}
 table.frame-sides{border-width:0 1px}
 table.frame-topbot{border-width:1px 0}
@@ -282,10 +285,12 @@ ul li ol{margin-left:1.5em}
 dl dd{margin-left:1.125em}
 dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
-ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
-ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
 ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
 ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
 ul.inline>li>*{display:block}
@@ -302,7 +307,8 @@ ol.lowergreek{list-style-type:lower-greek}
 td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
 td.hdlist1{font-weight:bold;padding-bottom:1.25em}
 .literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
-.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:first-of-type{padding:.4em .75em 0 .75em;line-height:1;vertical-align:top}
+.colist>table tr>td:first-of-type img{max-width:initial}
 .colist>table tr>td:last-of-type{padding:.25em 0}
 .thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
 .imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
@@ -365,6 +371,7 @@ div.unbreakable{page-break-inside:avoid}
 .yellow{color:#bfbf00}
 .yellow-background{background-color:#fafa00}
 span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
 .admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
 .admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
@@ -425,7 +432,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.0.7-SNAPSHOT,</span>
-<span id="revdate">2017-09-23</span>
+<span id="revdate">2017-09-25</span>
 </div>
 </div>
 <div id="content">
@@ -451,27 +458,27 @@ Copies of this document may be made for your own use and for distribution to oth
 <ul class="sectlevel0">
 <li><a href="#preface">Preface</a>
 <ul class="sectlevel1">
-<li><a href="#project">1. Project metadata</a></li>
-<li><a href="#content-repositories">2. Working with Spring Stores</a>
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#content-repositories">1. Working with Spring Stores</a>
 <ul class="sectlevel2">
-<li><a href="#content-repositories.core-concepts">2.1. Core concepts</a></li>
-<li><a href="#content-repositories.creation">2.2. Creating Content Store Instances</a></li>
-<li><a href="#_patterns_of_content_association">2.3. Patterns of Content Association</a></li>
+<li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
+<li><a href="#content-repositories.creation">1.2. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
 </ul>
 </li>
-<li><a href="#_s3_content_stores">3. S3 Content Stores</a>
+<li><a href="#_s3_content_stores">2. S3 Content Stores</a>
 <ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">3.1. Annotation based configuration</a></li>
-<li><a href="#_configuring">3.2. Configuring</a></li>
-<li><a href="#_accessing_content">3.3. Accessing Content</a></li>
+<li><a href="#_annotation_based_configuration">2.1. Annotation based configuration</a></li>
+<li><a href="#_configuring">2.2. Configuring</a></li>
+<li><a href="#_accessing_content">2.3. Accessing Content</a></li>
 </ul>
 </li>
-<li><a href="#solr-search">4. Indexing &amp; Searching with Solr</a>
+<li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
 <ul class="sectlevel2">
-<li><a href="#_overview">4.1. Overview</a></li>
-<li><a href="#_dependencies">4.2. Dependencies</a></li>
-<li><a href="#_enabling">4.3. Enabling</a></li>
-<li><a href="#_configuring_2">4.4. Configuring</a></li>
+<li><a href="#_overview">3.1. Overview</a></li>
+<li><a href="#_dependencies">3.2. Dependencies</a></li>
+<li><a href="#_enabling">3.3. Enabling</a></li>
+<li><a href="#_configuring_2">3.4. Configuring</a></li>
 </ul>
 </li>
 </ul>
@@ -482,7 +489,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 <h1 id="preface" class="sect0">Preface</h1>
 <div class="sect1">
-<h2 id="project">1. Project metadata</h2>
+<h2 id="project">Project metadata</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -503,7 +510,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect1">
-<h2 id="content-repositories">2. Working with Spring Stores</h2>
+<h2 id="content-repositories">1. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various implementations of Content Store.</p>
@@ -523,7 +530,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </table>
 </div>
 <div class="sect2">
-<h3 id="content-repositories.core-concepts">2.1. Core concepts</h3>
+<h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
 <div class="paragraph">
 <p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to the type of the content ID attribute on that domain class.</p>
 </div>
@@ -558,7 +565,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.events">2.1.1. Events</h4>
+<h4 id="content-repositories.events">1.1.1. Events</h4>
 <div class="paragraph">
 <p>There are 6 events that Spring Content emits whilst performing basic content access.  Those are:</p>
 </div>
@@ -733,7 +740,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.search">2.1.2. Search</h4>
+<h4 id="content-repositories.search">1.1.2. Search</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
 </div>
@@ -767,7 +774,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.renditions">2.1.3. Renditions</h4>
+<h4 id="content-repositories.renditions">1.1.3. Renditions</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
 </div>
@@ -793,7 +800,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect2">
-<h3 id="content-repositories.creation">2.2. Creating Content Store Instances</h3>
+<h3 id="content-repositories.creation">1.2. Creating Content Store Instances</h3>
 <div class="paragraph">
 <p>To use these core concepts:</p>
 </div>
@@ -917,12 +924,12 @@ public class SomeClass {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_patterns_of_content_association">2.3. Patterns of Content Association</h3>
+<h3 id="_patterns_of_content_association">1.3. Patterns of Content Association</h3>
 <div class="paragraph">
 <p>Content can be associated with a Spring Data Entity in several ways.</p>
 </div>
 <div class="sect3">
-<h4 id="_entity_association">2.3.1. Entity Association</h4>
+<h4 id="_entity_association">1.3.1. Entity Association</h4>
 <div class="paragraph">
 <p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
 </div>
@@ -954,7 +961,7 @@ public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_association">2.3.2. Property Association</h4>
+<h4 id="_property_association">1.3.2. Property Association</h4>
 <div class="paragraph">
 <p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
 </div>
@@ -1066,10 +1073,10 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_s3_content_stores">3. S3 Content Stores</h2>
+<h2 id="_s3_content_stores">2. S3 Content Stores</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_annotation_based_configuration">3.1. Annotation based configuration</h3>
+<h3 id="_annotation_based_configuration">2.1. Annotation based configuration</h3>
 <div class="paragraph">
 <p>Spring Content S3 is enabled with the following Java Config.</p>
 </div>
@@ -1111,7 +1118,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring">3.2. Configuring</h3>
+<h3 id="_configuring">2.2. Configuring</h3>
 <div class="paragraph">
 <p>The following configuration properties (prefix <code>spring.content.s3</code>) are supported.</p>
 </div>
@@ -1138,9 +1145,9 @@ public static class ApplicationConfig {
 </table>
 </div>
 <div class="sect2">
-<h3 id="_accessing_content">3.3. Accessing Content</h3>
+<h3 id="_accessing_content">2.3. Accessing Content</h3>
 <div class="sect3">
-<h4 id="_storage_customization">3.3.1. Storage Customization</h4>
+<h4 id="_storage_customization">2.3.1. Storage Customization</h4>
 <div class="paragraph">
 <p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.</p>
 </div>
@@ -1185,7 +1192,7 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_storage_model">3.3.2. Storage Model</h4>
+<h4 id="_storage_model">2.3.2. Storage Model</h4>
 <div class="paragraph">
 <p>Accordingly by default Spring Content S3 will store content entities in the root of the store&#8217;s bucket using the @ContentId field value as the key.</p>
 </div>
@@ -1194,7 +1201,7 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content">3.3.3. Setting Content</h4>
+<h4 id="_setting_content">2.3.3. Setting Content</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -1209,13 +1216,13 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content">3.3.4. Getting Content</h4>
+<h4 id="_getting_content">2.3.4. Getting Content</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content">3.3.5. Unsetting Content</h4>
+<h4 id="_unsetting_content">2.3.5. Unsetting Content</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
@@ -1224,16 +1231,16 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect1">
-<h2 id="solr-search">4. Indexing &amp; Searching with Solr</h2>
+<h2 id="solr-search">3. Indexing &amp; Searching with Solr</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview">4.1. Overview</h3>
+<h3 id="_overview">3.1. Overview</h3>
 <div class="paragraph">
 <p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_dependencies">4.2. Dependencies</h3>
+<h3 id="_dependencies">3.2. Dependencies</h3>
 <div class="paragraph">
 <p>Add the solrj to the classpath.</p>
 </div>
@@ -1269,7 +1276,7 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_enabling">4.3. Enabling</h3>
+<h3 id="_enabling">3.3. Enabling</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -1282,7 +1289,7 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring_2">4.4. Configuring</h3>
+<h3 id="_configuring_2">3.4. Configuring</h3>
 <div class="paragraph">
 <p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
 </div>
@@ -1322,7 +1329,7 @@ public class S3StoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.7-SNAPSHOT<br>
-Last updated 2017-09-23 00:05:36 UTC
+Last updated 2017-09-25 17:07:14 UTC
 </div>
 </div>
 </body>
