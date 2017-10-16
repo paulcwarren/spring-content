@@ -1,5 +1,6 @@
 package internal.org.springframework.content.rest.links;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -8,6 +9,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +42,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-
 import internal.org.springframework.content.rest.controllers.ContentPropertyCollectionRestController;
 import internal.org.springframework.content.rest.controllers.ContentPropertyRestController;
 import internal.org.springframework.content.rest.support.StoreConfig;
@@ -60,6 +57,7 @@ import internal.org.springframework.content.rest.support.TestEntityContentReposi
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 
 @RunWith(Ginkgo4jSpringRunner.class)
+@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {StoreConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class, HypermediaConfiguration.class})
 @Transactional
@@ -96,7 +94,7 @@ public class ContentLinksResourceProcessorIntegrationTest {
 						.build();
 			});
 			
-			Context("given an Entity with associated content and a Store with a default store path", () -> {
+			Context("given an Entity and a Store with a default store path", () -> {
 				BeforeEach(() -> {
 					testEntity3 = repository3.save(new TestEntity3());
 				});
@@ -120,6 +118,21 @@ public class ContentLinksResourceProcessorIntegrationTest {
 							assertThat(halResponse.getLinksByRel("testEntity3s").size(), is(1));
 							assertThat(halResponse.getLinksByRel("testEntity3s").get(0).getHref(), is("http://localhost/testEntity3s/"+testEntity3.contentId));
 						});
+					});
+				});
+				Context("a GET to /repository/id", () -> {
+					It("should provide a response without a content link", () -> {
+						MockHttpServletResponse response = mvc.perform(get("/testEntity3s/" + testEntity3.id)
+								.accept("application/hal+json"))
+								.andExpect(status().isOk())
+								.andReturn().getResponse();
+						assertThat(response, is(not(nullValue())));
+
+						RepresentationFactory representationFactory = new StandardRepresentationFactory();
+						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+						assertThat(halResponse, is(not(nullValue())));
+						assertThat(halResponse.getLinksByRel("testEntity3s"), is(not(nullValue())));
+						assertThat(halResponse.getLinksByRel("testEntity3s").size(), is(0));
 					});
 				});
 			});

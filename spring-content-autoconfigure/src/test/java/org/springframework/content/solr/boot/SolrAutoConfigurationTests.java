@@ -1,4 +1,4 @@
-package internal.org.springframework.content.autoconfigure.solr;
+package org.springframework.content.solr.boot;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;

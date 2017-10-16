@@ -43,6 +43,12 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-renditions</artifactId>
+			<version>0.0.7-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 	      	<groupId>com.github.paulcwarren</groupId>
 	  		<artifactId>spring-content-rest</artifactId>
 	  		<version>0.0.7-SNAPSHOT</version>
