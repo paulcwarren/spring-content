@@ -6,4 +6,4 @@ else
     echo "not on a tag -> keep snapshot version in pom.xml"
 fi
 
-mvn clean deploy --settings settings.xml -DskipTests=true scm-publish:publish-scm -B -U
+mvn -B -U -P ci clean deploy --settings settings.xml -DskipTests=true scm-publish:publish-scm
