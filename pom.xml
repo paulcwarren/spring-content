@@ -62,8 +62,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<springboot-version>1.5.6.RELEASE</springboot-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<docs.type>${env.MAVEN_PROFILE}</docs.type>
-		<docs.output.dir>../target/generated-docs/refs/${docs.type}/</docs.output.dir>
+		<docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
 	</properties>
 
 	<modules>
@@ -106,10 +105,9 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 						</goals>
 						<configuration>
 							<rules>
-								<requireProperty>
-									<property>docs.type</property>
-									<message>You must have a 'docs.type' propery set for asciidic publishing</message>
-								</requireProperty>
+								<requireEnvironmentVariable>
+									<variableName>BUILD_TYPE</variableName>
+								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
 						</configuration>
@@ -175,57 +173,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 					</execution>
 				</executions>
 			</plugin>
-			
-			<!-- Releasing to maven -->
-			<!--<plugin>-->
-				<!--<groupId>org.sonatype.plugins</groupId>-->
-				<!--<artifactId>nexus-staging-maven-plugin</artifactId>-->
-				<!--<extensions>true</extensions>-->
-				<!--<configuration>-->
-					<!--<serverId>ossrh</serverId>-->
-					<!--<nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
-					<!--<autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-				<!--</configuration>-->
-			<!--</plugin>-->
-			<!--<plugin>-->
-				<!--<groupId>org.apache.maven.plugins</groupId>-->
-				<!--<artifactId>maven-source-plugin</artifactId>-->
-				<!--<version>2.2.1</version>-->
-				<!--<executions>-->
-					<!--<execution>-->
-						<!--<id>attach-sources</id>-->
-						<!--<goals>-->
-							<!--<goal>jar-no-fork</goal>-->
-						<!--</goals>-->
-					<!--</execution>-->
-				<!--</executions>-->
-			<!--</plugin>-->
-			<!--<plugin>-->
-				<!--<groupId>org.apache.maven.plugins</groupId>-->
-				<!--<artifactId>maven-javadoc-plugin</artifactId>-->
-				<!--<version>2.9.1</version>-->
-				<!--<executions>-->
-					<!--<execution>-->
-						<!--<id>attach-javadocs</id>-->
-						<!--<goals>-->
-							<!--<goal>jar</goal>-->
-						<!--</goals>-->
-					<!--</execution>-->
-				<!--</executions>-->
-			<!--</plugin>-->
-			<!--<plugin>-->
-				<!--<groupId>org.apache.maven.plugins</groupId>-->
-				<!--<artifactId>maven-gpg-plugin</artifactId>-->
-				<!--<executions>-->
-					<!--<execution>-->
-						<!--<id>sign-artifacts</id>-->
-						<!--<phase>verify</phase>-->
-						<!--<goals>-->
-							<!--<goal>sign</goal>-->
-						<!--</goals>-->
-					<!--</execution>-->
-				<!--</executions>-->
-			<!--</plugin>-->
 
 			<!-- Doc Publishing -->
 			<plugin>
@@ -262,12 +209,22 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
 	<profiles>
    		<profile>
-			<id>master</id>
+			<id>dev</id>
 		</profile>
 		<profile>
-			<id>release</id>
+			<id>ci</id>
    			<build>
 				<plugins>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
@@ -307,37 +264,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 							</execution>
 						</executions>
 					</plugin>
-<!-- 					<plugin>
-						<groupId>org.eluder.coveralls</groupId>
-						<artifactId>coveralls-maven-plugin</artifactId>
-						<version>3.1.0</version>
-					</plugin>
-					<plugin>
-						<groupId>org.jacoco</groupId>
-						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.7.8</version>
-						<executions>
-							Prepare execution with Surefire
-							<execution>
-								<id>pre-unit-test</id>
-								<goals>
-									<goal>prepare-agent</goal>
-								</goals>
-								<configuration>
-									<propertyName>surefireArgLine</propertyName>
-								</configuration>
-							</execution>
-							Generate report after tests are run
-							<execution>
-								<id>post-unit-test</id>
-								<phase>test</phase>
-								<goals>
-									<goal>report</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
- -->				</plugins>
+				</plugins>
 			</build>
 		</profile>
 	</profiles>

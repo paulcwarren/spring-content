@@ -5,7 +5,8 @@ language: java
 jdk:
 - oraclejdk8
 env:
-- MAVEN_PROFILE=master
+- MAVEN_PROFILE=ci
+- BUILD_TYPE=snapshot
 before_install:
 - ./scripts/before-install.sh
 install:
