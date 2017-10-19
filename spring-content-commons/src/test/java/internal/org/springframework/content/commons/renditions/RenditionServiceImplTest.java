@@ -224,7 +224,9 @@ public class RenditionServiceImplTest {
 	public static class ContentObject {
 		@MimeType
 		public String mimeType;
-		
+
+		public ContentObject() {}
+
 		public ContentObject(String mimeType) {
 			this.mimeType = mimeType; 
 		}

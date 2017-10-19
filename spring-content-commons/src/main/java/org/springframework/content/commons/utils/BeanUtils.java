@@ -1,16 +1,16 @@
 package org.springframework.content.commons.utils;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
+import org.springframework.util.ReflectionUtils;
+
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.BeansException;
-import org.springframework.util.ReflectionUtils;
 
 public final class BeanUtils {
 
@@ -26,28 +26,11 @@ public final class BeanUtils {
 	public static boolean hasFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 
-		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
-		for (PropertyDescriptor descriptor : descriptors) {
-			String prop = descriptor.getName();
-			try {
-				Field candidate = domainObj.getClass().getDeclaredField(prop);
-				if (candidate != null) {
-					if (candidate.getAnnotation(annotationClass) != null) {
-						return true;
-					}
-				}
-			} catch (NoSuchFieldException ex) {
-				continue;
-			}
-		}
-		
-		for (Field field : domainObj.getClass().getFields()) {
-			if (field.getAnnotation(annotationClass) != null) {
-				return true;
-			}
-		}
-		
+        Field field = findFieldWithAnnotation(domainObj, annotationClass);
+        if (field != null && field.getAnnotation(annotationClass) != null) {
+            return true;
+        }
+
 		return false;
 	}
 
@@ -112,65 +95,33 @@ public final class BeanUtils {
 	public static Class<?> getFieldWithAnnotationType(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Class<?> type = null;
-		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
-		for (PropertyDescriptor descriptor : descriptors) {
-			String prop = descriptor.getName();
-			Field theField = null;
-			try {
-				theField = domainObj.getClass().getDeclaredField(prop);
-				if (theField != null && theField.getAnnotation(annotationClass) != null) {
-					type = theField.getType();
-					break;
-				}
-			} catch (NoSuchFieldException ex) {
-				continue;
-			}
-		}
 
-		if (type == null) {
-			for (Field field : domainObj.getClass().getFields()) {
-				if (field.getAnnotation(annotationClass) != null) {
-					try {
-						type = field.getType();
-					} catch (IllegalArgumentException iae) {}
-				}
-			}
-		}
-		
+        Field field = findFieldWithAnnotation(domainObj, annotationClass);
+        if (field != null && field.getAnnotation(annotationClass) != null) {
+            type = field.getType();
+        }
+
 		return type;
 	}
 
 	public static Object getFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Object value = null;
-		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
-		for (PropertyDescriptor descriptor : descriptors) {
-			String prop = descriptor.getName();
-			Field theField = null;
-			try {
-				theField = domainObj.getClass().getDeclaredField(prop);
-				if (theField != null) {
-					if (theField.getAnnotation(annotationClass) != null) {
-						value = wrapper.getPropertyValue(prop);
-					}
-				}
-			} catch (NoSuchFieldException ex) {
-				continue;
-			}
-		}
 
-		if (value == null) {
-			for (Field field : domainObj.getClass().getFields()) {
-				if (field.getAnnotation(annotationClass) != null) {
-					try {
-						value = ReflectionUtils.getField(field, domainObj);
-					} catch (IllegalArgumentException iae) {}
-				}
-			}
-		}
-		
+        Field field = findFieldWithAnnotation(domainObj, annotationClass);
+        if (field != null && field.getAnnotation(annotationClass) != null) {
+            try {
+                PropertyDescriptor descriptor = org.springframework.beans.BeanUtils.getPropertyDescriptor(domainObj.getClass(), field.getName());
+                if (descriptor != null) {
+                    BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+                    value = wrapper.getPropertyValue(field.getName());
+                } else {
+                    value = ReflectionUtils.getField(field, domainObj);
+                }
+                return value;
+            } catch (IllegalArgumentException iae) {}
+        }
+
 		return value;
 	}
 
@@ -201,30 +152,20 @@ public final class BeanUtils {
 	 * 					the condition that must be satisfied to allow the match
 	 */
 	public static void setFieldWithAnnotationConditionally(Object domainObj, Class<? extends Annotation> annotationClass, Object value, Condition condition) {
-		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
 
-		for (Field field : domainObj.getClass().getFields()) {
-			if (field.getAnnotation(annotationClass) != null && condition.matches(field)) {
-				try {
-					ReflectionUtils.setField(field, domainObj, value);
-				} catch (IllegalArgumentException iae) {}
-			}
-		}
-
-		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
-		for (PropertyDescriptor descriptor : descriptors) {
-			String prop = descriptor.getName();
-			Field theField = null;
+		Field field = findFieldWithAnnotation(domainObj, annotationClass);
+		if (field != null && field.getAnnotation(annotationClass) != null && condition.matches(field)) {
 			try {
-				theField = domainObj.getClass().getDeclaredField(prop);
-				if (theField != null) {
-					if (theField.getAnnotation(annotationClass) != null && condition.matches(theField)) {
-						wrapper.setPropertyValue(prop, value);
-					}
-				}
-			} catch (NoSuchFieldException ex) {
-				continue;
-			}
+			    PropertyDescriptor descriptor = org.springframework.beans.BeanUtils.getPropertyDescriptor(domainObj.getClass(), field.getName());
+			    if (descriptor != null) {
+                    BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+			        wrapper.setPropertyValue(field.getName(), value);
+                    return;
+                } else {
+                    ReflectionUtils.setField(field, domainObj, value);
+                }
+				return;
+			} catch (IllegalArgumentException iae) {}
 		}
 	}
 }
