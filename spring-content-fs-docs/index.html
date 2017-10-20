@@ -136,7 +136,7 @@ When you’re finished, you can check your results against the code in <code>spr
 </li>
 </ul>
 <h2 id="build-with-maven">Build with Maven</h2>
-<p>First you set up a basic build script. You can use any build system you like when building apps with Spring, but the code you need to work with <a href="https://maven.apache.org/">Maven</a> is included here.  If you’re not familiar with Maven, refer to <a href="http://spring.io/guides/gs/maven">Building Java Projects with Maven</a>. </p>
+<p>First you set up a basic build script. You can use any build system you like when building apps with Spring, but the code you need to work with <a href="https://maven.apache.org/">Maven</a> is included here.  If you’re not familiar with Maven, refer to <a href="http://spring.io/guides/gs/maven">Building Java Projects with Maven</a>.</p>
 <h3 id="create-a-directory-structure">Create a directory structure</h3>
 <p>In a project directory of your choosing, create the following subdirectory structure; for example, with <code>mkdir -p src/main/java/gettingstarted</code> on *nix systems:</p>
 <pre><code>∟ src
@@ -189,7 +189,7 @@ When you’re finished, you can check your results against the code in <code>spr
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;0.0.6&lt;/version&gt;
+            &lt;version&gt;0.0.7&lt;/version&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
 
@@ -375,7 +375,7 @@ public class FileContentController {
     @Autowired private FileContentStore contentStore;
 
     @RequestMapping(value=&quot;/files/{fileId}&quot;, method = RequestMethod.PUT, headers=&quot;content-type!=application/hal+json&quot;)
-    public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file) 
+    public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file)
             throws IOException {
 
         File f = filesRepo.findOne(id);
@@ -405,13 +405,13 @@ public class FileContentController {
 <p>Let's explain this class.  </p>
 <ul>
 <li>
-<p>It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content. </p>
+<p>It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content.</p>
 </li>
 <li>
 <p>Both <code>setContent</code> and <code>getContent</code> methods inject themselves into the URI space of the <code>FileRepository</code>, namely <code>/files/{fileId}</code>, but handle all GETs and PUTs that are aplication/hal+json based; i.e. content.</p>
 </li>
 <li>
-<p>We inject our <code>FileRepository</code> and our <code>FileContentStore</code>.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path). </p>
+<p>We inject our <code>FileRepository</code> and our <code>FileContentStore</code>.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path).</p>
 </li>
 <li>
 <p><code>setContent</code> uses the <code>FileRepository</code> to fetch the File entity  using the given <code>fileId</code> and then uses the <code>FileContentStore</code> to save the given file input stream.  </p>
@@ -457,12 +457,12 @@ public class FileContentController {
 &lt;/html&gt;
 </code></pre>
 
-<p>This HTML presents a simple list of files using an <code>ng-repeat</code> directive and contains a simple form allowing new files to be uploaded. </p>
+<p>This HTML presents a simple list of files using an <code>ng-repeat</code> directive and contains a simple form allowing new files to be uploaded.</p>
 <p>All the interesting code is in the code-behind file so add the following code behind to <code>src/main/resources/static/files.js</code></p>
 <pre><code>angular.module('filesApp', [])
   .controller('FilesListController', function($http) {
     var filesList = this;
-    filesList.files = []; 
+    filesList.files = [];
 
     filesList.getFilesList = function() {
         $http.get('/files/').
@@ -475,7 +475,7 @@ public class FileContentController {
                 }
             });
         };
-    filesList.getFilesList(); 
+    filesList.getFilesList();
 
     filesList.getHref = function(file) {
         return file._links[&quot;self&quot;].href
@@ -510,7 +510,7 @@ public class FileContentController {
 <p><code>getFilesList</code> queries our <code>FileRepository</code> via its REST endpoint <code>files/</code> and populates <code>filesList.files</code> (presented by the <code>ng-repeat</code> directive in the HTML)</p>
 </li>
 <li>
-<p><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}</code> (that ultimately calls <code>FileContentController.getContent</code>) </p>
+<p><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}</code> (that ultimately calls <code>FileContentController.getContent</code>)</p>
 </li>
 <li>
 <p><code>upload</code> uploads a new File by first <code>POST</code>ing to the <code>FileRepository</code> REST endpoints <code>/files</code> and once created  <code>PUT</code>ing the actual content to the Files content REST endpoint <code>files/{fileId}</code> (that ultimately calls <code>FileContentController.setContent</code>)   </p>
@@ -537,7 +537,7 @@ public class SpringContentFsApplication {
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.  Or you can build the JAR file with <code>mvn clean package</code> and run the JAR by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-fs-0.0.1.jar</code></p>
 <p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code> </p>
+<p><code>http://localhost:8080</code></p>
 <p>and you should see something like this:-</p>
 <p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
 <p>Exercise the application by uploading a range of new files and viewing them.  Viewed files will be downloaded and open in the appropriate editor.</p>

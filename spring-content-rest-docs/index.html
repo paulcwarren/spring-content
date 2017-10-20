@@ -168,12 +168,12 @@
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;0.0.6&lt;/version&gt;
+            &lt;version&gt;0.0.7&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;0.0.6&lt;/version&gt;
+            &lt;version&gt;0.0.7&lt;/version&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
 
@@ -244,12 +244,12 @@ public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.  Or you can build the JAR file with <code>mvn clean package</code> and run the JAR by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-rest-0.0.1.jar</code></p>
 <p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code> </p>
+<p><code>http://localhost:8080</code></p>
 <p>and you should see something like this:-</p>
 <p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
 <p>As you did in the previous tutorial, exercise the application by uploading a range of new files and viewing them.  You should see viewed files open as they did before.</p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've written a simple application that uses Spring Content and Spring Content REST to save objects with content to the file-system and to fetch them again using a hypermedia-based REST API - all without writing any implementation code to handle file access. </p>
+<p>Congratulations!  You've written a simple application that uses Spring Content and Spring Content REST to save objects with content to the file-system and to fetch them again using a hypermedia-based REST API - all without writing any implementation code to handle file access.</p>
 <p>Don't forget you can just changing the type of the spring-content boot-starter project on the classpath you can switch from file-based to a different implementation.  Spring Content REST works seamlessly with all modules.</p>
 <p>Spring Content supports the following implementations:-</p>
 <ul>
