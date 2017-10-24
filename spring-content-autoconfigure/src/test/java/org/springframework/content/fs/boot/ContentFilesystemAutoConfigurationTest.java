@@ -15,21 +15,19 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 
@@ -51,22 +49,25 @@ public class ContentFilesystemAutoConfigurationTest {
 				});
 			});
 
-			Context("given an environment specifying a filesystem root", () -> {
+			Context("given an environment specifying a filesystem root using spring prefix", () -> {
 				BeforeEach(() -> {
-					System.setProperty("CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/a/b/c/");
+					System.setProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
+				});
+				AfterEach(() -> {
+					System.clearProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT");
 				});
 				It("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).getFilesystemRoot(), endsWith("/a/b/c/"));
+					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).getFilesystemRoot(), endsWith("/UPPERCASE/NOTATION/"));
 
 					context.close();
 				});
 			});
 
-			Context("given a configuration that contributes a loader bean", () -> {
+            Context("given a configuration that contributes a loader bean", () -> {
 				It("should have that loader bean in the context", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(ConfigWithLoaderBean.class);

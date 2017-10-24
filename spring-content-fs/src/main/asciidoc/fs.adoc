@@ -33,9 +33,9 @@ By default content will be stored in a randomly chosen (at application startup) 
 
 == Spring Boot Configuration
 
-When using `content-fs-spring-boot-starter` the root for all file system stores will be a randomly chosen folder (at application start-up) under `java.io.tmdir`.  
+When using `spring-content-fs-boot-starter` (or `content-fs-spring-boot-starter`) the root for all file system stores will be a randomly chosen folder (at application start-up) under `java.io.tmdir`.
 
-The following configuration properties (prefix `content.fs`) are supported.
+The following configuration properties (prefix `spring.content.fs`) are supported.
 
 [cols="2*", options="header"]
 |=========
