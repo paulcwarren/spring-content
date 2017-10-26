@@ -1,10 +1,6 @@
 package internal.org.springframework.content.commons.renditions;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -81,6 +77,11 @@ public class RenditionServiceImplTest {
 							assertThat(renditionService.canConvert("one/thing", "something/*"), is(true));
 						});
 					});
+					Context("given a mimetype with a parameter", () -> {
+						It("should return true", () -> {
+							assertThat(renditionService.canConvert("one/thing;parameter=foo", "something/else"), is(true));
+						});
+					});
 				});
 			});
 			Context("#convert", () -> {
@@ -115,6 +116,12 @@ public class RenditionServiceImplTest {
 						It("should return true", () -> {
 							renditionService.convert("one/thing", null, "something/*");
 							verify(mockProvider).convert(anyObject(), eq("something/*"));
+						});
+					});
+					Context("given a mimetype with a parameter", () -> {
+						It("should return true", () -> {
+							renditionService.convert("one/thing;parameter=foo", null, "something/else");
+							verify(mockProvider).convert(anyObject(), eq("something/else"));
 						});
 					});
 				});
