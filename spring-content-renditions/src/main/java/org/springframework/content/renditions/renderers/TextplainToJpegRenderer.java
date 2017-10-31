@@ -3,6 +3,7 @@ package org.springframework.content.renditions.renderers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.content.renditions.RenditionException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -56,8 +57,7 @@ public class TextplainToJpegRenderer implements RenditionProvider {
         try {
             font = new Font(fontName, Font.PLAIN, (int) fontSize);
         } catch (Exception e) {
-            logger.error("Error creating font: " + e.getMessage());
-            return null;
+            throw new RenditionException("Error creating font", e);
         }
 
         BufferedImage tempBuffer = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
@@ -74,8 +74,7 @@ public class TextplainToJpegRenderer implements RenditionProvider {
         try {
             reader = new BufferedReader(new InputStreamReader(fromInputSource));
         } catch (Exception e) {
-            logger.error("Error opening input stream", e);
-            return null;
+            throw new RenditionException("Error opening input stream", e);
         }
 
         ArrayList images = new ArrayList();
@@ -123,8 +122,6 @@ public class TextplainToJpegRenderer implements RenditionProvider {
 
                 if (lineCnt + lineHeight > 480 || !wrapText) {
                     break;
-//                    images.clear();
-//                    lineCnt = margin + margin;
                 }
             }
         }
@@ -134,8 +131,7 @@ public class TextplainToJpegRenderer implements RenditionProvider {
                 saveImage(images, lineHeight, "/tmp/textToJpeg.jpeg");
                 return new FileInputStream("/tmp/textToJpeg.jpeg");
             } catch (IOException e) {
-                logger.error("Error writing image", e);
-                return null;
+                throw new RenditionException("Error writing image", e);
             }
         }
 
