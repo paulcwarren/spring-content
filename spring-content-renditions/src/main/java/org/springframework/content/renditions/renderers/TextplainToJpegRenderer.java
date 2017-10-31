@@ -135,6 +135,7 @@ public class TextplainToJpegRenderer implements RenditionProvider {
             }
         }
 
+        logger.info("Image not saved");
         return null;
     }
 
