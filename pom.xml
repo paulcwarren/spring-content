@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.paulcwarren</groupId>
 	<artifactId>spring-content</artifactId>
-	<version>0.0.8-SNAPSHOT</version>
+	<version>0.0.9-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Content</name>

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>0.0.8-SNAPSHOT</version>
+		<version>0.0.9-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>spring-content-s3-boot-starter</artifactId>
@@ -14,12 +14,12 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-s3</artifactId>
-			<version>0.0.8-SNAPSHOT</version>
+			<version>0.0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-autoconfigure</artifactId>
-			<version>0.0.8-SNAPSHOT</version>
+			<version>0.0.9-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

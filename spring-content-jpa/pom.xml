@@ -6,14 +6,14 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>0.0.8-SNAPSHOT</version>
+		<version>0.0.9-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>0.0.8-SNAPSHOT</version>
+			<version>0.0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
