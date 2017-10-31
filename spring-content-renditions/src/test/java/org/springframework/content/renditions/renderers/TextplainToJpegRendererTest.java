@@ -55,8 +55,10 @@ public class TextplainToJpegRendererTest {
                             input = new ByteArrayInputStream("Hello Spring Content World!".getBytes());
                         });
                         It("should produce the correct image", () -> {
+                            InputStream expected = IOUtils.contentEquals(this.getClass().getResourceAsStream("/textplaintorenderer/single-line.jpeg");
+                            assertThat(expected, is(not(nullValue())));
                             assertThat(result, is(not(nullValue())));
-                            assertThat(IOUtils.contentEquals(this.getClass().getResourceAsStream("/textplaintorenderer/single-line.jpeg"), result), is(true));
+                            assertThat(IOUtils.contentEquals(expected, result), is(true));
                         });
                     });
                     Context("given a multi-line input", () -> {
