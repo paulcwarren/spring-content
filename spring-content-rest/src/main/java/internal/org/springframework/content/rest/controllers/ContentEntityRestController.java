@@ -3,6 +3,7 @@ package internal.org.springframework.content.rest.controllers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -117,7 +118,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throw new ResourceNotFoundException();
 		}
 		
-		List<MediaType> mimeTypes = MediaType.parseMediaTypes(mimeType);
+		List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(mimeType));
 		if (mimeTypes.size() == 0) {
 			mimeTypes.add(MediaType.ALL);
 		}

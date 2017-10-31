@@ -31,6 +31,8 @@ public class TextplainToJpegRenderer implements RenditionProvider {
 
     private boolean wrapText = false;
 
+    public TextplainToJpegRenderer() {}
+
     public TextplainToJpegRenderer(boolean wrapText) {
         this.wrapText = wrapText;
     }
