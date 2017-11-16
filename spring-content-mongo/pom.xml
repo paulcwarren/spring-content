@@ -37,7 +37,13 @@
 			<version>1.10.19</version>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
+			<version>1.0</version>
+			<scope>test</scope>
+        </dependency>
+    </dependencies>
 	<build>
 		<plugins>
 			<!-- Docs Rendering -->

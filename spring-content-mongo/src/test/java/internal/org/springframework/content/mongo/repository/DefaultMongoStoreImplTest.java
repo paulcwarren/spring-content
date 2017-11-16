@@ -1,10 +1,6 @@
 package internal.org.springframework.content.mongo.repository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,10 +29,10 @@ import com.mongodb.gridfs.GridFSFile;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultMongoStoreImplTest {
-    private DefaultMongoStoreImpl<TestEntity, String> mongoContentRepoImpl;
+    private DefaultMongoStoreImpl<Object, String> mongoContentRepoImpl;
     private GridFsTemplate gridFsTemplate;
     private GridFSFile gridFSFile;
-    private TestEntity property;
+    private ContentProperty property;
     private GridFsResource resource;
     private ConversionService converter;
 
@@ -51,7 +47,7 @@ public class DefaultMongoStoreImplTest {
                 gridFsTemplate = mock(GridFsTemplate.class);
                 gridFSFile = mock(GridFSFile.class);
                 resource = mock(GridFsResource.class);
-                mongoContentRepoImpl = new DefaultMongoStoreImpl<TestEntity, String>(gridFsTemplate, converter);
+                mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(gridFsTemplate, converter);
             });
 
             Context("#setContent", () -> {
@@ -186,10 +182,31 @@ public class DefaultMongoStoreImplTest {
                 It("should unset content", () -> {
                     verify(gridFsTemplate).delete(anyObject());
                 });
-
-                It("should reset the metadata", () -> {
-                    assertThat(property.getContentId(), is(nullValue()));
-                    assertThat(property.getContentLen(), is(0L));
+                Context("when the property has a dedicated ContentId field", () -> {
+                    It("should reset the metadata", () -> {
+                        assertThat(property.getContentId(), is(nullValue()));
+                        assertThat(property.getContentLen(), is(0L));
+                    });
+                });
+                Context("when the property's ContentId field also is the javax persistence Id field", () ->{
+                    BeforeEach(() -> {
+                        property = new SharedIdContentIdEntity();
+                        property.setContentId("abcd");
+                    });
+                    It("should not reset the content id metadata", () -> {
+                        assertThat(property.getContentId(), is("abcd"));
+                        assertThat(property.getContentLen(), is(0L));
+                    });
+                });
+                Context("when the property's ContentId field also is the Spring Id field", () ->{
+                    BeforeEach(() -> {
+                        property = new SharedSpringIdContentIdEntity();
+                        property.setContentId("abcd");
+                    });
+                    It("should not reset the content id metadata", () -> {
+                        assertThat(property.getContentId(), is("abcd"));
+                        assertThat(property.getContentLen(), is(0L));
+                    });
                 });
             });
         });
@@ -200,7 +217,15 @@ public class DefaultMongoStoreImplTest {
     	//noop
     }
 
-    public static class TestEntity {
+    public interface ContentProperty {
+        String getContentId();
+        void setContentId(String contentId);
+        long getContentLen();
+        void setContentLen(long contentLen);
+    }
+
+    public static class TestEntity implements ContentProperty {
+
         @ContentId
         private String contentId;
 
@@ -215,20 +240,52 @@ public class DefaultMongoStoreImplTest {
             this.contentId = new String(contentId);
         }
 
-        public String getContentId() {
-            return this.contentId;
-        }
+        public String getContentId() { return this.contentId; }
 
-        public void setContentId(String contentId) {
-            this.contentId = contentId;
-        }
+        public void setContentId(String contentId) { this.contentId = contentId; }
 
-        public long getContentLen() {
-            return contentLen;
-        }
+        public long getContentLen() { return contentLen; }
 
-        public void setContentLen(long contentLen) {
-            this.contentLen = contentLen;
-        }
+        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
+    }
+
+    public static class SharedIdContentIdEntity implements ContentProperty {
+
+        @javax.persistence.Id
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+
+        public SharedIdContentIdEntity() {this.contentId = null;}
+
+        public String getContentId() { return this.contentId; }
+
+        public void setContentId(String contentId) { this.contentId = contentId; }
+
+        public long getContentLen() { return contentLen; }
+
+        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
+    }
+
+    public static class SharedSpringIdContentIdEntity implements ContentProperty {
+
+        @org.springframework.data.annotation.Id
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+
+        public SharedSpringIdContentIdEntity() { this.contentId = null; }
+
+        public String getContentId() { return this.contentId; }
+
+        public void setContentId(String contentId) { this.contentId = contentId; }
+
+        public long getContentLen() { return contentLen; }
+
+        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
     }
 }
