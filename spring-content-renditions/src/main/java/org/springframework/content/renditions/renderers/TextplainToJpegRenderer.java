@@ -45,7 +45,7 @@ public class TextplainToJpegRenderer implements RenditionProvider {
 
     @Override
     public String[] produces() {
-        return new String[] {"image/jpg"};
+        return new String[] {"image/jpg", "image/jpeg"};
     }
 
     @Override

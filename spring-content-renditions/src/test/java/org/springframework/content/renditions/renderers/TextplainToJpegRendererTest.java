@@ -42,6 +42,7 @@ public class TextplainToJpegRendererTest {
             Context("#produces", () -> {
                 It("should return jpeg mimetype", () -> {
                     assertThat(renderer.produces(), hasItemInArray("image/jpg"));
+                    assertThat(renderer.produces(), hasItemInArray("image/jpeg"));
                 });
             });
             Context("#convert", () -> {
