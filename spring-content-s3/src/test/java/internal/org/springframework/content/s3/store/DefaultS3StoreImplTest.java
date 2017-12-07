@@ -40,11 +40,11 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class DefaultS3StoreImplTest {
-    private DefaultS3StoreImpl<TestEntity, String> s3StoreImpl;
+    private DefaultS3StoreImpl<ContentProperty, String> s3StoreImpl;
     private ResourceLoader loader;
     private ConversionService converter;
     private AmazonS3 client;
-    private TestEntity entity;
+    private ContentProperty entity;
     
     private WritableResource resource;
     private Resource nonExistentResource;
@@ -64,7 +64,7 @@ public class DefaultS3StoreImplTest {
                 converter = mock(ConversionService.class);
                 client = mock(AmazonS3.class);
 
-                s3StoreImpl = new DefaultS3StoreImpl<TestEntity, String>(loader, converter, client, "some-bucket");
+                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
             });
             Context("#setContent", () -> {
                 BeforeEach(() -> {
@@ -233,11 +233,32 @@ public class DefaultS3StoreImplTest {
   	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
   	                });
 
-  	                It("should unset content", () -> {
-                	    verify(client).deleteObject(anyObject());
-                		assertThat(entity.getContentId(), is(nullValue()));
-                		assertThat(entity.getContentLen(), is(0L));
-                	});
+                    Context("when the property has a dedicated ContentId field", () -> {
+                        It("should reset the metadata", () -> {
+                            assertThat(entity.getContentId(), is(nullValue()));
+                            assertThat(entity.getContentLen(), is(0L));
+                        });
+                    });
+                    Context("when the property's ContentId field also is the javax persistence Id field", () ->{
+                        BeforeEach(() -> {
+                            entity = new SharedIdContentIdEntity();
+                            entity.setContentId("abcd-efgh");
+                        });
+                        It("should not reset the content id metadata", () -> {
+                            assertThat(entity.getContentId(), is("abcd-efgh"));
+                            assertThat(entity.getContentLen(), is(0L));
+                        });
+                    });
+                    Context("when the property's ContentId field also is the Spring Id field", () ->{
+                        BeforeEach(() -> {
+                            entity = new SharedSpringIdContentIdEntity();
+                            entity.setContentId("abcd-efgh");
+                        });
+                        It("should not reset the content id metadata", () -> {
+                            assertThat(entity.getContentId(), is("abcd-efgh"));
+                            assertThat(entity.getContentLen(), is(0L));
+                        });
+                    });
                 });
                 
                 Context("when the content doesnt exist", () -> {
@@ -268,7 +289,14 @@ public class DefaultS3StoreImplTest {
         });
     }
 
-    public static class TestEntity {
+    public interface ContentProperty {
+        String getContentId();
+        void setContentId(String contentId);
+        long getContentLen();
+        void setContentLen(long contentLen);
+    }
+
+    public static class TestEntity implements ContentProperty {
         @ContentId
         private String contentId;
 
@@ -298,5 +326,45 @@ public class DefaultS3StoreImplTest {
         public void setContentLen(long contentLen) {
             this.contentLen = contentLen;
         }
+    }
+
+    public static class SharedIdContentIdEntity implements ContentProperty {
+
+        @javax.persistence.Id
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+
+        public SharedIdContentIdEntity() {this.contentId = null;}
+
+        public String getContentId() { return this.contentId; }
+
+        public void setContentId(String contentId) { this.contentId = contentId; }
+
+        public long getContentLen() { return contentLen; }
+
+        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
+    }
+
+    public static class SharedSpringIdContentIdEntity implements ContentProperty {
+
+        @org.springframework.data.annotation.Id
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+
+        public SharedSpringIdContentIdEntity() { this.contentId = null; }
+
+        public String getContentId() { return this.contentId; }
+
+        public void setContentId(String contentId) { this.contentId = contentId; }
+
+        public long getContentLen() { return contentLen; }
+
+        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
     }
 }

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -14,6 +16,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.Condition;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -115,7 +118,17 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 			}
 
 			// reset content fields
-	        BeanUtils.setFieldWithAnnotation(property, ContentId.class, null);
+			BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
+				@Override
+				public boolean matches(Field field) {
+					for (Annotation annotation : field.getAnnotations()) {
+						if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
+								"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
+							return false;
+						}
+					}
+					return true;
+				}});
 	        BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
 		} catch (Exception ase) {
 			logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()), ase);
