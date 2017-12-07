@@ -1,8 +1,6 @@
 package internal.org.springframework.content.jpa.operations;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,6 +17,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.utils.BeanUtils;
 
 import internal.org.springframework.content.jpa.utils.InputStreamEx;
@@ -171,12 +171,17 @@ public class JpaContentTemplate implements InitializingBean {
                     if(!set.next()) return null;
                     Blob b = set.getBlob("blob");
 
-                    // yowchie...don't want to copy the content into memory however as the binarystream
-                    // is not available past connection.close() we have no choice.  This is the easiest thing to do with the current API
-                    // but we should investigate other alternatives.  Suspect we should pass in the OutputStream to write to.
                     try {
-                        byte[] bytes = IOUtils.toByteArray(b.getBinaryStream());
-                        return new ByteArrayInputStream(bytes);
+                        File tempFile = File.createTempFile("_sc_jpa_", null);
+                        FileOutputStream fos = new FileOutputStream(tempFile);
+                        InputStream is = b.getBinaryStream();
+                        try {
+                            IOUtils.copyLarge(is, fos);
+                        } finally {
+                            IOUtils.closeQuietly(is);
+                            IOUtils.closeQuietly(fos);
+                        }
+                        return new ObservableInputStream(new FileInputStream(tempFile), new FileRemover(tempFile));
                     } catch (IOException ioe) {
                         return null;
                     }

@@ -3,6 +3,7 @@ package internal.org.springframework.content.jpa.repository;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.content.commons.repository.ContentStore;
 
 import internal.org.springframework.content.jpa.operations.JpaContentTemplate;

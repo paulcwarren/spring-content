@@ -1,14 +1,11 @@
 package internal.org.springframework.content.operations;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -33,6 +30,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -250,8 +249,11 @@ public class JpaContentTemplateTest {
                         verify(connection).prepareStatement(eq("SELECT blob FROM BLOBS WHERE id='12345'"));
                     });
 
-                    It("should return a content stream", () -> {
+                    It("should return an observable inputstream with a file remover observer", () -> {
                         assertThat(inputStream, is(not(nullValue())));
+                        assertThat(inputStream, is(instanceOf(ObservableInputStream.class)));
+                        assertThat(((ObservableInputStream)inputStream).getObservers().size(), is(1));
+                        assertThat(((ObservableInputStream)inputStream).getObservers().get(0), is(instanceOf(FileRemover.class)));
                     });
 
                     It("should close the resultset", () -> {
