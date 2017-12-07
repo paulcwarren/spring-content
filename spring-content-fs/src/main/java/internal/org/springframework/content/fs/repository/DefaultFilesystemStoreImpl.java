@@ -152,7 +152,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 			public boolean matches(Field field) {
 				for (Annotation annotation : field.getAnnotations()) {
 					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-						"org.springframework.data.annotation".equals(annotation.annotationType().getCanonicalName())) {
+						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
 						return false;
 					}
 				}

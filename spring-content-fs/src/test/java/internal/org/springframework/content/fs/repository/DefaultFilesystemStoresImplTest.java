@@ -21,6 +21,7 @@ import org.springframework.core.io.WritableResource;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -34,19 +35,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class DefaultFilesystemStoresImplTest {
-    private DefaultFilesystemStoreImpl<TestEntity, String> filesystemContentRepoImpl;
+    private DefaultFilesystemStoreImpl<ContentProperty, String> filesystemContentRepoImpl;
     private FileSystemResourceLoader loader;
     private ConversionService conversion;
-    private TestEntity entity;
+    private ContentProperty entity;
     
     private Resource resource;
     private WritableResource writeableResource;
@@ -71,7 +66,7 @@ public class DefaultFilesystemStoresImplTest {
     			conversion= mock(ConversionService.class);
     			fileService = mock(FileService.class);
     			
-    			filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<TestEntity, String>(loader, conversion, fileService);
+    			filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(loader, conversion, fileService);
     		});
 
     		
@@ -287,12 +282,34 @@ public class DefaultFilesystemStoresImplTest {
         					when(loader.getResource(eq("abcd-efgh"))).thenReturn(deletableResource);
         					when(deletableResource.exists()).thenReturn(true);
         				});
-        				It("should unset content", () -> {
-        					verify(deletableResource).delete();
-        					assertThat(entity.getContentId(), is(nullValue()));
-        					assertThat(entity.getContentLen(), is(0L));
-        				});
-        			});
+
+						Context("when the property has a dedicated ContentId field", () -> {
+							It("should reset the metadata", () -> {
+								assertThat(entity.getContentId(), is(nullValue()));
+								assertThat(entity.getContentLen(), is(0L));
+							});
+						});
+						Context("when the property's ContentId field also is the javax persistence Id field", () ->{
+							BeforeEach(() -> {
+								entity = new SharedIdContentIdEntity();
+								entity.setContentId("abcd-efgh");
+							});
+							It("should not reset the content id metadata", () -> {
+								assertThat(entity.getContentId(), is("abcd-efgh"));
+								assertThat(entity.getContentLen(), is(0L));
+							});
+						});
+						Context("when the property's ContentId field also is the Spring Id field", () ->{
+							BeforeEach(() -> {
+								entity = new SharedSpringIdContentIdEntity();
+								entity.setContentId("abcd-efgh");
+							});
+							It("should not reset the content id metadata", () -> {
+								assertThat(entity.getContentId(), is("abcd-efgh"));
+								assertThat(entity.getContentLen(), is(0L));
+							});
+						});
+					});
         			
         			Context("when the content doesnt exist", () -> {
         				BeforeEach(() -> {
@@ -308,7 +325,7 @@ public class DefaultFilesystemStoresImplTest {
         					assertThat(entity.getContentLen(), is(0L));
         				});
         			});
-        		});
+				});
         		
         		Context("#getResource", () -> {
         			BeforeEach(() -> {
@@ -328,7 +345,14 @@ public class DefaultFilesystemStoresImplTest {
     	});
     }
 
-    public static class TestEntity {
+	public interface ContentProperty {
+		String getContentId();
+		void setContentId(String contentId);
+		long getContentLen();
+		void setContentLen(long contentLen);
+	}
+
+    public static class TestEntity implements ContentProperty {
         @ContentId
         private String contentId;
 
@@ -359,4 +383,44 @@ public class DefaultFilesystemStoresImplTest {
             this.contentLen = contentLen;
         }
     }
+
+	public static class SharedIdContentIdEntity implements ContentProperty {
+
+		@javax.persistence.Id
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private long contentLen;
+
+		public SharedIdContentIdEntity() {this.contentId = null;}
+
+		public String getContentId() { return this.contentId; }
+
+		public void setContentId(String contentId) { this.contentId = contentId; }
+
+		public long getContentLen() { return contentLen; }
+
+		public void setContentLen(long contentLen) { this.contentLen = contentLen; }
 	}
+
+	public static class SharedSpringIdContentIdEntity implements ContentProperty {
+
+		@org.springframework.data.annotation.Id
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private long contentLen;
+
+		public SharedSpringIdContentIdEntity() { this.contentId = null; }
+
+		public String getContentId() { return this.contentId; }
+
+		public void setContentId(String contentId) { this.contentId = contentId; }
+
+		public long getContentLen() { return contentLen; }
+
+		public void setContentLen(long contentLen) { this.contentLen = contentLen; }
+	}
+}
