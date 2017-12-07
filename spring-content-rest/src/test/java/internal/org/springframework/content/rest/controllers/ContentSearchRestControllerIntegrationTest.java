@@ -1,5 +1,6 @@
 package internal.org.springframework.content.rest.controllers;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,11 +59,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
@@ -190,6 +186,28 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(id1, is(not(id2)));
 					});
 				});
+				Context("given results contain invalid IDs", () -> {
+					BeforeEach(() -> {
+						entity2 = new TestEntityWithSharedId();
+						repository.save((TestEntityWithSharedId)entity2);
+
+						contentIds = new ArrayList<>();
+						contentIds.add(UUID.randomUUID());			// invalid id
+						contentIds.add(entity2.getContentId());
+
+						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("else"))).thenReturn(contentIds);
+					});
+					It("should filter out invalid IDs", () -> {
+						MvcResult result = mvc.perform(get("/testEntityWithSharedIds/searchContent/findKeyword?keyword=else")
+								.accept("application/hal+json"))
+								.andExpect(status().isOk()).andReturn();
+
+						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(result.getResponse().getContentAsString()));
+						assertThat(halResponse.getResourcesByRel("testEntityWithSharedIds").size(), is(1));
+						String id1 = halResponse.getResourcesByRel("testEntityWithSharedIds").get(0).getValue("contentId").toString();
+						assertThat(contentIds, hasItem(UUID.fromString(id1)));
+					});
+				});
 			});
 			Context("given an entity with separate Id/ContentId fields", () -> {
 				BeforeEach(() ->{
@@ -236,6 +254,28 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(contentIds, hasItem(UUID.fromString(id1)));
 						assertThat(contentIds, hasItem(UUID.fromString(id2)));
 						assertThat(id1, is(not(id2)));
+					});
+				});
+				Context("given results contain invalid IDs", () -> {
+					BeforeEach(() -> {
+						entity3 = new TestEntityWithSeparateId();
+						entityWithSeparateRepository.save(entity3);
+
+						contentIds = new ArrayList<>();
+						contentIds.add(UUID.randomUUID());			// invalid id
+						contentIds.add(entity3.getContentId());
+
+						when(reflectionService.invokeMethod(anyObject(), anyObject(), eq("else"))).thenReturn(contentIds);
+					});
+					It("should filter out invalid IDs", () -> {
+						MvcResult result = mvc.perform(get("/testEntityWithSeparateIds/searchContent/findKeyword?keyword=else")
+								.accept("application/hal+json"))
+								.andExpect(status().isOk()).andReturn();
+
+						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(result.getResponse().getContentAsString()));
+						assertThat(halResponse.getResourcesByRel("testEntityWithSeparateIds").size(), is(1));
+						String id1 = halResponse.getResourcesByRel("testEntityWithSeparateIds").get(0).getValue("contentId").toString();
+						assertThat(contentIds, hasItem(UUID.fromString(id1)));
 					});
 				});
 			});

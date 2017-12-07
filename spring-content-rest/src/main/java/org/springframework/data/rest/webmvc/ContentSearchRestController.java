@@ -119,7 +119,9 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 			if (idField.equals(contentIdField)) {
 				for (Object contentId : contentIds) {
 					Object entity = repoInfo.getInvoker().invokeFindOne(contentId.toString());
-					results.add(entity);
+					if (entity != null) {
+						results.add(entity);
+					}
 				}
 			} else {
 				Pageable pageable = null;
