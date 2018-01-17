@@ -66,6 +66,9 @@ public class EnableJpaStoresTest {
 				It("should have a jpaContentTemplate bean", () -> {
 					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
 				});
+				It("should have a blob resource loader", () -> {
+					assertThat(context.getBean("blobResourceLoader"), is(not(nullValue())));
+				});
 			});
 			Context("given a context with an empty configuration", () -> {
 				BeforeEach(() -> {
@@ -102,6 +105,9 @@ public class EnableJpaStoresTest {
 				});
 				It("should have a jpaContentTemplate bean", () -> {
 					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
+				});
+				It("should have a blob resource loader", () -> {
+					assertThat(context.getBean("blobResourceLoader"), is(not(nullValue())));
 				});
 			});
 		});
@@ -141,7 +147,6 @@ public class EnableJpaStoresTest {
 		}
 		@Bean
 		public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
 			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
 			vendorAdapter.setDatabase(Database.HSQL);
 			vendorAdapter.setGenerateDdl(true);
@@ -155,7 +160,6 @@ public class EnableJpaStoresTest {
 		}
 		@Bean
 		public PlatformTransactionManager transactionManager() {
-
 			JpaTransactionManager txManager = new JpaTransactionManager();
 			txManager.setEntityManagerFactory(entityManagerFactory().getObject());
 			return txManager;

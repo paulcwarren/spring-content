@@ -27,6 +27,8 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
+import javax.annotation.PostConstruct;
+
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
