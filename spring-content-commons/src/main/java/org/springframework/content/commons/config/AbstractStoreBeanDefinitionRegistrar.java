@@ -108,7 +108,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar implements ImportBean
 		return StoreUtils.getBasePackages(attributes, /* default*/ new String[] { ClassUtils.getPackageName(importingClassMetadata.getClassName()) });
 	}
 	
-	private BeanDefinition createBeanDefinition(Class<?> beanType) {
+	protected BeanDefinition createBeanDefinition(Class<?> beanType) {
 		GenericBeanDefinition beanDef = new GenericBeanDefinition();
 		beanDef.setBeanClass(beanType);
 

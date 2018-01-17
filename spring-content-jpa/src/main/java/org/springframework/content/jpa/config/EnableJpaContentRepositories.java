@@ -7,6 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import internal.org.springframework.content.jpa.config.JpaStoreConfiguration;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Import;
 
@@ -17,7 +18,7 @@ import internal.org.springframework.content.jpa.config.JpaStoreFactoryBean;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({JpaContentRepositoriesRegistrar.class})
+@Import({JpaContentRepositoriesRegistrar.class, JpaStoreConfiguration.class})
 public @interface EnableJpaContentRepositories {
 
 

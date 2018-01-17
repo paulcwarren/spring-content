@@ -2,7 +2,7 @@ package org.springframework.content.commons.io;
 
 import java.io.File;
 
-public class FileRemover implements InputStreamObserver {
+public class FileRemover implements CloseableObserver {
 
     private File file;
 

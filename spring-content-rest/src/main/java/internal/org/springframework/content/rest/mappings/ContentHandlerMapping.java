@@ -39,7 +39,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		this.contentStores = contentStores;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping#isHandler(java.lang.Class)
@@ -137,7 +137,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 	protected RequestCondition<?> getCustomMethodCondition(Method method) {
 		StoreType typeAnnotation = AnnotationUtils.findAnnotation(method, StoreType.class);
 		if (typeAnnotation != null) {
-			return new StoreCondition(typeAnnotation, this.contentStores);
+			return new StoreCondition(typeAnnotation, this.contentStores, method);
 		}
 		return null;
 	}
@@ -154,10 +154,12 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		
 		private String storeType = "store";
 		private ContentStoreService stores;
+		private Method method;
 		
-		public StoreCondition(StoreType typeAnnotation, ContentStoreService stores) {
+		public StoreCondition(StoreType typeAnnotation, ContentStoreService stores, Method method) {
 			storeType = typeAnnotation.value();
 			this.stores = stores;
+			this.method = method;
 		}
 
 		@Override

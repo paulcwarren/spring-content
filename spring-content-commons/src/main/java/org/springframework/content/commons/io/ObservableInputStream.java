@@ -9,9 +9,9 @@ import java.util.List;
 public class ObservableInputStream extends InputStream {
 
     private final InputStream is;
-    private final InputStreamObserver observer;
+    private final CloseableObserver observer;
 
-    public ObservableInputStream(InputStream is, InputStreamObserver observer) {
+    public ObservableInputStream(InputStream is, CloseableObserver observer) {
         this.is = is;
         this.observer = observer;
     }
@@ -27,7 +27,7 @@ public class ObservableInputStream extends InputStream {
         this.observer.closed();
     }
 
-    public List<InputStreamObserver> getObservers() {
-        return Arrays.asList(new InputStreamObserver[]{observer});
+    public List<CloseableObserver> getObservers() {
+        return Arrays.asList(new CloseableObserver[]{observer});
     }
 }

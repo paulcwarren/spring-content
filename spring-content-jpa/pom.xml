@@ -42,15 +42,51 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
+			<groupId>com.github.grantwest.eventually</groupId>
+			<artifactId>hamcrest-eventually-matchers</artifactId>
+			<version>0.0.1</version>
 			<scope>test</scope>
 		</dependency>
-  		<dependency>
+		<!--<dependency>-->
+			<!--<groupId>org.mockito</groupId>-->
+			<!--<artifactId>mockito-all</artifactId>-->
+			<!--<version>1.10.19</version>-->
+			<!--<scope>test</scope>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>org.powermock</groupId>-->
+			<!--<artifactId>powermock-core</artifactId>-->
+			<!--<version>1.7.3</version>-->
+			<!--<scope>test</scope>-->
+		<!--</dependency>-->
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4</artifactId>
+			<version>1.7.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-api-mockito</artifactId>
+			<version>1.7.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
  			<scope>test</scope>
+		</dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+			<version>5.1.44</version>
+            <scope>test</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.1.4</version>
 		</dependency>
 	</dependencies>
 	<build>
