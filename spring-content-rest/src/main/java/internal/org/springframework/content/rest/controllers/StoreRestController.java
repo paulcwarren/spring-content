@@ -46,7 +46,7 @@ public class StoreRestController extends AbstractContentPropertyController {
 	}
 
 	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", /*"range"*/})
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
 	public void getContent(HttpServletRequest request, 
 						   HttpServletResponse response,
 						   @PathVariable String store) 

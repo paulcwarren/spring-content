@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -99,7 +100,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 		return;
 	}
-	
+
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<InputStreamResource> getContent(@PathVariable String store, 
 														  @PathVariable String id, 
@@ -170,7 +172,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			response.setStatus(HttpStatus.OK.value());
 		}
 	}
-	
+
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void putMultipartContent(HttpServletResponse response,
@@ -180,7 +183,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		handleMultipart(response, store, id, multiPart);
 	}
-	
+
+	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void postMultipartContent(HttpServletResponse response,
