@@ -59,7 +59,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
 	<properties>
 		<ginkgo4j-version>1.0.9</ginkgo4j-version>
-		<springboot-version>1.5.6.RELEASE</springboot-version>
+		<springboot-version>1.5.10.RELEASE</springboot-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
