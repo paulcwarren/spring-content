@@ -9,9 +9,9 @@ env:
 before_install:
 - ./scripts/before-install.sh
 install:
-  - mvn --settings settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+  - mvn install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 script:
- - mvn test jacoco:report coveralls:report -Dmaven.javadoc.skip=true -B
+ - mvn test jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B
 deploy:
   - provider: script
     script: scripts/deploy.sh
