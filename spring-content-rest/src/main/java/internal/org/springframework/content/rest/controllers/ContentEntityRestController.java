@@ -199,8 +199,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers="accept!=application/hal+json")
 	public void deleteContent(HttpServletResponse response,
 							  @PathVariable String store, 
-							  @PathVariable String id) 
-			throws HttpRequestMethodNotSupportedException {
+							  @PathVariable String id)
+			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
 		if (info == null) {
@@ -208,11 +208,13 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 		
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		
-		if (info.getImpementation().getContent(domainObj) == null) {
-			throw new ResourceNotFoundException();
+
+		try (InputStream content = info.getImpementation().getContent(domainObj)) {
+			if (content == null) {
+				throw new ResourceNotFoundException();
+			}
 		}
-		
+
 		info.getImpementation().unsetContent(domainObj);
 		
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
