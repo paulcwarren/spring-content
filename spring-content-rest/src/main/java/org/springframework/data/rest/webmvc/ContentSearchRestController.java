@@ -3,11 +3,9 @@ package org.springframework.data.rest.webmvc;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import internal.org.springframework.content.rest.annotations.ContentRestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -19,10 +17,14 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.core.EmbeddedWrappers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -33,10 +35,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
 
 @RepositoryRestController
-public class ContentSearchRestController extends AbstractRepositoryRestController {
+public class ContentSearchRestController /*extends AbstractRepositoryRestController */{
 
+	private static final EmbeddedWrappers WRAPPERS = new EmbeddedWrappers(false);
 	private static final String ENTITY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent/{searchMethod}";
 	private static final String PROPERTY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent/{contentProperty}/{searchMethod}";
 
@@ -44,6 +50,8 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 
 	private Repositories repositories;
 	private ContentStoreService stores;
+	private PagedResourcesAssembler<Object> pagedResourcesAssembler;
+
 	private ReflectionService reflectionService;
 
 	static {
@@ -52,10 +60,12 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 	
 	@Autowired 
 	public ContentSearchRestController(Repositories repositories, ContentStoreService stores, PagedResourcesAssembler<Object> assembler) {
-		super(assembler);
+//		super(assembler);
 		
 		this.repositories = repositories;
 		this.stores = stores;
+		this.pagedResourcesAssembler = assembler;
+
 		this.reflectionService = new ReflectionServiceImpl();
 	}
 	
@@ -142,4 +152,51 @@ public class ContentSearchRestController extends AbstractRepositoryRestControlle
 
 		return ResponseEntity.ok(new Resources(ControllerUtils.EMPTY_RESOURCE_LIST));
 	}
+
+	protected Resources<?> toResources(Iterable<?> source, PersistentEntityResourceAssembler assembler,
+									   Class<?> domainType, Link baseLink) {
+
+		if (source instanceof Page) {
+			Page<Object> page = (Page<Object>) source;
+			return entitiesToResources(page, assembler, domainType, baseLink);
+		} else if (source instanceof Iterable) {
+			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
+		} else {
+			return new Resources(EMPTY_RESOURCE_LIST);
+		}
+	}
+
+	protected Resources<?> entitiesToResources(Page<Object> page, PersistentEntityResourceAssembler assembler,
+											   Class<?> domainType, Link baseLink) {
+
+		if (page.getContent().isEmpty()) {
+			return pagedResourcesAssembler.toEmptyResource(page, domainType, baseLink);
+		}
+
+		return baseLink == null ? pagedResourcesAssembler.toResource(page, assembler)
+				: pagedResourcesAssembler.toResource(page, assembler, baseLink);
+	}
+
+	protected Resources<?> entitiesToResources(Iterable<Object> entities, PersistentEntityResourceAssembler assembler,
+											   Class<?> domainType) {
+
+		if (!entities.iterator().hasNext()) {
+
+			List<Object> content = Arrays.<Object> asList(WRAPPERS.emptyCollectionOf(domainType));
+			return new Resources<Object>(content, getDefaultSelfLink());
+		}
+
+		List<Resource<Object>> resources = new ArrayList<Resource<Object>>();
+
+		for (Object obj : entities) {
+			resources.add(obj == null ? null : assembler.toResource(obj));
+		}
+
+		return new Resources<Resource<Object>>(resources, getDefaultSelfLink());
+	}
+
+	protected Link getDefaultSelfLink() {
+		return new Link(ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
+	}
+
 }
