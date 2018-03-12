@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: internal.org.springframework.renditions.poi.POIServiceTest
--------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.613 sec - in internal.org.springframework.renditions.poi.POIServiceTest

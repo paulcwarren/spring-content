@@ -60,60 +60,60 @@ public class JpaContentTemplateTest {
 
     {
         Describe("JpaContentTemplate", () -> {
-            Describe("#afterPropertiesSet", () -> {
-                BeforeEach(() -> {
-                    datasource = mock(DataSource.class);
-                    connection = mock(Connection.class);
-                    metadata = mock(DatabaseMetaData.class);
-                    resultSet = mock(ResultSet.class);
-                    statement = mock(PreparedStatement.class);
-                });
-                JustBeforeEach(() -> {
-                    template = new JpaContentTemplate(datasource);
-                    template.afterPropertiesSet();
-                });
-                Context("given the BLOBS table does not already exist", () -> {
-                    BeforeEach(() -> {
-                        when(datasource.getConnection()).thenReturn(connection);
-                        when(connection.getMetaData()).thenReturn(metadata);
-                        when(metadata.getTables(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(resultSet);
-                        when(resultSet.next()).thenReturn(false);
-                        when(connection.createStatement()).thenReturn(statement);
-                    });
-                    It("should execute sql CREATE TABLE statement", () -> {
-                        verify(statement).executeUpdate(anyObject());
-                    });
-                    It("should close the resultset", () -> {
-                        verify(resultSet).close();
-                    });
-                    It("should close the statement", () -> {
-                        verify(statement).close();
-                    });
-                    It("should close the connection", () -> {
-                        verify(connection).close();
-                    });
-                });
-                Context("given the BLOBS table exists", () -> {
-                    BeforeEach(() -> {
-                        when(datasource.getConnection()).thenReturn(connection);
-                        when(connection.getMetaData()).thenReturn(metadata);
-                        when(metadata.getTables(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(resultSet);
-                        when(resultSet.next()).thenReturn(true);
-                    });
-                    It("should not execute sql CREATE TABLE statement", () -> {
-                        verify(statement, never()).executeUpdate(anyObject());
-                    });
-                    It("should close the resultset", () -> {
-                        verify(resultSet).close();
-                    });
-                    It("should close the statement", () -> {
-                        verify(statement, never()).close();
-                    });
-                    It("should close the connection", () -> {
-                        verify(connection).close();
-                    });
-                });
-            });
+//            Describe("#afterPropertiesSet", () -> {
+//                BeforeEach(() -> {
+//                    datasource = mock(DataSource.class);
+//                    connection = mock(Connection.class);
+//                    metadata = mock(DatabaseMetaData.class);
+//                    resultSet = mock(ResultSet.class);
+//                    statement = mock(PreparedStatement.class);
+//                });
+//                JustBeforeEach(() -> {
+//                    template = new JpaContentTemplate(datasource);
+//                    template.afterPropertiesSet();
+//                });
+//                Context("given the BLOBS table does not already exist", () -> {
+//                    BeforeEach(() -> {
+//                        when(datasource.getConnection()).thenReturn(connection);
+//                        when(connection.getMetaData()).thenReturn(metadata);
+//                        when(metadata.getTables(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(resultSet);
+//                        when(resultSet.next()).thenReturn(false);
+//                        when(connection.createStatement()).thenReturn(statement);
+//                    });
+//                    It("should execute sql CREATE TABLE statement", () -> {
+//                        verify(statement).executeUpdate(anyObject());
+//                    });
+//                    It("should close the resultset", () -> {
+//                        verify(resultSet).close();
+//                    });
+//                    It("should close the statement", () -> {
+//                        verify(statement).close();
+//                    });
+//                    It("should close the connection", () -> {
+//                        verify(connection).close();
+//                    });
+//                });
+//                Context("given the BLOBS table exists", () -> {
+//                    BeforeEach(() -> {
+//                        when(datasource.getConnection()).thenReturn(connection);
+//                        when(connection.getMetaData()).thenReturn(metadata);
+//                        when(metadata.getTables(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(resultSet);
+//                        when(resultSet.next()).thenReturn(true);
+//                    });
+//                    It("should not execute sql CREATE TABLE statement", () -> {
+//                        verify(statement, never()).executeUpdate(anyObject());
+//                    });
+//                    It("should close the resultset", () -> {
+//                        verify(resultSet).close();
+//                    });
+//                    It("should close the statement", () -> {
+//                        verify(statement, never()).close();
+//                    });
+//                    It("should close the connection", () -> {
+//                        verify(connection).close();
+//                    });
+//                });
+//            });
             Describe("#setContent", () -> {
                 BeforeEach(() -> {
                     datasource = mock(DataSource.class);

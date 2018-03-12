@@ -18,6 +18,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 
+import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
+import internal.org.springframework.content.jpa.io.GenericBlobResourceLoader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -66,8 +68,11 @@ public class EnableJpaStoresTest {
 				It("should have a jpaContentTemplate bean", () -> {
 					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
 				});
-				It("should have a blob resource loader", () -> {
-					assertThat(context.getBean("blobResourceLoader"), is(not(nullValue())));
+				It("should have a delegating blob resource loader", () -> {
+					assertThat(context.getBean(DelegatingBlobResourceLoader.class), is(not(nullValue())));
+				});
+				It("should have a generic blob resource loader", () -> {
+					assertThat(context.getBean(GenericBlobResourceLoader.class), is(not(nullValue())));
 				});
 			});
 			Context("given a context with an empty configuration", () -> {
@@ -106,8 +111,11 @@ public class EnableJpaStoresTest {
 				It("should have a jpaContentTemplate bean", () -> {
 					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
 				});
-				It("should have a blob resource loader", () -> {
-					assertThat(context.getBean("blobResourceLoader"), is(not(nullValue())));
+				It("should have a delegating blob resource loader", () -> {
+					assertThat(context.getBean(DelegatingBlobResourceLoader.class), is(not(nullValue())));
+				});
+				It("should have a generic blob resource loader", () -> {
+					assertThat(context.getBean(GenericBlobResourceLoader.class), is(not(nullValue())));
 				});
 			});
 		});

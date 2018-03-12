@@ -3,3 +3,4 @@
 /**/*.iml
 /**/*.versionsBackup
 /**/infinitest.args
+*/target/*

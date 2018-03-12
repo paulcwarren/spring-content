@@ -1,5 +1,6 @@
 package internal.org.springframework.content.jpa.config;
 
+import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.jpa.io.BlobResourceLoader;
@@ -20,7 +21,7 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 	private DataSource dataSource;
 
 	@Autowired
-	private BlobResourceLoader blobResourceLoader;
+	private DelegatingBlobResourceLoader blobResourceLoader;
 
 	@Override
 	protected Object getContentStoreImpl() {

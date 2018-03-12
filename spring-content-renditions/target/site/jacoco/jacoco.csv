@@ -1,5 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-spring-content-renditions,internal.org.springframework.renditions.poi,POIServiceImpl,0,14,0,0,0,4,0,3,0,3
-spring-content-renditions,org.springframework.content.renditions,RenditionException,4,5,0,0,2,2,1,1,1,1
-spring-content-renditions,org.springframework.content.renditions.renderers,WordToJpegRenderer,13,69,1,1,4,18,2,5,1,5
-spring-content-renditions,org.springframework.content.renditions.renderers,TextplainToJpegRenderer,31,269,1,13,10,65,2,12,1,6
