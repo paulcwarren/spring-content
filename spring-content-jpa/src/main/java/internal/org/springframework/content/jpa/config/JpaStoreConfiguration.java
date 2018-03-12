@@ -1,8 +1,7 @@
 package internal.org.springframework.content.jpa.config;
 
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
-import internal.org.springframework.content.jpa.io.PostgresBlobResourceLoader;
-import internal.org.springframework.content.jpa.store.JpaStoreSchemaManager;
+import internal.org.springframework.content.jpa.io.GenericBlobResourceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.List;
 
@@ -36,7 +34,17 @@ public class JpaStoreConfiguration {
     }
 
     @Bean
-    public BlobResourceLoader postgresBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
-        return new PostgresBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
+    public BlobResourceLoader genericBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
+        return new GenericBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
     }
+
+//    @Bean
+//    public BlobResourceLoader postgresBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
+//        return new PostgresBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
+//    }
+//
+//    @Bean
+//    public BlobResourceLoader mysqlBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
+//        return new MySQLBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
+//    }
 }

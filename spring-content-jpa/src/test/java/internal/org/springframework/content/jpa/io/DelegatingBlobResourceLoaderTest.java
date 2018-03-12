@@ -57,6 +57,22 @@ public class DelegatingBlobResourceLoaderTest {
                         assertThat(resource, instanceOf(PostgresBlobResource.class));
                     });
                 });
+                Context("given a datasource that doesn't have a matching blobresourceloader", () -> {
+                    BeforeEach(() -> {
+                        ds = mock(DataSource.class);
+                        Connection conn = mock(Connection.class);
+                        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+                        when(ds.getConnection()).thenReturn(conn);
+                        when(conn.getMetaData()).thenReturn(metadata);
+                        when(metadata.getDatabaseProductName()).thenReturn("SomeOtherDatabase");
+
+                        loaders = new ArrayList<>();
+                        loaders.add(new GenericBlobResourceLoader(mock(JdbcTemplate.class), mock(PlatformTransactionManager.class)));
+                    });
+                    It("should return a GenericBlobResource", () -> {
+                        assertThat(resource, instanceOf(GenericBlobResource.class));
+                    });
+                });
             });
         });
     }

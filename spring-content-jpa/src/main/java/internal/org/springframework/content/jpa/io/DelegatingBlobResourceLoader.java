@@ -43,11 +43,14 @@ public class DelegatingBlobResourceLoader implements ResourceLoader {
             try {
                 database = ds.getConnection().getMetaData().getDatabaseProductName();
             } catch (SQLException e) {
-                database = "GENERIC";
                 logger.error("Error fetching database name", e);
             }
         }
-        return loaders.get(database).getResource(location);
+        BlobResourceLoader loader = loaders.get(database);
+        if (loader == null) {
+            loader = loaders.get("GENERIC");
+        }
+        return loader.getResource(location);
     }
 
     @Override

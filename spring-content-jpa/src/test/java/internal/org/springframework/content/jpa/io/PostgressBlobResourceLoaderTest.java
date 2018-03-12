@@ -62,9 +62,6 @@ public class PostgressBlobResourceLoaderTest {
                 JustBeforeEach(() -> {
                     result = loader.getResource("some-id");
                 });
-                It("should update the database schema", () -> {
-                    verify(stmt).execute(argThat(startsWith("IF NOT EXISTS(SELECT NULL FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'BLOBS') CREATE TABLE BLOBS")));
-                });
                 It("should return a PostgressBlobResource", () -> {
                     assertThat(result, instanceOf(PostgresBlobResource.class));
                 });

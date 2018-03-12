@@ -5,6 +5,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
+import org.springframework.content.commons.io.ObservableOutputStream;
+import org.springframework.content.commons.io.OutputStreamObserver;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -54,79 +56,85 @@ public abstract class AbstractBlobResource implements BlobResource {
         final AbstractBlobResource resource = this;
         TransactionTemplate txn = new TransactionTemplate(txnMgr);
 
-        PipedInputStream in = new PipedInputStream();
-        PipedOutputStream os = new PipedOutputStream(in);
+//        PipedOutputStream os = new PipedOutputStream();
+//        PipedInputStream in = new PipedInputStream(os);
 
-        new Thread(
-            new Runnable(){
-                public void run(){
-                    txn.execute(new TransactionCallbackWithoutResult() {
-                        @Override
-                        protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                            if (exists()) {
-                                String sql = "UPDATE BLOBS SET blob=? WHERE id=" + id;
-                                template.execute(sql, new PreparedStatementCallback<Object>() {
-                                    @Override
-                                    public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                                        int rc = 0;
+        File tempFile = File.createTempFile("_sc_jpa_generic_", null);
+        FileOutputStream fos = new FileOutputStream(tempFile);
+        InputStream fin = new FileInputStream(tempFile);
+
+        ObservableOutputStream os = new ObservableOutputStream(fos);
+        os.addObservers(new OutputStreamObserver() {
+            @Override
+            public void closed() {
+                txn.execute(new TransactionCallbackWithoutResult() {
+                    @Override
+                    protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                        if (exists()) {
+                            String sql = "UPDATE BLOBS SET content=? WHERE id=?";
+                            template.execute(sql, new PreparedStatementCallback<Object>() {
+                                @Override
+                                public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                                    int rc = 0;
 //                                        InputStreamEx inex = new InputStreamEx(in);
-                                        ps.setBinaryStream(1, in);
-                                        ps.setInt(2, Integer.parseInt(id.toString()));
-                                        rc = ps.executeUpdate();
-                                        // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                                        return rc;
-                                    }
-                                });
-                            } else {
-                                String sql = "INSERT INTO BLOBS (blob) VALUES(?)";
-                                int newId = template.execute(
-                                        new PreparedStatementCreator() {
-                                            @Override
-                                            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                                                return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                                            }
-                                        }, new PreparedStatementCallback<Integer>() {
-                                            @Override
-                                            public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                                                ResultSet set = null;
-                                                int id = 0;
-                                                int rc = 0;
-                                                try {
+                                    ps.setBinaryStream(1, fin);
+                                    ps.setInt(2, Integer.parseInt(id.toString()));
+                                    rc = ps.executeUpdate();
+                                    // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
+                                    return rc;
+                                }
+                            });
+                        } else {
+                            String sql = "INSERT INTO BLOBS (content) VALUES(?)";
+                            int newId = template.execute(
+                                    new PreparedStatementCreator() {
+                                        @Override
+                                        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                                            return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                                        }
+                                    }, new PreparedStatementCallback<Integer>() {
+                                        @Override
+                                        public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                                            ResultSet set = null;
+                                            int id = 0;
+                                            int rc = 0;
+                                            try {
 //                                                    InputStreamEx inex = new InputStreamEx(in);
-                                                    ps.setBinaryStream(1, in);
-                                                    rc = ps.executeUpdate();
-                                                    set = ps.getGeneratedKeys();
-                                                    set.next();
-                                                    id = set.getInt(1);
-                                                    //                                    BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, id);
-                                                    //                                 BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                                                    return id;
-                                                } catch (SQLException sqle) {
-                                                    sqle.printStackTrace(System.out);
-                                                } catch (Exception e) {
-                                                    e.printStackTrace(System.out);
-                                                } catch (Throwable t) {
-                                                    t.printStackTrace(System.out);
-                                                } finally {
-                                                    if (set != null) {
-                                                        try {
-                                                            set.close();
-                                                        } catch (SQLException e) {
-                                                            e.printStackTrace(System.out);
-                                                        }
+                                                ps.setBinaryStream(1, fin);
+                                                rc = ps.executeUpdate();
+                                                set = ps.getGeneratedKeys();
+                                                set.next();
+                                                id = set.getInt(1);
+                                                //                                    BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, id);
+                                                //                                 BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
+                                                return id;
+                                            } catch (SQLException sqle) {
+                                                sqle.printStackTrace(System.out);
+                                            } catch (Exception e) {
+                                                e.printStackTrace(System.out);
+                                            } catch (Throwable t) {
+                                                t.printStackTrace(System.out);
+                                            } finally {
+                                                if (set != null) {
+                                                    try {
+                                                        set.close();
+                                                    } catch (SQLException e) {
+                                                        e.printStackTrace(System.out);
                                                     }
                                                 }
-                                                return rc;
                                             }
+                                            return rc;
+                                        }
 
-                                        });
-                                resource.setId(newId);
-                            }
+                                    });
+                            resource.setId(newId);
                         }
-                    });
-                }
+                    }
+                });
+                IOUtils.closeQuietly(fin);
             }
-        ).start();
+        },
+        new FileRemover(tempFile));
 
         return os;
 //    }
@@ -201,7 +209,7 @@ public abstract class AbstractBlobResource implements BlobResource {
     @Override
     public InputStream getInputStream() throws IOException {
         final Object id = this.id;
-        String sql = "SELECT blob FROM BLOBS WHERE id=" + this.id;
+        String sql = "SELECT content FROM BLOBS WHERE id=" + this.id;
         return this.template.query(sql, new ResultSetExtractor<InputStream>() {
             @Override
             public InputStream extractData(ResultSet rs) throws SQLException, DataAccessException {
@@ -219,10 +227,17 @@ public abstract class AbstractBlobResource implements BlobResource {
                     }
                     return new ObservableInputStream(new FileInputStream(tempFile), new FileRemover(tempFile));
                 } catch (IOException ioe) {
-                    logger.error(String.format("getting input stream for blob %s", id), ioe);
+                    logger.error(String.format("getting input stream for content %s", id), ioe);
                     return null;
                 }
             }
         });
+    }
+
+    @Override
+    public void delete() {
+        final Object id = this.id;
+        String sql = "DELETE FROM BLOBS WHERE id=" + this.id;
+        this.template.update(sql);
     }
 }

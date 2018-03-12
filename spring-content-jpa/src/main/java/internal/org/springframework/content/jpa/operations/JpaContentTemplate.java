@@ -48,7 +48,7 @@ public class JpaContentTemplate implements InitializingBean {
     }
 
     public Resource getResource(String id) {
-        return new MySQLBlobResource(id, template);
+        return null; //new MySQLBlobResource(id, template);
     }
 
     @Override
