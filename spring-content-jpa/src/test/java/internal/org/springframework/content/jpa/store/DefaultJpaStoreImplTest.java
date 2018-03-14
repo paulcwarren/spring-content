@@ -146,15 +146,16 @@ public class DefaultJpaStoreImplTest {
                 BeforeEach(() -> {
                     blobResourceLoader = mock(BlobResourceLoader.class);
 
-                    entity = new TestEntity(12345);
+                    entity = new TestEntity();
                     byte[] content = new byte[5000];
                     new Random().nextBytes(content);
                     inputStream = new ByteArrayInputStream(content);
 
                     resource = mock(BlobResource.class);
-                    when(blobResourceLoader.getResource(entity.getContentId().toString())).thenReturn((BlobResource)resource);
+                    when(blobResourceLoader.getResource("-1")).thenReturn((BlobResource)resource);
                     outputStream = mock(OutputStream.class);
                     when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
+                    when(((BlobResource) resource).getId()).thenReturn(12345);
                 });
                 JustBeforeEach(() -> {
                     store.setContent(entity, inputStream);
@@ -162,6 +163,12 @@ public class DefaultJpaStoreImplTest {
                 Context("when the row does not exist", () -> {
                     It("should write the contents of the inputstream to the resource's outputstream", () -> {
                         verify(outputStream, atLeastOnce()).write(anyObject(), anyInt(), anyInt());
+                    });
+                    It("should update the @ContentId field", () -> {
+                        assertThat(entity.getContentId(), is(12345));
+                    });
+                    It("should update the @ContentLength field", () -> {
+                        assertThat(entity.getContentLen(), is(5000L));
                     });
                 });
             });

@@ -1,5 +1,6 @@
 package org.springframework.content.jpa.io;
 
+import internal.org.springframework.content.jpa.utils.InputStreamEx;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,86 +59,111 @@ public abstract class AbstractBlobResource implements BlobResource {
 
 //        PipedOutputStream os = new PipedOutputStream();
 //        PipedInputStream in = new PipedInputStream(os);
+        PipedInputStream is = new PipedInputStream();
+        PipedOutputStream os = new PipedOutputStream(is);
 
-        File tempFile = File.createTempFile("_sc_jpa_generic_", null);
-        FileOutputStream fos = new FileOutputStream(tempFile);
-        InputStream fin = new FileInputStream(tempFile);
-
-        ObservableOutputStream os = new ObservableOutputStream(fos);
-        os.addObservers(new OutputStreamObserver() {
-            @Override
-            public void closed() {
-                txn.execute(new TransactionCallbackWithoutResult() {
-                    @Override
-                    protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                        if (exists()) {
-                            String sql = "UPDATE BLOBS SET content=? WHERE id=?";
-                            template.execute(sql, new PreparedStatementCallback<Object>() {
-                                @Override
-                                public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                                    int rc = 0;
-//                                        InputStreamEx inex = new InputStreamEx(in);
-                                    ps.setBinaryStream(1, fin);
-                                    ps.setInt(2, Integer.parseInt(id.toString()));
-                                    rc = ps.executeUpdate();
-                                    // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                                    return rc;
-                                }
-                            });
-                        } else {
-                            String sql = "INSERT INTO BLOBS (content) VALUES(?)";
-                            int newId = template.execute(
-                                    new PreparedStatementCreator() {
-                                        @Override
-                                        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                                            return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                                        }
-                                    }, new PreparedStatementCallback<Integer>() {
-                                        @Override
-                                        public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                                            ResultSet set = null;
-                                            int id = 0;
-                                            int rc = 0;
-                                            try {
-//                                                    InputStreamEx inex = new InputStreamEx(in);
-                                                ps.setBinaryStream(1, fin);
-                                                rc = ps.executeUpdate();
-                                                set = ps.getGeneratedKeys();
-                                                set.next();
-                                                id = set.getInt(1);
-                                                //                                    BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, id);
-                                                //                                 BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                                                return id;
-                                            } catch (SQLException sqle) {
-                                                sqle.printStackTrace(System.out);
-                                            } catch (Exception e) {
-                                                e.printStackTrace(System.out);
-                                            } catch (Throwable t) {
-                                                t.printStackTrace(System.out);
-                                            } finally {
-                                                if (set != null) {
-                                                    try {
-                                                        set.close();
-                                                    } catch (SQLException e) {
-                                                        e.printStackTrace(System.out);
-                                                    }
-                                                }
-                                            }
-                                            return rc;
-                                        }
-
-                                    });
-                            resource.setId(newId);
-                        }
+        Thread t = new Thread(
+            new Runnable(){
+                public void run(){
+                    try {
+                        update(txn, is, id, resource);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
                     }
-                });
-                IOUtils.closeQuietly(fin);
+                }
             }
-        },
-        new FileRemover(tempFile));
+        );
+        t.start();
+
+//        File tempFile = File.createTempFile("_sc_jpa_generic_", null);
+//        FileOutputStream fos = new FileOutputStream(tempFile);
+//        InputStream fin = new FileInputStream(tempFile);
+//
+//        ObservableOutputStream os = new ObservableOutputStream(fos);
+//        os.addObservers(new OutputStreamObserver() {
+//            @Override
+//            public void closed() {
+//                try {
+//                    update(txn, fin, id, resource);
+//                } catch (SQLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        },
+//        new FileRemover(tempFile));
 
         return os;
 //    }
+    }
+
+    private void update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {
+        txn.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                if (exists()) {
+                    String sql = "UPDATE BLOBS SET content=? WHERE id=?";
+                    template.execute(sql, new PreparedStatementCallback<Object>() {
+                        @Override
+                        public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                            int rc = 0;
+//                                        InputStreamEx inex = new InputStreamEx(in);
+                            ps.setBinaryStream(1, fin);
+                            ps.setInt(2, Integer.parseInt(id.toString()));
+                            rc = ps.executeUpdate();
+                            IOUtils.closeQuietly(fin);
+                            // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
+                            return rc;
+                        }
+                    });
+                } else {
+                    String sql = "INSERT INTO BLOBS (content) VALUES(?)";
+                    template.execute(
+                            new PreparedStatementCreator() {
+                                @Override
+                                public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                                    return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                                }
+                            }, new PreparedStatementCallback<Integer>() {
+                                @Override
+                                public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                                    ResultSet set = null;
+                                    int id = 0;
+                                    int rc = 0;
+                                    try {
+//                                        InputStreamEx inex = new InputStreamEx(fin);
+                                        ps.setBinaryStream(1, fin);
+                                        rc = ps.executeUpdate();
+                                        set = ps.getGeneratedKeys();
+                                        set.next();
+                                        id = set.getInt(1);
+                                        //                                    BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, id);
+                                        //                                 BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
+                                        IOUtils.closeQuietly(fin);
+                                        resource.setId(id);
+//                                        System.out.println("Read: " + inex.getLength());
+                                        return id;
+                                    } catch (SQLException sqle) {
+                                        sqle.printStackTrace(System.out);
+                                    } catch (Exception e) {
+                                        e.printStackTrace(System.out);
+                                    } catch (Throwable t) {
+                                        t.printStackTrace(System.out);
+                                    } finally {
+                                        if (set != null) {
+                                            try {
+                                                set.close();
+                                            } catch (SQLException e) {
+                                                e.printStackTrace(System.out);
+                                            }
+                                        }
+                                    }
+                                    return rc;
+                                }
+
+                            });
+                }
+            }
+        });
     }
 
     @Override
