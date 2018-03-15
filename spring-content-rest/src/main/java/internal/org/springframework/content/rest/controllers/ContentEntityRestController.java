@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,6 +14,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
@@ -51,8 +51,9 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
 
-	@Autowired 
-	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
+	@Autowired
+	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService,
+			StoreByteRangeHttpRequestHandler handler) {
 		try {
 			this.repositories = context.getBean(Repositories.class);
 		} catch (BeansException be) {
@@ -63,24 +64,22 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	}
 
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers={"accept!=application/hal+json", "range"})
-	public void getContent(HttpServletRequest request, 
-						   HttpServletResponse response,
-						   @PathVariable String store, 
-						   @PathVariable String id) 
-			throws HttpRequestMethodNotSupportedException {
-		
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers = { "accept!=application/hal+json",
+			"range" })
+	public void getContent(HttpServletRequest request, HttpServletResponse response, @PathVariable String store,
+			@PathVariable String id) throws HttpRequestMethodNotSupportedException {
+
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
-		
+
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
 
 		Serializable cid = (Serializable) BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class);
-		
-		Resource r = ((Store)info.getImpementation()).getResource(cid);
+
+		Resource r = ((Store) info.getImpementation()).getResource(cid);
 		if (r == null) {
 			throw new ResourceNotFoundException();
 		}
@@ -88,9 +87,10 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		request.setAttribute("SPRING_CONTENT_RESOURCE", r);
 
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
-			request.setAttribute("SPRING_CONTENT_CONTENTTYPE", BeanUtils.getFieldWithAnnotation(domainObj, MimeType.class).toString());
+			request.setAttribute("SPRING_CONTENT_CONTENTTYPE",
+					BeanUtils.getFieldWithAnnotation(domainObj, MimeType.class).toString());
 		}
-		
+
 		try {
 			handler.handleRequest(request, response);
 		} catch (ServletException e) {
@@ -103,69 +103,67 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<InputStreamResource> getContent(@PathVariable String store, 
-														  @PathVariable String id, 
-														  @RequestHeader(value="Accept", required=false) String mimeType) 
+	public ResponseEntity<InputStreamResource> getContent(@PathVariable String store, @PathVariable String id,
+			@RequestHeader(value = "Accept", required = false) String mimeType)
 			throws HttpRequestMethodNotSupportedException {
-		
+
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		
+
 		Object contentId = BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class);
 		if (contentId == null) {
 			throw new ResourceNotFoundException();
 		}
-		
+
 		List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(mimeType));
 		if (mimeTypes.size() == 0) {
 			mimeTypes.add(MediaType.ALL);
 		}
-		
+
 		final HttpHeaders headers = new HttpHeaders();
-		ContentStore<Object,Serializable> storeImpl = info.getImpementation();
+		ContentStore<Object, Serializable> storeImpl = info.getImpementation();
 		InputStream content = ContentStoreUtils.getContent(storeImpl, domainObj, mimeTypes, headers);
-		if (content != null) {		
+		if (content != null) {
 			InputStreamResource inputStreamResource = new InputStreamResource(content);
 			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<InputStreamResource>(null, headers, HttpStatus.NOT_ACCEPTABLE);
 		}
 	}
-	
+
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers={"content-type!=multipart/form-data", "accept!=application/hal+json"})
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = { "content-type!=multipart/form-data",
+			"accept!=application/hal+json" })
 	@ResponseBody
-	public void putContent(HttpServletRequest request,
-						   HttpServletResponse response,
-        				   @PathVariable String store, 
-						   @PathVariable String id) 
+	public void putContent(HttpServletRequest request, HttpServletResponse response, @PathVariable String store,
+			@PathVariable String id)
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
-		
+
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		
+
 		boolean isNew = true;
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
 			isNew = (BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class) == null);
 		}
-		
+
 		info.getImpementation().setContent(domainObj, request.getInputStream());
-		
+
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, request.getHeader("Content-Type"));
 		}
-		
+
 		save(repositories, domainObj);
-		
+
 		if (isNew) {
 			response.setStatus(HttpStatus.CREATED.value());
 		} else {
@@ -176,37 +174,31 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void putMultipartContent(HttpServletResponse response,
-									@PathVariable String store, 
-									@PathVariable String id, 
-									@RequestParam("file") MultipartFile multiPart)
-											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
+	public void putMultipartContent(HttpServletResponse response, @PathVariable String store, @PathVariable String id,
+			@RequestParam("file") MultipartFile multiPart)
+			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		handleMultipart(response, store, id, multiPart);
 	}
 
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(HttpServletResponse response,
-									 @PathVariable String store, 
-									 @PathVariable String id, 
-									 @RequestParam("file") MultipartFile multiPart)
-											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
+	public void postMultipartContent(HttpServletResponse response, @PathVariable String store, @PathVariable String id,
+			@RequestParam("file") MultipartFile multiPart)
+			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		handleMultipart(response, store, id, multiPart);
 	}
-	
+
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers="accept!=application/hal+json")
-	public void deleteContent(HttpServletResponse response,
-							  @PathVariable String store, 
-							  @PathVariable String id)
+	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
+	public void deleteContent(HttpServletResponse response, @PathVariable String store, @PathVariable String id)
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
 
 		try (InputStream content = info.getImpementation().getContent(domainObj)) {
@@ -216,13 +208,13 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 
 		info.getImpementation().unsetContent(domainObj);
-		
+
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
 		}
-		
+
 		save(repositories, domainObj);
-		
+
 		response.setStatus(HttpStatus.NO_CONTENT.value());
 	}
 
@@ -230,26 +222,33 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
-		
+
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		
+
+		//To capture the original file name
+		String originalFileName = multiPart.getOriginalFilename();
+
 		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
-		
+
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
-		
+
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, OriginalFileName.class)) {
+			BeanUtils.setFieldWithAnnotation(domainObj, OriginalFileName.class, originalFileName);
+		}
+
 		boolean isNew = true;
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
 			isNew = (BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class) == null);
 		}
-		
+
 		save(repositories, domainObj);
-		
+
 		if (isNew) {
 			response.setStatus(HttpStatus.CREATED.value());
 		} else {
