@@ -27,7 +27,7 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 	protected Object getContentStoreImpl() {
 		Assert.notNull(template, "template cannot be null");
 		Assert.notNull(blobResourceLoader, "blobResourceLoader cannot be null");
-		return new DefaultJpaStoreImpl(template, blobResourceLoader);
+		return new DefaultJpaStoreImpl(blobResourceLoader, 30);
 	}
 
 }

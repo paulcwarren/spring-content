@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -66,7 +67,10 @@ public abstract class AbstractBlobResource implements BlobResource {
             new Runnable(){
                 public void run(){
                     try {
-                        update(txn, is, id, resource);
+                        Object rc = update(txn, is, id, resource);
+                        if (rc != null || rc.equals(-1)) {
+                            resource.setId(rc);
+                        }
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
@@ -96,15 +100,16 @@ public abstract class AbstractBlobResource implements BlobResource {
 //    }
     }
 
-    private void update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {
-        txn.execute(new TransactionCallbackWithoutResult() {
+    private Object update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {
+        return txn.execute(new TransactionCallback<Integer>() {
             @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+            public Integer doInTransaction(TransactionStatus transactionStatus) {
+                Integer rc = null;
                 if (exists()) {
                     String sql = "UPDATE BLOBS SET content=? WHERE id=?";
-                    template.execute(sql, new PreparedStatementCallback<Object>() {
+                    rc = template.execute(sql, new PreparedStatementCallback<Integer>() {
                         @Override
-                        public Object doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                        public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
                             int rc = 0;
 //                                        InputStreamEx inex = new InputStreamEx(in);
                             ps.setBinaryStream(1, fin);
@@ -112,56 +117,51 @@ public abstract class AbstractBlobResource implements BlobResource {
                             rc = ps.executeUpdate();
                             IOUtils.closeQuietly(fin);
                             // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                            return rc;
+                            return null;
                         }
                     });
                 } else {
                     String sql = "INSERT INTO BLOBS (content) VALUES(?)";
-                    template.execute(
-                            new PreparedStatementCreator() {
-                                @Override
-                                public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                                    return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                                }
-                            }, new PreparedStatementCallback<Integer>() {
-                                @Override
-                                public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                                    ResultSet set = null;
-                                    int id = 0;
-                                    int rc = 0;
-                                    try {
+                    rc = template.execute(
+                        new PreparedStatementCreator() {
+                            @Override
+                            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                                return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                            }
+                        }, new PreparedStatementCallback<Integer>() {
+                            @Override
+                            public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                                ResultSet set = null;
+                                try {
 //                                        InputStreamEx inex = new InputStreamEx(fin);
-                                        ps.setBinaryStream(1, fin);
-                                        rc = ps.executeUpdate();
-                                        set = ps.getGeneratedKeys();
-                                        set.next();
-                                        id = set.getInt(1);
-                                        //                                    BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, id);
-                                        //                                 BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                                        IOUtils.closeQuietly(fin);
-                                        resource.setId(id);
-//                                        System.out.println("Read: " + inex.getLength());
-                                        return id;
-                                    } catch (SQLException sqle) {
-                                        sqle.printStackTrace(System.out);
-                                    } catch (Exception e) {
-                                        e.printStackTrace(System.out);
-                                    } catch (Throwable t) {
-                                        t.printStackTrace(System.out);
-                                    } finally {
-                                        if (set != null) {
-                                            try {
-                                                set.close();
-                                            } catch (SQLException e) {
-                                                e.printStackTrace(System.out);
-                                            }
+                                    ps.setBinaryStream(1, fin);
+                                    ps.executeUpdate();
+                                    IOUtils.closeQuietly(fin);
+                                    set = ps.getGeneratedKeys();
+                                    set.next();
+                                    return set.getInt(1);
+                                } catch (SQLException sqle) {
+                                    sqle.printStackTrace(System.out);
+                                } catch (Exception e) {
+                                    e.printStackTrace(System.out);
+                                } catch (Throwable t) {
+                                    t.printStackTrace(System.out);
+                                } finally {
+                                    if (set != null) {
+                                        try {
+                                            set.close();
+                                        } catch (SQLException e) {
+                                            e.printStackTrace(System.out);
                                         }
                                     }
-                                    return rc;
                                 }
+                                return null;
+                            }
 
-                            });
+                        }
+                    );
                 }
+                return rc;
             }
         });
     }

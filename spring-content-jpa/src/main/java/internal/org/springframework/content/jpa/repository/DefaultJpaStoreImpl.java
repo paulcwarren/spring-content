@@ -13,6 +13,7 @@ import org.springframework.content.commons.repository.ContentStore;
 
 import internal.org.springframework.content.jpa.operations.JpaContentTemplate;
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.core.io.Resource;
@@ -24,9 +25,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
     private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
     private ResourceLoader loader;
+    private int timeout;
 
-    public DefaultJpaStoreImpl(JpaContentTemplate template, ResourceLoader blobResourceLoader) {
+    public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader, int timeout) {
         this.loader = blobResourceLoader;
+        this.timeout = timeout;
     }
 
     @Override
@@ -86,13 +89,27 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
             IOUtils.closeQuietly(os);
         }
 
+        waitForCommit((BlobResource) resource);
+
         BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, ((BlobResource)resource).getId());
         BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, contentLen);
 
         return;
 	}
 
-	@Override
+    private void waitForCommit(BlobResource resource) {
+        int i = timeout;
+        for (; i > 0 && resource.getId().equals("-1"); i--) {
+            try {
+                Thread.currentThread().sleep(1000);
+            } catch (InterruptedException e) {}
+        }
+        if (i == 0 && resource.getId().equals("-1")) {
+            throw new StoreAccessException(String.format("timeout (%s seconds) waiting for commit", timeout));
+        }
+    }
+
+    @Override
 	public void unsetContent(S metadata) {
         Object id = BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
         if (id == null) {
