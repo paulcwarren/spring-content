@@ -7,6 +7,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.core.io.Resource;
@@ -22,8 +23,7 @@ import java.util.Random;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyInt;
@@ -36,32 +36,22 @@ public class DefaultJpaStoreImplTest {
 
     private DefaultJpaStoreImpl<Object,Integer> store;
 
-    // actors
+    private BlobResourceLoader blobResourceLoader;
+    private int commitTimeout = 30;
+
     private TestEntity entity;
     private InputStream stream;
-
-    // mocks
-    private DataSource datasource;
-    private Connection connection;
-    private DatabaseMetaData metadata;
-    private ResultSet resultSet;
-    private PreparedStatement statement;
     private InputStream inputStream;
     private OutputStream outputStream;
-
-    private Blob blob;
-
-//    private BlobResourceFactory blobResourceFactory;
-    private BlobResourceLoader blobResourceLoader;
     private Resource resource;
-
     private Integer id;
+    private Exception e;
 
     {
         Describe("DefaultJpaStoreImpl", () -> {
             JustBeforeEach(() -> {
 //                store = new DefaultJpaStoreImpl(blobResourceFactory);
-                    store = new DefaultJpaStoreImpl(null, blobResourceLoader);
+                    store = new DefaultJpaStoreImpl(blobResourceLoader, commitTimeout);
             });
 
             Describe("Store", () -> {
@@ -143,24 +133,28 @@ public class DefaultJpaStoreImplTest {
                 });
             });
             Context("#setContent", () -> {
-                BeforeEach(() -> {
-                    blobResourceLoader = mock(BlobResourceLoader.class);
-
-                    entity = new TestEntity();
-                    byte[] content = new byte[5000];
-                    new Random().nextBytes(content);
-                    inputStream = new ByteArrayInputStream(content);
-
-                    resource = mock(BlobResource.class);
-                    when(blobResourceLoader.getResource("-1")).thenReturn((BlobResource)resource);
-                    outputStream = mock(OutputStream.class);
-                    when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
-                    when(((BlobResource) resource).getId()).thenReturn(12345);
-                });
                 JustBeforeEach(() -> {
-                    store.setContent(entity, inputStream);
+                    try {
+                        store.setContent(entity, inputStream);
+                    } catch (Exception e) {
+                        this.e = e;
+                    }
                 });
                 Context("when the row does not exist", () -> {
+                    BeforeEach(() -> {
+                        blobResourceLoader = mock(BlobResourceLoader.class);
+
+                        entity = new TestEntity();
+                        byte[] content = new byte[5000];
+                        new Random().nextBytes(content);
+                        inputStream = new ByteArrayInputStream(content);
+
+                        resource = mock(BlobResource.class);
+                        when(blobResourceLoader.getResource("-1")).thenReturn((BlobResource)resource);
+                        outputStream = mock(OutputStream.class);
+                        when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
+                        when(((BlobResource) resource).getId()).thenReturn(12345);
+                    });
                     It("should write the contents of the inputstream to the resource's outputstream", () -> {
                         verify(outputStream, atLeastOnce()).write(anyObject(), anyInt(), anyInt());
                     });
@@ -169,6 +163,28 @@ public class DefaultJpaStoreImplTest {
                     });
                     It("should update the @ContentLength field", () -> {
                         assertThat(entity.getContentLen(), is(5000L));
+                    });
+                });
+                Context("when the commit times out", () -> {
+                    BeforeEach(() -> {
+                        commitTimeout = 1;
+
+                        blobResourceLoader = mock(BlobResourceLoader.class);
+
+                        entity = new TestEntity();
+                        byte[] content = new byte[5000];
+                        new Random().nextBytes(content);
+                        inputStream = new ByteArrayInputStream(content);
+
+                        resource = mock(BlobResource.class);
+                        when(blobResourceLoader.getResource("-1")).thenReturn(resource);
+                        outputStream = mock(OutputStream.class);
+                        when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
+                        when(((BlobResource) resource).getId()).thenReturn("-1");
+                    });
+                    It("should throw an exception", () -> {
+                        assertThat(e, instanceOf(StoreAccessException.class));
+                        assertThat(e.getMessage(), containsString("timeout"));
                     });
                 });
             });
