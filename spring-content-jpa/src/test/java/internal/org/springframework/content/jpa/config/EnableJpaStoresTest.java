@@ -12,7 +12,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -28,6 +32,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
+import org.springframework.content.jpa.config.JpaStoreProperties;
+import org.springframework.content.jpa.config.JpaStoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +57,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class EnableJpaStoresTest {
 
 	private AnnotationConfigApplicationContext context;
+
+	private static JpaStoreConfigurer configurer;
+
 	{
 		Describe("EnableJpaStores", () -> {
 			Context("given a context and a configuartion with a jpa content repository bean", () -> {
@@ -93,6 +102,21 @@ public class EnableJpaStoresTest {
 					}
 				});
 			});
+			Context("given a context with a JpaStoreConfigurer", () -> {
+				BeforeEach(() -> {
+					configurer = mock(JpaStoreConfigurer.class);
+
+					context = new AnnotationConfigApplicationContext();
+					context.register(ConfigWithConfigurer.class);
+					context.refresh();
+				});
+				It("should call that configurer to help customize the store", () -> {
+					verify(configurer).configure(argThat(is(instanceOf(JpaStoreProperties.class))));
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+			});
 		});
 		
 		Describe("EnableJpaContentRepositores", () -> {
@@ -128,7 +152,7 @@ public class EnableJpaStoresTest {
 	}
 
 	@Configuration
-	@EnableJpaStores(basePackages="contains.no.jpa.repositores")
+	@EnableJpaStores(basePackages="contains.no.jpa.repositories")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 	}
@@ -137,6 +161,17 @@ public class EnableJpaStoresTest {
 	@EnableJpaStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
+	}
+
+	@Configuration
+	@EnableJpaStores
+	@Import(InfrastructureConfig.class)
+	public static class ConfigWithConfigurer {
+
+		@Bean
+		JpaStoreConfigurer configurer() {
+			return configurer;
+		}
 	}
 
 	@Configuration

@@ -68,7 +68,7 @@ public abstract class AbstractBlobResource implements BlobResource {
                 public void run(){
                     try {
                         Object rc = update(txn, is, id, resource);
-                        if (rc != null || rc.equals(-1)) {
+                        if (rc != null && !rc.equals(-1)) {
                             resource.setId(rc);
                         }
                     } catch (SQLException e) {
