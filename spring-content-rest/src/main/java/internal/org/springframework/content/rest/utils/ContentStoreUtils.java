@@ -50,6 +50,12 @@ public final class ContentStoreUtils {
 		
 		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
 		
+		//Modified to show download
+		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, org.springframework.content.commons.annotations.OriginalFileName.class);
+		if (originalFileName != null) {
+			headers.setContentDispositionFormData("attachment", (String)originalFileName);
+		}
+		
 		for (int i=0; i < arrMimeTypes.length && content == null; i++) {
 			MediaType mimeType = arrMimeTypes[i];
 			if (mimeType.includes(targetMimeType)) {
