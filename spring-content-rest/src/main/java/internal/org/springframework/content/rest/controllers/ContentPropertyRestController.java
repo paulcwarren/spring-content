@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -169,7 +171,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 						   @PathVariable String contentId) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), null, request.getInputStream());
 	}	
 	
 	@StoreType("contentstore")
@@ -182,7 +184,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 							@PathVariable String contentId) 
 			throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), request.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, request.getHeader("Content-Type"), null, request.getInputStream());
 	}	
 
 	@StoreType("contentstore")
@@ -195,7 +197,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 									 @RequestParam("file") MultipartFile multiPart)
 										throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 
-		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, multiPart.getContentType(), multiPart.getInputStream());
+		this.replaceContentInternal(repositories, storeService, repository, id, contentProperty, contentId, multiPart.getContentType(), multiPart.getOriginalFilename(), multiPart.getInputStream());
 	}
 
 	@StoreType("contentstore")
@@ -229,11 +231,11 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	private void replaceContentInternal(Repositories repositories,
 										ContentStoreService stores,
 										String repository,
-										String id, 
-										String contentProperty, 
-										String contentId, 
+										String id,
+										String contentProperty,
+										String contentId,
 										String mimeType,
-										InputStream stream) 
+										String originalFileName, InputStream stream)
 			throws HttpRequestMethodNotSupportedException {
 
 		Object domainObj = findOne(repositories, repository, id);
@@ -245,7 +247,13 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(contentPropertyValue, MimeType.class, mimeType);
 		}
-		
+
+		if (originalFileName != null && StringUtils.hasText(originalFileName)) {
+			if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, OriginalFileName.class)) {
+				BeanUtils.setFieldWithAnnotation(contentPropertyValue, OriginalFileName.class, originalFileName);
+			}
+		}
+
 		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 		
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
