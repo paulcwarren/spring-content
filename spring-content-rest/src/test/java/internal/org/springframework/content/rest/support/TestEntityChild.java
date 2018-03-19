@@ -14,7 +14,7 @@ public class TestEntityChild {
 	@ContentId public UUID contentId;
 	@ContentLength public Long contentLen;
 	@MimeType public String mimeType;
-	@OriginalFileName public String fileName;
+	@OriginalFileName public String fileName = "";
 	public UUID getContentId() {
 		return contentId;
 	}
