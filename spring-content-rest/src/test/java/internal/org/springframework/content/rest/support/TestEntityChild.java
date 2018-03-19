@@ -7,12 +7,14 @@ import javax.persistence.Embeddable;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 
 @Embeddable
 public class TestEntityChild {
 	@ContentId public UUID contentId;
 	@ContentLength public Long contentLen;
 	@MimeType public String mimeType;
+	@OriginalFileName public String fileName;
 	public UUID getContentId() {
 		return contentId;
 	}
@@ -31,4 +33,6 @@ public class TestEntityChild {
 	public void setMimeType(String mimeType) {
 		this.mimeType = mimeType;
 	}
+	public String getFileName() { return fileName; }
+	public void setFileName(String fileName) { this.fileName = fileName; }
 }

@@ -16,6 +16,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
@@ -199,7 +200,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 												  @PathVariable String contentProperty) 
 									throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), request.getHeader("Content-Type"), request.getInputStream());
+		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), request.getHeader("Content-Type"), null, request.getInputStream());
 		if (newContent != null) {
 			Resource<?> contentResource = toResource(request, newContent);
 			return new ResponseEntity<Resource<?>>(contentResource, HttpStatus.CREATED);
@@ -217,7 +218,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 												   @PathVariable String contentProperty) 
 									throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 		
-		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), request.getHeader("Content-Type"), request.getInputStream());
+		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), request.getHeader("Content-Type"), null, request.getInputStream());
 		if (newContent != null) {
 			Resource<?> contentResource = toResource(request, newContent);
 			return new ResponseEntity<Resource<?>>(contentResource, HttpStatus.CREATED);
@@ -236,7 +237,7 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 															@RequestParam("file") MultipartFile multiPart)
 											 throws IOException, HttpRequestMethodNotSupportedException, InstantiationException, IllegalAccessException {
 
-		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), multiPart.getContentType(), multiPart.getInputStream());
+		Object newContent = this.saveContentInternal(repositories, storeService, repository, id, contentProperty, request.getRequestURI(), multiPart.getContentType(), multiPart.getOriginalFilename(), multiPart.getInputStream());
 		if (newContent != null) {
 			Resource<?> contentResource = toResource(request, newContent);
 			return new ResponseEntity<Resource<?>>(contentResource, HttpStatus.CREATED);
@@ -305,11 +306,11 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 	private Object saveContentInternal(Repositories repositories,
 									   ContentStoreService stores,
 									   String repository,
-									   String id, 
-									   String contentProperty,  
+									   String id,
+									   String contentProperty,
 									   String requestUri,
 									   String mimeType,
-									   InputStream stream) 
+									   String originalFileName, InputStream stream)
 			throws HttpRequestMethodNotSupportedException {
 		
 		Object domainObj = findOne(repositories, repository, id);
@@ -377,7 +378,13 @@ public class ContentPropertyCollectionRestController extends AbstractContentProp
 		if (BeanUtils.hasFieldWithAnnotation(propVal, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(propVal, MimeType.class, mimeType);
 		}
-		
+
+		if (originalFileName != null && StringUtils.hasText(originalFileName)) {
+			if (BeanUtils.hasFieldWithAnnotation(propVal, OriginalFileName.class)) {
+				BeanUtils.setFieldWithAnnotation(propVal, OriginalFileName.class, originalFileName);
+			}
+		}
+
 		info.getImpementation().setContent(propVal, stream);
 		
 		save(repositories, domainObj);
