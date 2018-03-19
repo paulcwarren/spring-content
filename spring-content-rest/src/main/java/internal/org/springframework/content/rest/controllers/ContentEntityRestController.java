@@ -28,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -237,8 +238,6 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
 
-		//To capture the original file name
-		String originalFileName = multiPart.getOriginalFilename();
 
 		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
 
@@ -246,8 +245,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
 
-		if (BeanUtils.hasFieldWithAnnotation(domainObj, OriginalFileName.class)) {
-			BeanUtils.setFieldWithAnnotation(domainObj, OriginalFileName.class, originalFileName);
+		String originalFileName = multiPart.getOriginalFilename();
+		if (originalFileName != null && StringUtils.hasText(originalFileName)) {
+			if (BeanUtils.hasFieldWithAnnotation(domainObj, OriginalFileName.class)) {
+				BeanUtils.setFieldWithAnnotation(domainObj, OriginalFileName.class, originalFileName);
+			}
 		}
 
 		boolean isNew = true;

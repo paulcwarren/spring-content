@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.atteo.evo.inflector.English;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -51,7 +52,7 @@ public final class ContentStoreUtils {
 		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
 		
 		//Modified to show download
-		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, org.springframework.content.commons.annotations.OriginalFileName.class);
+		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
 		if (originalFileName != null) {
 			headers.setContentDispositionFormData("attachment", (String)originalFileName);
 		}

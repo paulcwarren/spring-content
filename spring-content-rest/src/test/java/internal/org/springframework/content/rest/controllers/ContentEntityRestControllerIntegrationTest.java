@@ -142,6 +142,7 @@ public class ContentEntityRestControllerIntegrationTest {
 
 						TestEntity fetched = repository.findOne(testEntity.id);
 						assertThat(fetched.contentId, is(not(nullValue())));
+						assertThat(fetched.originalFileName, is("test-file.txt"));
 						assertThat(fetched.mimeType, is("text/plain"));
 						assertThat(fetched.len, is(new Long(content.length())));
 						assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is(content));
@@ -241,11 +242,12 @@ public class ContentEntityRestControllerIntegrationTest {
 							String content = "This is Modified Spring Content!";
 							
 							mvc.perform(fileUpload("/testEntitiesContent/" + testEntity.id.toString())
-									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
+									.file(new MockMultipartFile("file", "test-file-modified.txt", "text/plain", content.getBytes())))
 							.andExpect(status().isOk());
 
 							TestEntity fetched = repository.findOne(testEntity.id);
 							assertThat(fetched.contentId, is(not(nullValue())));
+							assertThat(fetched.originalFileName, is("test-file-modified.txt"));
 							assertThat(fetched.mimeType, is("text/plain"));
 							assertThat(fetched.len, is(new Long(content.length())));
 							assertThat(IOUtils.toString(contentRepository.getContent(fetched)), is(content));
