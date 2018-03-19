@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,6 +14,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
@@ -28,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -230,26 +231,34 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
-		
+
 		if (info == null) {
 			throw new IllegalArgumentException(String.format("Store for path %s not found", store));
 		}
-		
+
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		
+
+
 		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
-		
+
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, multiPart.getContentType());
 		}
-		
+
+		String originalFileName = multiPart.getOriginalFilename();
+		if (originalFileName != null && StringUtils.hasText(originalFileName)) {
+			if (BeanUtils.hasFieldWithAnnotation(domainObj, OriginalFileName.class)) {
+				BeanUtils.setFieldWithAnnotation(domainObj, OriginalFileName.class, originalFileName);
+			}
+		}
+
 		boolean isNew = true;
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
 			isNew = (BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class) == null);
 		}
-		
+
 		save(repositories, domainObj);
-		
+
 		if (isNew) {
 			response.setStatus(HttpStatus.CREATED.value());
 		} else {

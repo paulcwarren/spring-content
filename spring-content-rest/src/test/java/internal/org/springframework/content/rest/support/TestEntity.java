@@ -6,10 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.springframework.content.commons.annotations.Content;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.*;
 
 @Entity
 @Content
@@ -17,6 +14,7 @@ public class TestEntity {
 	public @Id @GeneratedValue Long id;
 	public String name;
 	public @ContentId UUID contentId;
+	public @OriginalFileName String originalFileName;
 	public @ContentLength Long len;
 	public @MimeType String mimeType;
 	public Long getId() {
@@ -36,6 +34,12 @@ public class TestEntity {
 	}
 	public void setContentId(UUID contentId) {
 		this.contentId = contentId;
+	}
+	public String getOriginalFileName() {
+		return originalFileName;
+	}
+	public void setOriginalFileName(String name) {
+		this.originalFileName = name;
 	}
 	public Long getLen() {
 		return len;
