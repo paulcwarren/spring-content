@@ -34,8 +34,8 @@ public class JpaStoreConfiguration {
     }
 
     @Bean
-    public JpaStoreProperties jpaStoreProperties() {
-        JpaStoreProperties storeProperties = new JpaStorePropertiesImpl();
+    public JpaStorePropertiesImpl jpaStoreProperties() {
+        JpaStorePropertiesImpl storeProperties = new JpaStorePropertiesImpl();
         if (configurers != null) {
             for (JpaStoreConfigurer configurer : configurers) {
                 configurer.configure(storeProperties);
