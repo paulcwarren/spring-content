@@ -1,13 +1,10 @@
 package org.springframework.content.jpa.io;
 
-import internal.org.springframework.content.jpa.utils.InputStreamEx;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
-import org.springframework.content.commons.io.ObservableOutputStream;
-import org.springframework.content.commons.io.OutputStreamObserver;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,7 +14,6 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.*;
@@ -40,11 +36,15 @@ public abstract class AbstractBlobResource implements BlobResource {
     }
 
     public Object getId() {
-        return id;
+        synchronized (id) {
+            return id;
+        }
     }
 
     protected void setId(Object id) {
-        this.id = id;
+        synchronized (id) {
+            this.id = id;
+        }
     }
 
     @Override
@@ -58,14 +58,11 @@ public abstract class AbstractBlobResource implements BlobResource {
         final AbstractBlobResource resource = this;
         TransactionTemplate txn = new TransactionTemplate(txnMgr);
 
-//        PipedOutputStream os = new PipedOutputStream();
-//        PipedInputStream in = new PipedInputStream(os);
         PipedInputStream is = new PipedInputStream();
         PipedOutputStream os = new PipedOutputStream(is);
 
         Thread t = new Thread(
-            new Runnable(){
-                public void run(){
+                () -> {
                     try {
                         Object rc = update(txn, is, id, resource);
                         if (rc != null && !rc.equals(-1)) {
@@ -75,7 +72,6 @@ public abstract class AbstractBlobResource implements BlobResource {
                         e.printStackTrace();
                     }
                 }
-            }
         );
         t.start();
 
@@ -110,14 +106,14 @@ public abstract class AbstractBlobResource implements BlobResource {
                     rc = template.execute(sql, new PreparedStatementCallback<Integer>() {
                         @Override
                         public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
-                            int rc = 0;
-//                                        InputStreamEx inex = new InputStreamEx(in);
+                            // mark the resource as being updated
+                            resource.setId(-1);
+
                             ps.setBinaryStream(1, fin);
                             ps.setInt(2, Integer.parseInt(id.toString()));
-                            rc = ps.executeUpdate();
+                            ps.executeUpdate();
                             IOUtils.closeQuietly(fin);
-                            // BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, in.getLength());
-                            return null;
+                            return Integer.parseInt(id.toString());
                         }
                     });
                 } else {
@@ -133,7 +129,6 @@ public abstract class AbstractBlobResource implements BlobResource {
                             public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
                                 ResultSet set = null;
                                 try {
-//                                        InputStreamEx inex = new InputStreamEx(fin);
                                     ps.setBinaryStream(1, fin);
                                     ps.executeUpdate();
                                     IOUtils.closeQuietly(fin);
@@ -141,17 +136,13 @@ public abstract class AbstractBlobResource implements BlobResource {
                                     set.next();
                                     return set.getInt(1);
                                 } catch (SQLException sqle) {
-                                    sqle.printStackTrace(System.out);
-                                } catch (Exception e) {
-                                    e.printStackTrace(System.out);
-                                } catch (Throwable t) {
-                                    t.printStackTrace(System.out);
+                                    logger.error("inserting content", sqle);
                                 } finally {
                                     if (set != null) {
                                         try {
                                             set.close();
                                         } catch (SQLException e) {
-                                            e.printStackTrace(System.out);
+                                            logger.error("closing insert content set", e);
                                         }
                                     }
                                 }
