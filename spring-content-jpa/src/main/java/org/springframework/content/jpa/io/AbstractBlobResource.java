@@ -63,37 +63,21 @@ public abstract class AbstractBlobResource implements BlobResource {
 
         Thread t = new Thread(
                 () -> {
-                    try {
-                        Object rc = update(txn, is, id, resource);
-                        if (rc != null && !rc.equals(-1)) {
-                            resource.setId(rc);
+                    synchronized (resource) {
+                        try {
+                            Object rc = update(txn, is, id, resource);
+                            if (rc != null && !rc.equals(-1)) {
+                                resource.setId(rc);
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
                     }
                 }
         );
         t.start();
 
-//        File tempFile = File.createTempFile("_sc_jpa_generic_", null);
-//        FileOutputStream fos = new FileOutputStream(tempFile);
-//        InputStream fin = new FileInputStream(tempFile);
-//
-//        ObservableOutputStream os = new ObservableOutputStream(fos);
-//        os.addObservers(new OutputStreamObserver() {
-//            @Override
-//            public void closed() {
-//                try {
-//                    update(txn, fin, id, resource);
-//                } catch (SQLException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        },
-//        new FileRemover(tempFile));
-
         return os;
-//    }
     }
 
     private Object update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {

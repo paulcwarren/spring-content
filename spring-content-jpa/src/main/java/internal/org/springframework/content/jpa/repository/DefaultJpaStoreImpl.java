@@ -98,14 +98,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 	}
 
     private void waitForCommit(BlobResource resource) {
-        int i = timeout;
-        for (; i > 0 && resource.getId().toString().equals("-1"); i--) {
-            try {
-                Thread.currentThread().sleep(1000);
-            } catch (InterruptedException e) {}
-        }
-        if (i == 0 && resource.getId().equals("-1")) {
-            throw new StoreAccessException(String.format("timeout (%s seconds) waiting for commit", timeout));
+        synchronized (resource) {
+            return;
         }
     }
 
