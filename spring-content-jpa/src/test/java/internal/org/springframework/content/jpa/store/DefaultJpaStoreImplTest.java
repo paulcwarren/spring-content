@@ -50,7 +50,6 @@ public class DefaultJpaStoreImplTest {
     {
         Describe("DefaultJpaStoreImpl", () -> {
             JustBeforeEach(() -> {
-//                store = new DefaultJpaStoreImpl(blobResourceFactory);
                     store = new DefaultJpaStoreImpl(blobResourceLoader, commitTimeout);
             });
 
@@ -163,28 +162,6 @@ public class DefaultJpaStoreImplTest {
                     });
                     It("should update the @ContentLength field", () -> {
                         assertThat(entity.getContentLen(), is(5000L));
-                    });
-                });
-                Context("when the commit times out", () -> {
-                    BeforeEach(() -> {
-                        commitTimeout = 1;
-
-                        blobResourceLoader = mock(BlobResourceLoader.class);
-
-                        entity = new TestEntity();
-                        byte[] content = new byte[5000];
-                        new Random().nextBytes(content);
-                        inputStream = new ByteArrayInputStream(content);
-
-                        resource = mock(BlobResource.class);
-                        when(blobResourceLoader.getResource("-1")).thenReturn(resource);
-                        outputStream = mock(OutputStream.class);
-                        when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
-                        when(((BlobResource) resource).getId()).thenReturn("-1");
-                    });
-                    It("should throw an exception", () -> {
-                        assertThat(e, instanceOf(StoreAccessException.class));
-                        assertThat(e.getMessage(), containsString("timeout"));
                     });
                 });
             });
