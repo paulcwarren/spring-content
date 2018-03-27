@@ -3,7 +3,6 @@ package internal.org.springframework.content.jpa.config;
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
 import internal.org.springframework.content.jpa.io.GenericBlobResourceLoader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.jpa.config.JpaStoreProperties;
 import org.springframework.content.jpa.config.JpaStoreConfigurer;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.context.annotation.Bean;

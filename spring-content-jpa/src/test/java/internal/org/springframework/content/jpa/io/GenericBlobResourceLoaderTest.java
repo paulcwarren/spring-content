@@ -7,7 +7,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-
 import java.sql.Connection;
 import java.sql.Statement;
 
@@ -15,16 +14,13 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
-public class PostgressBlobResourceLoaderTest {
+public class GenericBlobResourceLoaderTest {
 
-    private PostgresBlobResourceLoader loader;
+    private GenericBlobResourceLoader loader;
 
     private JdbcTemplate template;
     private PlatformTransactionManager txnMgr;
@@ -36,16 +32,16 @@ public class PostgressBlobResourceLoaderTest {
     private Object result;
 
     {
-        Describe("PostgresBlobResourceLoader", () -> {
+        Describe("GenericBlobResourceLoader", () -> {
             JustBeforeEach(() -> {
-                loader = new PostgresBlobResourceLoader(template, txnMgr);
+                loader = new GenericBlobResourceLoader(template, txnMgr);
             });
             Context("#getDatabaseName", () -> {
                 JustBeforeEach(() -> {
                     result = loader.getDatabaseName();
                 });
-                It("should return 'PostgreSQL'", () -> {
-                    assertThat(result.toString(), is("PostgreSQL"));
+                It("should return 'GENERIC'", () -> {
+                    assertThat(result.toString(), is("GENERIC"));
                 });
             });
             Context("#getResource", () -> {
@@ -62,8 +58,8 @@ public class PostgressBlobResourceLoaderTest {
                 JustBeforeEach(() -> {
                     result = loader.getResource("some-id");
                 });
-                It("should return a PostgressBlobResource", () -> {
-                    assertThat(result, instanceOf(PostgresBlobResource.class));
+                It("should return a GenericBlobResource", () -> {
+                    assertThat(result, instanceOf(GenericBlobResource.class));
                 });
             });
             Context("#getClassLoader", () -> {

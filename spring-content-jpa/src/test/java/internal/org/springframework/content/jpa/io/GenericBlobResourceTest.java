@@ -3,8 +3,6 @@ package internal.org.springframework.content.jpa.io;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
-import org.springframework.content.commons.io.FileRemover;
-import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.jpa.io.AbstractBlobResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -28,9 +26,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
-public class PostgresBlobResourceTest {
+public class GenericBlobResourceTest {
 
-    private PostgresBlobResource resource;
+    private GenericBlobResource resource;
 
     private String id;
     private JdbcTemplate template;
@@ -48,7 +46,7 @@ public class PostgresBlobResourceTest {
 
 
     {
-        Describe("PostgresBlobResource", () -> {
+        Describe("GenericBlobResource", () -> {
             BeforeEach(() -> {
                 ds = mock(DataSource.class);
                 template = new JdbcTemplate(ds);
@@ -65,7 +63,7 @@ public class PostgresBlobResourceTest {
                     when(statement.executeQuery(anyObject())).thenReturn(rs);
                 });
                 JustBeforeEach(() -> {
-                    resource = new PostgresBlobResource(id, template, txnMgr);
+                    resource = new GenericBlobResource(id, template, txnMgr);
                     result = resource.exists();
                 });
                 Context("given the blob exists in the database", () -> {
@@ -106,7 +104,7 @@ public class PostgresBlobResourceTest {
                     when(statement.executeQuery(anyObject())).thenReturn(rs);
                 });
                 JustBeforeEach(() -> {
-                    resource = new PostgresBlobResource(id, template, txnMgr);
+                    resource = new GenericBlobResource(id, template, txnMgr);
                     result = resource.getInputStream();
                 });
                 Context("given the blob exists in the database", () -> {
@@ -149,7 +147,7 @@ public class PostgresBlobResourceTest {
                 });
                 JustBeforeEach(() -> {
                     id = "999";
-                    resource = new PostgresBlobResource(id, template, txnMgr);
+                    resource = new GenericBlobResource(id, template, txnMgr);
                     result = resource.getOutputStream();
                 });
                 Context("given the blob exists in the database", () -> {

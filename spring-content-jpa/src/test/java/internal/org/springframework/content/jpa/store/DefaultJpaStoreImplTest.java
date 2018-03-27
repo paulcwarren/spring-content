@@ -1,29 +1,25 @@
 package internal.org.springframework.content.jpa.store;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.jpa.io.MySQLBlobResource;
+import internal.org.springframework.content.jpa.io.GenericBlobResource;
 import internal.org.springframework.content.jpa.repository.DefaultJpaStoreImpl;
 import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.core.io.Resource;
 
-import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.*;
 import java.util.Random;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyInt;
@@ -98,7 +94,7 @@ public class DefaultJpaStoreImplTest {
             Context("#getContent", () -> {
                 BeforeEach(() -> {
                     blobResourceLoader= mock(BlobResourceLoader.class);
-                    resource = mock(MySQLBlobResource.class);
+                    resource = mock(GenericBlobResource.class);
 
                     entity = new TestEntity(12345);
 
