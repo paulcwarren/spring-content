@@ -3,23 +3,25 @@ package org.springframework.content.jpa.io;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.content.commons.io.FileRemover;
-import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.sql.DataSource;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
+
+import static java.lang.String.format;
 
 public abstract class AbstractBlobResource implements BlobResource {
 
@@ -211,28 +213,21 @@ public abstract class AbstractBlobResource implements BlobResource {
     public InputStream getInputStream() throws IOException {
         final Object id = this.id;
         String sql = "SELECT content FROM BLOBS WHERE id=" + this.id;
-        return this.template.query(sql, new ResultSetExtractor<InputStream>() {
-            @Override
-            public InputStream extractData(ResultSet rs) throws SQLException, DataAccessException {
-                if(!rs.next()) return null;
 
-                try {
-                    File tempFile = File.createTempFile("_sc_jpa_generic_", null);
-                    FileOutputStream fos = new FileOutputStream(tempFile);
-                    InputStream is = rs.getBinaryStream(1);
-                    try {
-                        IOUtils.copyLarge(is, fos);
-                    } finally {
-                        IOUtils.closeQuietly(is);
-                        IOUtils.closeQuietly(fos);
-                    }
-                    return new ObservableInputStream(new FileInputStream(tempFile), new FileRemover(tempFile));
-                } catch (IOException ioe) {
-                    logger.error(String.format("getting input stream for content %s", id), ioe);
-                    return null;
-                }
-            }
-        });
+        DataSource ds = this.template.getDataSource();
+        Connection conn = DataSourceUtils.getConnection(ds);
+        InputStream is = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(sql);
+            if(!rs.next()) return null;
+                    is = rs.getBinaryStream(1);
+        } catch (SQLException e) {
+            logger.error(format("getting content %s", id), e);
+        }
+        return new ClosingInputStream(id, is, rs, stmt, conn, ds);
     }
 
     @Override
@@ -240,5 +235,65 @@ public abstract class AbstractBlobResource implements BlobResource {
         final Object id = this.id;
         String sql = "DELETE FROM BLOBS WHERE id=" + this.id;
         this.template.update(sql);
+    }
+
+    public class ClosingInputStream extends InputStream {
+
+        private Object id;
+        private InputStream actual;
+        private ResultSet rs;
+        private Statement stmt;
+        private Connection conn;
+        private DataSource ds;
+
+        public ClosingInputStream(Object id, InputStream actual, ResultSet rs, Statement stmt, Connection conn, DataSource ds) {
+            this.id = id;
+            this.actual = actual;
+            this.rs = rs;
+            this.stmt = stmt;
+            this.conn = conn;
+            this.ds = ds;
+        }
+
+        @Override
+        public int read() throws IOException {
+            return actual.read();
+        }
+
+        @Override
+        public void close() {
+            try {
+                try {
+                    try {
+                        try {
+                            try {
+                                // This is empty due to the first line in `CompositeCloseable`'s constructor
+                            } finally {
+                                try {
+                                    actual.close();
+                                } catch (IOException e) {
+                                    logger.debug(format("closing content stream %s", id), e);
+                                }
+                            }
+                        } finally {
+                            try {
+                                rs.close();
+                            } catch (SQLException e) {
+                                logger.debug(format("closing content resultset %s", id), e);
+                            }
+                        }
+                    } finally {
+                        try {
+                            stmt.close();
+                        } catch (SQLException e) {
+                            logger.debug(format("closing content statement %s", id), e);
+                        }
+                    }
+                } finally {
+                    DataSourceUtils.releaseConnection(conn, ds);
+                }
+            } finally {
+            }
+        }
     }
 }
