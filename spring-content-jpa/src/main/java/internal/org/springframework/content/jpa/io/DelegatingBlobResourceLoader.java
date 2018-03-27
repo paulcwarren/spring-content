@@ -1,16 +1,14 @@
 package internal.org.springframework.content.jpa.io;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;

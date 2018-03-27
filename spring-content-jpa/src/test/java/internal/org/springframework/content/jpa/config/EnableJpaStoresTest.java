@@ -1,27 +1,7 @@
 package internal.org.springframework.content.jpa.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-
-import java.io.InputStream;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.sql.DataSource;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
 import internal.org.springframework.content.jpa.io.GenericBlobResourceLoader;
 import org.junit.Test;
@@ -32,8 +12,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
-import org.springframework.content.jpa.config.JpaStoreProperties;
 import org.springframework.content.jpa.config.JpaStoreConfigurer;
+import org.springframework.content.jpa.config.JpaStoreProperties;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,8 +29,19 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+import java.io.InputStream;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1) // required
@@ -73,9 +64,6 @@ public class EnableJpaStoresTest {
 				});
 				It("should have a content repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have a jpaContentTemplate bean", () -> {
-					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
 				});
 				It("should have a delegating blob resource loader", () -> {
 					assertThat(context.getBean(DelegatingBlobResourceLoader.class), is(not(nullValue())));
@@ -131,9 +119,6 @@ public class EnableJpaStoresTest {
 				});
 				It("should have a content repository bean", () -> {
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have a jpaContentTemplate bean", () -> {
-					assertThat(context.getBean("jpaContentTemplate"), is(not(nullValue())));
 				});
 				It("should have a delegating blob resource loader", () -> {
 					assertThat(context.getBean(DelegatingBlobResourceLoader.class), is(not(nullValue())));
