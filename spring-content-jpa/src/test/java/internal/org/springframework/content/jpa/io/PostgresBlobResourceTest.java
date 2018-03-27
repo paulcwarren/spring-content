@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
+import org.springframework.content.jpa.io.AbstractBlobResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -114,9 +115,7 @@ public class PostgresBlobResourceTest {
                         when(rs.getBinaryStream(1)).thenReturn(new ByteArrayInputStream("Hello Spring Content PostgreSQL BLOBby world!".getBytes()));
                     });
                     It("should be an ObservableInputStream with a file remover", () -> {
-                        assertThat(result, instanceOf(ObservableInputStream.class));
-                        assertThat(((ObservableInputStream)result).getObservers().size(), is(1));
-                        assertThat(((ObservableInputStream)result).getObservers().get(0), is(instanceOf(FileRemover.class)));
+                        assertThat(result, instanceOf(AbstractBlobResource.ClosingInputStream.class));
                     });
                     It("should return the correct content", () -> {
                         InputStream expected = null;
