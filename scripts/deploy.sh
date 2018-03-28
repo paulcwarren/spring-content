@@ -6,11 +6,9 @@ then
     #1>/dev/null 2>/dev/null
 else
     echo "Not on a tag -> keep snapshot version in pom.xml"
-    export TEST=bar
 fi
 
 echo BUILD_TYPE: $BUILD_TYPE
-echo TEST: $TEST
 
 echo "Importing GPG keys"
 openssl aes-256-cbc -K $encrypted_2d46c2ddc73e_key -iv $encrypted_2d46c2ddc73e_iv -in codesigning.asc.enc -out codesigning.asc -d
