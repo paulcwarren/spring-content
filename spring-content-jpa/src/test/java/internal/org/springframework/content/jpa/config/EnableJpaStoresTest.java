@@ -49,11 +49,9 @@ public class EnableJpaStoresTest {
 
 	private AnnotationConfigApplicationContext context;
 
-	private static JpaStoreConfigurer configurer;
-
 	{
 		Describe("EnableJpaStores", () -> {
-			Context("given a context and a configuartion with a jpa content repository bean", () -> {
+			Context("given a context and a configuration with a jpa content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
@@ -81,7 +79,7 @@ public class EnableJpaStoresTest {
 				AfterEach(() -> {
 					context.close();
 				});
-				It("should not contains any jpa repository beans", () -> {
+				It("should not contain any jpa repository beans", () -> {
 					try {
 						context.getBean(TestEntityContentRepository.class);
 						fail("expected no such bean");
@@ -90,25 +88,10 @@ public class EnableJpaStoresTest {
 					}
 				});
 			});
-			Context("given a context with a JpaStoreConfigurer", () -> {
-				BeforeEach(() -> {
-					configurer = mock(JpaStoreConfigurer.class);
-
-					context = new AnnotationConfigApplicationContext();
-					context.register(ConfigWithConfigurer.class);
-					context.refresh();
-				});
-				It("should call that configurer to help customize the store", () -> {
-					verify(configurer).configure(argThat(is(instanceOf(JpaStoreProperties.class))));
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-			});
 		});
 		
-		Describe("EnableJpaContentRepositores", () -> {
-			Context("given a context and a configuartion with a jpa content repository bean", () -> {
+		Describe("EnableJpaContentRepositories", () -> {
+			Context("given a context and a configuration with a jpa content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
 					context.register(EnableJpaContentRepositoriesConfig.class);
@@ -146,17 +129,6 @@ public class EnableJpaStoresTest {
 	@EnableJpaStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
-	}
-
-	@Configuration
-	@EnableJpaStores
-	@Import(InfrastructureConfig.class)
-	public static class ConfigWithConfigurer {
-
-		@Bean
-		JpaStoreConfigurer configurer() {
-			return configurer;
-		}
 	}
 
 	@Configuration

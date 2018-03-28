@@ -12,13 +12,10 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired
 	private DelegatingBlobResourceLoader blobResourceLoader;
 
-	@Autowired
-	private JpaStorePropertiesImpl jpaStoreProperties;
-
 	@Override
 	protected Object getContentStoreImpl() {
 		Assert.notNull(blobResourceLoader, "blobResourceLoader cannot be null");
-		return new DefaultJpaStoreImpl(blobResourceLoader, jpaStoreProperties.getCommitTimeout());
+		return new DefaultJpaStoreImpl(blobResourceLoader);
 	}
 
 }
