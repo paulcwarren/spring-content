@@ -25,11 +25,9 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
     private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
     private ResourceLoader loader;
-    private int timeout;
 
-    public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader, int timeout) {
+    public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader) {
         this.loader = blobResourceLoader;
-        this.timeout = timeout;
     }
 
     @Override

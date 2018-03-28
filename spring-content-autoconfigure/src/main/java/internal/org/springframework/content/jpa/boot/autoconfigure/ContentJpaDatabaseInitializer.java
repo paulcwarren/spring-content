@@ -1,4 +1,4 @@
-package org.springframework.content.jpa.boot;
+package internal.org.springframework.content.jpa.boot.autoconfigure;
 
 import org.springframework.boot.autoconfigure.AbstractDatabaseInitializer;
 import org.springframework.core.io.ResourceLoader;
@@ -18,7 +18,7 @@ public class ContentJpaDatabaseInitializer extends AbstractDatabaseInitializer {
     }
 
     @PostConstruct
-    protected void initialize() {
+    public void initialize() {
         super.initialize();
     }
 

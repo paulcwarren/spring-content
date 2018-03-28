@@ -33,7 +33,6 @@ public class DefaultJpaStoreImplTest {
     private DefaultJpaStoreImpl<Object,Integer> store;
 
     private BlobResourceLoader blobResourceLoader;
-    private int commitTimeout = 30;
 
     private TestEntity entity;
     private InputStream stream;
@@ -46,7 +45,7 @@ public class DefaultJpaStoreImplTest {
     {
         Describe("DefaultJpaStoreImpl", () -> {
             JustBeforeEach(() -> {
-                    store = new DefaultJpaStoreImpl(blobResourceLoader, commitTimeout);
+                    store = new DefaultJpaStoreImpl(blobResourceLoader);
             });
 
             Describe("Store", () -> {

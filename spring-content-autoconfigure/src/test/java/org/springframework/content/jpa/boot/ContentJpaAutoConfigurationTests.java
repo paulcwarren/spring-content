@@ -6,8 +6,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.config.JpaStorePropertiesImpl;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -18,16 +18,13 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -67,27 +64,12 @@ public class ContentJpaAutoConfigurationTests {
 			It("should have a database initializer", () -> {
 				assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(not(nullValue())));
 			});
-			It("should have the default commit timeout", () -> {
-				JpaStorePropertiesImpl properties = (JpaStorePropertiesImpl) context.getBean("jpaStoreProperties");
-				assertThat(properties, is(not(nullValue())));
-				assertThat(properties.getCommitTimeout(), is(30));
-			});
 			Context("when a custom bean configuration is used", () -> {
 				BeforeEach(() -> {
 					context.register(CustomBeanConfig.class);
 				});
 				It("should use the supplied custom bean", () -> {
 					assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(initializer));
-				});
-			});
-			Context("when a commitTimeout property is set", () -> {
-				BeforeEach(() -> {
-					context.register(CustomPropertiesConfig.class);
-				});
-				It("should use the supplied custom bean", () -> {
-					JpaStorePropertiesImpl properties = (JpaStorePropertiesImpl) context.getBean("jpaStoreProperties");
-					assertThat(properties, is(not(nullValue())));
-					assertThat(properties.getCommitTimeout(), is(60));
 				});
 			});
 		});

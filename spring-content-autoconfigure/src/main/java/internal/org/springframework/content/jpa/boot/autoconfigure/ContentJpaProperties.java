@@ -1,14 +1,11 @@
-package org.springframework.content.jpa.boot;
+package internal.org.springframework.content.jpa.boot.autoconfigure;
 
-import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("spring.content.jpa")
 public class ContentJpaProperties {
 
     private String schema = "classpath:org/springframework/content/jpa/schema-@@platform@@.sql";
-
-    private int commitTimeout = 30;
 
     private final ContentJpaProperties.Initializer initializer = new ContentJpaProperties.Initializer();
 
@@ -18,13 +15,6 @@ public class ContentJpaProperties {
 
     public String getSchema() {
         return schema;
-    }
-    public int getCommitTimeout() {
-        return commitTimeout;
-    }
-
-    public void setCommitTimeout(int commitTimeout) {
-        this.commitTimeout = commitTimeout;
     }
 
     public class Initializer {
