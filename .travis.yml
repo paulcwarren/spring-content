@@ -6,6 +6,7 @@ jdk:
 - oraclejdk8
 env:
 - BUILD_TYPE=snapshot
+- TEST=foo
 before_install:
 - ./scripts/before-install.sh
 install:
