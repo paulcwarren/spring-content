@@ -236,6 +236,27 @@ In this example many Resources can be associated with the chapters property of t
 
 As with Property Association the content resources are exposed under the URI `/dvds/{id}/chapters/{contentId}`.  In this case POSTing to `/dvds/{id}/chapters` a new content resource to be *appended* to the 'Chapters' collection.  This resource supports both POST and PUT HTTP methods.
 
+=== Search
+
+Exported content stores may be marked as `Searchable`.  Assume the following content store interface:
+
+====
+[source, java]
+----
+  public interface DvdStore extends ContentStore<Dvd, UUID>, Searchable<UUID> {}
+----
+====
+
+When exported Spring Content REST exposes a fulltext query resource for each `Searchable` method.  These resources are
+ exported under the URI `/dvds/searchContent/<findMethod>`.  Method parameters are supplied as query parameters:
+
+====
+[source, sh]
+----
+  curl http://localhost:8080/dvds/searchContent/findKeywords?keyword=one&keyword=two
+----
+====
+
 === Default status codes
 
 For the content resources exposed, we use a set of default status codes:
@@ -301,17 +322,35 @@ Appends new content to the collection of Resources
 
 All content types except `application/json`
  
+== The Fulltext Query Resource
+
+Spring Content REST exposes a fulltext query resource for each `Searchable` method.
+
+=== Supported HTTP Methods
+
+As the fulltext query resource is read-only it supports `GET` only.
+
+===== Supported media types
+
+- `application/hal+json`
+- `application/json`.
+
+Responses are standard Spring Data entity lists.  Requests must specify that they accept `application/hal+json` or
+`application/json`.
+
 = Customizing Store Resources
 
 == Configuring CORS
 
-For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.
+For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with
+client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.
 
 Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.
 
 === Store interface CORS configuration
 
-You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:
+You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default
+@CrossOrigin allows all origins and HTTP methods:
 
 ====
 [source, java]
@@ -321,7 +360,8 @@ interface DvdStore extends ContentStore<Dvd, UUID> {}
 ----
 ====
 
-In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform more granular configuration.
+In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform
+more granular configuration.
 
 ====
 [source,java]
@@ -333,5 +373,6 @@ interface DvdStore extends ContentStore<Dvd, UUID> {}
 ----
 ====
 
-This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE methods with a max age of 3600 seconds.
+This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE
+methods with a max age of 3600 seconds.
 
