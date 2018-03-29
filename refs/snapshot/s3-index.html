@@ -473,14 +473,6 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_accessing_content">2.3. Accessing Content</a></li>
 </ul>
 </li>
-<li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
-<ul class="sectlevel2">
-<li><a href="#_overview">3.1. Overview</a></li>
-<li><a href="#_dependencies">3.2. Dependencies</a></li>
-<li><a href="#_enabling">3.3. Enabling</a></li>
-<li><a href="#_configuring_2">3.4. Configuring</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -1224,104 +1216,11 @@ public class S3StoreConfiguration  {
 <div class="sect3">
 <h4 id="_unsetting_content">2.3.5. Unsetting Content</h4>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.
+Unresolved directive in s3-index.adoc - include::../../../../spring-content-solr/src/main/asciidoc/solr-search.adoc[]
+:leveloffset: -1</p>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="solr-search">3. Indexing &amp; Searching with Solr</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_overview">3.1. Overview</h3>
-<div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_dependencies">3.2. Dependencies</h3>
-<div class="paragraph">
-<p>Add the solrj to the classpath.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
-		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
-		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
-		&lt;exclusions&gt;
-			&lt;exclusion&gt;
-				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
-				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
-			&lt;/exclusion&gt;
-			&lt;exclusion&gt;
-				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
-				&lt;groupId&gt;log4j&lt;/groupId&gt;
-			&lt;/exclusion&gt;
-		&lt;/exclusions&gt;
-	&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>If using Spring Boot the version may be omitted</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enabling">3.3. Enabling</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
-</li>
-<li>
-<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring_2">3.4. Configuring</h3>
-<div class="paragraph">
-<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
-</div>
-<div class="paragraph">
-<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 </div>
@@ -1329,7 +1228,7 @@ public class S3StoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 0.0.11-SNAPSHOT<br>
-Last updated 2018-03-29 04:35:40 UTC
+Last updated 2018-03-29 05:49:01 UTC
 </div>
 </div>
 </body>
