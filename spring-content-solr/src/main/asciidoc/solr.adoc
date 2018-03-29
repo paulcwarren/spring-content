@@ -1,0 +1,69 @@
+[[solr-search]]
+= Fulltext Indexing & Searching with Solr
+
+== Overview
+
+When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by
+adding the optional `Searchable<CID>` interface to the Content Repositories.
+
+== Dependencies
+
+Spring Content Solr requires a solrj-based SolrClient bean.  We do not add this dependency so that
+you can add a version compatible with your Server.  It also requires two exclusions, as follows:
+
+====
+[source, java]
+----
+	<dependency>
+		<groupId>org.apache.solr</groupId>
+		<artifactId>solr-solrj</artifactId>
+		<version>7.2.1</version>
+		<exclusions>
+			<exclusion>
+				<groupId>org.codehaus.woodstox</groupId>
+				<artifactId>wstx-asl</artifactId>
+			</exclusion>
+			<exclusion>
+				<artifactId>log4j</artifactId>
+				<groupId>log4j</groupId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+----
+====
+
+== Annotation-based Configuration
+
+Fulltext indexing is enabled with the following Java Config.
+
+.Enabling Spring Content Solr with Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableFullTextSolrIndexing                 <1>
+@EnableFilesystemStores                     <2>
+public static class ApplicationConfig {
+
+    @Bean                                   <3>
+    public SolrClient solrClient() {
+        return new HttpSolrClient.Builder("http://localhost:8983/solr/solr").build();
+    }
+
+}
+----
+1. Specify the `@EnableFullTextSolrIndexing` annotation in an `@Configuration` class
+2. Spring Content Solr works with any Spring Content Store Module
+3. Ensure a `(SolrJ) SolrClient` `@Bean` is instantiated somewhere within your `@Configuration`
+====
+
+== Configuring
+
+If required, credentials can be specified using the following configuration properties.
+
+[cols="2*", options="header"]
+|=========
+| Property | Description
+| solr.username | Solr user
+| solr.password | Solr user's password
+|=========
