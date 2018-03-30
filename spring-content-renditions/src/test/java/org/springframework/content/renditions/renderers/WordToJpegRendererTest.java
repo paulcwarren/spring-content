@@ -84,7 +84,7 @@ public class WordToJpegRendererTest {
                     Context("when the input stream is not a valid word file", () -> {
                         BeforeEach(()-> {
                             doc = mock(XWPFDocument.class);
-                            when(poi.xwpfDocument(anyObject())).thenThrow(NotOfficeXmlFileException.class);
+                            doThrow(NotOfficeXmlFileException.class).when(poi).xwpfDocument(anyObject());
                         });
                         It("should throw a RenditionException", () -> {
                             assertThat(e, is(not(nullValue())));
@@ -96,7 +96,7 @@ public class WordToJpegRendererTest {
                             doc = mock(XWPFDocument.class);
                             when(poi.xwpfDocument(anyObject())).thenReturn(doc);
                             props = mock(POIXMLProperties.class);
-                            when(doc.getProperties()).thenThrow(Exception.class);
+                            doThrow(Exception.class).when(doc).getProperties();
                         });
                         It("should throw a RenditionException", () -> {
                             assertThat(e, is(not(nullValue())));
@@ -109,7 +109,7 @@ public class WordToJpegRendererTest {
                             when(poi.xwpfDocument(anyObject())).thenReturn(doc);
                             props = mock(POIXMLProperties.class);
                             when(doc.getProperties()).thenReturn(props);
-                            when(props.getThumbnailImage()).thenThrow(IOException.class);
+                            doThrow(IOException.class).when(props).getThumbnailImage();
                         });
                         It("should throw a RenditionException", () -> {
                             assertThat(e, is(not(nullValue())));
