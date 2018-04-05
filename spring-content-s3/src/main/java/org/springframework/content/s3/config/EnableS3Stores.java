@@ -20,7 +20,7 @@ import internal.org.springframework.content.s3.config.S3StoresRegistrar;
 @Documented
 @Inherited
 @Import({S3StoreConfiguration.class, S3StoresRegistrar.class})
-public @interface EnableS3Stores {
+public @interface   EnableS3Stores {
 
 	/**
 	 * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:

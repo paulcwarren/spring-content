@@ -56,7 +56,7 @@ public class ContentFilesystemAutoConfigurationTest {
 				AfterEach(() -> {
 					System.clearProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT");
 				});
-				It("should have a filesystem properties bean with the correct root set", () -> {
+				FIt("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
 					context.refresh();

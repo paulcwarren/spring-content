@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.UUID;
 
+import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
@@ -40,7 +42,7 @@ public class DefaultMongoStoreImplTest {
     private InputStream result;
 
     {
-        Describe("DefaultMongoContentRepositoryImpl", () -> {
+        Describe("DefaultMongoStoreImpl", () -> {
 
         	BeforeEach(() -> {
             	converter = mock(ConversionService.class);
@@ -65,7 +67,7 @@ public class DefaultMongoStoreImplTest {
                 	BeforeEach(() -> {
                 		when(converter.convert(isA(UUID.class), eq(String.class))).thenReturn("12345-67890");
                 		when(gridFsTemplate.getResource(anyString())).thenReturn(null).thenReturn(resource);
-                		when(gridFsTemplate.store(anyObject(), anyString())).thenReturn(gridFSFile);
+//                		when(gridFsTemplate.store(anyObject(), anyString()));
                 		when(resource.contentLength()).thenReturn(1L);
                 	});
 
@@ -88,7 +90,7 @@ public class DefaultMongoStoreImplTest {
 
                 		when(converter.convert(eq("abcd-efghi"), eq(String.class))).thenReturn("abcd-efghi");
                 		when(gridFsTemplate.getResource(anyObject())).thenReturn(resource);
-                		when(gridFsTemplate.store(anyObject(), anyString())).thenReturn(gridFSFile);
+//                        when(gridFsTemplate.store(anyObject(), anyString()));
                 		when(resource.exists()).thenReturn(true);
                 		when(resource.contentLength()).thenReturn(1L);
                 	});
