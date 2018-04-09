@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -33,8 +35,8 @@ public class ContentRestAutoConfigurationTests {
 	}
 
 	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude={MongoDataAutoConfiguration.class,
+			MongoAutoConfiguration.class})
 	public static class TestConfig {
 	}
 

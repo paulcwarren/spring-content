@@ -15,6 +15,11 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
@@ -49,8 +54,11 @@ public class ContentS3AutoConfigurationTest {
 	}
 
 	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
+			JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class,
+			MongoDataAutoConfiguration.class,
+			MongoAutoConfiguration.class})
 	public static class TestConfig {
 
 		public Region region() {
@@ -71,8 +79,11 @@ public class ContentS3AutoConfigurationTest {
 	}
 
 	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
+			JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class,
+			MongoDataAutoConfiguration.class,
+			MongoAutoConfiguration.class})
 	public static class TestConfigWithoutBeans {
 		// will be supplied by auto-configuration
 	}

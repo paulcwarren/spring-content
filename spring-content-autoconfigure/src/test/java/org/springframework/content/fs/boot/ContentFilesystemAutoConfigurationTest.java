@@ -17,6 +17,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -57,12 +58,12 @@ public class ContentFilesystemAutoConfigurationTest {
 
 			Context("given an environment specifying a filesystem root using spring prefix", () -> {
 				BeforeEach(() -> {
-					System.setProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
+					System.setProperty("spring.content.fs.filesystem-root", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
 				});
 				AfterEach(() -> {
-					System.clearProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT");
+					System.clearProperty("spring.content.fs.filesystem-root");
 				});
-				FIt("should have a filesystem properties bean with the correct root set", () -> {
+				It("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
 					context.refresh();
@@ -91,7 +92,7 @@ public class ContentFilesystemAutoConfigurationTest {
 
 
 	@Configuration
-	@AutoConfigurationPackage
+	@ComponentScan
 	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
 										JdbcTemplateAutoConfiguration.class,
 										JpaRepositoriesAutoConfiguration.class,
@@ -101,8 +102,12 @@ public class ContentFilesystemAutoConfigurationTest {
 	}
 
 	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@ComponentScan
+	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
+			JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class,
+			MongoDataAutoConfiguration.class,
+			MongoAutoConfiguration.class})
 	public static class ConfigWithLoaderBean {
 
 		@Bean

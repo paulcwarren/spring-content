@@ -6,6 +6,11 @@ import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemCont
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.renditions.Renderable;
@@ -48,8 +53,11 @@ public class ContentRenditionsAutoConfigurationTest {
 
 
 	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
+			JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class,
+			MongoDataAutoConfiguration.class,
+			MongoAutoConfiguration.class})
 	public static class TestConfig {
 	}
 
