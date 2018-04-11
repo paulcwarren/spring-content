@@ -1,10 +1,29 @@
 package internal.org.springframework.content.s3.store;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.junit.runner.RunWith;
+import org.mockito.Matchers;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.s3.S3ContentId;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.WritableResource;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -17,35 +36,18 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.WritableResource;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+//@Ginkgo4jConfiguration(threads=1)
 public class DefaultS3StoreImplTest {
     private DefaultS3StoreImpl<ContentProperty, String> s3StoreImpl;
+    private DefaultS3StoreImpl<ContentProperty, S3ContentId> s3ContentIdBasedStore;
     private ResourceLoader loader;
     private ConversionService converter;
     private AmazonS3 client;
     private ContentProperty entity;
-    
+
     private WritableResource resource;
     private Resource nonExistentResource;
 
@@ -57,7 +59,7 @@ public class DefaultS3StoreImplTest {
     private InputStream result;
     
     {
-        Describe("DefaultS3StoreImplTest", () -> {
+        Describe("DefaultS3StoreImpl", () -> {
             BeforeEach(() -> {
                 resource = mock(WritableResource.class);
                 loader = mock(ResourceLoader.class);
@@ -66,6 +68,25 @@ public class DefaultS3StoreImplTest {
 
                 s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
             });
+            Context("#getResource", () -> {
+                Context("when the resource's ID is an S3ContentId", () -> {
+                    BeforeEach(() -> {
+                        s3ContentIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ContentId>(loader, converter, client, "some-bucket");
+
+                        when(converter.convert(eq("some-object-id"), eq(String.class))).thenReturn("some-object-id");
+                    });
+                    JustBeforeEach(() -> {
+                        s3ContentIdBasedStore.getResource(new S3ContentId("some-bucket", "some-object-id"));
+                    });
+                    It("should use the converter to establish the resource path", () -> {
+                        verify(converter).convert(eq("some-object-id"),eq(String.class));
+                    });
+                    It("should fetch the resource", () -> {
+                        verify(loader).getResource(eq("s3://some-bucket/some-object-id"));
+                    });
+                });
+            });
+
             Context("#setContent", () -> {
                 BeforeEach(() -> {
                     entity = new TestEntity();
@@ -73,15 +94,13 @@ public class DefaultS3StoreImplTest {
 
 //                    when(placement.getLocation(anyObject())).thenReturn("/some/deeply/located/content");
                 });
-
                 JustBeforeEach(() -> {
                     s3StoreImpl.setContent(entity, content);
                 });
-
                 Context("#when the content already exists", () -> {
                     BeforeEach(() -> {
                         entity.setContentId("abcd-efgh");
-                        
+
                         when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
@@ -90,7 +109,7 @@ public class DefaultS3StoreImplTest {
 
                         when(resource.contentLength()).thenReturn(20L);
 
-                        
+
                         when(resource.exists()).thenReturn(true);
                     });
 
@@ -102,7 +121,7 @@ public class DefaultS3StoreImplTest {
                     It("should fetch the resource", () -> {
                     	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
                     });
-                    
+
                     It("should change the content length", () -> {
                         assertThat(entity.getContentLen(), is(20L));
                     });
@@ -117,7 +136,8 @@ public class DefaultS3StoreImplTest {
                     BeforeEach(() -> {
                         assertThat(entity.getContentId(), is(nullValue()));
 
-                        when(converter.convert(anyObject(), eq(String.class))).thenReturn("abcd-efgh");
+                        when(converter.convert(anyObject(), argThat(instanceOf(TypeDescriptor.class)), eq(TypeDescriptor.valueOf(String.class)))).thenReturn("abcd-efgh");
+                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
                         output = mock(OutputStream.class);
@@ -125,7 +145,6 @@ public class DefaultS3StoreImplTest {
 
                         when(resource.contentLength()).thenReturn(20L);
 
-                        
                         File resourceFile = mock(File.class);
                         parent = mock(File.class);
 
@@ -140,7 +159,7 @@ public class DefaultS3StoreImplTest {
                     It("should create a new resource", () -> {
                     	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
                     });
-                    
+
                     It("should write to the resource's outputstream", () -> {
                         verify(resource).getOutputStream();
                         verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0), eq(20));
@@ -153,7 +172,7 @@ public class DefaultS3StoreImplTest {
                     entity = new TestEntity();
                     content = mock(InputStream.class);
                     entity.setContentId("abcd-efgh");
-                  
+
 //                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
                     when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
@@ -176,7 +195,7 @@ public class DefaultS3StoreImplTest {
 	                It("should fetch the resource", () -> {
 	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
 	                });
-                  
+
                     It("should get content", () -> {
                         assertThat(result, is(content));
                     });
@@ -196,7 +215,7 @@ public class DefaultS3StoreImplTest {
   	                It("should fetch the resource", () -> {
   	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
   	                });
-                    
+
                     It("should not find the content", () -> {
                         assertThat(result, is(nullValue()));
                     });
@@ -216,15 +235,15 @@ public class DefaultS3StoreImplTest {
                 });
 
                 Context("when the content exists", () -> {
-                	
+
                 	BeforeEach(() -> {
 //                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
                         when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
-                		
+
 	            		when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
 	            		when(resource.exists()).thenReturn(true);
                 	});
-                	
+
                     It("should use the converter to establish a resource path", () -> {
                         verify(converter).convert(eq("abcd-efgh"),eq(String.class));
                       });
@@ -260,7 +279,7 @@ public class DefaultS3StoreImplTest {
                         });
                     });
                 });
-                
+
                 Context("when the content doesnt exist", () -> {
                 	BeforeEach(() -> {
 //                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
@@ -270,7 +289,7 @@ public class DefaultS3StoreImplTest {
                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
                         when(nonExistentResource.exists()).thenReturn(false);
                 	});
-                	
+
                     It("should use the converter to establish a resource path", () -> {
                         verify(converter).convert(eq("abcd-efgh"),eq(String.class));
                       });

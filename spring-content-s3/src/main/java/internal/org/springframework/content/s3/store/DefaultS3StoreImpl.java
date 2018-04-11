@@ -17,7 +17,9 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
+import org.springframework.content.s3.S3ContentId;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -44,15 +46,15 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 	@Override
 	public void setContent(S property, InputStream content) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
-			contentId = UUID.randomUUID().toString();
+			UUID newId = UUID.randomUUID();
+			contentId = (SID) converter.convert(newId, TypeDescriptor.forObject(newId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
 			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId);
 		}
 
-		String location = converter.convert(contentId, String.class);
-		location = absolutify(location);
-		Resource resource = loader.getResource(location);
+		Resource resource = this.getResource(contentId);
+
 		OutputStream os = null;
 		try {
 			if (resource instanceof WritableResource) {
@@ -82,13 +84,11 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	public InputStream getContent(S property) {
 		if (property == null)
 			return null;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		SID contentId = (SID)BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return null;
 
-		String location = converter.convert(contentId, String.class);
-		location = absolutify(location);
-		Resource resource = loader.getResource(location);
+		Resource resource = this.getResource(contentId);
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -104,15 +104,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	public void unsetContent(S property) {
 		if (property == null)
 			return;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		SID contentId = (SID)BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return;
 
 		// delete any existing content object
 		try {
-			String location = converter.convert(contentId, String.class);
-			location = absolutify(location);
-			Resource resource = loader.getResource(location);
+			Resource resource = this.getResource(contentId);
 			if (resource.exists()) {
 				this.delete(resource);
 			}
@@ -135,7 +133,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		}
 	}
 
-	private String absolutify(String location) {
+	private String absolutify(String bucket, String location) {
 		String locationToUse = null;
 		Assert.state(location.startsWith("s3://") == false);
 		if (location.startsWith("/")) {
@@ -154,8 +152,18 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 	@Override
 	public Resource getResource(SID id) {
-		String location = converter.convert(id, String.class);
-		location = absolutify(location);
+		String bucket = null;
+		Object objectId = null;
+
+		if (id instanceof S3ContentId) {
+			bucket = ((S3ContentId)id).getBucket();
+			objectId = ((S3ContentId)id).getObjectId();
+		} else {
+			bucket = this.bucket;
+			objectId = id;
+		}
+		String location = converter.convert(objectId, String.class);
+		location = absolutify(bucket, location);
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
