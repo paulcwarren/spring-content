@@ -57,7 +57,9 @@ public class DefaultS3StoreImplTest {
     private File parent;
 
     private InputStream result;
-    
+
+    private Exception e;
+
     {
         Describe("DefaultS3StoreImpl", () -> {
             BeforeEach(() -> {
@@ -83,6 +85,26 @@ public class DefaultS3StoreImplTest {
                     });
                     It("should fetch the resource", () -> {
                         verify(loader).getResource(eq("s3://some-bucket/some-object-id"));
+                    });
+                });
+                Context("when env:BUCKET is not set", () -> {
+                    BeforeEach(() -> {
+                        s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, null);
+                    });
+                    JustBeforeEach(() -> {
+                        try {
+                            s3StoreImpl.getResource("some-object-id");
+                        } catch (Exception e) {
+                            this.e = e;
+                        }
+                    });
+                    Context("when the resource's ID is not an S3ContentId", () -> {
+                        BeforeEach(() -> {
+                            when(converter.convert(eq("some-object-id"), eq(String.class))).thenReturn("some-object-id");
+                        });
+                        It("should throw an exception", () -> {
+                            assertThat(e, is(not(nullValue())));
+                        });
                     });
                 });
             });
