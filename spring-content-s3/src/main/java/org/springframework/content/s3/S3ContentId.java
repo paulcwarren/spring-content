@@ -1,5 +1,7 @@
 package org.springframework.content.s3;
 
+import org.springframework.util.Assert;
+
 import java.io.Serializable;
 
 public final class S3ContentId implements Serializable {
@@ -7,6 +9,8 @@ public final class S3ContentId implements Serializable {
     private String objectId;
 
     public S3ContentId(String bucket, String objectId) {
+        Assert.hasText(bucket, "bucket must be specified");
+        Assert.hasText(objectId, "objectId must be specified");
         this.bucket = bucket;
         this.objectId = objectId;
     }
