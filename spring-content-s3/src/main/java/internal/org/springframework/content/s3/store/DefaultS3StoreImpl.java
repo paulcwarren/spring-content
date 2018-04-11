@@ -15,6 +15,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.s3.S3ContentId;
@@ -38,10 +39,36 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	private String bucket;
 
 	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter, AmazonS3 client, String bucket) {
+		Assert.notNull(loader, "loader must be specified");
+		Assert.notNull(loader, "converter must be specified");
+		Assert.notNull(loader, "client must be specified");
 		this.loader = loader;
 		this.converter = converter;
 		this.client = client;
 		this.bucket = bucket;
+	}
+
+	@Override
+	public Resource getResource(SID id) {
+		String bucket = null;
+		Object objectId = null;
+
+		if (id instanceof S3ContentId) {
+			bucket = ((S3ContentId)id).getBucket();
+			objectId = ((S3ContentId)id).getObjectId();
+		} else {
+			bucket = this.bucket;
+			objectId = id;
+		}
+
+		if (bucket == null) {
+			throw new StoreAccessException("Bucket not set");
+		}
+
+		String location = converter.convert(objectId, String.class);
+		location = absolutify(bucket, location);
+		Resource resource = loader.getResource(location);
+		return resource;
 	}
 
 	@Override
@@ -148,23 +175,5 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		if (resource.exists()) {
 			client.deleteObject(new DeleteObjectRequest(bucket, resource.getFilename()));
 		}
-	}
-
-	@Override
-	public Resource getResource(SID id) {
-		String bucket = null;
-		Object objectId = null;
-
-		if (id instanceof S3ContentId) {
-			bucket = ((S3ContentId)id).getBucket();
-			objectId = ((S3ContentId)id).getObjectId();
-		} else {
-			bucket = this.bucket;
-			objectId = id;
-		}
-		String location = converter.convert(objectId, String.class);
-		location = absolutify(bucket, location);
-		Resource resource = loader.getResource(location);
-		return resource;
 	}
 }
