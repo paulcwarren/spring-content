@@ -178,10 +178,11 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-scm-publish-plugin</artifactId>
+				<version>3.0.0</version>
 				<configuration>
- 					<providerImplementations>
-						<git>jgit</git>
-					</providerImplementations>
+ 					<!--<providerImplementations>-->
+						<!--<git>jgit</git>-->
+					<!--</providerImplementations>-->
 					<checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
 					<checkinComment>Publishing reference guides for
 						${project.artifactId}:${project.version}</checkinComment>
@@ -199,7 +200,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<dependencies>
 					<dependency>
 						<groupId>org.apache.maven.scm</groupId>
-						<artifactId>maven-scm-provider-jgit</artifactId>
+						<!--<artifactId>maven-scm-provider-jgit</artifactId>-->
+						<artifactId>maven-scm-provider-gitexe</artifactId>
 						<version>1.9.5</version>
 					</dependency>
 				</dependencies>
