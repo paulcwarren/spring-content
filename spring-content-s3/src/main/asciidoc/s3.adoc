@@ -37,18 +37,33 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 [cols="3*", options="header"]
 |=========
 | Property | Required | Description
-| bucket | Yes | Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET   
+| bucket | No | Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET
 |=========
 
 == Accessing Content
 
-=== Storage Customization
+=== Storage Model
 
-In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.  Accordingly, by default, Spring Content S3 will store all content at the root of the content store location.  
+In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat
+structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of
+buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports
+the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.
 
-However, the S3 Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) instances of `org.springframework.core.concert.converter.Converter` it is possible to configure the Store to take advantage of S3's console folder concepts. 
+Spring Content S3's default behavior is to store content in a single bucket.  Determined by the `spring.content.s3.bucket`
+property or `AWS_BUCKET` environment variable.
 
-For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect in the Amazon S3 console of organizing content into a distributed set of folders.       
+If you wish to store your content in different buckets.  For example, one bucket per tenant or customer.  You can use the
+`org.springframework.s3.S3ContentId` class as the Store's ID type.  This captures the content's bucket as part of its
+identity.  However, this type is not a managed ID type and must therefore be managed by the application.
+
+S3 Stores will store all content in a flat structure by using the content ID as the object key.
+
+A dedicated `ConversionService` can be used to convert the content ID from one type to another. By contributing a
+`org.springframework.core.convert.converter.Converter` bean to convert content ID to folder path locations it is
+possible to configure the Store to take advantage of S3's console folder concepts.
+
+For example content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a path that will have the
+effect, in the Amazon S3 console, of organizing content into a distributed set of folders.
  
 .Configuring the S3 Store  
 ====
@@ -57,12 +72,12 @@ For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be m
 @Configuration
 public class S3StoreConfiguration  {
 
-	public Converter<String,String> converter() {
+	public Converter<UUID,String> converter() {
 		return new S3StoreConverter<String,String>() {
 
 			@Override
-			public String convert(String source) {
-				return String.format("/%s", source.replaceAll("-", "/"));
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-", "/"));
 			}
 		};
 	}
@@ -81,18 +96,12 @@ public class S3StoreConfiguration  {
 ----
 ====  
 
-=== Storage Model 
-
-
-Accordingly by default Spring Content S3 will store content entities in the root of the store's bucket using the @ContentId field value as the key.  
-
-If you wish to take advantage of S3's console folder concept you can create your content entities with hierarchical @ContentId field types like `java.net.URI` or field types that can be mapped to a hierarchy like `java.util.UUID` and create a corresponding `org.springframework.content.commons.placement.PlacementStrategy`.  See <<content-repositories.storage,Storage Model>> for more information.   
-
 === Setting Content
 
 Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
 
-If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based in `java.util.UUID`.  
+If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based
+in `java.util.UUID`.
 
 The @ContentId and @ContentLength annotations will be updated on `entity`.  
 
