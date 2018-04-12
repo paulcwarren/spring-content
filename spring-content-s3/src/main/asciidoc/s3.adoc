@@ -38,8 +38,7 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 [cols="3*", options="header"]
 |=========
 | Property | Required | Description
-| bucket | No | Default bucket.  Can be set as an application property or through the environment variable AWS_BUCKET.
-If not set then it must be possible to determine a bucket using one of the bucket resolution methods explained below.
+| bucket | Yes | Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET   
 |=========
 
 == Accessing Content
