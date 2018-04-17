@@ -13,6 +13,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -26,7 +27,7 @@ import org.springframework.util.Assert;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 
-public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SID>, ContentStore<S,SID> {
+public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -41,6 +42,33 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		this.client = client;
 		this.bucket = bucket;
 	}
+	
+	@Override
+	public Resource getResource(SID id) {
+		String location = converter.convert(id, String.class);
+		location = absolutify(location);
+		Resource resource = loader.getResource(location);
+		return resource;
+	}
+	
+	@Override
+    public void associate(S entity, SID id) {
+    	String location = converter.convert(id, String.class);
+    	location = absolutify(location);
+        BeanUtils.setFieldWithAnnotation(entity, ContentId.class, location);
+        Resource resource = loader.getResource(location);
+        try {
+            BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
+        } catch (IOException e) {
+            logger.error(String.format("Unexpected error setting content length for %s", location), e);
+        }
+    }
+
+    @Override
+    public void unassociate(S entity) {
+    	BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
+    }
 
 	@Override
 	public void setContent(S property, InputStream content) {
@@ -152,11 +180,5 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		}
 	}
 
-	@Override
-	public Resource getResource(SID id) {
-		String location = converter.convert(id, String.class);
-		location = absolutify(location);
-		Resource resource = loader.getResource(location);
-		return resource;
-	}
+	
 }

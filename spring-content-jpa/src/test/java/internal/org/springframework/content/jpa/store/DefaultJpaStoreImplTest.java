@@ -88,6 +88,23 @@ public class DefaultJpaStoreImplTest {
                         assertThat(entity.getContentLen(), CoreMatchers.is(20L));
                     });
                 });
+                
+                Context("#unassociate", () -> {
+        			BeforeEach(() -> {
+        				entity = new TestEntity();
+        				entity.setContentId(12345);
+        				entity.setContentLen(999L);
+        			});
+        			JustBeforeEach(() -> {
+        				store.unassociate(entity);
+        			});
+    				It("should reset the entity's content ID attribute", () -> {
+    					assertThat(entity.getContentId(), is(nullValue()));
+    				});
+    				It("should set the entity's content length attribute", () -> {
+    					assertThat(entity.getContentLen(), is(0L));
+    				});
+        		});
             });
 
             Context("#getContent", () -> {

@@ -48,7 +48,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 
     @Override
     public void unassociate(S entity) {
-
+    	BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
     }
 
     @Override

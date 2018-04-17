@@ -8,6 +8,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.File;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
@@ -33,10 +35,10 @@ public class FilesystemPropertiesTest {
 			Context("given a filesystem properties with root set", () -> {
 				BeforeEach(() -> {
 					props = new FilesystemContentAutoConfiguration.FilesystemProperties();
-					props.setFilesystemRoot("/some/random/path");
+					props.setFilesystemRoot(File.separator + "some" + File.separator + "random" + File.separator + "path");
 				});
 				It("should return a JAVA.IO.TMPDIR based default",() -> {
-					assertThat(props.getFilesystemRoot(), is("/some/random/path"));
+					assertThat(props.getFilesystemRoot(), is(File.separator + "some" + File.separator + "random" + File.separator + "path"));
 				});
 			});
 		});
