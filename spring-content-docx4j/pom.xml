@@ -36,8 +36,7 @@
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.9</version>
-		</dependency>
+			</dependency>
 		
 		<dependency>
 			<groupId>xalan</groupId>
@@ -54,8 +53,7 @@
 		<dependency>
 			<groupId>xml-apis</groupId>
 			<artifactId>xml-apis</artifactId>
-			<version>1.0.b2</version>
-		</dependency>
+			</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
