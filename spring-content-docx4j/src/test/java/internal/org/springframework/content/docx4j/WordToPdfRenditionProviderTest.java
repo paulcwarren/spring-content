@@ -38,7 +38,7 @@ public class WordToPdfRenditionProviderTest {
 												"application/pdf");
 
 		String content = pdfToText(converted);
-		assertThat(content, is("This is the Document Title\n \nand this is the document body.\n \n \n"));
+		assertThat(content, is("This is the Document Title"+System.lineSeparator()+" "+System.lineSeparator()+"and this is the document body."+System.lineSeparator()+" "+System.lineSeparator()+" "+System.lineSeparator()));
 	}
 
 	private String pdfToText(InputStream in) {

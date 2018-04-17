@@ -4,3 +4,8 @@
 /**/*.versionsBackup
 /**/infinitest.args
 */target/*
+*/bin/*
+*.classpath
+.factorypath
+*.project
+.settings

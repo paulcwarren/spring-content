@@ -14,7 +14,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.core.convert.ConversionService;
@@ -22,7 +24,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
-public class DefaultMongoStoreImpl<S, SID extends Serializable> implements ContentStore<S,SID> {
+public class DefaultMongoStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
 
@@ -36,6 +38,29 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable> implements Conte
 		this.gridFs = gridFs;
 		this.converter = converter;
 	}
+
+	@Override
+    public Resource getResource(SID id) {
+		String location = converter.convert(id, String.class);
+		return gridFs.getResource(location);
+    }
+
+    @Override
+    public void associate(S entity, SID id) {
+    	String location = converter.convert(id, String.class);
+        BeanUtils.setFieldWithAnnotation(entity, ContentId.class, location);
+        Resource resource = gridFs.getResource(location);
+        try {
+            BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
+        } catch (IOException e) {
+            logger.error(String.format("Unexpected error setting content length for %s", location), e);
+        }
+    }
+
+    @Override
+    public void unassociate(S entity) {
+
+    }
 
 	@Override
 	public void setContent(S property, InputStream content) {
