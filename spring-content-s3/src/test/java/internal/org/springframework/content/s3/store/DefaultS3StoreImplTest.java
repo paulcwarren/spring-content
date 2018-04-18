@@ -7,11 +7,13 @@ import org.mockito.Matchers;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.s3.S3ContentId;
+import org.springframework.content.s3.S3ContentIdHelper;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
+import org.springframework.util.Assert;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -74,6 +76,16 @@ public class DefaultS3StoreImplTest {
                 Context("when the resource's ID is an S3ContentId", () -> {
                     BeforeEach(() -> {
                         s3ContentIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ContentId>(loader, converter, client, "some-bucket");
+                        s3ContentIdBasedStore.setContentIdHelper(
+                        		S3ContentIdHelper.createS3ContentIdHelper(
+                        				S3ContentId::getBucket, 
+                        				S3ContentId::getObjectId, 
+                        				id -> {
+                        					Assert.notNull(id.getBucket(), "Bucket must not be null");
+                        					Assert.notNull(id.getObjectId(), "ObjectId must not be null");
+                        				}
+                        		)
+                        );
 
                         when(converter.convert(eq("some-object-id"), eq(String.class))).thenReturn("some-object-id");
                     });
