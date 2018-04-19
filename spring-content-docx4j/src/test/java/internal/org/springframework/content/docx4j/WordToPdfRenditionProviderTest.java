@@ -17,60 +17,59 @@ import org.springframework.content.commons.renditions.RenditionProvider;
 
 public class WordToPdfRenditionProviderTest {
 
-  private RenditionProvider service;
+	private RenditionProvider service;
 
-  @Before
-  public void setUp() {
-    service = new WordToPdfRenditionProvider();
-  }
+	@Before
+	public void setUp() {
+		service = new WordToPdfRenditionProvider();
+	}
 
-  @Test
-  public void testCanConvert() {
-    assertThat(service.consumes(),
-        is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
-    assertThat(Arrays.asList(service.produces()), hasItems("application/pdf"));
-  }
+	@Test
+	public void testCanConvert() {
+		assertThat(service.consumes(), is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+		assertThat(Arrays.asList(service.produces()), hasItems("application/pdf"));
+	}
 
-  @Test
-  public void testConvert() throws Exception {
-    InputStream converted = service
-        .convert(this.getClass().getResourceAsStream("/sample-docx2.docx"), "application/pdf");
+	@Test
+	public void testConvert() throws Exception {
+		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"),
+				"application/pdf");
 
-    String content = pdfToText(converted);
-    assertThat(content,
-        is("This is the Document Title" + System.lineSeparator() + " " + System.lineSeparator()
-            + "and this is the document body." + System.lineSeparator() + " "
-            + System.lineSeparator() + " " + System.lineSeparator()));
-  }
+		String content = pdfToText(converted);
+		assertThat(content,
+				is("This is the Document Title" + System.lineSeparator() + " " + System.lineSeparator()
+						+ "and this is the document body." + System.lineSeparator() + " " + System.lineSeparator() + " "
+						+ System.lineSeparator()));
+	}
 
-  private String pdfToText(InputStream in) {
-    PDFParser parser = null;
-    PDDocument pdDoc = null;
-    COSDocument cosDoc = null;
-    PDFTextStripper pdfStripper;
+	private String pdfToText(InputStream in) {
+		PDFParser parser = null;
+		PDDocument pdDoc = null;
+		COSDocument cosDoc = null;
+		PDFTextStripper pdfStripper;
 
-    try {
-      parser = new PDFParser(in);
-      parser.parse();
-      cosDoc = parser.getDocument();
-      pdfStripper = new PDFTextStripper();
-      pdDoc = new PDDocument(cosDoc);
-      return pdfStripper.getText(pdDoc);
-      // System.out.println(parsedText.replaceAll("[^A-Za-z0-9. ]+", ""));
-    } catch (Exception e) {
-      e.printStackTrace();
-      try {
-        if (cosDoc != null) {
-          cosDoc.close();
-        }
-        if (pdDoc != null) {
-          pdDoc.close();
-        }
-      } catch (Exception e1) {
-        e.printStackTrace();
-      }
-    }
-    return null;
-  }
+		try {
+			parser = new PDFParser(in);
+			parser.parse();
+			cosDoc = parser.getDocument();
+			pdfStripper = new PDFTextStripper();
+			pdDoc = new PDDocument(cosDoc);
+			return pdfStripper.getText(pdDoc);
+			// System.out.println(parsedText.replaceAll("[^A-Za-z0-9. ]+", ""));
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				if (cosDoc != null) {
+					cosDoc.close();
+				}
+				if (pdDoc != null) {
+					pdDoc.close();
+				}
+			} catch (Exception e1) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
 
 }

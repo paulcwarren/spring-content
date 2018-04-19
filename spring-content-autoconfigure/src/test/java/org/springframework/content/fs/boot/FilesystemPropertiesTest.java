@@ -19,29 +19,29 @@ import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemCont
 @RunWith(Ginkgo4jRunner.class)
 public class FilesystemPropertiesTest {
 
-  private FilesystemContentAutoConfiguration.FilesystemProperties props;
+	private FilesystemContentAutoConfiguration.FilesystemProperties props;
 
-  {
-    Describe("FilesystemProperties", () -> {
-      Context("given a filesystem properties with no root set", () -> {
-        BeforeEach(() -> {
-          props = new FilesystemContentAutoConfiguration.FilesystemProperties();
-        });
-        It("should return a JAVA.IO.TMPDIR based default", () -> {
-          assertThat(props.getFilesystemRoot(), startsWith(System.getProperty("java.io.tmpdir")));
-        });
-      });
-      Context("given a filesystem properties with root set", () -> {
-        BeforeEach(() -> {
-          props = new FilesystemContentAutoConfiguration.FilesystemProperties();
-          props.setFilesystemRoot(
-              File.separator + "some" + File.separator + "random" + File.separator + "path");
-        });
-        It("should return a JAVA.IO.TMPDIR based default", () -> {
-          assertThat(props.getFilesystemRoot(),
-              is(File.separator + "some" + File.separator + "random" + File.separator + "path"));
-        });
-      });
-    });
-  }
+	{
+		Describe("FilesystemProperties", () -> {
+			Context("given a filesystem properties with no root set", () -> {
+				BeforeEach(() -> {
+					props = new FilesystemContentAutoConfiguration.FilesystemProperties();
+				});
+				It("should return a JAVA.IO.TMPDIR based default", () -> {
+					assertThat(props.getFilesystemRoot(), startsWith(System.getProperty("java.io.tmpdir")));
+				});
+			});
+			Context("given a filesystem properties with root set", () -> {
+				BeforeEach(() -> {
+					props = new FilesystemContentAutoConfiguration.FilesystemProperties();
+					props.setFilesystemRoot(
+							File.separator + "some" + File.separator + "random" + File.separator + "path");
+				});
+				It("should return a JAVA.IO.TMPDIR based default", () -> {
+					assertThat(props.getFilesystemRoot(),
+							is(File.separator + "some" + File.separator + "random" + File.separator + "path"));
+				});
+			});
+		});
+	}
 }

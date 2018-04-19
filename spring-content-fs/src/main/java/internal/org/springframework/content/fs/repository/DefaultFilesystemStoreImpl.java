@@ -27,9 +27,8 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-import javax.annotation.PostConstruct;
-
-public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
+public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -37,8 +36,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 	private ConversionService conversion;
 	private FileService fileService;
 
-
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion,
+			FileService fileService) {
 		this.loader = loader;
 		this.conversion = conversion;
 		this.fileService = fileService;
@@ -50,7 +49,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
-	
+
 	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
@@ -62,7 +61,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 			logger.error(String.format("Unexpected error setting content length for %s", id.toString()), e);
 		}
 	}
-	
+
 	@Override
 	public void unassociate(S entity) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
@@ -82,31 +81,32 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Resource resource = loader.getResource(location);
 		OutputStream os = null;
 		try {
-		    if (resource.exists() == false) {
-		        File resourceFile = resource.getFile();
-		        File parent = resourceFile.getParentFile();
-		        this.fileService.mkdirs(parent);
-            }
+			if (resource.exists() == false) {
+				File resourceFile = resource.getFile();
+				File parent = resourceFile.getParentFile();
+				this.fileService.mkdirs(parent);
+			}
 			if (resource instanceof WritableResource) {
-				os = ((WritableResource)resource).getOutputStream();
+				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
 		} catch (IOException e) {
 			logger.error(String.format("Unexpected error setting content %s", contentId.toString()), e);
 		} finally {
-	        try {
-	            if (os != null) {
-	                os.close();
-	            }
-	        } catch (IOException ioe) {
-	            // ignore
-	        }
+			try {
+				if (os != null) {
+					os.close();
+				}
+			} catch (IOException ioe) {
+				// ignore
+			}
 		}
-			
+
 		try {
 			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, resource.contentLength());
 		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for content %s", contentId.toString()), e);
+			logger.error(String.format("Unexpected error setting content length for content %s", contentId.toString()),
+					e);
 		}
 	}
 
@@ -120,7 +120,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 
 		String location = conversion.convert(contentId, String.class);
 		Resource resource = loader.getResource(location);
-		
+
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
@@ -128,7 +128,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		} catch (IOException e) {
 			logger.error(String.format("Unexpected error getting content %s", contentId.toString()), e);
 		}
-		
+
 		return null;
 	}
 
@@ -139,13 +139,13 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return;
-	
-		// delete any existing content object	
+
+		// delete any existing content object
 		String location = conversion.convert(contentId, String.class);
 		Resource resource = loader.getResource(location);
 
 		if (resource.exists() && resource instanceof DeletableResource) {
-			((DeletableResource)resource).delete();
+			((DeletableResource) resource).delete();
 		}
 
 		// reset content fields
@@ -153,19 +153,23 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 			@Override
 			public boolean matches(Field field) {
 				for (Annotation annotation : field.getAnnotations()) {
-					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
+					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName())
+							|| "org.springframework.data.annotation.Id"
+									.equals(annotation.annotationType().getCanonicalName())) {
 						return false;
 					}
 				}
 				return true;
-			}});
+			}
+		});
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
 	}
-	
+
 	private Object convertToExternalContentIdType(S property, Object contentId) {
-		if (conversion.canConvert(TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)))) {
-			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
+		if (conversion.canConvert(TypeDescriptor.forObject(contentId),
+				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)))) {
+			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId),
+					TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
 			return contentId;
 		}
 		return contentId.toString();

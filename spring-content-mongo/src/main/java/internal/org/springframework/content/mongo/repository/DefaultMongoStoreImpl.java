@@ -25,137 +25,135 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
 public class DefaultMongoStoreImpl<S, SID extends Serializable>
-    implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
-  private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
+	private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
 
-  private GridFsTemplate gridFs;
-  private ConversionService converter;
+	private GridFsTemplate gridFs;
+	private ConversionService converter;
 
-  /**
-   * Constructs default implementation of content store.
-   * 
-   * @param gridFs
-   *          Mongo grid driver.
-   * @param converter
-   *          Id converter.
-   */
-  public DefaultMongoStoreImpl(GridFsTemplate gridFs, ConversionService converter) {
-    Assert.notNull(gridFs, "gridFs cannot be null");
-    Assert.notNull(converter, "converter cannot be null");
+	/**
+	 * Constructs default implementation of content store.
+	 * 
+	 * @param gridFs
+	 *            Mongo grid driver.
+	 * @param converter
+	 *            Id converter.
+	 */
+	public DefaultMongoStoreImpl(GridFsTemplate gridFs, ConversionService converter) {
+		Assert.notNull(gridFs, "gridFs cannot be null");
+		Assert.notNull(converter, "converter cannot be null");
 
-    this.gridFs = gridFs;
-    this.converter = converter;
-  }
+		this.gridFs = gridFs;
+		this.converter = converter;
+	}
 
-  @Override
-  public Resource getResource(SID id) {
-    String location = converter.convert(id, String.class);
-    return gridFs.getResource(location);
-  }
+	@Override
+	public Resource getResource(SID id) {
+		String location = converter.convert(id, String.class);
+		return gridFs.getResource(location);
+	}
 
-  @Override
-  public void associate(S entity, SID id) {
-    String location = converter.convert(id, String.class);
-    BeanUtils.setFieldWithAnnotation(entity, ContentId.class, location);
-    Resource resource = gridFs.getResource(location);
-    try {
-      BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
-    } catch (IOException e) {
-      logger.error(String.format("Unexpected error setting content length for %s", location), e);
-    }
-  }
+	@Override
+	public void associate(S entity, SID id) {
+		String location = converter.convert(id, String.class);
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, location);
+		Resource resource = gridFs.getResource(location);
+		try {
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
+		} catch (IOException e) {
+			logger.error(String.format("Unexpected error setting content length for %s", location), e);
+		}
+	}
 
-  @Override
-  public void unassociate(S entity) {
-    BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
-    BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
-  }
+	@Override
+	public void unassociate(S entity) {
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
+	}
 
-  @Override
-  public void setContent(S property, InputStream content) {
-    Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-    if (contentId == null) {
-      contentId = UUID.randomUUID();
-      BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
-    }
+	@Override
+	public void setContent(S property, InputStream content) {
+		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		if (contentId == null) {
+			contentId = UUID.randomUUID();
+			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId.toString());
+		}
 
-    String location = converter.convert(contentId, String.class);
-    Resource resource = gridFs.getResource(location);
-    if (resource != null && resource.exists()) {
-      gridFs.delete(query(whereFilename().is(resource.getFilename())));
-    }
+		String location = converter.convert(contentId, String.class);
+		Resource resource = gridFs.getResource(location);
+		if (resource != null && resource.exists()) {
+			gridFs.delete(query(whereFilename().is(resource.getFilename())));
+		}
 
-    gridFs.store(content, location);
-    resource = gridFs.getResource(location);
+		gridFs.store(content, location);
+		resource = gridFs.getResource(location);
 
-    long contentLen = 0L;
-    try {
-      contentLen = resource.contentLength();
-    } catch (IOException ioe) {
-      logger.debug(String.format("Unable to retrieve content length for %s", contentId));
-    }
-    BeanUtils.setFieldWithAnnotation(property, ContentLength.class, contentLen);
-  }
+		long contentLen = 0L;
+		try {
+			contentLen = resource.contentLength();
+		} catch (IOException ioe) {
+			logger.debug(String.format("Unable to retrieve content length for %s", contentId));
+		}
+		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, contentLen);
+	}
 
-  @Override
-  public InputStream getContent(S property) {
-    if (property == null) {
-      return null;
-    }
-    Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-    if (contentId == null) {
-      return null;
-    }
+	@Override
+	public InputStream getContent(S property) {
+		if (property == null) {
+			return null;
+		}
+		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		if (contentId == null) {
+			return null;
+		}
 
-    String location = converter.convert(contentId, String.class);
-    Resource resource = gridFs.getResource(location);
-    try {
-      if (resource != null && resource.exists()) {
-        return resource.getInputStream();
-      }
-    } catch (IOException e) {
-      logger.error(String.format("Unexpected error getting content %s", contentId.toString()), e);
-    }
-    return null;
-  }
+		String location = converter.convert(contentId, String.class);
+		Resource resource = gridFs.getResource(location);
+		try {
+			if (resource != null && resource.exists()) {
+				return resource.getInputStream();
+			}
+		} catch (IOException e) {
+			logger.error(String.format("Unexpected error getting content %s", contentId.toString()), e);
+		}
+		return null;
+	}
 
-  @Override
-  public void unsetContent(S property) {
-    if (property == null) {
-      return;
-    }
-    Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-    if (contentId == null) {
-      return;
-    }
+	@Override
+	public void unsetContent(S property) {
+		if (property == null) {
+			return;
+		}
+		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		if (contentId == null) {
+			return;
+		}
 
-    try {
-      String location = converter.convert(contentId, String.class);
-      Resource resource = gridFs.getResource(location);
-      if (resource != null && resource.exists()) {
-        gridFs.delete(query(whereFilename().is(resource.getFilename())));
+		try {
+			String location = converter.convert(contentId, String.class);
+			Resource resource = gridFs.getResource(location);
+			if (resource != null && resource.exists()) {
+				gridFs.delete(query(whereFilename().is(resource.getFilename())));
 
-        // reset content fields
-        BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null,
-            new Condition() {
-              @Override
-              public boolean matches(Field field) {
-                for (Annotation annotation : field.getAnnotations()) {
-                  if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName())
-                      || "org.springframework.data.annotation.Id"
-                          .equals(annotation.annotationType().getCanonicalName())) {
-                    return false;
-                  }
-                }
-                return true;
-              }
-            });
-        BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-      }
-    } catch (Exception ase) {
-      logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()),
-          ase);
-    }
-  }
+				// reset content fields
+				BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
+					@Override
+					public boolean matches(Field field) {
+						for (Annotation annotation : field.getAnnotations()) {
+							if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName())
+									|| "org.springframework.data.annotation.Id"
+											.equals(annotation.annotationType().getCanonicalName())) {
+								return false;
+							}
+						}
+						return true;
+					}
+				});
+				BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+			}
+		} catch (Exception ase) {
+			logger.error(String.format("Unexpected error unsetting content %s", contentId.toString()), ase);
+		}
+	}
 }
