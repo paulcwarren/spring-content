@@ -14,86 +14,95 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.core.io.Resource;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class FileSystemResourceLoaderTest {
 
-	private FileSystemResourceLoader loader = null;
+  private FileSystemResourceLoader loader = null;
 
-	private String path;
+  private String path;
 
-	private String location;
-	
-	private File parent;
-	private File file;
-	
-	private Exception ex;
-	
-	{
-		Describe("FileSystemResourceLoader", () -> {
-			Context("#FileSystemResourceLoader", () -> {
-			    JustBeforeEach(() -> {
-			        try {
-			            loader = new FileSystemResourceLoader(path);
-                    } catch (Exception e) {
-			            ex = e;
-                    }
-                });
-                Context("given well formed path (has a trailing slash)", () -> {
-                    BeforeEach(() -> {
-                        path = File.separator + "some" + File.separator + "well-formed" + File.separator + "path"  + File.separator;
-                    });
-                    It("succeeds", () -> {
-                        assertThat(ex, is(nullValue()));
-                        assertThat(loader.getResource( File.separator + "something").getFile().getPath(), is( File.separator + "some" + File.separator + "well-formed" + File.separator + "path" + File.separator + "something"));
-                        assertThat(loader.getResource( File.separator + "something"), instanceOf(DeletableResource.class));
-                    });
-                });
+  private String location;
 
-                Context("given malformed path without a trailing slash)", () -> {
-                    BeforeEach(() -> {
-                        path = "/some/malformed/path";
-                    });
-                    It("succeeds", () -> {
-                        assertThat(ex, is(nullValue()));
-                        assertThat(loader.getResource(File.separator + "something").getFile().getPath(), is(File.separator + "some" + File.separator + "malformed" + File.separator + "path" + File.separator + "something"));
-                        assertThat(loader.getResource(File.separator + "something"), instanceOf(DeletableResource.class));
-                    });
-                });
-			});
-		});
+  private File parent;
+  private File file;
 
-		Describe("DeletableResource", () -> {
-			Context("#delete", () -> {
-				BeforeEach(() -> {
-					parent = new File(Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString()).toAbsolutePath().toString());
-				});
-				JustBeforeEach(() -> {
-					loader = new FileSystemResourceLoader(parent.getPath() + File.separator );
-					Resource resource = loader.getResource(location);
-					assertThat(resource, instanceOf(DeletableResource.class));
-					((DeletableResource)resource).delete();
-				});
-				Context("given a file resource that exists", () -> {
-					BeforeEach(() -> {
-  						location = "FileSystemResourceLoaderTest.tmp";
-  						file = new File(parent, location);
- 						FileUtils.touch(file);
- 						assertThat(file.exists(), is(true));
-					});
-					It("should delete the underlying file", () -> {
-						assertThat(file.exists(), is(false));
-					});
-				});
-			});
-		});
-	}
+  private Exception ex;
+
+  {
+    Describe("FileSystemResourceLoader", () -> {
+      Context("#FileSystemResourceLoader", () -> {
+        JustBeforeEach(() -> {
+          try {
+            loader = new FileSystemResourceLoader(path);
+          } catch (Exception e) {
+            ex = e;
+          }
+        });
+        Context("given well formed path (has a trailing slash)", () -> {
+          BeforeEach(() -> {
+            path = File.separator + "some" + File.separator + "well-formed" + File.separator
+                + "path" + File.separator;
+          });
+          It("succeeds", () -> {
+            assertThat(ex, is(nullValue()));
+            assertThat(loader.getResource(File.separator + "something").getFile().getPath(),
+                is(File.separator + "some" + File.separator + "well-formed" + File.separator
+                    + "path" + File.separator + "something"));
+            assertThat(loader.getResource(File.separator + "something"),
+                instanceOf(DeletableResource.class));
+          });
+        });
+
+        Context("given malformed path without a trailing slash)", () -> {
+          BeforeEach(() -> {
+            path = "/some/malformed/path";
+          });
+          It("succeeds", () -> {
+            assertThat(ex, is(nullValue()));
+            assertThat(loader.getResource(File.separator + "something").getFile().getPath(),
+                is(File.separator + "some" + File.separator + "malformed" + File.separator + "path"
+                    + File.separator + "something"));
+            assertThat(loader.getResource(File.separator + "something"),
+                instanceOf(DeletableResource.class));
+          });
+        });
+      });
+    });
+
+    Describe("DeletableResource", () -> {
+      Context("#delete", () -> {
+        BeforeEach(() -> {
+          parent = new File(
+              Paths.get(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
+                  .toAbsolutePath().toString());
+        });
+        JustBeforeEach(() -> {
+          loader = new FileSystemResourceLoader(parent.getPath() + File.separator);
+          Resource resource = loader.getResource(location);
+          assertThat(resource, instanceOf(DeletableResource.class));
+          ((DeletableResource) resource).delete();
+        });
+        Context("given a file resource that exists", () -> {
+          BeforeEach(() -> {
+            location = "FileSystemResourceLoaderTest.tmp";
+            file = new File(parent, location);
+            FileUtils.touch(file);
+            assertThat(file.exists(), is(true));
+          });
+          It("should delete the underlying file", () -> {
+            assertThat(file.exists(), is(false));
+          });
+        });
+      });
+    });
+  }
 }
