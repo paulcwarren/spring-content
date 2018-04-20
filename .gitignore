@@ -1,6 +1,29 @@
+target/
+bin/
+!.mvn/wrapper/maven-wrapper.jar
+**/.sts4-cache
+
+### STS ###
+**/.sts4-cache
+.apt_generated
+.classpath
+.factorypath
+.springBeans
+.project
+.settings
+
+### IntelliJ IDEA ###
 .idea
-.DS_Store
-/**/*.iml
-/**/*.versionsBackup
-/**/infinitest.args
-*/target/*
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+*.log
+

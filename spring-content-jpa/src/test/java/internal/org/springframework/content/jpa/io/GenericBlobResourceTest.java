@@ -213,7 +213,7 @@ public class GenericBlobResourceTest {
                         verify(preparedStatement, timeout(100)).setBinaryStream(eq(1), argThat(is(instanceOf(InputStream.class))));
                         verify(preparedStatement, timeout(100)).executeUpdate();
 
-                        assertThat(resource.getId(), is(9999));
+                        assertThat(resource.getId(), is(9999));  
                     });
                     It("should update the ID of the resource from the ID returned by the database", () -> {
                         while (resource.getId().equals(9999) == false) {

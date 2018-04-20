@@ -9,9 +9,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.endsWith;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -47,6 +47,7 @@ public class DefaultS3StoreImplTest {
     private ContentProperty entity;
     
     private WritableResource resource;
+    private Resource genericResource;
     private Resource nonExistentResource;
 
     private InputStream content;
@@ -57,6 +58,69 @@ public class DefaultS3StoreImplTest {
     private InputStream result;
     
     {
+    	Describe("Store", () -> {
+    		BeforeEach(() -> {
+				genericResource = mock(Resource.class);
+                loader = mock(ResourceLoader.class);
+                converter = mock(ConversionService.class);
+                client = mock(AmazonS3.class);
+
+                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
+    		});
+    		Context("#getResource", () -> {
+    			BeforeEach(() -> {
+    				
+    				when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
+    			});
+    			JustBeforeEach(() -> {
+    				genericResource = s3StoreImpl.getResource("12345-67890");
+    			});
+				It("should use the conversion service to get a resource path", () -> {
+					verify(converter).convert(eq("12345-67890"), eq(String.class));
+					verify(loader).getResource(eq("s3://some-bucket/12345-67890"));
+				});
+    		});
+    		Context("#associate", () -> {
+    			BeforeEach(() -> {
+    				entity = new TestEntity();
+    				
+    				when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
+    				
+    				when(loader.getResource(eq("s3://some-bucket/12345-67890"))).thenReturn(genericResource);
+    				when(genericResource.contentLength()).thenReturn(20L);
+    			});
+    			JustBeforeEach(() -> {
+    				s3StoreImpl.associate(entity, "12345-67890");
+    			});
+				It("should use the conversion service to get a resource path", () -> {
+					verify(converter).convert(eq("12345-67890"), eq(String.class));
+					verify(loader).getResource(eq("s3://some-bucket/12345-67890"));
+				});
+				It("should set the entity's content ID attribute", () -> {
+					assertThat(entity.getContentId(), is("s3://some-bucket/12345-67890"));
+				});
+				It("should set the entity's content length attribute", () -> {
+					assertThat(entity.getContentLen(), is(20L));
+				});
+    		});
+    		Context("#unassociate", () -> {
+    			BeforeEach(() -> {
+    				entity = new TestEntity();
+    				entity.setContentId("12345-67890");
+    				entity.setContentLen(999L);
+    			});
+    			JustBeforeEach(() -> {
+    				s3StoreImpl.unassociate(entity);
+    			});
+				It("should reset the entity's content ID attribute", () -> {
+					assertThat(entity.getContentId(), is(nullValue()));
+				});
+				It("should set the entity's content length attribute", () -> {
+					assertThat(entity.getContentLen(), is(0L));
+				});
+    		});
+    	});
+    	
         Describe("DefaultS3StoreImplTest", () -> {
             BeforeEach(() -> {
                 resource = mock(WritableResource.class);

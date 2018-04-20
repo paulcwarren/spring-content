@@ -15,17 +15,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.content.commons.renditions.RenditionProvider;
 
-import internal.org.springframework.content.docx4j.WordToPdfRenditionProvider;
-
 public class WordToPdfRenditionProviderTest {
 
 	private RenditionProvider service;
-	
+
 	@Before
 	public void setUp() {
 		service = new WordToPdfRenditionProvider();
 	}
-	
+
 	@Test
 	public void testCanConvert() {
 		assertThat(service.consumes(), is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
@@ -34,11 +32,14 @@ public class WordToPdfRenditionProviderTest {
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"), 
-												"application/pdf");
+		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"),
+				"application/pdf");
 
 		String content = pdfToText(converted);
-		assertThat(content, is("This is the Document Title\n \nand this is the document body.\n \n \n"));
+		assertThat(content,
+				is("This is the Document Title" + System.lineSeparator() + " " + System.lineSeparator()
+						+ "and this is the document body." + System.lineSeparator() + " " + System.lineSeparator() + " "
+						+ System.lineSeparator()));
 	}
 
 	private String pdfToText(InputStream in) {
@@ -58,10 +59,12 @@ public class WordToPdfRenditionProviderTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 			try {
-				if (cosDoc != null)
+				if (cosDoc != null) {
 					cosDoc.close();
-				if (pdDoc != null)
+				}
+				if (pdDoc != null) {
 					pdDoc.close();
+				}
 			} catch (Exception e1) {
 				e.printStackTrace();
 			}
