@@ -93,127 +93,120 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 	</modules>
 
 	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>3.0.0-M1</version>
-					<executions>
-						<execution>
-							<id>enforce-property</id>
-							<goals>
-								<goal>enforce</goal>
-							</goals>
-							<configuration>
-								<rules>
-									<requireEnvironmentVariable>
-										<variableName>BUILD_TYPE</variableName>
-									</requireEnvironmentVariable>
-								</rules>
-								<fail>true</fail>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
-				
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.1</version>
-					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
-					</configuration>
-				</plugin>
-				
-				<!-- unit test/coverage -->
-				<plugin>
-					<groupId>org.eluder.coveralls</groupId>
-					<artifactId>coveralls-maven-plugin</artifactId>
-					<version>3.1.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.jacoco</groupId>
-					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.7.8</version>
-					<executions>
-						<!-- Prepare execution with Surefire -->
-						<execution>
-							<id>pre-unit-test</id>
-							<goals>
-								<goal>prepare-agent</goal>
-							</goals>
-							<configuration>
-								<propertyName>surefireArgLine</propertyName>
-							</configuration>
-						</execution>
-						<!-- Generate report after tests are run -->
-						<execution>
-							<id>post-unit-test</id>
-							<phase>test</phase>
-							<goals>
-								<goal>report</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.18.1</version>
-					<configuration>
-						<argLine>${surefireArgLine}</argLine>
-					</configuration>
-					<executions>
-						<execution>
-							<id>run-unit-tests</id>
-							<goals>
-								<goal>test</goal>
-							</goals>
-	
-						</execution>
-					</executions>
-				</plugin>
-	
-				<!-- Doc Publishing -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-scm-publish-plugin</artifactId>
-					<version>3.0.0</version>
-					<configuration>
-	 					<providerImplementations>
-							<git>jgit</git>
-						</providerImplementations>
-						<checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
-						<checkinComment>Publishing reference guides for
-							${project.artifactId}:${project.version}</checkinComment>
-						<content>${basedir}/target/generated-docs</content>
-						<skipDeletedFiles>true</skipDeletedFiles>
-						<!-- <dryRun>true</dryRun> -->
-						<pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
-						<scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
-						<username>${env.GITHUB_USERNAME}</username>
-						<password>${env.GITHUB_PASSWORD}</password>
-						<ignorePathsToDelete>
-							<ignorePathToDelete>/*</ignorePathToDelete>
-						</ignorePathsToDelete>
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.apache.maven.scm</groupId>
-							<artifactId>maven-scm-provider-jgit</artifactId>
-							<version>1.9.5</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
-			          <groupId>org.apache.maven.plugins</groupId>
-			          <artifactId>maven-checkstyle-plugin</artifactId>
-			          <version>3.0.0</version>
-			        </plugin>
-			</plugins>
-		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0-M1</version>
+				<executions>
+					<execution>
+						<id>enforce-property</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>BUILD_TYPE</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			
+			<!-- unit test/coverage -->
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>3.1.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.7.8</version>
+				<executions>
+					<!-- Prepare execution with Surefire -->
+					<execution>
+						<id>pre-unit-test</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<propertyName>surefireArgLine</propertyName>
+						</configuration>
+					</execution>
+					<!-- Generate report after tests are run -->
+					<execution>
+						<id>post-unit-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<argLine>${surefireArgLine}</argLine>
+				</configuration>
+				<executions>
+					<execution>
+						<id>run-unit-tests</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Doc Publishing -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-scm-publish-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+ 					<providerImplementations>
+						<git>jgit</git>
+					</providerImplementations>
+					<checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
+					<checkinComment>Publishing reference guides for
+						${project.artifactId}:${project.version}</checkinComment>
+					<content>${basedir}/target/generated-docs</content>
+					<skipDeletedFiles>true</skipDeletedFiles>
+					<!-- <dryRun>true</dryRun> -->
+					<pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
+					<scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
+					<username>${env.GITHUB_USERNAME}</username>
+					<password>${env.GITHUB_PASSWORD}</password>
+					<ignorePathsToDelete>
+						<ignorePathToDelete>/*</ignorePathToDelete>
+					</ignorePathsToDelete>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.scm</groupId>
+						<artifactId>maven-scm-provider-jgit</artifactId>
+						<version>1.9.5</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
 	</build>
 
 	<profiles>
