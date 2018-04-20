@@ -9,9 +9,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.endsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -23,6 +23,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.springframework.content.commons.annotations.ContentId;
@@ -32,66 +36,61 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
-
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class DefaultS3StoreImplTest {
-    private DefaultS3StoreImpl<ContentProperty, String> s3StoreImpl;
-    private ResourceLoader loader;
-    private ConversionService converter;
-    private AmazonS3 client;
-    private ContentProperty entity;
-    
-    private WritableResource resource;
-    private Resource genericResource;
-    private Resource nonExistentResource;
+	private DefaultS3StoreImpl<ContentProperty, String> s3StoreImpl;
+	private ResourceLoader loader;
+	private ConversionService converter;
+	private AmazonS3 client;
+	private ContentProperty entity;
 
-    private InputStream content;
-    private OutputStream output;
+	private WritableResource resource;
+	private Resource genericResource;
+	private Resource nonExistentResource;
 
-    private File parent;
+	private InputStream content;
+	private OutputStream output;
 
-    private InputStream result;
-    
-    {
-    	Describe("Store", () -> {
-    		BeforeEach(() -> {
+	private File parent;
+
+	private InputStream result;
+
+	{
+		Describe("Store", () -> {
+			BeforeEach(() -> {
 				genericResource = mock(Resource.class);
-                loader = mock(ResourceLoader.class);
-                converter = mock(ConversionService.class);
-                client = mock(AmazonS3.class);
+				loader = mock(ResourceLoader.class);
+				converter = mock(ConversionService.class);
+				client = mock(AmazonS3.class);
 
-                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
-    		});
-    		Context("#getResource", () -> {
-    			BeforeEach(() -> {
-    				
-    				when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
-    			});
-    			JustBeforeEach(() -> {
-    				genericResource = s3StoreImpl.getResource("12345-67890");
-    			});
+				s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
+			});
+			Context("#getResource", () -> {
+				BeforeEach(() -> {
+
+					when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
+				});
+				JustBeforeEach(() -> {
+					genericResource = s3StoreImpl.getResource("12345-67890");
+				});
 				It("should use the conversion service to get a resource path", () -> {
 					verify(converter).convert(eq("12345-67890"), eq(String.class));
 					verify(loader).getResource(eq("s3://some-bucket/12345-67890"));
 				});
-    		});
-    		Context("#associate", () -> {
-    			BeforeEach(() -> {
-    				entity = new TestEntity();
-    				
-    				when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
-    				
-    				when(loader.getResource(eq("s3://some-bucket/12345-67890"))).thenReturn(genericResource);
-    				when(genericResource.contentLength()).thenReturn(20L);
-    			});
-    			JustBeforeEach(() -> {
-    				s3StoreImpl.associate(entity, "12345-67890");
-    			});
+			});
+			Context("#associate", () -> {
+				BeforeEach(() -> {
+					entity = new TestEntity();
+
+					when(converter.convert(eq("12345-67890"), eq(String.class))).thenReturn("12345-67890");
+
+					when(loader.getResource(eq("s3://some-bucket/12345-67890"))).thenReturn(genericResource);
+					when(genericResource.contentLength()).thenReturn(20L);
+				});
+				JustBeforeEach(() -> {
+					s3StoreImpl.associate(entity, "12345-67890");
+				});
 				It("should use the conversion service to get a resource path", () -> {
 					verify(converter).convert(eq("12345-67890"), eq(String.class));
 					verify(loader).getResource(eq("s3://some-bucket/12345-67890"));
@@ -102,333 +101,386 @@ public class DefaultS3StoreImplTest {
 				It("should set the entity's content length attribute", () -> {
 					assertThat(entity.getContentLen(), is(20L));
 				});
-    		});
-    		Context("#unassociate", () -> {
-    			BeforeEach(() -> {
-    				entity = new TestEntity();
-    				entity.setContentId("12345-67890");
-    				entity.setContentLen(999L);
-    			});
-    			JustBeforeEach(() -> {
-    				s3StoreImpl.unassociate(entity);
-    			});
-				It("should reset the entity's content ID attribute", () -> {
-					assertThat(entity.getContentId(), is(nullValue()));
+			});
+			Context("#unassociate", () -> {
+				BeforeEach(() -> {
+					entity = new TestEntity();
+					entity.setContentId("12345-67890");
+					entity.setContentLen(999L);
 				});
-				It("should set the entity's content length attribute", () -> {
-					assertThat(entity.getContentLen(), is(0L));
+				JustBeforeEach(() -> {
+					s3StoreImpl.unassociate(entity);
 				});
-    		});
-    	});
-    	
-        Describe("DefaultS3StoreImplTest", () -> {
-            BeforeEach(() -> {
-                resource = mock(WritableResource.class);
-                loader = mock(ResourceLoader.class);
-                converter = mock(ConversionService.class);
-                client = mock(AmazonS3.class);
+				Context("when the property has a dedicated ContentId field", () -> {
+					It("should reset the metadata", () -> {
+						assertThat(entity.getContentId(), is(nullValue()));
+						assertThat(entity.getContentLen(), is(0L));
+					});
+				});
+				Context("when the property's ContentId field also is the javax persistence Id field", () -> {
+					BeforeEach(() -> {
+						entity = new SharedIdContentIdEntity();
+						entity.setContentId("abcd-efgh");
+					});
+					It("should not reset the content id metadata", () -> {
+						assertThat(entity.getContentId(), is("abcd-efgh"));
+						assertThat(entity.getContentLen(), is(0L));
+					});
+				});
+				Context("when the property's ContentId field also is the Spring Id field", () -> {
+					BeforeEach(() -> {
+						entity = new SharedSpringIdContentIdEntity();
+						entity.setContentId("abcd-efgh");
+					});
+					It("should not reset the content id metadata", () -> {
+						assertThat(entity.getContentId(), is("abcd-efgh"));
+						assertThat(entity.getContentLen(), is(0L));
+					});
+				});
+			});
+		});
 
-                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
-            });
-            Context("#setContent", () -> {
-                BeforeEach(() -> {
-                    entity = new TestEntity();
-                    content = new ByteArrayInputStream("Hello content world!".getBytes());
+		Describe("DefaultS3StoreImplTest", () -> {
+			BeforeEach(() -> {
+				resource = mock(WritableResource.class);
+				loader = mock(ResourceLoader.class);
+				converter = mock(ConversionService.class);
+				client = mock(AmazonS3.class);
 
-//                    when(placement.getLocation(anyObject())).thenReturn("/some/deeply/located/content");
-                });
+				s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "some-bucket");
+			});
+			Context("#setContent", () -> {
+				BeforeEach(() -> {
+					entity = new TestEntity();
+					content = new ByteArrayInputStream("Hello content world!".getBytes());
 
-                JustBeforeEach(() -> {
-                    s3StoreImpl.setContent(entity, content);
-                });
+					// when(placement.getLocation(anyObject())).thenReturn("/some/deeply/located/content");
+				});
 
-                Context("#when the content already exists", () -> {
-                    BeforeEach(() -> {
-                        entity.setContentId("abcd-efgh");
-                        
-                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
+				JustBeforeEach(() -> {
+					s3StoreImpl.setContent(entity, content);
+				});
 
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-                        output = mock(OutputStream.class);
-                        when(resource.getOutputStream()).thenReturn(output);
+				Context("#when the content already exists", () -> {
+					BeforeEach(() -> {
+						entity.setContentId("abcd-efgh");
 
-                        when(resource.contentLength()).thenReturn(20L);
+						when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-                        
-                        when(resource.exists()).thenReturn(true);
-                    });
+						when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+						output = mock(OutputStream.class);
+						when(resource.getOutputStream()).thenReturn(output);
 
-                    It("should use the converter to establish a resource path", () -> {
-//                        verify(placement).getLocation(anyObject());
-                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
-                    });
+						when(resource.contentLength()).thenReturn(20L);
 
-                    It("should fetch the resource", () -> {
-                    	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-                    });
-                    
-                    It("should change the content length", () -> {
-                        assertThat(entity.getContentLen(), is(20L));
-                    });
+						when(resource.exists()).thenReturn(true);
+					});
 
-                    It("should write to the resource's outputstream", () -> {
-                        verify(resource).getOutputStream();
-                        verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0), eq(20));
-                    });
-                });
+					It("should use the converter to establish a resource path", () -> {
+						// verify(placement).getLocation(anyObject());
+						verify(converter).convert(eq("abcd-efgh"), eq(String.class));
+					});
 
-                Context("when the content does not already exist", () -> {
-                    BeforeEach(() -> {
-                        assertThat(entity.getContentId(), is(nullValue()));
+					It("should fetch the resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-                        when(converter.convert(anyObject(), eq(String.class))).thenReturn("abcd-efgh");
+					It("should change the content length", () -> {
+						assertThat(entity.getContentLen(), is(20L));
+					});
 
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-                        output = mock(OutputStream.class);
-                        when(resource.getOutputStream()).thenReturn(output);
+					It("should write to the resource's outputstream", () -> {
+						verify(resource).getOutputStream();
+						verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0), eq(20));
+					});
+				});
 
-                        when(resource.contentLength()).thenReturn(20L);
+				Context("when the content does not already exist", () -> {
+					BeforeEach(() -> {
+						assertThat(entity.getContentId(), is(nullValue()));
 
-                        
-                        File resourceFile = mock(File.class);
-                        parent = mock(File.class);
+						when(converter.convert(anyObject(), eq(String.class))).thenReturn("abcd-efgh");
 
-                        when(resource.getFile()).thenReturn(resourceFile);
-                        when(resourceFile.getParentFile()).thenReturn(parent);
-                    });
+						when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+						output = mock(OutputStream.class);
+						when(resource.getOutputStream()).thenReturn(output);
 
-                    It("should make a new UUID", () -> {
-                        assertThat(entity.getContentId(), is(not(nullValue())));
-                    });
+						when(resource.contentLength()).thenReturn(20L);
 
-                    It("should create a new resource", () -> {
-                    	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-                    });
-                    
-                    It("should write to the resource's outputstream", () -> {
-                        verify(resource).getOutputStream();
-                        verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0), eq(20));
-                    });
-                });
-            });
+						File resourceFile = mock(File.class);
+						parent = mock(File.class);
 
-            Context("#getContent", () -> {
-                BeforeEach(() -> {
-                    entity = new TestEntity();
-                    content = mock(InputStream.class);
-                    entity.setContentId("abcd-efgh");
-                  
-//                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
-                    when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
+						when(resource.getFile()).thenReturn(resourceFile);
+						when(resourceFile.getParentFile()).thenReturn(parent);
+					});
 
-                    when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-                    when(resource.getInputStream()).thenReturn(content);
-                });
+					It("should make a new UUID", () -> {
+						assertThat(entity.getContentId(), is(not(nullValue())));
+					});
 
-                JustBeforeEach(() -> {
-                	result = s3StoreImpl.getContent(entity);
-                });
-                Context("when the resource exists", () -> {
-                    BeforeEach(() -> {
-                        when(resource.exists()).thenReturn(true);
-                    });
+					It("should create a new resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-                    It("should use the converter to establish a resource path", () -> {
-                      verify(converter).convert(eq("abcd-efgh"),eq(String.class));
-                    });
+					It("should write to the resource's outputstream", () -> {
+						verify(resource).getOutputStream();
+						verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0), eq(20));
+					});
+				});
+			});
 
-	                It("should fetch the resource", () -> {
-	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-	                });
-                  
-                    It("should get content", () -> {
-                        assertThat(result, is(content));
-                    });
-                });
-                Context("when the resource does not exist", () -> {
-                    BeforeEach(() -> {
-                		nonExistentResource = mock(Resource.class);
-                		when(resource.exists()).thenReturn(true);
+			Context("#getContent", () -> {
+				BeforeEach(() -> {
+					entity = new TestEntity();
+					content = mock(InputStream.class);
+					entity.setContentId("abcd-efgh");
 
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
-                    });
+					// when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
+					when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-                    It("should use the converter to establish a resource path", () -> {
-                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
-                      });
+					when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+					when(resource.getInputStream()).thenReturn(content);
+				});
 
-  	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-  	                });
-                    
-                    It("should not find the content", () -> {
-                        assertThat(result, is(nullValue()));
-                    });
-                });
-            });
+				JustBeforeEach(() -> {
+					result = s3StoreImpl.getContent(entity);
+				});
+				Context("when the resource exists", () -> {
+					BeforeEach(() -> {
+						when(resource.exists()).thenReturn(true);
+					});
 
-            Context("#unsetContent", () -> {
-                BeforeEach(() -> {
-                    entity = new TestEntity();
-                    entity.setContentId("abcd-efgh");
-                    entity.setContentLen(100L);
-                    resource = mock(WritableResource.class);
-                });
+					It("should use the converter to establish a resource path", () -> {
+						verify(converter).convert(eq("abcd-efgh"), eq(String.class));
+					});
 
-                JustBeforeEach(() -> {
-                	s3StoreImpl.unsetContent(entity);
-                });
+					It("should fetch the resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-                Context("when the content exists", () -> {
-                	
-                	BeforeEach(() -> {
-//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
-                		
-	            		when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
-	            		when(resource.exists()).thenReturn(true);
-                	});
-                	
-                    It("should use the converter to establish a resource path", () -> {
-                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
-                      });
+					It("should get content", () -> {
+						assertThat(result, is(content));
+					});
+				});
+				Context("when the resource does not exist", () -> {
+					BeforeEach(() -> {
+						nonExistentResource = mock(Resource.class);
+						when(resource.exists()).thenReturn(true);
 
-  	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-  	                });
+						when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
+					});
 
-                    Context("when the property has a dedicated ContentId field", () -> {
-                        It("should reset the metadata", () -> {
-                            assertThat(entity.getContentId(), is(nullValue()));
-                            assertThat(entity.getContentLen(), is(0L));
-                        });
-                    });
-                    Context("when the property's ContentId field also is the javax persistence Id field", () ->{
-                        BeforeEach(() -> {
-                            entity = new SharedIdContentIdEntity();
-                            entity.setContentId("abcd-efgh");
-                        });
-                        It("should not reset the content id metadata", () -> {
-                            assertThat(entity.getContentId(), is("abcd-efgh"));
-                            assertThat(entity.getContentLen(), is(0L));
-                        });
-                    });
-                    Context("when the property's ContentId field also is the Spring Id field", () ->{
-                        BeforeEach(() -> {
-                            entity = new SharedSpringIdContentIdEntity();
-                            entity.setContentId("abcd-efgh");
-                        });
-                        It("should not reset the content id metadata", () -> {
-                            assertThat(entity.getContentId(), is("abcd-efgh"));
-                            assertThat(entity.getContentLen(), is(0L));
-                        });
-                    });
-                });
-                
-                Context("when the content doesnt exist", () -> {
-                	BeforeEach(() -> {
-//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
-                        when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
+					It("should use the converter to establish a resource path", () -> {
+						verify(converter).convert(eq("abcd-efgh"), eq(String.class));
+					});
 
-                		nonExistentResource = mock(Resource.class);
-                        when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
-                        when(nonExistentResource.exists()).thenReturn(false);
-                	});
-                	
-                    It("should use the converter to establish a resource path", () -> {
-                        verify(converter).convert(eq("abcd-efgh"),eq(String.class));
-                      });
+					It("should fetch the resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-  	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
-  	                });
+					It("should not find the content", () -> {
+						assertThat(result, is(nullValue()));
+					});
+				});
+			});
 
-  	                It("should unset the content", () -> {
-                		verify(client, never()).deleteObject(anyObject());
-                		assertThat(entity.getContentId(), is(nullValue()));
-                		assertThat(entity.getContentLen(), is(0L));
-                	});
-                });
-            });
-        });
-    }
+			Context("#unsetContent", () -> {
+				BeforeEach(() -> {
+					entity = new TestEntity();
+					entity.setContentId("abcd-efgh");
+					entity.setContentLen(100L);
+					resource = mock(WritableResource.class);
+				});
 
-    public interface ContentProperty {
-        String getContentId();
-        void setContentId(String contentId);
-        long getContentLen();
-        void setContentLen(long contentLen);
-    }
+				JustBeforeEach(() -> {
+					s3StoreImpl.unsetContent(entity);
+				});
 
-    public static class TestEntity implements ContentProperty {
-        @ContentId
-        private String contentId;
+				Context("when the content exists", () -> {
 
-        @ContentLength
-        private long contentLen;
+					BeforeEach(() -> {
+						// when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+						when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-        public TestEntity() {
-            this.contentId = null;
-        }
+						when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
+						when(resource.exists()).thenReturn(true);
+					});
 
-        public TestEntity(String contentId) {
-            this.contentId = new String(contentId);
-        }
+					It("should use the converter to establish a resource path", () -> {
+						verify(converter).convert(eq("abcd-efgh"), eq(String.class));
+					});
 
-        public String getContentId() {
-            return this.contentId;
-        }
+					It("should fetch the resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-        public void setContentId(String contentId) {
-            this.contentId = contentId;
-        }
+					Context("when the property has a dedicated ContentId field", () -> {
+						It("should reset the metadata", () -> {
+							assertThat(entity.getContentId(), is(nullValue()));
+							assertThat(entity.getContentLen(), is(0L));
+						});
+					});
+					Context("when the property's ContentId field also is the javax persistence Id field", () -> {
+						BeforeEach(() -> {
+							entity = new SharedIdContentIdEntity();
+							entity.setContentId("abcd-efgh");
+						});
+						It("should not reset the content id metadata", () -> {
+							assertThat(entity.getContentId(), is("abcd-efgh"));
+							assertThat(entity.getContentLen(), is(0L));
+						});
+					});
+					Context("when the property's ContentId field also is the Spring Id field", () -> {
+						BeforeEach(() -> {
+							entity = new SharedSpringIdContentIdEntity();
+							entity.setContentId("abcd-efgh");
+						});
+						It("should not reset the content id metadata", () -> {
+							assertThat(entity.getContentId(), is("abcd-efgh"));
+							assertThat(entity.getContentLen(), is(0L));
+						});
+					});
+				});
 
-        public long getContentLen() {
-            return contentLen;
-        }
+				Context("when the content doesnt exist", () -> {
+					BeforeEach(() -> {
+						// when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
+						when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-        public void setContentLen(long contentLen) {
-            this.contentLen = contentLen;
-        }
-    }
+						nonExistentResource = mock(Resource.class);
+						when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
+						when(nonExistentResource.exists()).thenReturn(false);
+					});
 
-    public static class SharedIdContentIdEntity implements ContentProperty {
+					It("should use the converter to establish a resource path", () -> {
+						verify(converter).convert(eq("abcd-efgh"), eq(String.class));
+					});
 
-        @javax.persistence.Id
-        @ContentId
-        private String contentId;
+					It("should fetch the resource", () -> {
+						verify(loader).getResource(eq("s3://some-bucket/abcd-efgh"));
+					});
 
-        @ContentLength
-        private long contentLen;
+					It("should unset the content", () -> {
+						verify(client, never()).deleteObject(anyObject());
+						assertThat(entity.getContentId(), is(nullValue()));
+						assertThat(entity.getContentLen(), is(0L));
+					});
+				});
+			});
+		});
+	}
 
-        public SharedIdContentIdEntity() {this.contentId = null;}
+	public interface ContentProperty {
+		String getContentId();
 
-        public String getContentId() { return this.contentId; }
+		void setContentId(String contentId);
 
-        public void setContentId(String contentId) { this.contentId = contentId; }
+		long getContentLen();
 
-        public long getContentLen() { return contentLen; }
+		void setContentLen(long contentLen);
+	}
 
-        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
-    }
+	public static class TestEntity implements ContentProperty {
+		@ContentId
+		private String contentId;
 
-    public static class SharedSpringIdContentIdEntity implements ContentProperty {
+		@ContentLength
+		private long contentLen;
 
-        @org.springframework.data.annotation.Id
-        @ContentId
-        private String contentId;
+		public TestEntity() {
+			this.contentId = null;
+		}
 
-        @ContentLength
-        private long contentLen;
+		public TestEntity(String contentId) {
+			this.contentId = new String(contentId);
+		}
 
-        public SharedSpringIdContentIdEntity() { this.contentId = null; }
+		@Override
+		public String getContentId() {
+			return this.contentId;
+		}
 
-        public String getContentId() { return this.contentId; }
+		@Override
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
 
-        public void setContentId(String contentId) { this.contentId = contentId; }
+		@Override
+		public long getContentLen() {
+			return contentLen;
+		}
 
-        public long getContentLen() { return contentLen; }
+		@Override
+		public void setContentLen(long contentLen) {
+			this.contentLen = contentLen;
+		}
+	}
 
-        public void setContentLen(long contentLen) { this.contentLen = contentLen; }
-    }
+	public static class SharedIdContentIdEntity implements ContentProperty {
+
+		@javax.persistence.Id
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private long contentLen;
+
+		public SharedIdContentIdEntity() {
+			this.contentId = null;
+		}
+
+		@Override
+		public String getContentId() {
+			return this.contentId;
+		}
+
+		@Override
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
+
+		@Override
+		public long getContentLen() {
+			return contentLen;
+		}
+
+		@Override
+		public void setContentLen(long contentLen) {
+			this.contentLen = contentLen;
+		}
+	}
+
+	public static class SharedSpringIdContentIdEntity implements ContentProperty {
+
+		@org.springframework.data.annotation.Id
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private long contentLen;
+
+		public SharedSpringIdContentIdEntity() {
+			this.contentId = null;
+		}
+
+		@Override
+		public String getContentId() {
+			return this.contentId;
+		}
+
+		@Override
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
+
+		@Override
+		public long getContentLen() {
+			return contentLen;
+		}
+
+		@Override
+		public void setContentLen(long contentLen) {
+			this.contentLen = contentLen;
+		}
+	}
 }
