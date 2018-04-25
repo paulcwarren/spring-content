@@ -50,7 +50,12 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
-	
+
+	@Override
+	public Resource getResource(S entity) {
+		return null;
+	}
+
 	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());

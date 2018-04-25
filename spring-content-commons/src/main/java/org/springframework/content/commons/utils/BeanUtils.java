@@ -36,13 +36,22 @@ public final class BeanUtils {
 
 	public static Field findFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
-		return findFieldWithAnnotation(domainObj.getClass(), annotationClass);
+		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+		Field candidate = findFieldWithAnnotation(domainObj.getClass(), annotationClass, wrapper);
+		if (candidate != null) return candidate;
+		return null;
 	}
 
 	public static Field findFieldWithAnnotation(Class<?> domainObjClass, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 
 		BeanWrapper wrapper = new BeanWrapperImpl(domainObjClass);
+		Field candidate = findFieldWithAnnotation(domainObjClass, annotationClass, wrapper);
+		if (candidate != null) return candidate;
+		return null;
+	}
+
+	private static Field findFieldWithAnnotation(Class<?> domainObjClass, Class<? extends Annotation> annotationClass, BeanWrapper wrapper) {
 		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
 		for (PropertyDescriptor descriptor : descriptors) {
 			Field candidate = getField(domainObjClass, descriptor.getName());
@@ -52,16 +61,15 @@ public final class BeanUtils {
 				}
 			}
 		}
-		
+
 		for (Field field : getAllFields(domainObjClass)) {
 			if (field.getAnnotation(annotationClass) != null) {
 				return field;
 			}
 		}
-		
 		return null;
 	}
-	
+
 	protected static List<Field> getAllFields(Class<?> type) {
 		List<Field> fields = new ArrayList<>();
 	    fields.addAll(Arrays.asList(type.getDeclaredFields()));
