@@ -36,6 +36,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
     }
 
     @Override
+    public Resource getResource(S entity) {
+        return null;
+    }
+
+    @Override
     public void associate(S entity, SID id) {
         BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
         Resource resource = loader.getResource(id.toString());

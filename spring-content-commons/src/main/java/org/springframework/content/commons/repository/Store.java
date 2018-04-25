@@ -7,5 +7,5 @@ import org.springframework.core.io.Resource;
 public interface Store<SID extends Serializable> {
 
 	Resource getResource(SID id);
-	
+
 }
