@@ -46,21 +46,31 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 
 	@Override
 	public Resource getResource(SID id) {
+		return getResourceInternal(id);
+	}
+
+	@Override
+	public Resource getResource(S entity) {
+		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		if (contentId == null) {
+			contentId = UUID.randomUUID();
+			contentId = convertToExternalContentIdType(entity, contentId);
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, contentId);
+		}
+
+		return getResourceInternal(contentId);
+	}
+
+	protected Resource getResourceInternal(Object id) {
 		String location = conversion.convert(id, String.class);
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
 
 	@Override
-	public Resource getResource(S entity) {
-		return null;
-	}
-
-	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
-		String location = conversion.convert(id, String.class);
-		Resource resource = loader.getResource(location);
+		Resource resource = getResourceInternal(id);
 		try {
 			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
 		} catch (IOException e) {
@@ -70,21 +80,23 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 	
 	@Override
 	public void unassociate(S entity) {
-		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
+		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null, new Condition() {
+			@Override
+			public boolean matches(Field field) {
+				for (Annotation annotation : field.getAnnotations()) {
+					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
+						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
+						return false;
+					}
+				}
+				return true;
+			}});
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	@Override
 	public void setContent(S property, InputStream content) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			contentId = convertToExternalContentIdType(property, contentId);
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, contentId);
-		}
-
-		String location = conversion.convert(contentId, String.class);
-		Resource resource = loader.getResource(location);
+		Resource resource = getResource(property);
 		OutputStream os = null;
 		try {
 		    if (resource.exists() == false) {
@@ -97,7 +109,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 				IOUtils.copy(content, os);
 			}
 		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content %s", contentId.toString()), e);
+			logger.error(String.format("Unexpected error setting content for resource %s", property.toString()), e);
 		} finally {
 	        try {
 	            if (os != null) {
@@ -111,7 +123,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		try {
 			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, resource.contentLength());
 		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for content %s", contentId.toString()), e);
+			logger.error(String.format("Unexpected error setting content length for content for resource %s", resource.toString()), e);
 		}
 	}
 
@@ -123,8 +135,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		if (contentId == null)
 			return null;
 
-		String location = conversion.convert(contentId, String.class);
-		Resource resource = loader.getResource(location);
+		Resource resource = getResourceInternal(contentId);
 		
 		try {
 			if (resource.exists()) {
@@ -141,31 +152,20 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 	public void unsetContent(S property) {
 		if (property == null)
 			return;
+
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return;
 	
 		// delete any existing content object	
-		String location = conversion.convert(contentId, String.class);
-		Resource resource = loader.getResource(location);
+		Resource resource = getResourceInternal(contentId);
 
 		if (resource.exists() && resource instanceof DeletableResource) {
 			((DeletableResource)resource).delete();
 		}
 
 		// reset content fields
-		BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
-			@Override
-			public boolean matches(Field field) {
-				for (Annotation annotation : field.getAnnotations()) {
-					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
-						return false;
-					}
-				}
-				return true;
-			}});
-		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+		unassociate(property);
 	}
 	
 	private Object convertToExternalContentIdType(S property, Object contentId) {

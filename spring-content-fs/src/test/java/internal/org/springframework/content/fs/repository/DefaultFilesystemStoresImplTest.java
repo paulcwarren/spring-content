@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
@@ -15,6 +16,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -22,6 +24,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -34,6 +37,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -74,7 +78,7 @@ public class DefaultFilesystemStoresImplTest {
         		BeforeEach(() -> {
         			deletableResource = mock(DeletableResource.class);
         		});
-        		Context("#getResource", () -> {
+        		Context("#getResource with content ID", () -> {
         			BeforeEach(() -> {
         				id = "12345-67890";
         				
@@ -88,6 +92,36 @@ public class DefaultFilesystemStoresImplTest {
     					verify(loader).getResource(eq("12345-67890"));
     				});
         		});
+				Context("#getResource with entity", () -> {
+					JustBeforeEach(() -> {
+						resource = filesystemContentRepoImpl.getResource(entity);
+					});
+					Context("when the entity is not already associated with a resource", () -> {
+						BeforeEach(() -> {
+							entity  = new TestEntity();
+
+							when(conversion.canConvert((TypeDescriptor)argThat(is(instanceOf(TypeDescriptor.class))), argThat(is(instanceOf(TypeDescriptor.class))))).thenReturn(true);
+							when(conversion.convert(argThat(is(instanceOf(UUID.class))), argThat(is(instanceOf(TypeDescriptor.class))), argThat(is(instanceOf(TypeDescriptor.class))))).thenReturn("12345-67890");
+							when(conversion.convert(eq("12345-67890"), eq(String.class))).thenReturn("/12345/67890");
+						});
+						It("should use the conversion service to get a resource path", () -> {
+							verify(conversion).convert(eq("12345-67890"), eq(String.class));
+							verify(loader).getResource(eq("/12345/67890"));
+						});
+					});
+					Context("when the entity is already associated with a resource", () -> {
+						BeforeEach(() -> {
+							entity  = new TestEntity();
+							entity.setContentId("12345-67890");
+
+							when(conversion.convert(eq("12345-67890"), eq(String.class))).thenReturn("/12345/67890");
+						});
+						It("should use the conversion service to get a resource path", () -> {
+							verify(conversion).convert(eq("12345-67890"), eq(String.class));
+							verify(loader).getResource(eq("/12345/67890"));
+						});
+					});
+				});
         		Context("#associate", () -> {
         			BeforeEach(() -> {
         				id = "12345-67890";
@@ -326,22 +360,7 @@ public class DefaultFilesystemStoresImplTest {
         				});
         			});
 				});
-        		
-        		Context("#getResource", () -> {
-        			BeforeEach(() -> {
-        				when(conversion.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("/abcd/efgh");
-        				
-        				resource = mock(Resource.class);
-        				when(loader.getResource(eq("/abcd/efgh"))).thenReturn(resource);
-        			});
-        			JustBeforeEach(() -> {
-        				filesystemContentRepoImpl.getResource("abcd-efgh");
-        			});
-        			It("should load resource from the placement provided location", () -> {
-        				verify(loader).getResource(eq("/abcd/efgh"));
-        			});
-        		});
-        	});
+			});
     	});
     }
 
