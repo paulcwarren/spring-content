@@ -11,7 +11,6 @@ import org.springframework.content.s3.S3ContentId;
 import org.springframework.content.s3.S3ContentIdHelper;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -27,7 +26,6 @@ import java.util.UUID;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -35,7 +33,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.endsWith;
@@ -56,11 +53,12 @@ public class DefaultS3StoreImplTest {
     private ResourceLoader loader;
     private ConversionService converter;
     private AmazonS3 client;
+    private String bucket;
+
     private ContentProperty entity;
 
     private WritableResource resource;
     private Resource nonExistentResource;
-
     private InputStream content;
     private OutputStream output;
 
@@ -70,6 +68,7 @@ public class DefaultS3StoreImplTest {
 
     private Exception e;
 
+
     {
         Describe("DefaultS3StoreImpl", () -> {
             BeforeEach(() -> {
@@ -77,13 +76,15 @@ public class DefaultS3StoreImplTest {
                 loader = mock(ResourceLoader.class);
                 converter = mock(ConversionService.class);
                 client = mock(AmazonS3.class);
-
-                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "default-customer");
+                bucket = "default-bucket";
+            });
+            JustBeforeEach(() -> {
+                s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, bucket);
             });
             Context("#getResource", () -> {
                 Context("when the resource's ID is an S3ContentId", () -> {
                     BeforeEach(() -> {
-                        s3ContentIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ContentId>(loader, converter, client, "default-customer");
+                        s3ContentIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ContentId>(loader, converter, client, "default-bucket");
                         s3ContentIdBasedStore.setContentIdHelper(
                         		S3ContentIdHelper.createS3ContentIdHelper(
                         				S3ContentId::getBucket,
@@ -127,8 +128,6 @@ public class DefaultS3StoreImplTest {
                 });
                 Context("when the argument is an entity", () -> {
                     BeforeEach(() -> {
-                        s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, "default-bucket");
-
                         // converter that converts new ud to take contentId type
                         when(converter.convert(argThat(is(instanceOf(UUID.class))), argThat(is(instanceOf(TypeDescriptor.class))), argThat(is(instanceOf(TypeDescriptor.class))))).thenReturn("converted-uuid");
 
@@ -154,7 +153,7 @@ public class DefaultS3StoreImplTest {
                 });
                 Context("when env:BUCKET is not set", () -> {
                     BeforeEach(() -> {
-                        s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, null);
+                        bucket = null;
                     });
                     JustBeforeEach(() -> {
                         try {
@@ -203,7 +202,7 @@ public class DefaultS3StoreImplTest {
                     });
 
                     It("should fetch the resource", () -> {
-                    	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+                    	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
                     });
 
                     It("should change the content length", () -> {
@@ -241,7 +240,7 @@ public class DefaultS3StoreImplTest {
                     });
 
                     It("should create a new resource", () -> {
-                    	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+                    	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
                     });
 
                     It("should write to the resource's outputstream", () -> {
@@ -257,7 +256,6 @@ public class DefaultS3StoreImplTest {
                     content = mock(InputStream.class);
                     entity.setContentId("abcd-efgh");
 
-//                    when(placement.getLocation(eq("abcd-efgh"))).thenReturn("/abcd/efgh");
                     when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                     when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
@@ -277,7 +275,7 @@ public class DefaultS3StoreImplTest {
                     });
 
 	                It("should fetch the resource", () -> {
-	                	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+	                	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
 	                });
 
                     It("should get content", () -> {
@@ -297,7 +295,7 @@ public class DefaultS3StoreImplTest {
                       });
 
   	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+  	                	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
   	                });
 
                     It("should not find the content", () -> {
@@ -321,7 +319,6 @@ public class DefaultS3StoreImplTest {
                 Context("when the content exists", () -> {
 
                 	BeforeEach(() -> {
-//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
                         when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
 	            		when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
@@ -333,7 +330,7 @@ public class DefaultS3StoreImplTest {
                       });
 
   	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+  	                	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
   	                });
 
                     Context("when the property has a dedicated ContentId field", () -> {
@@ -366,7 +363,6 @@ public class DefaultS3StoreImplTest {
 
                 Context("when the content doesnt exist", () -> {
                 	BeforeEach(() -> {
-//                        when(placement.getLocation("abcd-efgh")).thenReturn("/abcd/efgh");
                         when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
                 		nonExistentResource = mock(Resource.class);
@@ -379,7 +375,7 @@ public class DefaultS3StoreImplTest {
                       });
 
   	                It("should fetch the resource", () -> {
-  	                	verify(loader).getResource(eq("s3://default-customer/abcd-efgh"));
+  	                	verify(loader).getResource(eq("s3://default-bucket/abcd-efgh"));
   	                });
 
   	                It("should unset the content", () -> {
