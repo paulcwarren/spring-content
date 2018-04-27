@@ -10,6 +10,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -19,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
 
 public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
 
@@ -37,7 +41,12 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 
     @Override
     public Resource getResource(S entity) {
-        return null;
+        Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (id == null) {
+            id = -1L;
+        }
+
+        return loader.getResource(id.toString());
     }
 
     @Override
@@ -53,7 +62,18 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 
     @Override
     public void unassociate(S entity) {
-
+        BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null, new Condition() {
+            @Override
+            public boolean matches(Field field) {
+                for (Annotation annotation : field.getAnnotations()) {
+                    if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
+                        "org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }});
+        BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
     }
 
     @Override
@@ -73,11 +93,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 
 	@Override
 	public void setContent(S metadata, InputStream content) {
-        Object id = BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
-        if (id == null) {
-            id = -1L;
-        }
-        Resource resource = loader.getResource(id.toString());
+        Resource resource = getResource(metadata);
         OutputStream os = null;
         long contentLen = -1L;
         try {
@@ -86,7 +102,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
                 contentLen = IOUtils.copyLarge(content, os);
             }
         } catch (IOException e) {
-            logger.error(String.format("Unable to get output stream for resource %s", id));
+            logger.error(String.format("Unable to get output stream for resource %s", resource));
         } finally {
             IOUtils.closeQuietly(content);
             IOUtils.closeQuietly(os);
@@ -116,7 +132,6 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
         if (resource instanceof DeletableResource) {
             ((DeletableResource)resource).delete();
         }
-        BeanUtils.setFieldWithAnnotation(metadata, ContentId.class, null);
-        BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, 0L);
+        unassociate(metadata);
 	}
 }
