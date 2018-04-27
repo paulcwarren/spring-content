@@ -79,7 +79,19 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	@Override
 	public void unassociate(S entity) {
-		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, null);
+		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null, new Condition() {
+			@Override
+			public boolean matches(Field field) {
+				for (Annotation annotation : field.getAnnotations()) {
+					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName())
+							|| "org.springframework.data.annotation.Id"
+									.equals(annotation.annotationType().getCanonicalName())) {
+						return false;
+					}
+				}
+				return true;
+			}
+		});
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0L);
 	}
 
