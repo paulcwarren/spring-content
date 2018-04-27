@@ -17,7 +17,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,7 +29,10 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultJpaStoreImplTest {
@@ -65,6 +72,28 @@ public class DefaultJpaStoreImplTest {
                         });
                     });
                 });
+                Context("#getResource with entity", () -> {
+                    JustBeforeEach(() -> {
+                        resource = store.getResource(entity);
+                    });
+                    Context("when the entity is not already associated with a resource", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntity();
+                        });
+                        It("should load a new resource", () -> {
+                            verify(blobResourceLoader).getResource(eq("-1"));
+                        });
+                    });
+                    Context("when the entity is not already associated with a resource", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntity();
+                            entity.setContentId(12345);
+                        });
+                        It("should load a new resource", () -> {
+                            verify(blobResourceLoader).getResource(eq("12345"));
+                        });
+                    });
+                });
                 Context("#associate", () -> {
                     BeforeEach(() -> {
                         id = 12345;
@@ -86,6 +115,22 @@ public class DefaultJpaStoreImplTest {
                     });
                     It("should set the entity's content length attribute", () -> {
                         assertThat(entity.getContentLen(), CoreMatchers.is(20L));
+                    });
+                });
+                Context("#unassociate", () -> {
+                    BeforeEach(() -> {
+                        id = 12345;
+
+                        entity = new TestEntity();
+                        entity.setContentId(id);
+                        entity.setContentLen(20L);
+                    });
+                    JustBeforeEach(() -> {
+                        store.unassociate(entity);
+                    });
+                    It("should reset the @ContentId and @ContentLength", () -> {
+                        assertThat(entity.getContentId(), is(nullValue()));
+                        assertThat(entity.getContentLen(), is(0L));
                     });
                 });
             });
