@@ -128,7 +128,7 @@ public class DefaultS3StoreImplTest {
                 });
                 Context("when the argument is an entity", () -> {
                     BeforeEach(() -> {
-                        // converter that converts new ud to take contentId type
+                        // converter that converts new id to take contentId type
                         when(converter.convert(argThat(is(instanceOf(UUID.class))), argThat(is(instanceOf(TypeDescriptor.class))), argThat(is(instanceOf(TypeDescriptor.class))))).thenReturn("converted-uuid");
 
                         // converter that converts the object id for storage placement
