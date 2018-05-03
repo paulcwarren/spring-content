@@ -23,14 +23,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 
-import internal.org.springframework.content.commons.renditions.RenditionContext;
 import internal.org.springframework.content.rest.StoreRestResource;
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
 
 public final class ContentStoreUtils {
 
-	private ContentStoreUtils() {}
-	
+	private ContentStoreUtils() {
+	}
+
 	/**
 	 * Given a store and a collection of mime types this method will iterate the
 	 * mime-types returning the first input stream that it can find from the store
@@ -119,7 +119,7 @@ public final class ContentStoreUtils {
 					headers.setContentType(MediaType.valueOf(mt));
 
 					// determine file extension TODO: make it better!!!
-					String mtExt = ".new"
+					String mtExt = ".new";
 					// String mtExt = allMimeTypes.forName(mime.toString()).getExtension();
 
 					// content name header

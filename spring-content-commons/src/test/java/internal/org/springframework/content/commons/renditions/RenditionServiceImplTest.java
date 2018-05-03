@@ -1,15 +1,20 @@
 package internal.org.springframework.content.commons.renditions;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +24,9 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Set;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,21 +35,18 @@ import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.repository.StoreInvoker;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class RenditionServiceImplTest {
 
 	private RenditionServiceImpl renditionService;
 	private Object rc;
-	
+
 	// mocks
 	private MethodInvocation invocation;
 	private StoreInvoker repoInvoker;
 	private RenditionProvider mockProvider = null;
-	
+
 	{
 		Describe("RenditionServiceImpl", () -> {
 			Context("#canConvert", () -> {
@@ -58,9 +63,7 @@ public class RenditionServiceImplTest {
 				});
 				Context("given a provider", () -> {
 					BeforeEach(() -> {
-						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("one/thing");
-						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
+						mockProvider = spy(new DummyRenderer());
 						renditionService.setProviders(mockProvider);
 					});
 					It("should return true for a consumes/produces match", () -> {
@@ -79,7 +82,8 @@ public class RenditionServiceImplTest {
 					});
 					Context("given a mimetype with a parameter", () -> {
 						It("should return true", () -> {
-							assertThat(renditionService.canConvert("one/thing;parameter=foo", "something/else"), is(true));
+							assertThat(renditionService.canConvert("one/thing;parameter=foo", "something/else"),
+									is(true));
 						});
 					});
 				});
@@ -95,9 +99,7 @@ public class RenditionServiceImplTest {
 				});
 				Context("given a provider", () -> {
 					BeforeEach(() -> {
-						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("one/thing");
-						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
+						mockProvider = spy(new DummyRenderer());
 						renditionService.setProviders(mockProvider);
 					});
 					It("should return true for a consumes/produces match", () -> {
@@ -133,55 +135,56 @@ public class RenditionServiceImplTest {
 			});
 			Context("#getMethods", () -> {
 				It("should return a set containing the getRendition method", () -> {
-					Class<?> clazz  = Renderable.class;
+					Class<?> clazz = Renderable.class;
 					Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-					
+
 					Set<Method> methods = renditionService.getMethods();
 					assertThat(methods.size(), is(1));
 					assertThat(methods, hasItem(getRenditionMethod));
 				});
 			});
-			
+
 			Context("#invoke", () -> {
 				JustBeforeEach(() -> {
 					rc = renditionService.invoke(invocation, repoInvoker);
 				});
-				Context("given a provider", ()->{
+				Context("given a provider", () -> {
 					BeforeEach(() -> {
-						mockProvider = mock(RenditionProvider.class);
-						when(mockProvider.consumes()).thenReturn("one/thing");
-						when(mockProvider.produces()).thenReturn(new String[]{"something/else"});
+						mockProvider = spy(new DummyRenderer());
 						renditionService.setProviders(mockProvider);
 					});
-					
+
 					Context("given a renderable invocation", () -> {
 						BeforeEach(() -> {
-							Class<?> clazz  = Renderable.class;
+							Class<?> clazz = Renderable.class;
 							Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-							
+
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("one/thing"), "something/else"});
-							
+							when(invocation.getArguments())
+									.thenReturn(new Object[] { new ContentObject("one/thing"), "something/else" });
+
 							repoInvoker = mock(StoreInvoker.class);
-							when(repoInvoker.invokeGetContent()).thenReturn(new ByteArrayInputStream("some content".getBytes()));
+							when(repoInvoker.invokeGetContent())
+									.thenReturn(new ByteArrayInputStream("some content".getBytes()));
 						});
-						
+
 						It("should convert the content", () -> {
 							verify(mockProvider).convert(anyObject(), eq("something/else"));
 						});
 					});
-					
+
 					Context("given a ContentObject with no mime-type", () -> {
 						BeforeEach(() -> {
-							Class<?> clazz  = Renderable.class;
+							Class<?> clazz = Renderable.class;
 							Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-							
+
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new NoMimeTypeContentObject(), "something/else"});
+							when(invocation.getArguments())
+									.thenReturn(new Object[] { new NoMimeTypeContentObject(), "something/else" });
 						});
-						
+
 						It("should not convert the content and return null", () -> {
 							verify(mockProvider, never()).convert(anyObject(), anyString());
 							assertThat(rc, is(nullValue()));
@@ -190,14 +193,15 @@ public class RenditionServiceImplTest {
 
 					Context("given an unsupported 'from' mime-type", () -> {
 						BeforeEach(() -> {
-							Class<?> clazz  = Renderable.class;
+							Class<?> clazz = Renderable.class;
 							Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-							
+
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("somehting/bad"), "something/else"});
+							when(invocation.getArguments())
+									.thenReturn(new Object[] { new ContentObject("somehting/bad"), "something/else" });
 						});
-						
+
 						It("should not convert the content and return null", () -> {
 							verify(mockProvider, never()).convert(anyObject(), anyString());
 							assertThat(rc, is(nullValue()));
@@ -206,14 +210,15 @@ public class RenditionServiceImplTest {
 
 					Context("given an unsupported 'to' mime-type", () -> {
 						BeforeEach(() -> {
-							Class<?> clazz  = Renderable.class;
+							Class<?> clazz = Renderable.class;
 							Method getRenditionMethod = clazz.getMethod("getRendition", Object.class, String.class);
-							
+
 							invocation = mock(MethodInvocation.class);
 							when(invocation.getMethod()).thenReturn(getRenditionMethod);
-							when(invocation.getArguments()).thenReturn(new Object[] {new ContentObject("one/thing"), "something/bad"});
+							when(invocation.getArguments())
+									.thenReturn(new Object[] { new ContentObject("one/thing"), "something/bad" });
 						});
-						
+
 						It("should not convert the content and return null", () -> {
 							verify(mockProvider, never()).convert(anyObject(), anyString());
 							assertThat(rc, is(nullValue()));
@@ -223,19 +228,20 @@ public class RenditionServiceImplTest {
 			});
 		});
 	}
-	
+
 	@Test
 	public void noop() {
 	}
-	
+
 	public static class ContentObject {
 		@MimeType
 		public String mimeType;
 
-		public ContentObject() {}
+		public ContentObject() {
+		}
 
 		public ContentObject(String mimeType) {
-			this.mimeType = mimeType; 
+			this.mimeType = mimeType;
 		}
 	}
 

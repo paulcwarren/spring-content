@@ -29,14 +29,14 @@ import java.sql.Statement;
 
 import javax.sql.DataSource;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
 import org.springframework.content.jpa.io.AbstractBlobResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 public class GenericBlobResourceTest {
