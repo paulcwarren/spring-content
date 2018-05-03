@@ -1,7 +1,7 @@
 package org.springframework.content.commons.renditions;
 
-import java.io.InputStream;
+import org.springframework.core.io.Resource;
 
 public interface Renderable<S> {
-	InputStream getRendition(S property, String mimeType);
+	Resource getRendition(S property, String mimeType);
 }

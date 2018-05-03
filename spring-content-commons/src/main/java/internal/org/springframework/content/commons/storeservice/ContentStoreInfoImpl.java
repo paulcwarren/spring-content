@@ -11,14 +11,15 @@ public class ContentStoreInfoImpl implements ContentStoreInfo {
 	private Class<?> storeInterface;
 	private Class<?> storeDomainClass;
 	private Object storeImpl;
-	
+
 	public ContentStoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass, Store<Serializable> storeImpl) {
 		this.storeInterface = interfaceClass;
 		this.storeDomainClass = storeDomainClass;
 		this.storeImpl = storeImpl;
 	}
 
-	public ContentStoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass, ContentStore<Object,Serializable> storeImpl) {
+	public ContentStoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass,
+			ContentStore<Object, Serializable> storeImpl) {
 		this.storeInterface = interfaceClass;
 		this.storeDomainClass = storeDomainClass;
 		this.storeImpl = storeImpl;
@@ -36,17 +37,17 @@ public class ContentStoreInfoImpl implements ContentStoreInfo {
 
 	@Deprecated
 	@Override
-	public ContentStore<Object,Serializable> getImpementation() {
+	public ContentStore<Object, Serializable> getImpementation() {
 		if (storeImpl instanceof ContentStore) {
-			return (ContentStore<Object,Serializable>)this.storeImpl;
-		} 
+			return (ContentStore<Object, Serializable>) this.storeImpl;
+		}
 		return null;
 	}
 
 	@Override
 	public <T> T getImplementation(Class<? extends T> clazz) {
 		if (clazz.isAssignableFrom(storeImpl.getClass())) {
-			return (T)storeImpl;
+			return clazz.cast(storeImpl);
 		}
 		return null;
 	}

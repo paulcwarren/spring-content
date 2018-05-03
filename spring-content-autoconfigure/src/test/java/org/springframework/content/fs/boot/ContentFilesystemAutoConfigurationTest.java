@@ -1,10 +1,22 @@
 package org.springframework.content.fs.boot;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.io.File;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -19,27 +31,16 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class ContentFilesystemAutoConfigurationTest {
 
 	{
@@ -57,29 +58,33 @@ public class ContentFilesystemAutoConfigurationTest {
 			});
 
 			Context("given an environment specifying a filesystem root using spring prefix", () -> {
-				BeforeEach(() -> {
-					System.setProperty("spring.content.fs.filesystem-root", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
-				});
-				AfterEach(() -> {
-					System.clearProperty("spring.content.fs.filesystem-root");
-				});
+				/*
+				 * Value come from test.properties !!!!! BeforeEach(() -> {
+				 * System.setProperty("spring.content.fs.filesystem-root",
+				 * "${java.io.tmpdir}/UPPERCASE/NOTATION/"); }); AfterEach(() -> {
+				 * System.clearProperty("spring.content.fs.filesystem-root"); });
+				 */
 				It("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).getFilesystemRoot(), endsWith("/UPPERCASE/NOTATION/"));
+					assertThat(
+							context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class)
+									.getFilesystemRoot(),
+							endsWith(File.separator + "UPPERCASE" + File.separator + "NOTATION"));
 
 					context.close();
 				});
 			});
 
-            Context("given a configuration that contributes a loader bean", () -> {
+			Context("given a configuration that contributes a loader bean", () -> {
 				It("should have that loader bean in the context", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(ConfigWithLoaderBean.class);
 					context.refresh();
 
+					// file system resource loader don't normalize path separator !!!!
 					FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
 					assertThat(loader.getFilesystemRoot(), is("/some/random/path/"));
 
@@ -90,24 +95,18 @@ public class ContentFilesystemAutoConfigurationTest {
 		});
 	}
 
-
+	@PropertySource("classpath:/test.properties")
 	@Configuration
 	@ComponentScan
-	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
-										JdbcTemplateAutoConfiguration.class,
-										JpaRepositoriesAutoConfiguration.class,
-										MongoDataAutoConfiguration.class,
-										MongoAutoConfiguration.class})
+	@EnableAutoConfiguration(exclude = { HibernateJpaAutoConfiguration.class, JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class, MongoDataAutoConfiguration.class, MongoAutoConfiguration.class })
 	public static class TestConfig {
 	}
 
 	@Configuration
 	@ComponentScan
-	@EnableAutoConfiguration(exclude={HibernateJpaAutoConfiguration.class,
-			JdbcTemplateAutoConfiguration.class,
-			JpaRepositoriesAutoConfiguration.class,
-			MongoDataAutoConfiguration.class,
-			MongoAutoConfiguration.class})
+	@EnableAutoConfiguration(exclude = { HibernateJpaAutoConfiguration.class, JdbcTemplateAutoConfiguration.class,
+			JpaRepositoriesAutoConfiguration.class, MongoDataAutoConfiguration.class, MongoAutoConfiguration.class })
 	public static class ConfigWithLoaderBean {
 
 		@Bean
@@ -117,7 +116,7 @@ public class ContentFilesystemAutoConfigurationTest {
 
 	}
 
-	@Entity
+	@Entity(name = "TestEntity")
 	@Content
 	public class TestEntity {
 		@Id

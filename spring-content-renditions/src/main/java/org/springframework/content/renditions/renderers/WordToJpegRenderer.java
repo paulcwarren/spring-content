@@ -1,66 +1,88 @@
 package org.springframework.content.renditions.renderers;
 
-import internal.org.springframework.renditions.poi.POIServiceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.poi.POIXMLProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.springframework.content.commons.io.MedializedResource;
+import org.springframework.content.commons.renditions.RenditionCapability;
 import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.commons.repository.StoreExtensionException;
 import org.springframework.content.renditions.RenditionException;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.renditions.poi.POIService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.MimeType;
 
-import java.io.IOException;
-import java.io.InputStream;
+import internal.org.springframework.renditions.poi.POIServiceImpl;
 
 @Service
 public class WordToJpegRenderer implements RenditionProvider {
 
-    private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
+	private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
 
-    private POIService poi = null;
+	private POIService poi = null;
 
-    public WordToJpegRenderer() {
-        poi = new POIServiceImpl();
-    };
+	public WordToJpegRenderer() {
+		poi = new POIServiceImpl();
+	};
 
-    public WordToJpegRenderer(POIService poi) {
-        this.poi = poi;
-    }
+	public WordToJpegRenderer(POIService poi) {
+		this.poi = poi;
+	}
 
-    @Override
-    public String consumes() {
-        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    }
+	@Override
+	public String consumes() {
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	}
 
-    @Override
-    public String[] produces() {
-        return new String[] {"image/jpg"};
-    }
+	@Override
+	public Boolean consumes(String fromMimeType) {
+		if (fromMimeType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+			return true;
+		return false;
+	}
 
-    @SuppressWarnings("resource")
-    @Override
-    public InputStream convert(InputStream fromInputSource, String toMimeType) {
+	@Override
+	public String[] produces() {
+		return new String[] { "image/jpeg", "image/jpg" };
+	}
 
-        Assert.notNull(fromInputSource, "input source must not be null");
+	@Override
+	public RenditionCapability isCapable(String fromMimeType, String toMimeType) {
+		if ((MimeType.valueOf(toMimeType).includes(MimeType.valueOf("image/jpg"))
+				|| MimeType.valueOf(toMimeType).includes(MimeType.valueOf("image/jpeg")))
+				&& MimeType.valueOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+						.includes(MimeType.valueOf(fromMimeType)))
+			return RenditionCapability.GOOD_CAPABILITY;
+		return RenditionCapability.NOT_CAPABLE;
+	}
 
-        XWPFDocument wordDoc = null;
-        try {
-            wordDoc = poi.xwpfDocument(fromInputSource);
-        } catch (Exception e) {
-            throw new RenditionException(String.format("Unexpected error reading input attempting to get mime-type rendition %s", toMimeType), e);
-        }
+	@SuppressWarnings("resource")
+	@Override
+	public Resource convert(Resource fromInputSource, String toMimeType) {
 
-        if (wordDoc != null) {
-            try {
-                POIXMLProperties props = wordDoc.getProperties();
-                return props.getThumbnailImage();
-            } catch (Exception e) {
-                throw new RenditionException(String.format("Unexpected error getting thumbnail for mime-type rendition %s", toMimeType), e);
-            }
-        }
-        return null;
-    }
+		Assert.notNull(fromInputSource, "input source must not be null");
+
+		XWPFDocument wordDoc = null;
+		try {
+			wordDoc = poi.xwpfDocument(fromInputSource.getInputStream());
+		} catch (Exception e) {
+			throw new RenditionException(String
+					.format("Unexpected error reading input attempting to get mime-type rendition %s", toMimeType), e);
+		}
+
+		if (wordDoc != null) {
+			try {
+				POIXMLProperties props = wordDoc.getProperties();
+				return new MedializedResource(new InputStreamResource(props.getThumbnailImage()), "image/jpeg",
+						props.getThumbnailFilename());
+			} catch (Exception e) {
+				throw new RenditionException(
+						String.format("Unexpected error getting thumbnail for mime-type rendition %s", toMimeType), e);
+			}
+		}
+		return null;
+	}
 }

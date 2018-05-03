@@ -1,156 +1,186 @@
 package org.springframework.content.renditions.renderers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.renditions.RenditionException;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.content.commons.renditions.RenditionCapability;
+import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.content.renditions.RenditionException;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+import org.springframework.util.MimeType;
+
 @Service
 public class TextplainToJpegRenderer implements RenditionProvider {
 
-    private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
+	private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
 
-    private static int width = 272;
-    private static int margin = 5;
-    private static String fontName = "Courier New";
-    private static int fontSize = 12;
+	private static int width = 272;
+	private static int margin = 5;
+	private static String fontName = "Courier New";
+	private static int fontSize = 12;
 
-    private boolean wrapText = false;
+	private boolean wrapText = false;
 
-    public TextplainToJpegRenderer() {}
+	public TextplainToJpegRenderer() {
+	}
 
-    public TextplainToJpegRenderer(boolean wrapText) {
-        this.wrapText = wrapText;
-    }
+	public TextplainToJpegRenderer(boolean wrapText) {
+		this.wrapText = wrapText;
+	}
 
-    @Override
-    public String consumes() {
-        return "text/plain";
-    }
+	@Override
+	public String consumes() {
+		return "text/plain";
+	}
 
-    @Override
-    public String[] produces() {
-        return new String[] {"image/jpg", "image/jpeg"};
-    }
+	@Override
+	public Boolean consumes(String fromMimeType) {
+		if (fromMimeType.equals("text/plain"))
+			return true;
+		return false;
+	}
 
-    @Override
-    public InputStream convert(InputStream fromInputSource, String toMimeType) {
+	@Override
+	public String[] produces() {
+		return new String[] { "image/jpg", "image/jpeg" };
+	}
 
-        Assert.notNull(fromInputSource, "input source must not be null");
+	@Override
+	public RenditionCapability isCapable(String fromMimeType, String toMimeType) {
+		if ((MimeType.valueOf(toMimeType).includes(MimeType.valueOf("image/jpg"))
+				|| MimeType.valueOf(toMimeType).includes(MimeType.valueOf("image/jpeg")))
+				&& MimeType.valueOf("text/plain").includes(MimeType.valueOf(fromMimeType)))
+			return RenditionCapability.GOOD_CAPABILITY;
+		return RenditionCapability.NOT_CAPABLE;
+	}
 
-        Font font = null;
-        try {
-            font = new Font(fontName, Font.PLAIN, (int) fontSize);
-        } catch (Exception e) {
-            throw new RenditionException("Error creating font", e);
-        }
+	@Override
+	public Resource convert(Resource fromInputSource, String toMimeType) {
 
-        BufferedImage tempBuffer = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = tempBuffer.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setFont(font);
+		Assert.notNull(fromInputSource, "input source must not be null");
 
-        FontRenderContext fc = g.getFontRenderContext();
-        Rectangle2D bounds = font.getStringBounds("Random Text", fc);
-        int lineHeight = (int)bounds.getHeight();
+		Font font = null;
+		try {
+			font = new Font(fontName, Font.PLAIN, (int) fontSize);
+		} catch (Exception e) {
+			throw new RenditionException("Error creating font", e);
+		}
 
-        BufferedReader reader = null;
+		BufferedImage tempBuffer = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = tempBuffer.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setFont(font);
 
-        try {
-            reader = new BufferedReader(new InputStreamReader(fromInputSource));
-        } catch (Exception e) {
-            throw new RenditionException("Error opening input stream", e);
-        }
+		FontRenderContext fc = g.getFontRenderContext();
+		Rectangle2D bounds = font.getStringBounds("Random Text", fc);
+		int lineHeight = (int) bounds.getHeight();
 
-        ArrayList images = new ArrayList();
+		BufferedReader reader = null;
 
-        int lineCnt = margin + margin;
+		try {
+			reader = new BufferedReader(new InputStreamReader(fromInputSource.getInputStream()));
+		} catch (Exception e) {
+			throw new RenditionException("Error opening input stream", e);
+		}
 
-        while (true) {
-            String line;
+		ArrayList images = new ArrayList();
 
-            try {
-                line = reader.readLine();
-            } catch (IOException ignore) {
-                break;
-            }
+		int lineCnt = margin + margin;
 
-            if (line == null) { // EOF
-                break;
-            }
+		while (true) {
+			String line;
 
-            if ("".equals(line)) { // Empty line
-                line = " ";
-            }
+			try {
+				line = reader.readLine();
+			} catch (IOException ignore) {
+				break;
+			}
 
-            AttributedString attribString = new AttributedString(line);
-            attribString.addAttribute(TextAttribute.BACKGROUND, Color.WHITE, 0, line.length());
-            attribString.addAttribute(TextAttribute.FOREGROUND, Color.BLACK, 0, line.length());
-            attribString.addAttribute(TextAttribute.FONT, font, 0, line.length());
+			if (line == null) { // EOF
+				break;
+			}
 
-            AttributedCharacterIterator aci = attribString.getIterator();
-            LineBreakMeasurer lbm = new LineBreakMeasurer(aci, fc);
+			if ("".equals(line)) { // Empty line
+				line = " ";
+			}
 
-            while (lbm.getPosition() < line.length()) {
-                BufferedImage lineBuffer = new BufferedImage(width, lineHeight, BufferedImage.TYPE_INT_ARGB);
+			AttributedString attribString = new AttributedString(line);
+			attribString.addAttribute(TextAttribute.BACKGROUND, Color.WHITE, 0, line.length());
+			attribString.addAttribute(TextAttribute.FOREGROUND, Color.BLACK, 0, line.length());
+			attribString.addAttribute(TextAttribute.FONT, font, 0, line.length());
 
-                Graphics2D g1 = lineBuffer.createGraphics();
-                g1.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			AttributedCharacterIterator aci = attribString.getIterator();
+			LineBreakMeasurer lbm = new LineBreakMeasurer(aci, fc);
 
-                TextLayout layout = lbm.nextLayout(width - margin);
+			while (lbm.getPosition() < line.length()) {
+				BufferedImage lineBuffer = new BufferedImage(width, lineHeight, BufferedImage.TYPE_INT_ARGB);
 
-                int y = (int) layout.getAscent();
+				Graphics2D g1 = lineBuffer.createGraphics();
+				g1.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                layout.draw(g1, margin, y);
-                images.add(lineBuffer);
-                lineCnt += lineHeight;
+				TextLayout layout = lbm.nextLayout(width - margin);
 
-                if (lineCnt + lineHeight > 480 || !wrapText) {
-                    break;
-                }
-            }
-        }
+				int y = (int) layout.getAscent();
 
-        if (lineCnt != 0) {
-            try {
-                saveImage(images, lineHeight, "/tmp/textToJpeg.jpeg");
-                return new FileInputStream("/tmp/textToJpeg.jpeg");
-            } catch (IOException e) {
-                throw new RenditionException("Error writing image", e);
-            }
-        }
+				layout.draw(g1, margin, y);
+				images.add(lineBuffer);
+				lineCnt += lineHeight;
 
-        return null;
-    }
+				if (lineCnt + lineHeight > 480 || !wrapText) {
+					break;
+				}
+			}
+		}
 
-    private void saveImage(ArrayList<BufferedImage> images, int lineHeight, String fileName) throws IOException {
-        BufferedImage buffer = new BufferedImage(272, 480, BufferedImage.TYPE_INT_RGB);
+		if (lineCnt != 0) {
+			try {
+				saveImage(images, lineHeight, "/tmp/textToJpeg.jpeg");
+				return new FileSystemResource("/tmp/textToJpeg.jpeg");
+			} catch (IOException e) {
+				throw new RenditionException("Error writing image", e);
+			}
+		}
 
-        Graphics2D g = buffer.createGraphics();
-        g.setBackground(Color.WHITE);
-        g.clearRect(0, 0, 272, 480);
+		return null;
+	}
 
-        for (int i = 0; i < images.size(); i++) {
-            g.drawImage((BufferedImage) images.get(i), 0, margin + (i * lineHeight), null);
-        }
+	private void saveImage(ArrayList<BufferedImage> images, int lineHeight, String fileName) throws IOException {
+		BufferedImage buffer = new BufferedImage(272, 480, BufferedImage.TYPE_INT_RGB);
 
-        OutputStream out = new FileOutputStream(new File(fileName.toString()));
-        ImageIO.write(buffer, "jpg", out);
-        out.close();
-    }
+		Graphics2D g = buffer.createGraphics();
+		g.setBackground(Color.WHITE);
+		g.clearRect(0, 0, 272, 480);
+
+		for (int i = 0; i < images.size(); i++) {
+			g.drawImage((BufferedImage) images.get(i), 0, margin + (i * lineHeight), null);
+		}
+
+		OutputStream out = new FileOutputStream(new File(fileName.toString()));
+		ImageIO.write(buffer, "jpg", out);
+		out.close();
+	}
 }
