@@ -6,8 +6,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
 
+import com.amazonaws.services.s3.model.S3ObjectId;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,11 +19,8 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
-import org.springframework.content.s3.S3ContentIdHelper;
-import org.springframework.content.s3.Bucket;
-import org.springframework.content.s3.S3ContentId;
+import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -39,64 +36,40 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	private ResourceLoader loader;
 	private ConversionService converter;
 	private AmazonS3 client;
-	private S3ContentIdHelper contentIdHelper = null; //S3ContentIdHelper.createDefaultS3ContentIdHelper();
-	private String bucket;
+	private S3ObjectIdResolver idResolver = null;
+	private String defaultBucket;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter, AmazonS3 client, String bucket) {
+	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter, AmazonS3 client, S3ObjectIdResolver idResolver, String defaultBucket) {
 		Assert.notNull(loader, "loader must be specified");
-		Assert.notNull(loader, "converter must be specified");
-		Assert.notNull(loader, "client must be specified");
+		Assert.notNull(converter, "converter must be specified");
+		Assert.notNull(client, "client must be specified");
+		Assert.notNull(idResolver, "idResolver must be specified");
 		this.loader = loader;
 		this.converter = converter;
 		this.client = client;
-		this.bucket = bucket;
-	}
-	
-	public S3ContentIdHelper getContentIdHelper() {
-		if (contentIdHelper == null) {
-			contentIdHelper = new S3ContentIdHelper<S>() {
-				@Override
-				public String getBucket(S entityOrId, String defaultBucketName) {
-					Object bucket = BeanUtils.getFieldWithAnnotation(entityOrId, Bucket.class);
-					if (bucket == null) {
-						bucket = DefaultS3StoreImpl.this.bucket;
-					}
-					if (bucket == null) {
-						throw new StoreAccessException("Bucket not set");
-					}
-					return bucket.toString();
-				}
-
-				@Override
-				public String getObjectId(S entityOrId) {
-					Object contentId = (SID) BeanUtils.getFieldWithAnnotation(entityOrId, ContentId.class);
-					if (contentId == null) {
-						UUID newId = UUID.randomUUID();
-						contentId = (SID) converter.convert(newId, TypeDescriptor.forObject(newId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(entityOrId, ContentId.class)));
-						BeanUtils.setFieldWithAnnotation(entityOrId, ContentId.class, contentId);
-					}
-					return contentId.toString();
-				}
-			};
-		}
-		return contentIdHelper;
+		this.idResolver = idResolver;
+		this.defaultBucket = defaultBucket;
 	}
 
-	public void setContentIdHelper(S3ContentIdHelper contentIdHelper) {
-		this.contentIdHelper = contentIdHelper;
+	public S3ObjectIdResolver getS3ObjectIdResolver() {
+		return idResolver;
 	}
 
 	@Override
 	public Resource getResource(SID id) {
-		String bucket = this.getContentIdHelper().getBucket(id, this.bucket);
-		String objectId = this.getContentIdHelper().getObjectId(id);
+		if (id == null)
+			return null;
+
+		this.getS3ObjectIdResolver().validate(id);
+		String bucket = this.getS3ObjectIdResolver().getBucket(id, this.defaultBucket);
+		String objectId = this.getS3ObjectIdResolver().getKey(id);
 
 		if (bucket == null) {
 			throw new StoreAccessException("Bucket not set");
 		}
 
-		S3ContentId s3ContentId = new S3ContentId(bucket, objectId);
-		return this.getResource(s3ContentId);
+		S3ObjectId s3ObjectId = new S3ObjectId(bucket, objectId);
+		return this.getResource(s3ObjectId);
 	}
 
 	@Override
@@ -104,16 +77,20 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		if (entity == null)
 			return null;
 
-		String bucket = this.getContentIdHelper().getBucket(entity, this.bucket);
-		String objectId = this.getContentIdHelper().getObjectId(entity);
+		String bucket = this.getS3ObjectIdResolver().getBucket(entity, this.defaultBucket);
+		String objectId = this.getS3ObjectIdResolver().getKey(entity);
 
-		S3ContentId s3ContentId = new S3ContentId(bucket.toString(), objectId.toString());
-		return this.getResource(s3ContentId);
+		if (bucket == null) {
+			throw new StoreAccessException("Bucket not set");
+		}
+
+		S3ObjectId s3ObjectId = new S3ObjectId(bucket.toString(), objectId.toString());
+		return this.getResource(s3ObjectId);
 	}
 
-	private Resource getResource(S3ContentId id) {
+	private Resource getResource(S3ObjectId id) {
 		String bucket = id.getBucket();
-		Object objectId = id.getObjectId();
+		Object objectId = id.getKey();
 
 		String location = converter.convert(objectId, String.class);
 		location = absolutify(bucket, location);
@@ -227,7 +204,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	}
 
 	private void deleteIfExists(SID contentId) {
-		String bucketName = this.contentIdHelper.getBucket(contentId, this.bucket);
+		String bucketName = this.idResolver.getBucket(contentId, this.defaultBucket);
 		
 		Resource resource = this.getResource(contentId);
 		if (resource.exists()) {
@@ -236,7 +213,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	}
 
 	private void deleteIfExists(S entity) {
-		String bucketName = this.getContentIdHelper().getBucket(entity, this.bucket);
+		String bucketName = this.getS3ObjectIdResolver().getBucket(entity, this.defaultBucket);
 
 		Resource resource = this.getResource(entity);
 		if (resource.exists()) {

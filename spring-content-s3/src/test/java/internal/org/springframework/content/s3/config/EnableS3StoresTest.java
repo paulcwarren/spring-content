@@ -1,16 +1,21 @@
 package internal.org.springframework.content.s3.config;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static org.junit.Assert.fail;
 
+import com.amazonaws.services.s3.model.S3ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.content.s3.config.S3ObjectIdResolvers;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +27,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.springframework.core.convert.converter.ConverterRegistry;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -47,7 +53,7 @@ public class EnableS3StoresTest {
 	static S3StoreConfigurer configurer;
 	{
 		Describe("EnableS3Stores", () -> {
-			Context("given a context and a configuartion with an S3 content repository bean", () -> {
+			Context("given a context and a configuration with an S3 content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
@@ -77,6 +83,7 @@ public class EnableS3StoresTest {
 				});
 				It("should call that configurer to help setup the store", () -> {
 					verify(configurer).configureS3StoreConverters(anyObject());
+					verify(configurer).configureS3ObjectIdResolvers(anyObject());
 				});
 			});
 
@@ -101,7 +108,7 @@ public class EnableS3StoresTest {
 		});
 		
 		Describe("EnableS3ContentRepositories", () -> {
-			Context("given a context and a configuartion with an S3 content repository bean", () -> {
+			Context("given a context and a configuration with an S3 content repository bean", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
 					context.register(EnableS3ContentRepositoriesConfig.class);
@@ -127,21 +134,18 @@ public class EnableS3StoresTest {
 
 	@Configuration
 	@EnableS3Stores(basePackages="contains.no.fs.repositores")
-//	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 	}
 
 	@Configuration
 	@EnableS3Stores
-//	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
 	}
 	
 	@Configuration
 	@EnableS3Stores
-//	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class ConverterConfig {
 		@Bean
@@ -151,8 +155,40 @@ public class EnableS3StoresTest {
 	}
 
 	@Configuration
+	@EnableS3Stores
+	@Import(InfrastructureConfig.class)
+	public static class TestConverterConfig {
+		@Bean
+		public S3StoreConfigurer configurer() {
+			return new S3StoreConfigurer() {
+
+				@Override
+				public void configureS3StoreConverters (ConverterRegistry registry){
+				}
+
+				@Override
+				public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers){
+					resolvers.add(new S3ObjectIdResolver<S3ObjectId>() {
+						@Override
+						public String getBucket(S3ObjectId idOrEntity, String defaultBucketName) {
+							return idOrEntity.getBucket();
+						}
+
+						@Override
+						public String getKey(S3ObjectId idOrEntity) {
+							return idOrEntity.getKey();
+						}
+					});
+				}
+			};
+		}
+	}
+
+	public interface TestEntityStore extends AssociativeStore<TestEntity, S3ObjectId> {
+	}
+
+	@Configuration
 	@EnableS3ContentRepositories
-//	@EnableContextResourceLoader
 	@Import(InfrastructureConfig.class)
 	public static class EnableS3ContentRepositoriesConfig {
 	}

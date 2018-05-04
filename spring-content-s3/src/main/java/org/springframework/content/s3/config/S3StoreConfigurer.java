@@ -6,4 +6,5 @@ public interface S3StoreConfigurer {
 
 	void configureS3StoreConverters(ConverterRegistry registry);
 
+	void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers);
 }

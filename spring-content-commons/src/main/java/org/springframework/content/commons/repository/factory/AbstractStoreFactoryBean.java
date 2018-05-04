@@ -15,6 +15,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
@@ -144,11 +145,11 @@ public abstract class AbstractStoreFactoryBean
 		return (Store<? extends Serializable>)result.getProxy(classLoader);
 	}
 
-    /* package */ Class<?> getDomainClass(Class<?> repositoryClass) {
+    protected Class<?> getDomainClass(Class<?> repositoryClass) {
         return getStoreParameter(repositoryClass, 0);
     }
 
-    /* package */ Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
+    protected Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
         return (Class<? extends Serializable>) getStoreParameter(repositoryClass, 1);
     }
 
@@ -159,7 +160,16 @@ public abstract class AbstractStoreFactoryBean
         for ( Type t : types ) {
             if (t instanceof ParameterizedType) {
                 ParameterizedType pt = (ParameterizedType) t;
-                if (pt.getRawType().getTypeName().equals(ContentStore.class.getCanonicalName())) {
+				if (pt.getRawType().getTypeName().equals(Store.class.getCanonicalName())) {
+					types = pt.getActualTypeArguments();
+					if (types.length != 1) {
+						throw new IllegalStateException(String.format("Store class %s must have a contentId type", repositoryClass.getCanonicalName()));
+					}
+					if (types[0] instanceof Class) {
+						clazz = (Class<?>) types[0];
+					}
+				} else if (pt.getRawType().getTypeName().equals(AssociativeStore.class.getCanonicalName()) ||
+						pt.getRawType().getTypeName().equals(ContentStore.class.getCanonicalName())) {
                     types = pt.getActualTypeArguments();
                     if (types.length != 2) {
                         throw new IllegalStateException(String.format("ContentRepository class %s must have domain and contentId types", repositoryClass.getCanonicalName()));
