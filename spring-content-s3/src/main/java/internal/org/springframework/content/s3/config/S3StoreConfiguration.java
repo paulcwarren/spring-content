@@ -3,6 +3,7 @@ package internal.org.springframework.content.s3.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.s3.config.S3ObjectIdResolvers;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,17 @@ import org.springframework.core.convert.support.DefaultConversionService;
 public class S3StoreConfiguration {
 	
 	@Autowired(required=false) private List<S3StoreConfigurer> configurers;
+
+	@Bean
+	public S3ObjectIdResolvers contentIdResolvers() {
+		S3ObjectIdResolvers resolvers = new S3ObjectIdResolvers();
+		if (configurers != null) {
+			for (S3StoreConfigurer configurer : configurers) {
+				configurer.configureS3ObjectIdResolvers(resolvers);
+			}
+		}
+		return resolvers;
+	}
 
 	@Bean
 	public ConversionService s3StoreConverter() {
@@ -28,4 +40,5 @@ public class S3StoreConfiguration {
 			configurer.configureS3StoreConverters(conversion);
 		}
 	}
+
 }
