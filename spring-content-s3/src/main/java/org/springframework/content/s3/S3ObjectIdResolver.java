@@ -8,10 +8,10 @@ import org.springframework.util.Assert;
 
 /**
  * This interface helps resolve the elements of an S3ObjectId object, namely bucket and key.
- * <br/><br/>
+ * <br><br>
  * S3 stores can be configured with instances of this interface.  See {@link org.springframework.content.s3.config.S3StoreConfigurer}.
  * Useful for stores who wish to defer until runtime the decision about which bucket store resources in.
- * <br/><br/>
+ * <br><br>
  * The interface provides a static helper method {@link #createS3ObjectIdResolver(Function, Function, Consumer)} which
  * can be used to provide an instance based on functional arguments.
  * <p>
