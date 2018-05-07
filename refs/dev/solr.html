@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>MongoDB Content Stores</title>
+<title>Fulltext Indexing &amp; Searching with Solr</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -425,51 +425,86 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="book">
+<body id="solr-search" class="book">
 <div id="header">
-<h1>MongoDB Content Stores</h1>
+<h1>Fulltext Indexing &amp; Searching with Solr</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
+<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by
+adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dependencies">Dependencies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content Solr requires a solrj-based SolrClient bean.  We do not add this dependency so that
+you can add a version compatible with your Server.  It also requires two exclusions, as follows:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content MongoDB Stores using Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
+		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
+		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
+		&lt;version&gt;7.2.1&lt;/version&gt;
+		&lt;exclusions&gt;
+			&lt;exclusion&gt;
+				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
+				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
+			&lt;/exclusion&gt;
+			&lt;exclusion&gt;
+				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
+				&lt;groupId&gt;log4j&lt;/groupId&gt;
+			&lt;/exclusion&gt;
+		&lt;/exclusions&gt;
+	&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Fulltext indexing is enabled with the following Java Config.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 1. Enabling Spring Content Solr with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration { <b class="conum">(1)</b>
+@EnableFullTextSolrIndexing                 <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
+public static class ApplicationConfig {
 
-  	@Override
-  	protected String getDatabaseName() {
-  		return "database";
-  	}
-
-	@Override
-  	public Mongo mongo() throws Exception {
-  		return new Mongo();
-  	}
-
-	@Bean
-	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
-		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-	}
+    @Bean                                   <b class="conum">(3)</b>
+    public SolrClient solrClient() {
+        return new HttpSolrClient.Builder("http://localhost:8983/solr/solr").build();
+    }
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
+<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation in an <code>@Configuration</code> class</p>
 </li>
 <li>
-<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
+<p>Spring Content Solr works with any Spring Content Store Module</p>
+</li>
+<li>
+<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code></p>
 </li>
 </ol>
 </div>
@@ -478,50 +513,39 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 </div>
 </div>
 <div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
+<h2 id="_configuring">Configuring</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>If required, credentials can be specified using the following configuration properties.</p>
 </div>
-<div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
-</div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
-<div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
-</div>
-<div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
-</div>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-05-07 21:37:46 UTC
+Last updated 2018-03-28 21:04:56 PDT
 </div>
 </div>
 </body>

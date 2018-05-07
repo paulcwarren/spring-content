@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>MongoDB Content Stores</title>
+<title>JPA Content Stores</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -427,58 +427,72 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>MongoDB Content Stores</h1>
+<h1>JPA Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
 <h2 id="_annotation_based_configuration">Annotation based configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
+<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content MongoDB Stores using Java Config</div>
+<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration { <b class="conum">(1)</b>
+@EnableJpaRepositories
+@EnableJpaContentRepositories
+@EnableTransactionManagement
+public static class ApplicationConfig {
 
-  	@Override
-  	protected String getDatabaseName() {
-  		return "database";
-  	}
+  @Bean
+  public DataSource dataSource() {
 
-	@Override
-  	public Mongo mongo() throws Exception {
-  		return new Mongo();
-  	}
+    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+    return builder.setType(EmbeddedDatabaseType.HSQL).build();
+  }
 
-	@Bean
-	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
-		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-	}
+  @Bean
+  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    vendorAdapter.setGenerateDdl(true);
+
+    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+    factory.setJpaVendorAdapter(vendorAdapter);
+    factory.setPackagesToScan("com.acme.domain");
+    factory.setDataSource(dataSource());
+    return factory;
+  }
+
+  @Bean
+  public PlatformTransactionManager transactionManager() {
+
+    JpaTransactionManager txManager = new JpaTransactionManager();
+    txManager.setEntityManagerFactory(entityManagerFactory());
+    return txManager;
+  }
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
-</li>
-<li>
-<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
-</li>
-</ol>
 </div>
 </div>
+<div class="paragraph">
+<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component declared here is the JpaTransactionManager.</p>
+</div>
+<div class="paragraph">
+<p>We activate Spring Data JPA repositories using the @EnableJpaRepositories annotation,  Spring Content JPA stores using @EnableJpaContentRepositories and enable transaction management with the @EnableTransactionManagement annotation.</p>
+</div>
+<div class="paragraph">
+<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the one the configuration class resides in.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
+<h2 id="_persisting_content">Persisting Content</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
@@ -486,18 +500,18 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
+<p>The Spring Content Commons provided <code>PlacementService</code> is used to determine the actual physical storage location by parsing the @ContentId field into a resource path.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
+<p>The <code>entity</code> @ContentId and @ContentLength fields will be updated.</p>
+</div>
+<div class="paragraph">
+<p>If content has been previously stored this will overwritten with the new content updating just the @ContentLength field, if appropriate.</p>
 </div>
 <div class="sect3">
 <h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
 <div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
-</div>
-<div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
+<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when content is initially set.</p>
 </div>
 </div>
 </div>
@@ -512,16 +526,13 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
-<div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
-</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-05-07 21:37:46 UTC
+Last updated 2018-03-28 21:04:47 PDT
 </div>
 </div>
 </body>

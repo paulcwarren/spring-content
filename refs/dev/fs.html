@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>MongoDB Content Stores</title>
+<title>Filesystem Content Stores</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -427,78 +427,137 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>MongoDB Content Stores</h1>
+<h1>Filesystem Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
+<p>Spring Content Filesystem Stores are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content MongoDB Stores using Java Config</div>
+<div class="title">Example 1. Spring Content Filesystem Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration { <b class="conum">(1)</b>
+@EnableFilesystemStores
+public static class ApplicationConfig {
 
-  	@Override
-  	protected String getDatabaseName() {
-  		return "database";
-  	}
+    @Bean
+    File filesystemRoot() {
+        try {
+            return Files.createTempDirectory("").toFile();
+        } catch (IOException ioe) {}
+        return null;
+    }
 
-	@Override
-  	public Mongo mongo() throws Exception {
-  		return new Mongo();
-  	}
-
-	@Bean
-	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
-		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-	}
+    @Bean
+    FileSystemResourceLoader fileSystemResourceLoader() {
+        return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+    }
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
-</li>
-<li>
-<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
-</li>
-</ol>
+</div>
+</div>
+<div class="paragraph">
+<p>By default content will be stored in a randomly chosen (at application startup) folder</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_spring_boot_configuration">Spring Boot Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When using <code>spring-content-fs-boot-starter</code> (or <code>content-fs-spring-boot-starter</code>) the root for all file system stores will be a randomly chosen folder (at application start-up) under <code>java.io.tmdir</code>.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix <code>spring.content.fs</code>) are supported.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">filesystemRoot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The root location where file system stores place their content (defaults to <code>java.io.tmpdir/&lt;random&gt;/</code>).</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="_storage_customization">Storage Customization</h3>
+<div class="paragraph">
+<p>By default Spring Content Filesystem will store all content at the root of the content store location.</p>
+</div>
+<div class="paragraph">
+<p>The Filesystem Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.core.conmvert.converter.Converter</code> it is possible to configure the Store to use other more sophisticated storage models.</p>
+</div>
+<div class="paragraph">
+<p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Configuring the Filesystem Store</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class FilesystemStoreConfiguration  {
+
+   	public Converter&lt;UUID,String&gt; converter() {
+		return new FilesystemStoreConverter&lt;UUID,String&gt;() {
+
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-", "/"));
+			}
+		};
+	}
+
+	@Bean
+	public FilesystemStoreConfigurer configurer() {
+		return new FilesystemStoreConfigurer() {
+
+			@Override
+			public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
+<p>If content has not yet been associated with this entity before and an ID has not been assigned by the application, one will be generated based on <code>java.util.UUID</code> and converted to the type of the @ContentId field.</p>
+</div>
+<div class="paragraph">
+<p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
 </div>
 <div class="paragraph">
 <p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
-</div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
-<div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
-</div>
-<div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
-</div>
 </div>
 </div>
 <div class="sect2">
@@ -512,16 +571,13 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
-<div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
-</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-05-07 21:37:46 UTC
+Last updated 2018-03-28 21:04:46 PDT
 </div>
 </div>
 </body>

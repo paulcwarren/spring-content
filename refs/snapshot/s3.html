@@ -468,6 +468,9 @@ public static class ApplicationConfig {
 <li>
 <p>The S3 ResourceLoader used by the S3 Store</p>
 </li>
+<li>
+<p>The default bucket also needs to be set (see Configuring below)</p>
+</li>
 </ol>
 </div>
 </div>
@@ -496,7 +499,7 @@ public static class ApplicationConfig {
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
 </tr>
 </tbody>
@@ -509,34 +512,96 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_storage_model">Storage Model</h3>
 <div class="paragraph">
-<p>In Amazon S3, buckets and objects are the primary resources, where objects are stored in buckets.  Amazon S3 has a flat
-structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number of
+<p>In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
+flat
+structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
+of
 buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports
 the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.</p>
 </div>
+<div class="sect3">
+<h4 id="_bucket_resolution">Bucket Resolution</h4>
 <div class="paragraph">
-<p>Spring Content S3&#8217;s default behavior is to store content in a single bucket.  Determined by the <code>spring.content.s3.bucket</code>
-property or <code>AWS_BUCKET</code> environment variable.</p>
+<p>Unless configured to do otherwise Spring Content S3 will store all content in the default bucket (see Configuring for
+details on how to configure the default bucket for your application).</p>
 </div>
+<div class="sect4">
+<h5 id="_bucket_annotation">@Bucket annotation</h5>
 <div class="paragraph">
-<p>If you wish to store your content in different buckets.  For example, one bucket per tenant or customer.  You can use the
-<code>org.springframework.s3.S3ContentId</code> class as the Store&#8217;s ID type.  This captures the content&#8217;s bucket as part of its
-identity.  However, this type is not a managed ID type and must therefore be managed by the application.</p>
+<p>The bucket can be determined by annotating one of your Entity&#8217;s fields with the <code>@Bucket</code> annotation.  It is
+important that this field exhibits non-null semantics.  This approach makes it possible to store content in different
+buckets and not just the default bucket.</p>
 </div>
-<div class="paragraph">
-<p>S3 Stores will store all content in a flat structure by using the content ID as the object key.</p>
 </div>
+<div class="sect4">
+<h5 id="_s3objectidresolver">S3ObjectIdResolver</h5>
 <div class="paragraph">
-<p>A dedicated <code>ConversionService</code> can be used to convert the content ID from one type to another. By contributing a
-<code>org.springframework.core.convert.converter.Converter</code> bean to convert content ID to folder path locations it is
-possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
-</div>
-<div class="paragraph">
-<p>For example content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a path that will have the
-effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
+<p>If the <code>@Bucket</code> annotation is not suitable it is also possible to configure Spring Content S3 with one or more
+<code>S3ObjectIdResolver</code> objects.  This approach is more flexible than the <code>@Bucket</code> annotation as it provides an approach
+to determining the bucket from either the Entity or from an Entity&#8217;s composite custom <code>@ContentId</code> field.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. Configuring the S3 Store</div>
+<div class="title">Example 2. Configuring the S3 Store with a custom S3ObjectIdResolver</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class S3StoreConfiguration  {
+
+	public S3ObjectIdResolver&lt;CustomContentId&gt; bucketResolver() {
+		return S3ObjectIdResolver&lt;CustomContentId&gt;() {
+
+            public String getBucket(CustomContentId id, String defaultBucketName) {
+                return id.getCustomerId();
+            }
+
+            public String getKey(CustomContentId id) {
+                return id.getObjectId();
+            }
+		};
+	}
+
+	@Bean
+	public S3StoreConfigurer configurer() {
+		return new S3StoreConfigurer() {
+
+			@Override
+			public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
+			    resolvers.add(bucketResolver());
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_s3objectid">S3ObjectId</h5>
+<div class="paragraph">
+<p>Ultimately, the S3 store uses instances of <code>S3ObjectId</code> to identify and place content.  It is therefore also possible to
+create S3 stores using this type as the <code>@ContentId</code> type.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_key_resolution">Key Resolution</h4>
+<div class="paragraph">
+<p>By default, Spring Content S3 will store all content using simple keys.  This maps well onto primitive datatypes and
+<code>java.util.UUID</code>.</p>
+</div>
+<div class="paragraph">
+<p>The S3 Store uses a dedicated <code>ConversionService</code> to convert the Entity&#8217;s <code>@ContentId</code> into a resource path.  By
+configuring your application to contribute one (or more) instances of <code>org.springframework.core.concert.converter.Converter</code>
+it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
+</div>
+<div class="paragraph">
+<p>For example, @ContentId fields of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that
+will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Configuring the S3 Store with a custom converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -544,7 +609,7 @@ effect, in the Amazon S3 console, of organizing content into a distributed set o
 public class S3StoreConfiguration  {
 
 	public Converter&lt;UUID,String&gt; converter() {
-		return new S3StoreConverter&lt;String,String&gt;() {
+		return new S3StoreConverter&lt;UUID,String&gt;() {
 
 			@Override
 			public String convert(UUID source) {
@@ -569,20 +634,22 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 </div>
+</div>
 <div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>If content has not yet been stored with this entity before and an ID has not been assigned one will be generated based
+<p>If content has not yet been stored with this entity and an Id has not been assigned one will be generated
+based
 in <code>java.util.UUID</code>.</p>
 </div>
 <div class="paragraph">
 <p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
+<p>If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.</p>
 </div>
 </div>
 <div class="sect2">
@@ -602,7 +669,7 @@ in <code>java.util.UUID</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-04-12 17:11:53 UTC
+Last updated 2018-05-07 21:37:46 UTC
 </div>
 </div>
 </body>
