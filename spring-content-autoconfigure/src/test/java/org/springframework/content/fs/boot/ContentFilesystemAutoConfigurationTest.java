@@ -116,7 +116,7 @@ public class ContentFilesystemAutoConfigurationTest {
 
 	}
 
-	@Entity(name = "TestEntity")
+	@Entity
 	@Content
 	public class TestEntity {
 		@Id

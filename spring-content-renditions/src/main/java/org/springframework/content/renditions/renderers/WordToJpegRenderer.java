@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.poi.POIXMLProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.springframework.content.commons.io.MedializedResource;
+import org.springframework.content.commons.io.DefaultMediaResource;
 import org.springframework.content.commons.renditions.RenditionCapability;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.renditions.RenditionException;
@@ -76,7 +76,7 @@ public class WordToJpegRenderer implements RenditionProvider {
 		if (wordDoc != null) {
 			try {
 				POIXMLProperties props = wordDoc.getProperties();
-				return new MedializedResource(new InputStreamResource(props.getThumbnailImage()), "image/jpeg",
+				return new DefaultMediaResource(new InputStreamResource(props.getThumbnailImage()), "image/jpeg",
 						props.getThumbnailFilename());
 			} catch (Exception e) {
 				throw new RenditionException(

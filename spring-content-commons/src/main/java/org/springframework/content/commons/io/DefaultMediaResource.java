@@ -9,13 +9,13 @@ import java.net.URL;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
-public class MedializedResource implements MediaResource {
+public class DefaultMediaResource implements MediaResource {
 
 	private String name;
 	private String mime;
 	private Resource resource;
 
-	public MedializedResource(Resource resource, String mime, String name) {
+	public DefaultMediaResource(Resource resource, String mime, String name) {
 		this.resource = resource;
 		this.mime = mime;
 		this.name = name;

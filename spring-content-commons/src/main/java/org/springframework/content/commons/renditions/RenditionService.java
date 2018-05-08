@@ -9,6 +9,4 @@ public interface RenditionService {
 	public String[] conversions(String fromMimeType);
 
 	public Resource convert(String fromMimeType, Resource fromInputSource, String toMimeType);
-
-	public RenditionProvider getProvider(String fromMimeType, String toMimeType);
 }

@@ -3,14 +3,12 @@ package internal.org.springframework.content.rest.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import org.atteo.evo.inflector.English;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.OriginalFileName;
-import org.springframework.content.commons.io.MedializedResource;
+import org.springframework.content.commons.io.DefaultMediaResource;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -23,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 
+import internal.org.springframework.content.commons.utils.MimeToFileExt;
 import internal.org.springframework.content.rest.StoreRestResource;
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
 
@@ -52,25 +51,11 @@ public final class ContentStoreUtils {
 	public static InputStream getContent(ContentStore<Object, Serializable> store, Object entity,
 			List<MediaType> mimeTypes, HttpHeaders headers) {
 		InputStream content = null;
-		String cName = "content";
-		String httpNameHeader = "x-file-name";
 
 		Object entityMimeType = BeanUtils.getFieldWithAnnotation(entity,
 				org.springframework.content.commons.annotations.MimeType.class);
 		if (entityMimeType == null)
 			return content;
-
-		// content name
-		Field contentName = BeanUtils.getFieldWithAnnotationField(entity,
-				org.springframework.content.commons.annotations.ContentName.class);
-		if (contentName != null) {
-			Annotation cntNameAn = contentName
-					.getAnnotation(org.springframework.content.commons.annotations.ContentName.class);
-			cName = BeanUtils.getFieldValue(entity, contentName).toString();
-			if (cntNameAn != null) {
-				httpNameHeader = AnnotationUtils.getValue(cntNameAn, "httpHeader").toString();
-			}
-		}
 
 		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
 
@@ -80,9 +65,6 @@ public final class ContentStoreUtils {
 
 		// Modified to show download
 		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
-		if (originalFileName != null) {
-			headers.setContentDispositionFormData("attachment", (String) originalFileName);
-		}
 
 		for (int i = 0; i < arrMimeTypes.length && content == null; i++) {
 			MediaType mimeType = arrMimeTypes[i];
@@ -100,7 +82,10 @@ public final class ContentStoreUtils {
 				headers.setContentType(targetMimeType);
 
 				// content name header
-				headers.set(httpNameHeader, cName);
+				// headers.set(httpNameHeader, cName);
+				if (originalFileName != null) {
+					headers.setContentDispositionFormData("attachment", (String) originalFileName);
+				}
 
 				// long contentLength = 0L;
 				Object len = BeanUtils.getFieldWithAnnotation(entity, ContentLength.class);
@@ -114,23 +99,22 @@ public final class ContentStoreUtils {
 				if (ret != null) {
 					// we have to use mime arrived from rendition due to it can be one of possible
 					// requested
-					String mt = (ret instanceof MedializedResource) ? ((MedializedResource) ret).getMime()
+					String mt = (ret instanceof DefaultMediaResource) ? ((DefaultMediaResource) ret).getMime()
 							: "application/octet-stream";
 					headers.setContentType(MediaType.valueOf(mt));
 
-					// determine file extension TODO: make it better!!!
-					String mtExt = ".new";
-					// String mtExt = allMimeTypes.forName(mime.toString()).getExtension();
+					// determine file extension
+					String mtExt = MimeToFileExt.get(mimeType.toString());
 
 					// content name header
-					headers.set(httpNameHeader, cName + mtExt);
+					if (originalFileName != null) {
+						headers.setContentDispositionFormData("attachment", (String) originalFileName + mtExt);
+					}
 
 					try {
 						content = ret.getInputStream();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
-
 						content = null;
 					}
 				}

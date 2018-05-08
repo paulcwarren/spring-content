@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.content.commons.io.MedializedResource;
+import org.springframework.content.commons.io.DefaultMediaResource;
 import org.springframework.content.commons.renditions.RenditionCapability;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -69,7 +69,7 @@ public class StoreConfig extends JpaInfrastructureConfig {
 					input = IOUtils.toString(fromInputSource.getInputStream());
 				} catch (IOException e) {
 				}
-				return new MedializedResource(
+				return new DefaultMediaResource(
 						new InputStreamResource(new ByteArrayInputStream(
 								String.format("<html><body>%s</body></html>", input).getBytes())),
 						"text/html", "some.html");

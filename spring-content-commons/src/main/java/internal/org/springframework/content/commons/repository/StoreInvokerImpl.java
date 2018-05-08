@@ -11,7 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentName;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.io.MedializedResource;
+import org.springframework.content.commons.io.DefaultMediaResource;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreInvoker;
@@ -102,7 +102,7 @@ public class StoreInvokerImpl implements StoreInvoker {
 				name = "";
 			}
 
-			return new MedializedResource((Resource) this.getResourceMethod.invoke(invocation.getThis(), contentId),
+			return new DefaultMediaResource((Resource) this.getResourceMethod.invoke(invocation.getThis(), contentId),
 					mime, name);
 		} catch (IllegalAccessException e) {
 			LOGGER.error(String.format("Unable to get content for inovcation", invocation.getMethod().getName()), e);

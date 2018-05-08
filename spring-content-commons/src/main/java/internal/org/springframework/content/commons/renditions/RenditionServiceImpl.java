@@ -39,24 +39,10 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 
 	@Override
 	public boolean canConvert(String fromMimeType, String toMimeType) {
-		/*
-		 * for (RenditionProvider provider : providers) { if
-		 * (MimeType.valueOf(fromMimeType).includes(MimeType.valueOf(provider.consumes()
-		 * ))) { for (String produce : provider.produces()) { if
-		 * (MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce))) { return
-		 * true; } } } }
-		 */
-
 		for (RenditionProvider provider : providers) {
 			if (provider.isCapable(fromMimeType, toMimeType).isBetterThan(RenditionCapability.NOT_CAPABLE)) {
 				return true;
 			}
-			/*
-			 * for (String produce : provider.produces()) { if (
-			 * MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce)) &&
-			 * MimeType.valueOf(provider.consumes()).includes(MimeType.valueOf(fromMimeType)
-			 * ) ) { return true; } }
-			 */
 		}
 		return false;
 	}
@@ -65,7 +51,6 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 	public String[] conversions(String fromMimeType) {
 		Set<String> conversions = new HashSet<>();
 		for (RenditionProvider provider : providers) {
-			// if (provider.consumes().equals(fromMimeType)) {
 			if (provider.consumes(fromMimeType)) {
 				conversions.addAll(Arrays.asList(provider.produces()));
 			}
@@ -118,7 +103,6 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 		return null;
 	}
 
-	@Override
 	public RenditionProvider getProvider(String fromMimeType, String toMimeType) {
 		RenditionCapability bestCapability = RenditionCapability.NOT_CAPABLE;
 		RenditionProvider bestProvider = null;
@@ -130,24 +114,7 @@ public class RenditionServiceImpl implements RenditionService, StoreExtension {
 				bestCapability = vote; // Elect a better provider.
 				bestProvider = provider;
 			}
-
-			/*
-			 * for (String produce : provider.produces()) { if (
-			 * MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce)) && // * /*
-			 * includes all so we can create rendition with consume * /*
-			 * MimeType.valueOf(provider.consumes()).includes(MimeType.valueOf(fromMimeType)
-			 * ) ) { return provider; } }
-			 */
 		}
-		/*
-		 * if ( null == bestProvider ) { //throw new
-		 * NoSuchElementException("Unable to find renderer from '" + fromMimeType +
-		 * "' to '" + toMimeType + "'"); throw new
-		 * IllegalArgumentException("Unable to find renderer from '" + fromMimeType +
-		 * "' to '" + toMimeType + "'"); //throw new
-		 * MethodArgumentNotValidException("Unable to find renderer from '" +
-		 * fromMimeType + "' to '" + toMimeType + "'"); }
-		 */
 		return bestProvider;
 	}
 }
