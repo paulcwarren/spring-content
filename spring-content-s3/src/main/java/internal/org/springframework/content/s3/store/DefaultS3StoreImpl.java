@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 import com.amazonaws.services.s3.model.S3ObjectId;
+import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,16 +61,20 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		if (id == null)
 			return null;
 
-		this.getS3ObjectIdResolver().validate(id);
-		String bucket = this.getS3ObjectIdResolver().getBucket(id, this.defaultBucket);
-		String objectId = this.getS3ObjectIdResolver().getKey(id);
+		if (id instanceof S3ObjectId == false) {
+			this.getS3ObjectIdResolver().validate(id);
+			String bucket = this.getS3ObjectIdResolver().getBucket(id, this.defaultBucket);
+			String objectId = this.getS3ObjectIdResolver().getKey(id);
 
-		if (bucket == null) {
-			throw new StoreAccessException("Bucket not set");
+			if (bucket == null) {
+				throw new StoreAccessException("Bucket not set");
+			}
+
+			S3ObjectId s3ObjectId = new S3ObjectId(bucket, objectId);
+			return this.getResourceInternal(s3ObjectId);
+		} else {
+			return this.getResourceInternal((S3ObjectId)id);
 		}
-
-		S3ObjectId s3ObjectId = new S3ObjectId(bucket, objectId);
-		return this.getResource(s3ObjectId);
 	}
 
 	@Override
@@ -85,17 +90,17 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		}
 
 		S3ObjectId s3ObjectId = new S3ObjectId(bucket.toString(), objectId.toString());
-		return this.getResource(s3ObjectId);
+		return this.getResourceInternal(s3ObjectId);
 	}
 
-	private Resource getResource(S3ObjectId id) {
+	protected Resource getResourceInternal(S3ObjectId id) {
 		String bucket = id.getBucket();
 		Object objectId = id.getKey();
 
 		String location = converter.convert(objectId, String.class);
 		location = absolutify(bucket, location);
 		Resource resource = loader.getResource(location);
-		return resource;
+		return new S3StoreResource(client, bucket, resource);
 	}
 
 	@Override
