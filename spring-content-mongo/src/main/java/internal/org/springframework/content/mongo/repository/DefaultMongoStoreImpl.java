@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
+import internal.org.springframework.content.mongo.io.GridFsStoreResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
@@ -43,7 +44,8 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable> implements Store
 	@Override
     public Resource getResource(SID id) {
 		String location = converter.convert(id, String.class);
-		return gridFs.getResource(location);
+//		Resource delegate = gridFs.getResource(location);
+		return new GridFsStoreResource(location, gridFs);
 	}
 
 	@Override
@@ -59,7 +61,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable> implements Store
 		}
 
 		String location = converter.convert(contentId, String.class);
-		return gridFs.getResource(location);
+		return new GridFsStoreResource(location, gridFs);
 	}
 
 	@Override
