@@ -60,8 +60,7 @@ public abstract class AbstractBlobResource implements BlobResource {
         final AbstractBlobResource resource = this;
         TransactionTemplate txn = new TransactionTemplate(txnMgr);
 
-        PipedInputStream is = new PipedInputStream();
-        PipedOutputStream os = new PipedOutputStream(is);
+        final PipedInputStream is = new PipedInputStream();
 
         Thread t = new Thread(
                 () -> {
@@ -79,7 +78,23 @@ public abstract class AbstractBlobResource implements BlobResource {
         );
         t.start();
 
-        return os;
+        OutputStream synchronizedOutputStream = new PipedOutputStream(is) {
+            @Override
+            public void write(int b) throws IOException {
+                super.write(b);
+            }
+
+            @Override
+            public void close() throws IOException {
+                super.close();
+
+                synchronized (resource) {
+                    return;
+                }
+            }
+        };
+
+        return synchronizedOutputStream;
     }
 
     private Object update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {
