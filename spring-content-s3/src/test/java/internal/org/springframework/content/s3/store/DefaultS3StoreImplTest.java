@@ -37,6 +37,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.endsWith;
@@ -98,6 +99,7 @@ public class DefaultS3StoreImplTest {
                                     )
                                     , "default-defaultBucket");
                             when(converter.convert(eq("some-object-id"), eq(String.class))).thenReturn("/some/object/id");
+                            when(loader.getResource(anyString())).thenReturn(resource);
                         });
                         JustBeforeEach(() -> {
                             s3ObjectIdBasedStore.getResource(new S3ObjectId("some-defaultBucket", "some-object-id"));
@@ -439,7 +441,7 @@ public class DefaultS3StoreImplTest {
                                 });
                                 Context("and the resource doesn't exist", () -> {
                                     BeforeEach(() -> {
-                                        nonExistentResource = mock(Resource.class);
+                                        nonExistentResource = mock(WritableResource.class);
                                         when(resource.exists()).thenReturn(true);
 
                                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
@@ -524,7 +526,7 @@ public class DefaultS3StoreImplTest {
                                     BeforeEach(() -> {
                                         when(converter.convert(eq("abcd-efgh"), eq(String.class))).thenReturn("abcd-efgh");
 
-                                        nonExistentResource = mock(Resource.class);
+                                        nonExistentResource = mock(WritableResource.class);
                                         when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
                                         when(nonExistentResource.exists()).thenReturn(false);
                                     });
