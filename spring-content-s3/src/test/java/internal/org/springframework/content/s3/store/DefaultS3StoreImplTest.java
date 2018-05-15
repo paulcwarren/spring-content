@@ -84,7 +84,7 @@ public class DefaultS3StoreImplTest {
                 defaultBucket = null;
             });
             Describe("Store", () -> {
-                Context("#getResource", () -> {
+                Context("#getResourceInternal", () -> {
                     Context("given the store's ID is an S3ObjectId type", () ->{
                         BeforeEach(() -> {
                             s3ObjectIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ObjectId>(loader, converter, client,
@@ -217,7 +217,7 @@ public class DefaultS3StoreImplTest {
                 JustBeforeEach(() -> {
                     s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, resolver, defaultBucket);
                 });
-                Context("#getResource", () -> {
+                Context("#getResourceInternal", () -> {
                     JustBeforeEach(() -> {
                         s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader, converter, client, resolver, defaultBucket);
                         try {
