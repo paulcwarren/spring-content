@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
-public class GridFSResourceTests {
+public class GridFSResourceTest {
 
     private GridFsStoreResource r;
 
