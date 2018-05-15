@@ -7,7 +7,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 
 import java.io.File;
@@ -18,7 +17,6 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URL;
-import java.sql.SQLException;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
@@ -37,12 +35,13 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
 
     public GridFsStoreResource(String location, GridFsTemplate gridfs) {
         Assert.notNull(location, "location must be specified");
+        Assert.notNull(location, "gridfs must be specified");
         this.location = location;
         this.gridfs = gridfs;
     }
 
     public long contentLength() throws IOException {
-        GridFSFile file = gridfs.findOne(query(whereFilename().is(location)));
+        GridFSDBFile file = gridfs.findOne(query(whereFilename().is(location)));
         if (file == null) {
             return 0L;
         }
@@ -54,7 +53,11 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
     }
 
     public long lastModified() throws IOException {
-        return delegate.lastModified();
+        GridFSDBFile file = gridfs.findOne(query(whereFilename().is(location)));
+        if (file == null) {
+            return -1L;
+        }
+        return file.getUploadDate().getTime();
     }
 
     public Object getId() {
@@ -78,7 +81,7 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
     }
 
     public boolean isOpen() {
-        return delegate.isOpen();
+        return true;
     }
 
     public InputStream getInputStream() throws IOException, IllegalStateException {
@@ -90,37 +93,27 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
     }
 
     public String getDescription() {
-        return delegate.getDescription();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return delegate.equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return delegate.hashCode();
+        return "gridfsdbfile [" + location + "]";
     }
 
     public boolean isReadable() {
-        return delegate.isReadable();
+        return true;
     }
 
     public URL getURL() throws IOException {
-        return delegate.getURL();
+        throw new UnsupportedOperationException();
     }
 
     public URI getURI() throws IOException {
-        return delegate.getURI();
+        throw new UnsupportedOperationException();
     }
 
     public File getFile() throws IOException {
-        return delegate.getFile();
+        throw new UnsupportedOperationException();
     }
 
     public Resource createRelative(String relativePath) throws IOException {
-        return delegate.createRelative(relativePath);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -154,26 +147,25 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-                firstWrite();
+                deleteOnFirstWrite();
                 super.write(b, off, len);
             }
 
             @Override
             public void write(byte[] b) throws IOException {
-//                firstWrite();
+                deleteOnFirstWrite();
                 super.write(b);
             }
 
             @Override
             public void write(int b) throws IOException {
-//                firstWrite();
+                deleteOnFirstWrite();
                 super.write(b);
             }
 
-            protected void firstWrite() {
+            protected void deleteOnFirstWrite() {
                 if (firstWrite) {
                     try {
-                        System.out.println("------->deleted existing content");
                         gridfs.delete(query(whereFilename().is(resource.getFilename())));
                     } finally {
                         firstWrite = false;

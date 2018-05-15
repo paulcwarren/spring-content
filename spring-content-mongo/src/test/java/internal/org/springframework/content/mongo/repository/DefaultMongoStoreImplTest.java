@@ -67,9 +67,6 @@ public class DefaultMongoStoreImplTest {
                         It("should use the mongoStoreConverter to find the resource path", () -> {
                             verify(converter).convert(eq("abcd"), eq(String.class));
                         });
-                        It("should fetch the resource from that path", () -> {
-                            verify(gridFsTemplate).getResource("abcd");
-                        });
                         It("should get Resource", () -> {
                             assertThat(genericResource, is(instanceOf(Resource.class)));
                         });
@@ -89,9 +86,6 @@ public class DefaultMongoStoreImplTest {
                             It("should use the mongoStoreConverter to find the resource path", () -> {
                                 verify(converter).convert(matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"), eq(String.class));
                             });
-                            It("should fetch the resource from that path", () -> {
-                                verify(gridFsTemplate).getResource("abcd");
-                            });
                             It("should get Resource", () -> {
                                 assertThat(genericResource, is(not(nullValue())));
                             });
@@ -108,9 +102,6 @@ public class DefaultMongoStoreImplTest {
                             });
                             It("should use the mongoStoreConverter to find the resource path", () -> {
                                 verify(converter).convert(eq("abcd"), eq(String.class));
-                            });
-                            It("should fetch the resource from that path", () -> {
-                                verify(gridFsTemplate).getResource("abcd");
                             });
                             It("should get Resource", () -> {
                                 assertThat(genericResource, is(not(nullValue())));
