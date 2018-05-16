@@ -91,6 +91,8 @@
         <li class="main "><a href="#create-a-file-repository">Create a File Repository</a></li>
         <li class="main "><a href="#create-a-file-content-store">Create a File Content Store</a></li>
         <li class="main "><a href="#create-a-file-controller">Create a File Controller</a></li>
+        <li class="main "><a href="#create-web-client">Create Web Client</a></li>
+        <li class="main "><a href="#create-an-application-class">Create an Application class</a></li>
         <li class="main "><a href="#build-an-executable-jar">Build an executable JAR</a></li>
         <li class="main "><a href="#summary">Summary</a></li>
         <li class="main "><a href="#look-forward">Look Forward</a></li>
@@ -406,144 +408,146 @@ public class FileContentController {
         headers.set(&quot;Content-Type&quot;,     f.getMimeType());
         return new ResponseEntity&lt;Object&gt;(inputStreamResource, headers, HttpStatus.OK);
     }
-}```
-Let's explain this class.  
-
-- It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content.
-
-- Both `setContent` and `getContent` methods inject themselves into the URI space of the `FileRepository`, namely `/files/{fileId}`, but handle all GETs and PUTs that are aplication/hal+json based; i.e. content.
-
-- We inject our `FileRepository` and our `FileContentStore`.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path).
-
-- `setContent` uses the `FileRepository` to fetch the File entity  using the given `fileId` and then uses the `FileContentStore` to save the given file input stream.  
-
-- Similarly, `getContent` uses the `FileRepository` to fetch the File entity using the given `fileId` and again use the `FileContentStore` to fetch the associated content and stream it back to the client as the response.  We also use previosuly saved metdata `contentLength` and `mimeType` to set http headers appropriately.  This will mean that browsers can handle the content correctly by launching the relevant desktop application.
-
-## Create Web Client
-
-Now let's create a really simple angular web front-end for our document list.  
-
-`src/main/resources/static/index.html`
-
+}
 </code></pre>
 
-<!doctype html>
-<html ng-app="filesApp">
-  <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
-    <script src="files.js"></script>
-  </head>
-  <body>
-    <div ng-controller="FilesListController as filesList">
-        <h1>Files</h1>
+<p>Let's explain this class.  </p>
+<ul>
+<li>
+<p>It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content.</p>
+</li>
+<li>
+<p>Both <code>setContent</code> and <code>getContent</code> methods inject themselves into the URI space of the <code>FileRepository</code>, namely <code>/files/{fileId}</code>, but handle all GETs and PUTs that are aplication/hal+json based; i.e. content.</p>
+</li>
+<li>
+<p>We inject our <code>FileRepository</code> and our <code>FileContentStore</code>.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path).</p>
+</li>
+<li>
+<p><code>setContent</code> uses the <code>FileRepository</code> to fetch the File entity  using the given <code>fileId</code> and then uses the <code>FileContentStore</code> to save the given file input stream.  </p>
+</li>
+<li>
+<p>Similarly, <code>getContent</code> uses the <code>FileRepository</code> to fetch the File entity using the given <code>fileId</code> and again use the <code>FileContentStore</code> to fetch the associated content and stream it back to the client as the response.  We also use previosuly saved metdata <code>contentLength</code> and <code>mimeType</code> to set http headers appropriately.  This will mean that browsers can handle the content correctly by launching the relevant desktop application.</p>
+</li>
+</ul>
+<h2 id="create-web-client">Create Web Client</h2>
+<p>Now let's create a really simple angular web front-end for our document list.  </p>
+<p><code>src/main/resources/static/index.html</code></p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html ng-app=&quot;filesApp&quot;&gt;
+  &lt;head&gt;
+    &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;files.js&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div ng-controller=&quot;FilesListController as filesList&quot;&gt;
+        &lt;h1&gt;Files&lt;/h1&gt;
 
-<pre><code>    &lt;section style="display: table; width: 80%"&gt;
-      &lt;header style="display: table-row;"&gt;
-        &lt;div style="display: table-cell;"&gt;Name&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;Length&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;Created&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;Summary&lt;/div&gt;
-      &lt;/header&gt;
-      &lt;div style="display: table-row;" ng-repeat="file in filesList.files"&gt;
-        &lt;div style="display: table-cell;"&gt;&lt;a href="{{filesList.getHref(file)}}" type={{file.mimeType}} download={{file.name}}&gt;{{file.name}}&lt;/a&gt;&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;&lt;label&gt;{{file.contentLength}}&lt;/label&gt;&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;&lt;label&gt;{{file.created}}&lt;/label&gt;&lt;/div&gt;
-        &lt;div style="display: table-cell;"&gt;&lt;label&gt;{{file.summary}}&lt;/label&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/section&gt;
+        &lt;section style=&quot;display: table; width: 80%&quot;&gt;
+          &lt;header style=&quot;display: table-row;&quot;&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;Name&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;Length&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;Created&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;Summary&lt;/div&gt;
+          &lt;/header&gt;
+          &lt;div style=&quot;display: table-row;&quot; ng-repeat=&quot;file in filesList.files&quot;&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;a href=&quot;{{filesList.getHref(file)}}&quot; type={{file.mimeType}} download={{file.name}}&gt;{{file.name}}&lt;/a&gt;&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.contentLength}}&lt;/label&gt;&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.created}}&lt;/label&gt;&lt;/div&gt;
+            &lt;div style=&quot;display: table-cell;&quot;&gt;&lt;label&gt;{{file.summary}}&lt;/label&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
 
-    &lt;h2&gt;New File&lt;/h2&gt;
-    &lt;input type="file" id="file" name="file"/&gt;
-    &lt;input type="summary" id="summary" name="summary" ng-model="filesList.summary" placeholder="Summary"/&gt;
-    &lt;button ng-click="filesList.upload()"&gt;Upload&lt;/button&gt;
-&lt;/div&gt;
+        &lt;h2&gt;New File&lt;/h2&gt;
+        &lt;input type=&quot;file&quot; id=&quot;file&quot; name=&quot;file&quot;/&gt;
+        &lt;input type=&quot;summary&quot; id=&quot;summary&quot; name=&quot;summary&quot; ng-model=&quot;filesList.summary&quot; placeholder=&quot;Summary&quot;/&gt;
+        &lt;button ng-click=&quot;filesList.upload()&quot;&gt;Upload&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
-<p></body>
-</html></p>
-<pre><code>
-This HTML presents a simple list of files using an `ng-repeat` directive and contains a simple form allowing new files to be uploaded.
 
-All the interesting code is in the code-behind file so add the following code behind to `src/main/resources/static/files.js`
-
-</code></pre>
-
-<p>angular.module('filesApp', [])
+<p>This HTML presents a simple list of files using an <code>ng-repeat</code> directive and contains a simple form allowing new files to be uploaded.</p>
+<p>All the interesting code is in the code-behind file so add the following code behind to <code>src/main/resources/static/files.js</code></p>
+<pre><code>angular.module('filesApp', [])
   .controller('FilesListController', function($http) {
     var filesList = this;
-    filesList.files = [];</p>
-<pre><code>filesList.getFilesList = function() {
-    $http.get('/files/').
-        success(function(data, status, headers, config) {
-            if (data._embedded != undefined) {
-                filesList.files = [];
-                angular.forEach(data._embedded.files, function(file) {
-                    filesList.files.push(file);
-                });
-            }
-        });
-    };
-filesList.getFilesList();
+    filesList.files = [];
 
-filesList.getHref = function(file) {
-    return file._links["self"].href
-};
-
-filesList.upload = function() {
-    var f = document.getElementById('file').files[0];
-    var file = {name: f.name, summary: filesList.summary};
-
-    $http.post('/files/', file).
-        then(function(response) {
-            var fd = new FormData();
-            fd.append('file', f);
-            return $http.put(response.headers("Location"), fd, {
-                transformRequest: angular.identity,
-                headers: {'Content-Type': undefined}
+    filesList.getFilesList = function() {
+        $http.get('/files/').
+            success(function(data, status, headers, config) {
+                if (data._embedded != undefined) {
+                    filesList.files = [];
+                    angular.forEach(data._embedded.files, function(file) {
+                        filesList.files.push(file);
+                    });
+                }
             });
-        })
-        .then(function(response) {
-            filesList.title = "";
-            filesList.keywords = "";
-            filesList.getFilesList();
-            document.getElementById('file').files[0] = undefined;
-        });
+        };
+    filesList.getFilesList();
+
+    filesList.getHref = function(file) {
+        return file._links[&quot;self&quot;].href
+    };
+
+    filesList.upload = function() {
+        var f = document.getElementById('file').files[0];
+        var file = {name: f.name, summary: filesList.summary};
+
+        $http.post('/files/', file).
+            then(function(response) {
+                var fd = new FormData();
+                fd.append('file', f);
+                return $http.put(response.headers(&quot;Location&quot;), fd, {
+                    transformRequest: angular.identity,
+                    headers: {'Content-Type': undefined}
+                });
+            })
+            .then(function(response) {
+                filesList.title = &quot;&quot;;
+                filesList.keywords = &quot;&quot;;
+                filesList.getFilesList();
+                document.getElementById('file').files[0] = undefined;
+            });
+    }
+  });
+</code></pre>
+
+<p>This angular controller has the following functions:-</p>
+<ul>
+<li>
+<p><code>getFilesList</code> queries our <code>FileRepository</code> via its REST endpoint <code>files/</code>
+and populates <code>filesList.files</code> (presented by the <code>ng-repeat</code> directive
+in the HTML)</p>
+</li>
+<li>
+<p><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}</code> (that
+ultimately calls <code>FileContentController.getContent</code>)</p>
+</li>
+<li>
+<p><code>upload</code> uploads a new File by first <code>POST</code>ing to the <code>FileRepository</code>
+REST endpoints <code>/files</code> and once created  <code>PUT</code>ing the actual content to
+the Files content REST endpoint <code>files/{fileId}</code> (that ultimately calls
+<code>FileContentController.setContent</code>)</p>
+</li>
+</ul>
+<h2 id="create-an-application-class">Create an Application class</h2>
+<p>Our simple document list app is now complete.  All that remains is to add the usual Spring Boot Application class.</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<pre><code>package gettingstarted;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringContentApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringContentApplication.class, args);
+    }
 }
 </code></pre>
-<p>});</p>
-<pre><code>
-This angular controller has the following functions:-
 
-- `getFilesList` queries our `FileRepository` via its REST endpoint `files/`
-and populates `filesList.files` (presented by the `ng-repeat` directive
-in the HTML)
-
-- `getHref` returns a `file`'s content hyperlink `files/{fileId}` (that
-ultimately calls `FileContentController.getContent`)
-
-- `upload` uploads a new File by first `POST`ing to the `FileRepository`
-REST endpoints `/files` and once created  `PUT`ing the actual content to
-the Files content REST endpoint `files/{fileId}` (that ultimately calls
-`FileContentController.setContent`)
-
-## Create an Application class
-
-Our simple document list app is now complete.  All that remains is to add the usual Spring Boot Application class.
-
-`src/main/java/gettingstarted/SpringContentFsApplication.java`
-
-</code></pre>
-
-<p>package gettingstarted;</p>
-<p>import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;</p>
-<p>@SpringBootApplication
-public class SpringContentApplication {</p>
-<pre><code>public static void main(String[] args) {
-    SpringApplication.run(SpringContentApplication.class, args);
-}
-</code></pre>
-<p>}
-```</p>
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using
 <code>mvn spring-boot:run</code>.  Or you can build the JAR file with
