@@ -2,6 +2,7 @@ package internal.org.springframework.content.mongo.io;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import com.mongodb.gridfs.GridFSDBFile;
+import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
@@ -13,6 +14,7 @@ import java.util.Date;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
@@ -232,12 +234,13 @@ public class GridFSResourceTest {
                     JustBeforeEach(() -> {
                         rc = r.getOutputStream();
                     });
-                    It("should store the content", () -> {
-                        verify(gridfs).store(any(InputStream.class), eq(location));
-                    });
                     Context("when content is written", () -> {
                         JustBeforeEach(() -> {
                             ((OutputStream)rc).write(new byte[]{32}, 0, 1);
+                            IOUtils.closeQuietly((OutputStream)rc);
+                        });
+                        It("should store the content", () -> {
+                            verify(gridfs).store(any(InputStream.class), eq(location));
                         });
                         It("should delete existing content", () -> {
                             verify(gridfs).delete(anyObject());
