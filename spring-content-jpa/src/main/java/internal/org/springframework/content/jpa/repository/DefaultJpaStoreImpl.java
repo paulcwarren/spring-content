@@ -12,6 +12,9 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.jpa.io.BlobResource;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -41,12 +44,14 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
 
     @Override
     public Resource getResource(S entity) {
-        Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-        if (id == null) {
-            id = -1L;
+        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (contentId == null) {
+            contentId = UUID.randomUUID();
+            contentId = convertToExternalContentIdType(entity, contentId);
+            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, contentId.toString());
         }
 
-        return loader.getResource(id.toString());
+        return loader.getResource(contentId.toString());
     }
 
     @Override
@@ -134,4 +139,14 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable> implements Store<S
         }
         unassociate(metadata);
 	}
+
+    protected Object convertToExternalContentIdType(S property, Object contentId) {
+        ConversionService converter = new DefaultConversionService();
+        if (converter.canConvert(TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)))) {
+            contentId = converter.convert(contentId, TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
+            return contentId;
+        }
+        return contentId.toString();
+    }
+
 }

@@ -20,6 +20,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
+import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
@@ -61,23 +62,6 @@ public abstract class AbstractBlobResource implements BlobResource {
         TransactionTemplate txn = new TransactionTemplate(txnMgr);
 
         final PipedInputStream is = new PipedInputStream();
-
-        Thread t = new Thread(
-                () -> {
-                    synchronized (resource) {
-                        try {
-                            Object rc = update(txn, is, id, resource);
-                            if (rc != null && !rc.equals(-1)) {
-                                resource.setId(rc);
-                            }
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        );
-        t.start();
-
         OutputStream synchronizedOutputStream = new PipedOutputStream(is) {
             @Override
             public void write(int b) throws IOException {
@@ -94,48 +78,73 @@ public abstract class AbstractBlobResource implements BlobResource {
             }
         };
 
+        CountDownLatch latch = new CountDownLatch(1);
+        Thread t = new Thread(
+                () -> {
+                    synchronized (resource) {
+                        latch.countDown();
+                        try {
+                            Object rc = update(txn, is, id, resource);
+                            // TODO: remove - no longer required
+                            if (rc != null && !rc.equals(-1)) {
+                                resource.setId(rc);
+                            }
+                        } catch (SQLException e) {
+                            logger.error(String.format("updating resource %s", resource.getFilename()), e);
+                        }
+                    }
+                }
+        );
+        t.start();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            logger.warn(String.format("waiting for countdown latch for resource %s", resource.getFilename()), e);
+        }
+
         return synchronizedOutputStream;
     }
 
     private Object update(TransactionTemplate txn, InputStream fin, Object id, AbstractBlobResource resource) throws SQLException {
-        return txn.execute(new TransactionCallback<Integer>() {
+        final Object rid = this.id;
+        return txn.execute(new TransactionCallback<String>() {
             @Override
-            public Integer doInTransaction(TransactionStatus transactionStatus) {
-                Integer rc = null;
+            public String doInTransaction(TransactionStatus transactionStatus) {
+                String rc = null;
                 if (exists()) {
                     String sql = "UPDATE BLOBS SET content=? WHERE id=?";
-                    rc = template.execute(sql, new PreparedStatementCallback<Integer>() {
+                    rc = template.execute(sql, new PreparedStatementCallback<String>() {
                         @Override
-                        public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                        public String doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
                             // mark the resource as being updated
                             resource.setId(-1);
 
                             ps.setBinaryStream(1, fin);
-                            ps.setInt(2, Integer.parseInt(id.toString()));
+                            ps.setString(2, id.toString());
                             ps.executeUpdate();
                             IOUtils.closeQuietly(fin);
-                            return Integer.parseInt(id.toString());
+                            return id.toString();
                         }
                     });
                 } else {
-                    String sql = "INSERT INTO BLOBS (content) VALUES(?)";
+                    String sql = "INSERT INTO BLOBS (id,content) VALUES(?,?)";
                     rc = template.execute(
                         new PreparedStatementCreator() {
                             @Override
                             public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
                                 return con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                             }
-                        }, new PreparedStatementCallback<Integer>() {
+                        }, new PreparedStatementCallback<String>() {
                             @Override
-                            public Integer doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
+                            public String doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
                                 ResultSet set = null;
                                 try {
-                                    ps.setBinaryStream(1, fin);
+                                    ps.setString(1, rid.toString());
+                                    ps.setBinaryStream(2, fin);
                                     ps.executeUpdate();
                                     IOUtils.closeQuietly(fin);
-                                    set = ps.getGeneratedKeys();
-                                    set.next();
-                                    return set.getInt(1);
+                                    return rid.toString();
                                 } catch (SQLException sqle) {
                                     logger.error("inserting content", sqle);
                                 } finally {
@@ -160,7 +169,7 @@ public abstract class AbstractBlobResource implements BlobResource {
 
     @Override
     public boolean exists() {
-        String sql = "SELECT COUNT(id) FROM BLOBS WHERE id=" + this.id;
+        String sql = "SELECT COUNT(id) FROM BLOBS WHERE id='" + this.id + "'";
         return this.template.query(sql, new ResultSetExtractor<Boolean>() {
             @Override
             public Boolean extractData(ResultSet rs) throws SQLException, DataAccessException {
@@ -216,7 +225,7 @@ public abstract class AbstractBlobResource implements BlobResource {
 
     @Override
     public String getFilename() {
-        return null;
+        return id.toString();
     }
 
     @Override
@@ -227,7 +236,7 @@ public abstract class AbstractBlobResource implements BlobResource {
     @Override
     public InputStream getInputStream() throws IOException {
         final Object id = this.id;
-        String sql = "SELECT content FROM BLOBS WHERE id=" + this.id;
+        String sql = "SELECT content FROM BLOBS WHERE id='" + this.id + "'";
 
         DataSource ds = this.template.getDataSource();
         Connection conn = DataSourceUtils.getConnection(ds);
@@ -248,7 +257,7 @@ public abstract class AbstractBlobResource implements BlobResource {
     @Override
     public void delete() {
         final Object id = this.id;
-        String sql = "DELETE FROM BLOBS WHERE id=" + this.id;
+        String sql = "DELETE FROM BLOBS WHERE id='" + this.id + "'";
         this.template.update(sql);
     }
 

@@ -1,1 +1,3 @@
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='BLOBS' AND xtype='U') CREATE TABLE BLOBS ( id int IDENTITY(1,1), content varBinary(MAX) )
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='BLOBS' AND xtype='U') CREATE TABLE BLOBS ( id VARCHAR(36) NOT NULL, content varBinary(MAX) )
+ALTER TABLE BLOBS ADD CONSTRAINT pk_id PRIMARY KEY (id)
+

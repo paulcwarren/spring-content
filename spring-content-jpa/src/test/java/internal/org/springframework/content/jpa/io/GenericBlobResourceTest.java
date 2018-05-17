@@ -172,7 +172,7 @@ public class GenericBlobResourceTest {
                         verify(conn, timeout(100)).prepareStatement(argThat(containsString("UPDATE BLOBS")));
 
                         verify(preparedStatement, timeout(100)).setBinaryStream(eq(1), argThat(is(instanceOf(InputStream.class))));
-                        verify(preparedStatement, timeout(100)).setInt(2, 999);
+                        verify(preparedStatement, timeout(100)).setString(2, "999");
                         verify(preparedStatement, timeout(100)).executeUpdate();
                     });
                 });
@@ -191,8 +191,6 @@ public class GenericBlobResourceTest {
                         // generated keys
                         ResultSet generatedKeys = mock(ResultSet.class);
                         when(preparedStatement.getGeneratedKeys()).thenReturn(generatedKeys);
-                        when(generatedKeys.next()).thenReturn(true);
-                        when(generatedKeys.getInt(1)).thenReturn(9999);
                     });
                     JustBeforeEach(() ->{
                         IOUtils.copy(in, (OutputStream)result);
@@ -202,16 +200,17 @@ public class GenericBlobResourceTest {
                     });
                     It("should use insert to add the content", () -> {
                         verify(conn, timeout(100)).prepareStatement(argThat(containsString("INSERT INTO BLOBS")), eq(Statement.RETURN_GENERATED_KEYS));
-                        verify(preparedStatement, timeout(100)).setBinaryStream(eq(1), argThat(is(instanceOf(InputStream.class))));
+                        verify(preparedStatement, timeout(100)).setString(eq(1), argThat(is("999")));
+                        verify(preparedStatement, timeout(100)).setBinaryStream(eq(2), argThat(is(instanceOf(InputStream.class))));
                         verify(preparedStatement, timeout(100)).executeUpdate();
 
-                        assertThat(resource.getId(), is(9999));
+                        assertThat(resource.getId(), is("999"));
                     });
                     It("should update the ID of the resource from the ID returned by the database", () -> {
-                        while (resource.getId().equals(9999) == false) {
+                        while (resource.getId().equals("999") == false) {
                             Thread.sleep(100);
                         }
-                        assertThat(resource.getId(), is(9999));
+                        assertThat(resource.getId(), is("999"));
                     });
                 });
             });
