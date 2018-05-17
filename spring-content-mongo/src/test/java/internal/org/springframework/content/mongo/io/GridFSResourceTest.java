@@ -229,20 +229,18 @@ public class GridFSResourceTest {
                     });
                 });
                 Context("getOutputStream", () -> {
-                    Context("#isWritable", () -> {
+                    JustBeforeEach(() -> {
+                        rc = r.getOutputStream();
+                    });
+                    It("should store the content", () -> {
+                        verify(gridfs).store(any(InputStream.class), eq(location));
+                    });
+                    Context("when content is written", () -> {
                         JustBeforeEach(() -> {
-                            rc = r.getOutputStream();
+                            ((OutputStream)rc).write(new byte[]{32}, 0, 1);
                         });
-                        It("should store the content", () -> {
-                            verify(gridfs).store(any(InputStream.class), eq(location));
-                        });
-                        Context("when content is written", () -> {
-                            JustBeforeEach(() -> {
-                                ((OutputStream)rc).write(new byte[]{32}, 0, 1);
-                            });
-                            It("should delete existing content", () -> {
-                                verify(gridfs).delete(anyObject());
-                            });
+                        It("should delete existing content", () -> {
+                            verify(gridfs).delete(anyObject());
                         });
                     });
                 });
