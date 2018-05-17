@@ -183,7 +183,6 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
                 () -> {
                     synchronized (resource) {
                         latch.countDown();
-                        logger.info(String.format("writing resource %s", resource.getFilename()));
                         gridfs.store(is, resource.getFilename());
                     }
                 }
