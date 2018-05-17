@@ -29,6 +29,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.when;
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultJpaStoreImplTest {
 
-    private DefaultJpaStoreImpl<Object,Integer> store;
+    private DefaultJpaStoreImpl<Object,String> store;
 
     private BlobResourceLoader blobResourceLoader;
 
@@ -46,7 +47,7 @@ public class DefaultJpaStoreImplTest {
     private InputStream inputStream;
     private OutputStream outputStream;
     private Resource resource;
-    private Integer id;
+    private String id;
     private Exception e;
 
     {
@@ -62,7 +63,7 @@ public class DefaultJpaStoreImplTest {
                 Context("#getResource", () -> {
                     Context("given an id", () -> {
                         BeforeEach(() -> {
-                            id = 1;
+                            id = "1";
                         });
                         JustBeforeEach(() -> {
                             resource = store.getResource(id);
@@ -81,13 +82,13 @@ public class DefaultJpaStoreImplTest {
                             entity = new TestEntity();
                         });
                         It("should load a new resource", () -> {
-                            verify(blobResourceLoader).getResource(eq("-1"));
+                            verify(blobResourceLoader).getResource(matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"));
                         });
                     });
                     Context("when the entity is not already associated with a resource", () -> {
                         BeforeEach(() -> {
                             entity = new TestEntity();
-                            entity.setContentId(12345);
+                            entity.setContentId("12345");
                         });
                         It("should load a new resource", () -> {
                             verify(blobResourceLoader).getResource(eq("12345"));
@@ -96,7 +97,7 @@ public class DefaultJpaStoreImplTest {
                 });
                 Context("#associate", () -> {
                     BeforeEach(() -> {
-                        id = 12345;
+                        id = "12345";
 
                         entity = new TestEntity();
 
@@ -111,7 +112,7 @@ public class DefaultJpaStoreImplTest {
                         verify(blobResourceLoader).getResource(eq("12345"));
                     });
                     It("should set the entity's content ID attribute", () -> {
-                        assertThat(entity.getContentId(), CoreMatchers.is(12345));
+                        assertThat(entity.getContentId(), CoreMatchers.is("12345"));
                     });
                     It("should set the entity's content length attribute", () -> {
                         assertThat(entity.getContentLen(), CoreMatchers.is(20L));
@@ -119,7 +120,7 @@ public class DefaultJpaStoreImplTest {
                 });
                 Context("#unassociate", () -> {
                     BeforeEach(() -> {
-                        id = 12345;
+                        id = "12345";
 
                         entity = new TestEntity();
                         entity.setContentId(id);
@@ -140,7 +141,7 @@ public class DefaultJpaStoreImplTest {
                     blobResourceLoader= mock(BlobResourceLoader.class);
                     resource = mock(GenericBlobResource.class);
 
-                    entity = new TestEntity(12345);
+                    entity = new TestEntity("12345");
 
                     when(blobResourceLoader.getResource(entity.getContentId().toString())).thenReturn((BlobResource)resource);
                 });
@@ -189,7 +190,7 @@ public class DefaultJpaStoreImplTest {
                         inputStream = new ByteArrayInputStream(content);
 
                         resource = mock(BlobResource.class);
-                        when(blobResourceLoader.getResource("-1")).thenReturn((BlobResource)resource);
+                        when(blobResourceLoader.getResource(matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))).thenReturn((BlobResource)resource);
                         outputStream = mock(OutputStream.class);
                         when(((BlobResource) resource).getOutputStream()).thenReturn(outputStream);
                         when(((BlobResource) resource).getId()).thenReturn(12345);
@@ -198,7 +199,7 @@ public class DefaultJpaStoreImplTest {
                         verify(outputStream, atLeastOnce()).write(anyObject(), anyInt(), anyInt());
                     });
                     It("should update the @ContentId field", () -> {
-                        assertThat(entity.getContentId(), is(12345));
+                        assertThat(entity.getContentId(), is("12345"));
                     });
                     It("should update the @ContentLength field", () -> {
                         assertThat(entity.getContentLen(), is(5000L));
@@ -210,7 +211,7 @@ public class DefaultJpaStoreImplTest {
 
     public static class TestEntity {
         @ContentId
-        private Integer contentId;
+        private String contentId;
         @ContentLength
         private long contentLen;
 
@@ -218,15 +219,15 @@ public class DefaultJpaStoreImplTest {
             this.contentId = null;
         }
 
-        public TestEntity(int contentId) {
-            this.contentId = new Integer(contentId);
+        public TestEntity(String contentId) {
+            this.contentId = contentId;
         }
 
-        public Integer getContentId() {
+        public String getContentId() {
             return this.contentId;
         }
 
-        public void setContentId(Integer contentId) {
+        public void setContentId(String contentId) {
             this.contentId = contentId;
         }
 
