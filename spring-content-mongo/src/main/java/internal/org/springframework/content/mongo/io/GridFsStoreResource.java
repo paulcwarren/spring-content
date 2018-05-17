@@ -2,6 +2,8 @@ package internal.org.springframework.content.mongo.io;
 
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
@@ -17,11 +19,14 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
 public class GridFsStoreResource implements Resource, WritableResource, DeletableResource {
+
+    private static Log logger = LogFactory.getLog(GridFsStoreResource.class);
 
     private GridFsResource delegate;
     private String location;
@@ -132,17 +137,7 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
         final GridFsStoreResource resource = this;
 
         final PipedInputStream is = new PipedInputStream();
-
-        Thread t = new Thread(
-                () -> {
-                    synchronized (resource) {
-                        gridfs.store(is, resource.getFilename());
-                    }
-                }
-        );
-        t.start();
-
-        OutputStream synchronizedOutputStream = new PipedOutputStream(is) {
+        final OutputStream synchronizedOutputStream = new PipedOutputStream(is) {
             private boolean firstWrite = true;
 
             @Override
@@ -182,6 +177,23 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
                 }
             }
         };
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Thread t = new Thread(
+                () -> {
+                    synchronized (resource) {
+                        latch.countDown();
+                        gridfs.store(is, resource.getFilename());
+                    }
+                }
+        );
+        t.start();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            logger.warn(String.format("waiting for countdown latch for resource %s", resource.getFilename()), e);
+        }
 
         return synchronizedOutputStream;
     }
