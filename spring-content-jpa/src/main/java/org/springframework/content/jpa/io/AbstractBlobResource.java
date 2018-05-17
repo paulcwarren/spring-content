@@ -143,7 +143,6 @@ public abstract class AbstractBlobResource implements BlobResource {
                                     ps.setString(1, rid.toString());
                                     ps.setBinaryStream(2, fin);
                                     ps.executeUpdate();
-                                    IOUtils.closeQuietly(fin);
                                     return rid.toString();
                                 } catch (SQLException sqle) {
                                     logger.error("inserting content", sqle);
