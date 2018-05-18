@@ -431,8 +431,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content REST - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.0.10,</span>
-<span id="revdate">2018-03-28</span>
+<span id="revnumber">version 0.0.11,</span>
+<span id="revdate">2018-05-18</span>
 </div>
 </div>
 <div id="content">
@@ -474,6 +474,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_fundamentals">3.1. Fundamentals</a></li>
 <li><a href="#_the_content_resource">3.2. The Content Resource</a></li>
 <li><a href="#_the_content_collection_resource">3.3. The Content Collection Resource</a></li>
+<li><a href="#_the_fulltext_query_resource">3.4. The Fulltext Query Resource</a></li>
 </ul>
 </li>
 <li><a href="#_customizing_store_resources">4. Customizing Store Resources</a>
@@ -835,7 +836,35 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_default_status_codes">3.1.4. Default status codes</h4>
+<h4 id="_search">3.1.4. Search</h4>
+<div class="paragraph">
+<p>Exported content stores may be marked as <code>Searchable</code>.  Assume the following content store interface:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt;, Searchable&lt;UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>When exported Spring Content REST exposes a fulltext query resource for each <code>Searchable</code> method.  These resources are
+ exported under the URI <code>/dvds/searchContent/&lt;findMethod&gt;</code>.  Method parameters are supplied as query parameters:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent/findKeywords?keyword=one&amp;keyword=two</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_default_status_codes">3.1.5. Default status codes</h4>
 <div class="paragraph">
 <p>For the content resources exposed, we use a set of default status codes:</p>
 </div>
@@ -857,7 +886,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_resource_discoverability">3.1.5. Resource Discoverability</h4>
+<h4 id="_resource_discoverability">3.1.6. Resource Discoverability</h4>
 <div class="paragraph">
 <p>A core principle of HATEOAS is that resources should be discoverable through the publication of links that point to the available resources.  There are a few competing de-facto standards of how to represent links in JSON.  By default, Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.</p>
 </div>
@@ -941,6 +970,35 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_the_fulltext_query_resource">3.4. The Fulltext Query Resource</h3>
+<div class="paragraph">
+<p>Spring Content REST exposes a fulltext query resource for each <code>Searchable</code> method.</p>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_3">3.4.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>As the fulltext query resource is read-only it supports <code>GET</code> only.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_5">Supported media types</h6>
+<div class="ulist">
+<ul>
+<li>
+<p><code>application/hal+json</code></p>
+</li>
+<li>
+<p><code>application/json</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Responses are standard Spring Data entity lists.  Requests must specify that they accept <code>application/hal+json</code> or
+<code>application/json</code>.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -949,7 +1007,8 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="sect2">
 <h3 id="_configuring_cors">4.1. Configuring CORS</h3>
 <div class="paragraph">
-<p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
+<p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with
+client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
 </div>
 <div class="paragraph">
 <p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
@@ -957,7 +1016,8 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="sect3">
 <h4 id="_store_interface_cors_configuration">4.1.1. Store interface CORS configuration</h4>
 <div class="paragraph">
-<p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default @CrossOrigin allows all origins and HTTP methods:</p>
+<p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default
+@CrossOrigin allows all origins and HTTP methods:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -970,7 +1030,8 @@ interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform more granular configuration.</p>
+<p>In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform
+more granular configuration.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -985,7 +1046,8 @@ interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE methods with a max age of 3600 seconds.</p>
+<p>This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE
+methods with a max age of 3600 seconds.</p>
 </div>
 </div>
 </div>
@@ -994,8 +1056,8 @@ interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.0.10<br>
-Last updated 2018-03-28 17:08:48 UTC
+Version 0.0.11<br>
+Last updated 2018-05-18 02:58:16 UTC
 </div>
 </div>
 </body>
