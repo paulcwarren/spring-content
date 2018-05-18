@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>Fulltext Indexing &amp; Searching with Solr</title>
+<title>Indexing &amp; Searching with Solr</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -427,15 +427,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body id="solr-search" class="book">
 <div id="header">
-<h1>Fulltext Indexing &amp; Searching with Solr</h1>
+<h1>Indexing &amp; Searching with Solr</h1>
 </div>
 <div id="content">
 <div class="sect1">
 <h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by
-adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
+<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
 </div>
 </div>
 </div>
@@ -443,8 +442,7 @@ adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content 
 <h2 id="_dependencies">Dependencies</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content Solr requires a solrj-based SolrClient bean.  We do not add this dependency so that
-you can add a version compatible with your Server.  It also requires two exclusions, as follows:</p>
+<p>Add the solrj to the classpath.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -453,7 +451,7 @@ you can add a version compatible with your Server.  It also requires two exclusi
 <pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
 		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
 		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;7.2.1&lt;/version&gt;
+		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
 		&lt;exclusions&gt;
 			&lt;exclusion&gt;
 				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
@@ -467,44 +465,10 @@ you can add a version compatible with your Server.  It also requires two exclusi
 	&lt;/dependency&gt;</code></pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Fulltext indexing is enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 1. Enabling Spring Content Solr with Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableFullTextSolrIndexing                 <b class="conum">(1)</b>
-@EnableFilesystemStores                     <b class="conum">(2)</b>
-public static class ApplicationConfig {
-
-    @Bean                                   <b class="conum">(3)</b>
-    public SolrClient solrClient() {
-        return new HttpSolrClient.Builder("http://localhost:8983/solr/solr").build();
-    }
-
-}</code></pre>
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
+<div class="colist arabic">
+<ol>
 <li>
-<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation in an <code>@Configuration</code> class</p>
-</li>
-<li>
-<p>Spring Content Solr works with any Spring Content Store Module</p>
-</li>
-<li>
-<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code></p>
+<p>If using Spring Boot the version may be omitted</p>
 </li>
 </ol>
 </div>
@@ -513,10 +477,28 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect1">
+<h2 id="_enabling">Enabling</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
+</li>
+<li>
+<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_configuring">Configuring</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>If required, credentials can be specified using the following configuration properties.</p>
+<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
+</div>
+<div class="paragraph">
+<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -530,6 +512,10 @@ public static class ApplicationConfig {
 </tr>
 </thead>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
