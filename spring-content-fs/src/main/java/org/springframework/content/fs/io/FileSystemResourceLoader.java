@@ -2,6 +2,7 @@ package org.springframework.content.fs.io;
 
 import static org.springframework.util.StringUtils.cleanPath;
 
+import internal.org.springframework.content.fs.io.FileSystemDeletableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.io.DeletableResource;
