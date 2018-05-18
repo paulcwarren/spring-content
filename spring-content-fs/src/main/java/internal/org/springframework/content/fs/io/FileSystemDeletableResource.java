@@ -1,4 +1,4 @@
-package org.springframework.content.fs.io;
+package internal.org.springframework.content.fs.io;
 
 import java.io.File;
 import java.io.IOException;
