@@ -1,7 +1,6 @@
 package internal.org.springframework.content.mongo.io;
 
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.gridfs.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
@@ -46,7 +45,7 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
     }
 
     public long contentLength() throws IOException {
-        GridFSDBFile file = gridfs.findOne(query(whereFilename().is(location)));
+        GridFSFile file = gridfs.findOne(query(whereFilename().is(location)));
         if (file == null) {
             return 0L;
         }
@@ -58,7 +57,7 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
     }
 
     public long lastModified() throws IOException {
-        GridFSDBFile file = gridfs.findOne(query(whereFilename().is(location)));
+        GridFSFile file = gridfs.findOne(query(whereFilename().is(location)));
         if (file == null) {
             return -1L;
         }
@@ -94,11 +93,11 @@ public class GridFsStoreResource implements Resource, WritableResource, Deletabl
         if (file == null) {
             return null;
         }
-        return ((GridFSDBFile)file).getInputStream();
+        return gridfs.getResource(location).getInputStream();
     }
 
     public String getDescription() {
-        return "gridfsdbfile [" + location + "]";
+        return "GridFsStoreResource [location = '%s'" + location + "]";
     }
 
     public boolean isReadable() {

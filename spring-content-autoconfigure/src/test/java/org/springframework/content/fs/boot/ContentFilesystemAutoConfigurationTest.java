@@ -15,6 +15,7 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,6 +31,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import org.springframework.jmx.support.RegistrationPolicy;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -51,10 +53,10 @@ public class ContentFilesystemAutoConfigurationTest {
 
 			Context("given an environment specifying a filesystem root using spring prefix", () -> {
 				BeforeEach(() -> {
-					System.setProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
+					System.setProperty("spring.content.fs.filesystem-root", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
 				});
 				AfterEach(() -> {
-					System.clearProperty("SPRING_CONTENT_FS_FILESYSTEM_ROOT");
+					System.clearProperty("spring.content.fs.filesystem-root");
 				});
 				It("should have a filesystem properties bean with the correct root set", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
@@ -87,12 +89,14 @@ public class ContentFilesystemAutoConfigurationTest {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
+	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
+	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
 	public static class ConfigWithLoaderBean {
 
 		@Bean

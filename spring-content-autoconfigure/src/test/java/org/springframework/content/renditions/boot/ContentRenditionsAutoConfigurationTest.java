@@ -15,7 +15,9 @@ import org.springframework.content.renditions.renderers.WordToJpegRenderer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.jmx.support.RegistrationPolicy;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -50,6 +52,7 @@ public class ContentRenditionsAutoConfigurationTest {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
+	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 

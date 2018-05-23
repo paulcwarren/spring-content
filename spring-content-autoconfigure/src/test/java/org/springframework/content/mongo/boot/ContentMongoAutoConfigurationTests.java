@@ -10,9 +10,11 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.jmx.support.RegistrationPolicy;
 
 public class ContentMongoAutoConfigurationTests {
 
@@ -30,6 +32,7 @@ public class ContentMongoAutoConfigurationTests {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
+	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 

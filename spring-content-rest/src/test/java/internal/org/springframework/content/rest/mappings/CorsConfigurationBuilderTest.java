@@ -33,7 +33,7 @@ public class CorsConfigurationBuilderTest {
 	private Exception e;
 	
 	{
-		Describe("CorsConfigurationBuilderTest", () -> {
+		Describe("CorsConfigurationBuilder", () -> {
 			Context("#build", () -> {
 				JustBeforeEach(() -> {
 					builder = new CorsConfigurationBuilder();
@@ -144,7 +144,7 @@ public class CorsConfigurationBuilderTest {
 						storeInterface = StoreWithEmptyAllowCredentials.class;
 					});
 					It("should create a cors configuration with the default allow credentials value", () -> {
-						assertThat(config.getAllowCredentials(), is(true));
+						assertThat(config.getAllowCredentials(), is(false));
 					});
 				});
 				Context("given a positive max-age specification", () -> {

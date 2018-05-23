@@ -26,7 +26,7 @@ public class SolrAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SolrClient.class)
     public SolrClient solrClient() {
-            return new HttpSolrClient(solrProperties().getUrl());
+        return new HttpSolrClient.Builder(solrProperties().getUrl()).build();
     }
 
     @Bean

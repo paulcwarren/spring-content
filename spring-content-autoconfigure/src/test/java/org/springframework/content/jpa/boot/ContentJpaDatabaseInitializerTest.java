@@ -4,6 +4,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
 import org.junit.runner.RunWith;
+import org.springframework.boot.jdbc.DataSourceInitializationMode;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 
@@ -15,7 +16,13 @@ import java.sql.Statement;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ContentJpaDatabaseInitializerTest {
@@ -60,7 +67,7 @@ public class ContentJpaDatabaseInitializerTest {
                 });
                 Context("when initialization is disabled", () -> {
                     BeforeEach(() -> {
-                        props.getInitializer().setEnabled(false);
+                        props.getInitializer().setInitializeSchema(DataSourceInitializationMode.NEVER);
                     });
                     It("should not execute any statements on the database", () -> {
                         verify(stmt, never()).execute(anyString());

@@ -1,10 +1,16 @@
 package internal.org.springframework.content.mongo.io;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+import org.springframework.core.io.Resource;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 import java.io.InputStream;
@@ -29,7 +35,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(Ginkgo4jRunner.class)
+@RunWith(PowerMockRunner.class)
+@PowerMockRunnerDelegate(Ginkgo4jRunner.class)
+@PrepareForTest({GridFsTemplate.class, GridFSFile.class})
 public class GridFSResourceTest {
 
     private GridFsStoreResource r;
@@ -37,7 +45,7 @@ public class GridFSResourceTest {
     private String location;
     private GridFsTemplate gridfs;
 
-    private GridFSDBFile file;
+    private GridFSFile file;
 
     private Object rc;
 
@@ -53,7 +61,7 @@ public class GridFSResourceTest {
             Describe("Resource", () -> {
                 Context("#contentLength", () -> {
                     BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
+                        file = mock(GridFSFile.class);
                     });
                     JustBeforeEach(() -> {
                         rc = r.contentLength();
@@ -83,14 +91,14 @@ public class GridFSResourceTest {
                 });
                 Context("#getId", () -> {
                     BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
+                        file = mock(GridFSFile.class);
                     });
                     JustBeforeEach(() -> {
                         rc = r.getId();
                     });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                             when(gridfs.findOne(anyObject())).thenReturn(file);
                         });
                         It("should return the file's id", () -> {
@@ -106,14 +114,14 @@ public class GridFSResourceTest {
                 });
                 Context("#getContentType", () -> {
                     BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
+                        file = mock(GridFSFile.class);
                     });
                     JustBeforeEach(() -> {
                         rc = r.getContentType();
                     });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                             when(gridfs.findOne(anyObject())).thenReturn(file);
                         });
                         It("should return the file's content type", () -> {
@@ -129,14 +137,14 @@ public class GridFSResourceTest {
                 });
                 Context("#exists", () -> {
                     BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
+                        file = mock(GridFSFile.class);
                     });
                     JustBeforeEach(() -> {
                         rc = r.exists();
                     });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                             when(gridfs.findOne(anyObject())).thenReturn(file);
                         });
                         It("should return true", () -> {
@@ -158,24 +166,21 @@ public class GridFSResourceTest {
                     });
                 });
                 Context("#getInputStream", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
-                    });
                     JustBeforeEach(() -> {
-                        rc = r.getInputStream();
-                    });
+                        rc = r.getInputStream(); });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                             when(gridfs.findOne(anyObject())).thenReturn(file);
+                            when(gridfs.getResource(location)).thenReturn(mock(GridFsResource.class));
                         });
                         It("should return the file's input stream", () -> {
-                            verify(file).getInputStream();
+                            verify(gridfs).getResource(location);
                         });
                     });
                     Context("given the file doesn't exist", () -> {
                         It("should return null", () -> {
-                            verify(file, never()).getInputStream();
+                            verify(gridfs, never()).getResource(location);
                             assertThat(rc, is(nullValue()));
                         });
                     });
@@ -198,14 +203,14 @@ public class GridFSResourceTest {
                 });
                 Context("#lastModified", () -> {
                     BeforeEach(() -> {
-                        file = mock(GridFSDBFile.class);
+                        file = mock(GridFSFile.class);
                     });
                     JustBeforeEach(() -> {
                         rc = r.lastModified();
                     });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                             when(gridfs.findOne(anyObject())).thenReturn(file);
                             when(file.getUploadDate()).thenReturn(new Date());
                         });
@@ -255,7 +260,7 @@ public class GridFSResourceTest {
                     });
                     Context("given the file exists", () -> {
                         BeforeEach(() -> {
-                            file = mock(GridFSDBFile.class);
+                            file = mock(GridFSFile.class);
                         });
                         Context("given the file exists", () -> {
                             BeforeEach(() -> {

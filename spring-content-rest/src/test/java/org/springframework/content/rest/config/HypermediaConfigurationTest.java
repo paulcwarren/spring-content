@@ -74,7 +74,7 @@ public class HypermediaConfigurationTest {
 		}
 
 		@Override
-		public MongoDbFactory mongoDbFactory() throws Exception {
+		public MongoDbFactory mongoDbFactory() {
 			
 			if (System.getenv("spring_eg_content_mongo_host") != null) {
 		    	String host = System.getenv("spring_eg_content_mongo_host");
@@ -95,8 +95,7 @@ public class HypermediaConfigurationTest {
 			return super.mongoDbFactory();
 		}
 
-		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 	        return new MongoClient();
 		}
 	}
