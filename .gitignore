@@ -1,6 +1,20 @@
-.idea
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
 .DS_Store
-/**/*.iml
 /**/*.versionsBackup
+
+# Maven
+log/
+target/
+
+# Infinitest
 /**/infinitest.args
-*/target/*
