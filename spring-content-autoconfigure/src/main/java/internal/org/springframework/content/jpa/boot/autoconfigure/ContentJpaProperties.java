@@ -1,6 +1,7 @@
 package internal.org.springframework.content.jpa.boot.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceInitializationMode;
 
 @ConfigurationProperties("spring.content.jpa")
 public class ContentJpaProperties {
@@ -18,14 +19,14 @@ public class ContentJpaProperties {
     }
 
     public class Initializer {
-        private boolean enabled = true;
+        private DataSourceInitializationMode initializeSchema;
 
-        public boolean isEnabled() {
-            return enabled;
+        public DataSourceInitializationMode getInitializeSchema() {
+            return this.initializeSchema;
         }
 
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
+        public void setInitializeSchema(DataSourceInitializationMode initializeSchema) {
+            this.initializeSchema = initializeSchema;
         }
     }
 }

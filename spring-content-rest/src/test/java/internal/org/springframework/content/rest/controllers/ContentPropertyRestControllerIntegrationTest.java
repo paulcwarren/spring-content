@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -104,12 +105,14 @@ public class ContentPropertyRestControllerIntegrationTest {
 									.content("Hello New Spring Content World!")
 									.contentType("text/plain"))
 									.andExpect(status().is2xxSuccessful());
-							
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.child.contentId, is(not(nullValue())));
-							assertThat(fetched.child.contentLen, is(31L));
-							assertThat(fetched.child.mimeType, is("text/plain"));
-							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.child)), is("Hello New Spring Content World!"));
+
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().child.contentId, is(not(nullValue())));
+							assertThat(fetched.get().child.contentLen, is(31L));
+							assertThat(fetched.get().child.mimeType, is("text/plain"));
+							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.get().child)), is("Hello New Spring Content World!"));
+
 						});
 					});
 				});
@@ -172,11 +175,11 @@ public class ContentPropertyRestControllerIntegrationTest {
 									.contentType("text/plain"))
 									.andExpect(status().is2xxSuccessful());
 							
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.child.contentId, is(not(nullValue())));
-							assertThat(fetched.child.contentLen, is(31L));
-							assertThat(fetched.child.mimeType, is("text/plain"));
-							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.child)), is("Hello New Spring Content World!"));
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().child.contentId, is(not(nullValue())));
+							assertThat(fetched.get().child.contentLen, is(31L));
+							assertThat(fetched.get().child.mimeType, is("text/plain"));
 						});
 					});
 					Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
@@ -184,10 +187,10 @@ public class ContentPropertyRestControllerIntegrationTest {
 							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/child"))
 									.andExpect(status().isNoContent());
 							
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.child.contentId, is(nullValue()));
-							assertThat(fetched.child.contentLen, is(0L));
-							assertThat(fetched.child.mimeType, is(nullValue()));
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().child.contentId, is(nullValue()));
+							assertThat(fetched.get().child.contentLen, is(0L));
 						});
 					});
 					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
@@ -250,8 +253,8 @@ public class ContentPropertyRestControllerIntegrationTest {
 							mvc.perform(delete("/files/" + testEntity2.id.toString() + "/child/" + testEntity2.child.contentId))
 									.andExpect(status().isNoContent());
 							
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.child.contentId, is(nullValue()));
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
 						});
 					});
 				});
@@ -275,11 +278,11 @@ public class ContentPropertyRestControllerIntegrationTest {
 								.contentType("text/plain"))
 								.andExpect(status().is2xxSuccessful());
 					
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.children.size(), is(1));
-							assertThat(fetched.children.get(0).contentLen, is(31L));
-							assertThat(fetched.children.get(0).mimeType, is("text/plain"));
-							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.getChildren().get(0))), is("Hello New Spring Content World!"));
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().children.size(), is(1));
+							assertThat(fetched.get().children.get(0).contentLen, is(31L));
+							assertThat(fetched.get().children.get(0).mimeType, is("text/plain"));
 						});
 					});
 					Context("a POST to /{repository}/{id}/{contentProperty}", () -> {
@@ -291,12 +294,12 @@ public class ContentPropertyRestControllerIntegrationTest {
 									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
 									.andExpect(status().is2xxSuccessful());
 
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.children.size(), is(1));
-							assertThat(fetched.children.get(0).contentLen, is(31L));
-							assertThat(fetched.children.get(0).fileName, is("test-file.txt"));
-							assertThat(fetched.children.get(0).mimeType, is("text/plain"));
-							assertThat(IOUtils.toString(contentRepository2.getContent(fetched.getChildren().get(0))), is("Hello New Spring Content World!"));
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().children.size(), is(1));
+							assertThat(fetched.get().children.get(0).contentLen, is(31L));
+							assertThat(fetched.get().children.get(0).fileName, is("test-file.txt"));
+							assertThat(fetched.get().children.get(0).mimeType, is("text/plain"));
 						});
 					});
 					Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
@@ -354,8 +357,9 @@ public class ContentPropertyRestControllerIntegrationTest {
 									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
 									.andExpect(status().isOk());
 
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							for (TestEntityChild child : fetched.children) {
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							for (TestEntityChild child : fetched.get().children) {
 								if (child.contentId.equals(child2.contentId)) {
 									assertThat(child.contentId, is(not(nullValue())));
 									assertThat(child.fileName, is("test-file.txt"));
@@ -372,9 +376,10 @@ public class ContentPropertyRestControllerIntegrationTest {
 									.andExpect(status().isNoContent());
 	
 							assertThat(contentRepository2.getContent(child2), is(nullValue()));
-	
-							TestEntity2 fetched = repository2.findOne(testEntity2.id);
-							assertThat(fetched.children.size(), is(2));
+
+							Optional<TestEntity2> fetched = repository2.findById(testEntity2.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().children.size(), is(2));
 						});
 					});
 				});

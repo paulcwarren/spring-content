@@ -22,13 +22,23 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
 	public static final S3ObjectIdResolver<Serializable> DEFAULT_S3OBJECTID_RESOLVER_STORE = S3ObjectIdResolver.createDefaultS3ObjectIdHelper();
 
+	@Autowired
 	private AmazonS3 client;
+
+	@Autowired
 	private SimpleStorageResourceLoader loader;
+
+	@Autowired
 	private ConversionService s3StoreConverter;
+
+	@Autowired
 	private S3ObjectIdResolvers resolvers;
 
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
+
+	public S3StoreFactoryBean() {
+	}
 
 	@Autowired
 	public S3StoreFactoryBean(AmazonS3 client, SimpleStorageResourceLoader loader, ConversionService s3StoreConverter, S3ObjectIdResolvers resolvers) {

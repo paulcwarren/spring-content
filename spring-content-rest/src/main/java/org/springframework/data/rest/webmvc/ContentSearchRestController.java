@@ -128,9 +128,9 @@ public class ContentSearchRestController /*extends AbstractRepositoryRestControl
 			List<Object> results = new ArrayList<>();
 			if (idField.equals(contentIdField)) {
 				for (Object contentId : contentIds) {
-					Object entity = repoInfo.getInvoker().invokeFindOne(contentId.toString());
-					if (entity != null) {
-						results.add(entity);
+					Optional<Object> entity = repoInfo.getInvoker().invokeFindById(contentId.toString());
+					if (entity.isPresent()) {
+						results.add(entity.get());
 					}
 				}
 			} else {

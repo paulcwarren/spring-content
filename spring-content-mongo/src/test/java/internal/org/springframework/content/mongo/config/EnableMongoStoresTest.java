@@ -168,11 +168,10 @@ public class EnableMongoStoresTest {
 			return "spring-content";
 		}
 		@Override
-		public MongoDbFactory mongoDbFactory() throws Exception {
+		public MongoDbFactory mongoDbFactory() {
 			return super.mongoDbFactory();
 		}
-		@Override
-		public Mongo mongo() throws Exception {
+		public MongoClient mongoClient() {
 	        return new MongoClient();
 		}
 	}

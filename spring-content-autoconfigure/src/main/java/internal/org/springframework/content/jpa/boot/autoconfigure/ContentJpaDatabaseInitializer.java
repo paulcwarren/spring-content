@@ -1,13 +1,14 @@
 package internal.org.springframework.content.jpa.boot.autoconfigure;
 
-import org.springframework.boot.autoconfigure.AbstractDatabaseInitializer;
+import org.springframework.boot.jdbc.AbstractDataSourceInitializer;
+import org.springframework.boot.jdbc.DataSourceInitializationMode;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
-public class ContentJpaDatabaseInitializer extends AbstractDatabaseInitializer {
+public class ContentJpaDatabaseInitializer extends AbstractDataSourceInitializer {
 
     private ContentJpaProperties properties;
 
@@ -23,8 +24,8 @@ public class ContentJpaDatabaseInitializer extends AbstractDatabaseInitializer {
     }
 
     @Override
-    protected boolean isEnabled() {
-        return properties.getInitializer().isEnabled();
+    protected DataSourceInitializationMode getMode() {
+        return properties.getInitializer().getInitializeSchema();
     }
 
     @Override
