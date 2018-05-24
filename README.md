@@ -4,9 +4,9 @@
 
 # Spring Content
 
-Cloud-Native Content Services for Spring. Integrates with Spring Data, Spring Data REST and Apache Solr. 
+Cloud-Native Content Services for Spring.
 
-Spring Content provides modules for JPA, MongoDB, S3 and the Filesystem for storing content, relies on Spring Data for content metadata and integrates with Apache Solr for searching that content.
+Spring Content provides modules for managing content in JPA, MongoDB's GridFS, S3 or Filesystem storage.  To associate content with Spring Data Entities Spring Content may be used with Spring Data/REST.  Spring Content can integrate with Apache Solr for fulltext indexing and search capabilities.  Spring Content also provides a pluggable renditions framework and several out-of-the-box renderers that can render stored content in several different formats.   
 
 ## Getting help
 Having trouble with Spring Content? We'd like to help!
