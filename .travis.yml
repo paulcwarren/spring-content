@@ -25,7 +25,5 @@ deploy:
     on:
       repo: paulcwarren/spring-content
       tags: true
-#script:
-#- mvn deploy --settings settings.xml -P $MAVEN_PROFILE jacoco:report coveralls:report 
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9

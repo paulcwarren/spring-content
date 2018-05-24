@@ -45,7 +45,7 @@
 			<artifactId>evo-inflector</artifactId>
 			<version>1.2.1</version>
 		</dependency>
-		
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -119,32 +119,4 @@
 		    <scope>test</scope>
 		</dependency>
 	</dependencies>
-	
-	<build>
-		<plugins>
-			<!-- Docs Rendering -->
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<configuration>
-			        <backend>html</backend>
-			        <doctype>book</doctype>
-			        <attributes>
-					    <version>${project.version}</version>
-			        </attributes>
-			        <outputDirectory>${docs.output.dir}</outputDirectory>
-			    </configuration>
-			    <executions>
-			        <execution>
-			            <id>output-html</id>             
-			            <phase>generate-resources</phase>
-			            <goals>
-			                <goal>process-asciidoc</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			</plugin>
-		</plugins>
-	</build>
-	
 </project>
