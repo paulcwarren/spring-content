@@ -41,7 +41,7 @@ greatest, Spring Content can be easily built with the
 [maven wrapper](https://github.com/takari/maven-wrapper). You also need JDK 1.8.
 
 ```
-$ ./mvnw clean install
+$ BUILD_TYPE=dev ./mvnw clean install
 ```
 
 If you want to build with the regular `mvn` command, you will need
