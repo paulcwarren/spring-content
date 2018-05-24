@@ -14,7 +14,7 @@ Having trouble with Spring Content? We'd like to help!
 * Check the [reference documentation](https://paulcwarren.github.io/spring-content/).
 * Learn the Spring basics -- Spring Content builds on many other Spring projects, check
   the [spring.io](https://spring.io) web-site for a wealth of reference documentation. If
-  you are just starting out with Spring, try one of the https://spring.io/guides[guides].
+  you are just starting out with Spring, try one of the [spring.io guides](https://spring.io/guides).
 * If you are upgrading, read the [release notes](https://github.com/paulcwarren/spring-content/releases).
   for upgrade instructions and "new and noteworthy" features.
 * Ask a question - we monitor our [Gitter room](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) for questions.
