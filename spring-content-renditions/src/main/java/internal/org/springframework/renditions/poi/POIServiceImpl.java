@@ -10,11 +10,11 @@ import java.io.InputStream;
 
 public class POIServiceImpl implements org.springframework.renditions.poi.POIService {
 
-    private static Log logger = LogFactory.getLog(POIServiceImpl.class);
+	private static Log logger = LogFactory.getLog(POIServiceImpl.class);
 
-    @Override
-    public XWPFDocument xwpfDocument(InputStream stream) throws IOException {
-        Assert.notNull(stream);
-        return new XWPFDocument(stream);
-    }
+	@Override
+	public XWPFDocument xwpfDocument(InputStream stream) throws IOException {
+		Assert.notNull(stream);
+		return new XWPFDocument(stream);
+	}
 }

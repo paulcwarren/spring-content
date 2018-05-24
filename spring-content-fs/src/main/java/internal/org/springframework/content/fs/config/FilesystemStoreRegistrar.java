@@ -12,7 +12,8 @@ import org.springframework.core.type.AnnotationMetadata;
 public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 
 	@Override
-	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
+			BeanDefinitionRegistry registry) {
 		super.registerBeanDefinitions(importingClassMetadata, registry);
 	}
 
@@ -24,5 +25,5 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 	protected Class<? extends Annotation> getAnnotation() {
 		return EnableFilesystemStores.class;
 	}
-	
+
 }

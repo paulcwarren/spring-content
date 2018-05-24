@@ -41,92 +41,117 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 @Ginkgo4jConfiguration(threads = 1)
 public class SolrSearchContentRepositoryExtensionTest {
 
-    private SolrSearchContentRepositoryExtension search;
+	private SolrSearchContentRepositoryExtension search;
 
-    private Method method;
-    private MethodInvocation invocation;
-    private StoreInvoker invoker;
-    private GenericConversionService conversionService;
-    private SolrProperties solrProperties;
+	private Method method;
+	private MethodInvocation invocation;
+	private StoreInvoker invoker;
+	private GenericConversionService conversionService;
+	private SolrProperties solrProperties;
 
-    // mock
-    private SolrClient solr;
-    private ReflectionService reflectionService;
+	// mock
+	private SolrClient solr;
+	private ReflectionService reflectionService;
 
-    {
-        Describe("ContentRepositoryExtension", () ->{
-            Context("#getMethods", () -> {
-                It("should return searchable methods", () -> {
-                    search = new SolrSearchContentRepositoryExtension(null, reflectionService, conversionService, solrProperties);
-                    Set<Method> methods = search.getMethods();
-                    assertThat(methods, is(not(nullValue())));
-                    assertThat(methods.size(), is(greaterThan(0)));
-                    assertThat(methods.contains(Searchable.class.getMethod("findKeyword", String.class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findAllKeywords", String[].class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findAnyKeywords", String[].class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findKeywordsNear", int.class, String[].class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findKeywordStartsWith", String.class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findKeywordStartsWithAndEndsWith", String.class, String.class)), is(true));
-                    assertThat(methods.contains(Searchable.class.getMethod("findAllKeywordsWithWeights", String[].class, double[].class)), is(true));
-                });
-            });
-            Context("#invoke", () -> {
-                BeforeEach(() -> {
-                    invocation = mock(MethodInvocation.class);
-                    method = Searchable.class.getMethod("findKeyword", String.class);
-                    when(invocation.getMethod()).thenReturn(method);
-                    when(invocation.getArguments()).thenReturn(new String[]{"something"});
+	{
+		Describe("ContentRepositoryExtension", () -> {
+			Context("#getMethods", () -> {
+				It("should return searchable methods", () -> {
+					search = new SolrSearchContentRepositoryExtension(null,
+							reflectionService, conversionService, solrProperties);
+					Set<Method> methods = search.getMethods();
+					assertThat(methods, is(not(nullValue())));
+					assertThat(methods.size(), is(greaterThan(0)));
+					assertThat(methods.contains(
+							Searchable.class.getMethod("findKeyword", String.class)),
+							is(true));
+					assertThat(methods.contains(Searchable.class
+							.getMethod("findAllKeywords", String[].class)), is(true));
+					assertThat(methods.contains(Searchable.class
+							.getMethod("findAnyKeywords", String[].class)), is(true));
+					assertThat(
+							methods.contains(Searchable.class.getMethod(
+									"findKeywordsNear", int.class, String[].class)),
+							is(true));
+					assertThat(
+							methods.contains(Searchable.class
+									.getMethod("findKeywordStartsWith", String.class)),
+							is(true));
+					assertThat(methods.contains(
+							Searchable.class.getMethod("findKeywordStartsWithAndEndsWith",
+									String.class, String.class)),
+							is(true));
+					assertThat(methods.contains(
+							Searchable.class.getMethod("findAllKeywordsWithWeights",
+									String[].class, double[].class)),
+							is(true));
+				});
+			});
+			Context("#invoke", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+					method = Searchable.class.getMethod("findKeyword", String.class);
+					when(invocation.getMethod()).thenReturn(method);
+					when(invocation.getArguments())
+							.thenReturn(new String[] { "something" });
 
-                    invoker = mock(StoreInvoker.class);
+					invoker = mock(StoreInvoker.class);
 
-                    conversionService = new GenericConversionService();
-                    conversionService.addConverter(new StringToInteger());
-                });
-                It("should invoke the correct method", () -> {
-                    doReturn(String.class).when(invoker).getContentIdClass();
-                    doReturn(Document.class).when(invoker).getDomainClass();
+					conversionService = new GenericConversionService();
+					conversionService.addConverter(new StringToInteger());
+				});
+				It("should invoke the correct method", () -> {
+					doReturn(String.class).when(invoker).getContentIdClass();
+					doReturn(Document.class).when(invoker).getDomainClass();
 
-                    reflectionService = mock(ReflectionService.class);
-                    when(reflectionService.invokeMethod(anyObject(), anyObject(), anyVararg())).thenReturn(Collections.singletonList("12345"));
+					reflectionService = mock(ReflectionService.class);
+					when(reflectionService.invokeMethod(anyObject(), anyObject(),
+							anyVararg())).thenReturn(Collections.singletonList("12345"));
 
-                    search = new SolrSearchContentRepositoryExtension(null, reflectionService, conversionService, solrProperties);
-                    search.invoke(invocation, invoker);
+					search = new SolrSearchContentRepositoryExtension(null,
+							reflectionService, conversionService, solrProperties);
+					search.invoke(invocation, invoker);
 
-                    verify(reflectionService).invokeMethod(argThat(is(method)), argThat(is(instanceOf(SolrSearchService.class))), argThat(is("something")));
-                });
-                It("should convert the returned list to the content id type", () -> {
-                    doReturn(Integer.class).when(invoker).getContentIdClass();
-                    doReturn(Document.class).when(invoker).getDomainClass();
+					verify(reflectionService).invokeMethod(argThat(is(method)),
+							argThat(is(instanceOf(SolrSearchService.class))),
+							argThat(is("something")));
+				});
+				It("should convert the returned list to the content id type", () -> {
+					doReturn(Integer.class).when(invoker).getContentIdClass();
+					doReturn(Document.class).when(invoker).getDomainClass();
 
-                    solr = mock(SolrClient.class);
-                    solrProperties = new SolrProperties();
-                    NamedList list = new NamedList();
-                    SolrDocumentList docs = new SolrDocumentList();
-                    SolrDocument doc = new SolrDocument();
-                    doc.addField("id", "12345");
-                    docs.add(doc);
-                    list.add("response", docs);
-                    when(solr.request(anyObject(), anyObject())).thenReturn(list);
+					solr = mock(SolrClient.class);
+					solrProperties = new SolrProperties();
+					NamedList list = new NamedList();
+					SolrDocumentList docs = new SolrDocumentList();
+					SolrDocument doc = new SolrDocument();
+					doc.addField("id", "12345");
+					docs.add(doc);
+					list.add("response", docs);
+					when(solr.request(anyObject(), anyObject())).thenReturn(list);
 
-                    reflectionService = new ReflectionServiceImpl();
+					reflectionService = new ReflectionServiceImpl();
 
-                    search = new SolrSearchContentRepositoryExtension(solr, reflectionService, conversionService, solrProperties);
-                    Iterable<?> results = (Iterable<?>)search.invoke(invocation, invoker);
-                    assertThat(results, Every.everyItem(instanceOf(Integer.class)));
-                });
-            });
-        });
-    }
+					search = new SolrSearchContentRepositoryExtension(solr,
+							reflectionService, conversionService, solrProperties);
+					Iterable<?> results = (Iterable<?>) search.invoke(invocation,
+							invoker);
+					assertThat(results, Every.everyItem(instanceOf(Integer.class)));
+				});
+			});
+		});
+	}
 
-    @Test
-    public void noop() {
-    }
+	@Test
+	public void noop() {
+	}
 
-    static class StringToInteger implements Converter<String, Integer> {
-        public Integer convert(String source) {
-            return Integer.valueOf(source);
-        }
-    }
+	static class StringToInteger implements Converter<String, Integer> {
+		public Integer convert(String source) {
+			return Integer.valueOf(source);
+		}
+	}
 
-    static class Document {}
+	static class Document {
+	}
 }

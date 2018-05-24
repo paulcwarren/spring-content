@@ -17,25 +17,27 @@ import internal.org.springframework.content.docx4j.WordToTextRenditionProvider;
 public class WordToTextRenditionProviderTest {
 
 	private RenditionProvider service;
-	
+
 	@Before
 	public void setUp() {
 		service = new WordToTextRenditionProvider();
 	}
-	
+
 	@Test
 	public void testCanConvert() {
-		assertThat(service.consumes(), is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+		assertThat(service.consumes(), is(
+				"application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
 		assertThat(Arrays.asList(service.produces()), hasItems("text/plain"));
 	}
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"), 
-												"text/plain");
+		InputStream converted = service.convert(
+				this.getClass().getResourceAsStream("/sample-docx2.docx"), "text/plain");
 
 		String content = IOUtils.toString(converted);
-		assertThat(content, is("This is the Document Title and this is the document body."));
+		assertThat(content,
+				is("This is the Document Title and this is the document body."));
 	}
 
 }

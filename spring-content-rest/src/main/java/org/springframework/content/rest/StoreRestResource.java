@@ -19,4 +19,3 @@ public @interface StoreRestResource {
 	String path() default "";
 
 }
-

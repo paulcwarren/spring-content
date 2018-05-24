@@ -32,7 +32,8 @@ public class ContentS3AutoConfigurationTest {
 		context.register(TestConfig.class);
 		context.refresh();
 
-		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class),
+				CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 
 		context.close();
 	}
@@ -43,7 +44,8 @@ public class ContentS3AutoConfigurationTest {
 		context.register(TestConfigWithoutBeans.class);
 		context.refresh();
 
-		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class),
+				CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 
 		context.close();
 	}
@@ -90,6 +92,7 @@ public class ContentS3AutoConfigurationTest {
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

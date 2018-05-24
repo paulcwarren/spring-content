@@ -12,9 +12,9 @@ public interface ContentStoreInfo {
 	 * @return interface class
 	 */
 	public Class<?> getInterface();
-	
+
 	/**
-	 * Returns the Store's domain object class if applicable.  In cases where the Store
+	 * Returns the Store's domain object class if applicable. In cases where the Store
 	 * does not have a domain class, returns null
 	 * 
 	 * @return domain object class
@@ -31,9 +31,9 @@ public interface ContentStoreInfo {
 
 	/**
 	 * Returns the Store's implementation
-	 * @return the store's implementation (implementing ContentStore), or null 
+	 * @return the store's implementation (implementing ContentStore), or null
 	 */
 	@Deprecated
 	public ContentStore<Object, Serializable> getImpementation();
-	
+
 }

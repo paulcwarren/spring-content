@@ -26,11 +26,12 @@ import org.springframework.test.context.ContextConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@ContextConfiguration(classes=EnableFullTextSolrIndexingTest.TestConfiguration.class)
+@ContextConfiguration(classes = EnableFullTextSolrIndexingTest.TestConfiguration.class)
 public class EnableFullTextSolrIndexingTest {
 
-	@Autowired private ApplicationContext context;
-	
+	@Autowired
+	private ApplicationContext context;
+
 	{
 		Describe("EnableFullTextSolrIndexing", () -> {
 			It("should have a SolrProperties bean", () -> {
@@ -41,22 +42,22 @@ public class EnableFullTextSolrIndexingTest {
 			});
 		});
 	}
-	
+
 	@Configuration
 	@EnableFullTextSolrIndexing
 	@Import(ContentStoreConfiguration.class)
 	public static class TestConfiguration {
 
 		@Bean
-	    public SolrClient solrClient() {
-	        SolrClient sc = new HttpSolrClient("http://some/url");
-	        return sc;
-	    }
-		
+		public SolrClient solrClient() {
+			SolrClient sc = new HttpSolrClient("http://some/url");
+			return sc;
+		}
+
 	}
-	
+
 	public static class ContentStoreConfiguration {
-		
+
 		// Developer bean - would usually be supplied by app developer
 		@Bean
 		public ConversionService conversionService() {
@@ -64,7 +65,7 @@ public class EnableFullTextSolrIndexingTest {
 		}
 
 	}
-	
+
 	@Test
 	public void noop() {
 	}

@@ -24,8 +24,8 @@ public class StoreInvokerImpl implements StoreInvoker {
 
 	private MethodInvocation invocation = null;
 
-
-	public StoreInvokerImpl(Class<?> domainClass, Class<? extends Serializable> contentIdClass, MethodInvocation invocation) {
+	public StoreInvokerImpl(Class<?> domainClass,
+			Class<? extends Serializable> contentIdClass, MethodInvocation invocation) {
 		Assert.notNull(domainClass, "domainClass must not be null");
 		this.domainClass = domainClass;
 
@@ -36,9 +36,10 @@ public class StoreInvokerImpl implements StoreInvoker {
 		this.invocation = invocation;
 
 		try {
-			Class<?> storeClazz  = ContentStore.class;
+			Class<?> storeClazz = ContentStore.class;
 			getContentMethod = storeClazz.getMethod("getContent", Object.class);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			LOGGER.error("Failed to get ContentStore.getContentmethod", e);
 		}
 	}
@@ -56,11 +57,16 @@ public class StoreInvokerImpl implements StoreInvoker {
 	@Override
 	public InputStream invokeGetContent() {
 		try {
-			return (InputStream) this.getContentMethod.invoke(invocation.getThis(), invocation.getArguments()[0]);
-		} catch (IllegalAccessException e) {
-			LOGGER.error(String.format("Unable to get content for inovcation", invocation.getMethod().getName()), e);
-		} catch (InvocationTargetException e) {
-			LOGGER.error(String.format("Unable to get content for inovcation", invocation.getMethod().getName()), e);
+			return (InputStream) this.getContentMethod.invoke(invocation.getThis(),
+					invocation.getArguments()[0]);
+		}
+		catch (IllegalAccessException e) {
+			LOGGER.error(String.format("Unable to get content for inovcation",
+					invocation.getMethod().getName()), e);
+		}
+		catch (InvocationTargetException e) {
+			LOGGER.error(String.format("Unable to get content for inovcation",
+					invocation.getMethod().getName()), e);
 		}
 		return null;
 	}

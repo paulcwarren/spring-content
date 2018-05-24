@@ -29,7 +29,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class ContentRenditionsAutoConfigurationTest {
 
 	{
@@ -40,7 +40,8 @@ public class ContentRenditionsAutoConfigurationTest {
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(WordToJpegRenderer.class), is(not(nullValue())));
+					assertThat(context.getBean(WordToJpegRenderer.class),
+							is(not(nullValue())));
 
 					context.close();
 				});
@@ -48,11 +49,10 @@ public class ContentRenditionsAutoConfigurationTest {
 		});
 	}
 
-
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
@@ -66,6 +66,7 @@ public class ContentRenditionsAutoConfigurationTest {
 		private String contentId;
 	}
 
-	public interface TestEntityContentStore extends ContentStore<TestEntity, String>, Renderable<TestEntity> {
+	public interface TestEntityContentStore
+			extends ContentStore<TestEntity, String>, Renderable<TestEntity> {
 	}
 }

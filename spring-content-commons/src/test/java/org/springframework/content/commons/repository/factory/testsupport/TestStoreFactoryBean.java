@@ -5,10 +5,10 @@ import org.springframework.content.commons.repository.factory.AbstractStoreFacto
 public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Override
-    protected Object getContentStoreImpl() {
-        return new TestConfigStoreImpl();
-    }
+	protected Object getContentStoreImpl() {
+		return new TestConfigStoreImpl();
+	}
 
-    public static class TestConfigStoreImpl {
-    }
+	public static class TestConfigStoreImpl {
+	}
 }

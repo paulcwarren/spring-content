@@ -13,18 +13,20 @@ import org.springframework.core.convert.support.DefaultConversionService;
 @Configuration
 public class FilesystemStoreConfiguration {
 
-	@Autowired(required=false) private List<FilesystemStoreConfigurer> configurers;
+	@Autowired(required = false)
+	private List<FilesystemStoreConfigurer> configurers;
 
-	@Bean ConversionService filesystemStoreConverter() {
+	@Bean
+	ConversionService filesystemStoreConverter() {
 		DefaultConversionService conversion = new DefaultConversionService();
 		addConverters(conversion);
 		return conversion;
 	}
 
 	protected void addConverters(ConverterRegistry registry) {
-		if (configurers == null) 
+		if (configurers == null)
 			return;
-		
+
 		for (FilesystemStoreConfigurer configurer : configurers) {
 			configurer.configureFilesystemStoreConverters(registry);
 		}

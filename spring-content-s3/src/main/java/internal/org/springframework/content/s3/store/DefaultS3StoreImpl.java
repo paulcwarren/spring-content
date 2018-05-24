@@ -30,7 +30,8 @@ import org.springframework.util.Assert;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 
-public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
+public class DefaultS3StoreImpl<S, SID extends Serializable>
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -40,7 +41,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 	private S3ObjectIdResolver idResolver = null;
 	private String defaultBucket;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter, AmazonS3 client, S3ObjectIdResolver idResolver, String defaultBucket) {
+	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter,
+			AmazonS3 client, S3ObjectIdResolver idResolver, String defaultBucket) {
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(converter, "converter must be specified");
 		Assert.notNull(client, "client must be specified");
@@ -63,7 +65,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 		if (id instanceof S3ObjectId == false) {
 			this.getS3ObjectIdResolver().validate(id);
-			String bucket = this.getS3ObjectIdResolver().getBucket(id, this.defaultBucket);
+			String bucket = this.getS3ObjectIdResolver().getBucket(id,
+					this.defaultBucket);
 			String objectId = this.getS3ObjectIdResolver().getKey(id);
 
 			if (bucket == null) {
@@ -72,8 +75,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 			S3ObjectId s3ObjectId = new S3ObjectId(bucket, objectId);
 			return this.getResourceInternal(s3ObjectId);
-		} else {
-			return this.getResourceInternal((S3ObjectId)id);
+		}
+		else {
+			return this.getResourceInternal((S3ObjectId) id);
 		}
 	}
 
@@ -82,7 +86,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		if (entity == null)
 			return null;
 
-		String bucket = this.getS3ObjectIdResolver().getBucket(entity, this.defaultBucket);
+		String bucket = this.getS3ObjectIdResolver().getBucket(entity,
+				this.defaultBucket);
 		String objectId = this.getS3ObjectIdResolver().getKey(entity);
 
 		if (bucket == null) {
@@ -105,24 +110,29 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 	@Override
 	public void associate(Object entity, Serializable id) {
-        BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id);
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id);
 	}
 
 	@Override
 	public void unassociate(Object entity) {
-        BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null, new Condition() {
-            @Override
-            public boolean matches(Field field) {
-                for (Annotation annotation : field.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
-                        return false;
-                    }
-                }
-                return true;
-            }});
-        BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
-    }
+		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null,
+				new Condition() {
+					@Override
+					public boolean matches(Field field) {
+						for (Annotation annotation : field.getAnnotations()) {
+							if ("javax.persistence.Id".equals(
+									annotation.annotationType().getCanonicalName())
+									|| "org.springframework.data.annotation.Id"
+											.equals(annotation.annotationType()
+													.getCanonicalName())) {
+								return false;
+							}
+						}
+						return true;
+					}
+				});
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+	}
 
 	@Override
 	public void setContent(S property, InputStream content) {
@@ -131,25 +141,33 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		OutputStream os = null;
 		try {
 			if (resource instanceof WritableResource) {
-				os = ((WritableResource)resource).getOutputStream();
+				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content for resource %s", resource.toString()), e);
-		} finally {
-	        try {
-	            if (os != null) {
-	                os.close();
-	            }
-	        } catch (IOException ioe) {
-	            // ignore
-	        }
 		}
-			
+		catch (IOException e) {
+			logger.error(String.format("Unexpected error setting content for resource %s",
+					resource.toString()), e);
+		}
+		finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+			}
+			catch (IOException ioe) {
+				// ignore
+			}
+		}
+
 		try {
-			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, resource.contentLength());
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for resource %s", resource.toString()), e);
+			BeanUtils.setFieldWithAnnotation(property, ContentLength.class,
+					resource.contentLength());
+		}
+		catch (IOException e) {
+			logger.error(String.format(
+					"Unexpected error setting content length for resource %s",
+					resource.toString()), e);
 		}
 	}
 
@@ -164,10 +182,12 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 			if (resource.exists()) {
 				return resource.getInputStream();
 			}
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content for resource %s", resource.toString()), e);
 		}
-		
+		catch (IOException e) {
+			logger.error(String.format("Unexpected error getting content for resource %s",
+					resource.toString()), e);
+		}
+
 		return null;
 	}
 
@@ -180,20 +200,27 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 			deleteIfExists(property);
 
 			// reset content fields
-			BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null, new Condition() {
-				@Override
-				public boolean matches(Field field) {
-					for (Annotation annotation : field.getAnnotations()) {
-						if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-								"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
-							return false;
+			BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null,
+					new Condition() {
+						@Override
+						public boolean matches(Field field) {
+							for (Annotation annotation : field.getAnnotations()) {
+								if ("javax.persistence.Id".equals(
+										annotation.annotationType().getCanonicalName())
+										|| "org.springframework.data.annotation.Id"
+												.equals(annotation.annotationType()
+														.getCanonicalName())) {
+									return false;
+								}
+							}
+							return true;
 						}
-					}
-					return true;
-				}});
-	        BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-		} catch (Exception ase) {
-			logger.error(String.format("Unexpected error unsetting content for entity %s", property.toString()), ase);
+					});
+			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+		}
+		catch (Exception ase) {
+			logger.error(String.format("Unexpected error unsetting content for entity %s",
+					property.toString()), ase);
 		}
 	}
 
@@ -202,7 +229,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 		Assert.state(location.startsWith("s3://") == false);
 		if (location.startsWith("/")) {
 			locationToUse = location.substring(1);
-		} else {
+		}
+		else {
 			locationToUse = location;
 		}
 		return String.format("s3://%s/%s", bucket, locationToUse);
@@ -210,19 +238,22 @@ public class DefaultS3StoreImpl<S, SID extends Serializable> implements Store<SI
 
 	private void deleteIfExists(SID contentId) {
 		String bucketName = this.idResolver.getBucket(contentId, this.defaultBucket);
-		
+
 		Resource resource = this.getResource(contentId);
 		if (resource.exists()) {
-			client.deleteObject(new DeleteObjectRequest(bucketName, resource.getFilename()));
+			client.deleteObject(
+					new DeleteObjectRequest(bucketName, resource.getFilename()));
 		}
 	}
 
 	private void deleteIfExists(S entity) {
-		String bucketName = this.getS3ObjectIdResolver().getBucket(entity, this.defaultBucket);
+		String bucketName = this.getS3ObjectIdResolver().getBucket(entity,
+				this.defaultBucket);
 
 		Resource resource = this.getResource(entity);
 		if (resource.exists()) {
-			client.deleteObject(new DeleteObjectRequest(bucketName, resource.getFilename()));
+			client.deleteObject(
+					new DeleteObjectRequest(bucketName, resource.getFilename()));
 		}
 	}
 }

@@ -26,8 +26,9 @@ public class FilesystemPropertiesTest {
 				BeforeEach(() -> {
 					props = new FilesystemContentAutoConfiguration.FilesystemProperties();
 				});
-				It("should return a JAVA.IO.TMPDIR based default",() -> {
-					assertThat(props.getFilesystemRoot(), startsWith(System.getProperty("java.io.tmpdir")));
+				It("should return a JAVA.IO.TMPDIR based default", () -> {
+					assertThat(props.getFilesystemRoot(),
+							startsWith(System.getProperty("java.io.tmpdir")));
 				});
 			});
 			Context("given a filesystem properties with root set", () -> {
@@ -35,7 +36,7 @@ public class FilesystemPropertiesTest {
 					props = new FilesystemContentAutoConfiguration.FilesystemProperties();
 					props.setFilesystemRoot("/some/random/path");
 				});
-				It("should return a JAVA.IO.TMPDIR based default",() -> {
+				It("should return a JAVA.IO.TMPDIR based default", () -> {
 					assertThat(props.getFilesystemRoot(), is("/some/random/path"));
 				});
 			});

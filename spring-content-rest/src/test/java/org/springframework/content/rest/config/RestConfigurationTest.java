@@ -36,11 +36,11 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class RestConfigurationTest {
 
 	private AnnotationConfigWebApplicationContext context;
-	
+
 	{
 		Describe("RestConfiguration", () -> {
 			Context("given a context with a ContentRestConfiguration", () -> {
@@ -53,21 +53,29 @@ public class RestConfigurationTest {
 							RestConfiguration.class);
 					context.refresh();
 				});
-				
+
 				It("should have a content handler mapping bean", () -> {
-					MatcherAssert.assertThat(context.getBean("contentHandlerMapping"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("contentHandlerMapping"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 				});
-				
+
 				It("should have the content rest controllers", () -> {
-					MatcherAssert.assertThat(context.getBean("contentEntityRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(context.getBean("contentPropertyCollectionRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(context.getBean("contentPropertyRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(context.getBean("storeRestController"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(
+							context.getBean("contentEntityRestController"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(
+							context.getBean("contentPropertyCollectionRestController"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(
+							context.getBean("contentPropertyRestController"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("storeRestController"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 				});
 			});
 		});
 	}
-	
+
 	@Configuration
 	@EnableMongoContentRepositories
 	public static class TestConfig extends AbstractMongoConfiguration {
@@ -75,7 +83,7 @@ public class RestConfigurationTest {
 		public GridFsTemplate gridFsTemplate() throws Exception {
 			return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
 		}
-		
+
 		@Override
 		protected String getDatabaseName() {
 			return "spring-content";
@@ -83,32 +91,35 @@ public class RestConfigurationTest {
 
 		@Override
 		public MongoDbFactory mongoDbFactory() {
-			
-			if (System.getenv("spring_eg_content_mongo_host") != null) {
-		    	String host = System.getenv("spring_eg_content_mongo_host");
-		    	String port = System.getenv("spring_eg_content_mongo_port");
-		    	String username = System.getenv("spring_eg_content_mongo_username");
-		    	String password = System.getenv("spring_eg_content_mongo_password");
 
-				 // Set credentials      
-			    MongoCredential credential = MongoCredential.createCredential(username, getDatabaseName(), password.toCharArray());
-			    ServerAddress serverAddress = new ServerAddress(host, Integer.parseInt(port));
-		
-			    // Mongo Client
-			    MongoClient mongoClient = new MongoClient(serverAddress,Arrays.asList(credential)); 
-		
-			    // Mongo DB Factory
-			    return new SimpleMongoDbFactory(mongoClient, getDatabaseName());
+			if (System.getenv("spring_eg_content_mongo_host") != null) {
+				String host = System.getenv("spring_eg_content_mongo_host");
+				String port = System.getenv("spring_eg_content_mongo_port");
+				String username = System.getenv("spring_eg_content_mongo_username");
+				String password = System.getenv("spring_eg_content_mongo_password");
+
+				// Set credentials
+				MongoCredential credential = MongoCredential.createCredential(username,
+						getDatabaseName(), password.toCharArray());
+				ServerAddress serverAddress = new ServerAddress(host,
+						Integer.parseInt(port));
+
+				// Mongo Client
+				MongoClient mongoClient = new MongoClient(serverAddress,
+						Arrays.asList(credential));
+
+				// Mongo DB Factory
+				return new SimpleMongoDbFactory(mongoClient, getDatabaseName());
 			}
 			return super.mongoDbFactory();
 		}
 
 		@Override
 		public MongoClient mongoClient() {
-	        return new MongoClient();
+			return new MongoClient();
 		}
 	}
-	
+
 	@Document
 	@Content
 	public class TestEntity {
@@ -121,6 +132,7 @@ public class RestConfigurationTest {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

@@ -9,7 +9,8 @@ public class BeforeGetContentEvent extends StoreEvent {
 
 	private static final long serialVersionUID = -6943798939368100773L;
 
-	public BeforeGetContentEvent(Object source, ContentStore<Object,Serializable> store) {
+	public BeforeGetContentEvent(Object source,
+			ContentStore<Object, Serializable> store) {
 		super(source, store);
 	}
 

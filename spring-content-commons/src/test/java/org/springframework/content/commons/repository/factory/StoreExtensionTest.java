@@ -30,102 +30,115 @@ import org.springframework.util.ReflectionUtils;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-@RunWith(Ginkgo4jSpringRunner.class )
-@Ginkgo4jConfiguration(threads=1)
+@RunWith(Ginkgo4jSpringRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 @ContextConfiguration(classes = StoreExtensionTest.TestConfiguration.class)
 public class StoreExtensionTest {
 
-    @Autowired
-    private TestContentRepository repo;
+	@Autowired
+	private TestContentRepository repo;
 
-    @Autowired
-    private TestContentRepositoryExtension testExtensionService;
+	@Autowired
+	private TestContentRepositoryExtension testExtensionService;
 
-    // mocks/spys
-    private TestContentRepositoryExtension spy;
+	// mocks/spys
+	private TestContentRepositoryExtension spy;
 
-    {
-        Describe("AbstractContentStoreFactoryBean", () -> {
-            Context("given a repository extension bean", () -> {
-                Context("given an extension method is invoked on the proxy", () -> {
-                    BeforeEach(() -> {
-                        repo.someMethod();
-                    });
-                    It("should forward that method onto the extension", () -> {
-                        verify(testExtensionService).someMethod();
-                    });
-                });
-            });
-        });
-    }
+	{
+		Describe("AbstractContentStoreFactoryBean", () -> {
+			Context("given a repository extension bean", () -> {
+				Context("given an extension method is invoked on the proxy", () -> {
+					BeforeEach(() -> {
+						repo.someMethod();
+					});
+					It("should forward that method onto the extension", () -> {
+						verify(testExtensionService).someMethod();
+					});
+				});
+			});
+		});
+	}
 
-    @Configuration
-    public static class TestConfiguration {
+	@Configuration
+	public static class TestConfiguration {
 
-        @Bean
-        public TestContentRepositoryExtension textExtensionService() {
-            return spy(new TestContentRepositoryExtension());
-        }
+		@Bean
+		public TestContentRepositoryExtension textExtensionService() {
+			return spy(new TestContentRepositoryExtension());
+		}
 
-        @Bean
-        public Class<? extends Store<Serializable>> storeInterface() {
-            return TestContentRepository.class;
-        }
+		@Bean
+		public Class<? extends Store<Serializable>> storeInterface() {
+			return TestContentRepository.class;
+		}
 
-        @Bean
-        public AbstractStoreFactoryBean contentStoreFactory() {
-            return new TestContentStoreFactory();
-        }
-    }
+		@Bean
+		public AbstractStoreFactoryBean contentStoreFactory() {
+			return new TestContentStoreFactory();
+		}
+	}
 
-    public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
-        @Override
-        protected Object getContentStoreImpl() {
-            return new TestConfigStoreImpl();
-        }
-    }
+	public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
+		@Override
+		protected Object getContentStoreImpl() {
+			return new TestConfigStoreImpl();
+		}
+	}
 
-    public static class TestConfigStoreImpl implements ContentStore<Object,Serializable> {
+	public static class TestConfigStoreImpl
+			implements ContentStore<Object, Serializable> {
 
-		@Override public void setContent(Object property, InputStream content) {}
+		@Override
+		public void setContent(Object property, InputStream content) {
+		}
 
-		@Override public void unsetContent(Object property) {}
+		@Override
+		public void unsetContent(Object property) {
+		}
 
-		@Override public InputStream getContent(Object property) { return null; }
+		@Override
+		public InputStream getContent(Object property) {
+			return null;
+		}
 
-    }
-    
-    public interface TestContentRepository extends Store<Serializable>, ContentStore<Object, Serializable>, TestExtensionService {
-    }
+	}
 
-    public interface TestExtensionService {
-        Object someMethod();
-    }
+	public interface TestContentRepository extends Store<Serializable>,
+			ContentStore<Object, Serializable>, TestExtensionService {
+	}
 
-    public static class TestContentRepositoryExtension implements TestExtensionService, StoreExtension {
+	public interface TestExtensionService {
+		Object someMethod();
+	}
 
-        @Override
-        public Object someMethod() {
-            return null;
-        }
+	public static class TestContentRepositoryExtension
+			implements TestExtensionService, StoreExtension {
 
-        @Override
-        public Set<Method> getMethods() {
-            Set<Method> methods = new HashSet<>();
-            try {
-                methods.add(TestExtensionService.class.getMethod("someMethod",new Class<?>[]{}));
-            } catch (NoSuchMethodException e) {
-                Assert.fail();
-            }
-            return methods;
-        }
+		@Override
+		public Object someMethod() {
+			return null;
+		}
 
-        @Override
-        public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
-            return ReflectionUtils.invokeMethod(invocation.getMethod(), this, null);
-        }
-    }
+		@Override
+		public Set<Method> getMethods() {
+			Set<Method> methods = new HashSet<>();
+			try {
+				methods.add(TestExtensionService.class.getMethod("someMethod",
+						new Class<?>[] {}));
+			}
+			catch (NoSuchMethodException e) {
+				Assert.fail();
+			}
+			return methods;
+		}
 
-    @Test
-    public void noop() {}
+		@Override
+		public Object invoke(MethodInvocation invocation, StoreInvoker invoker) {
+			return ReflectionUtils.invokeMethod(invocation.getMethod(), this, null);
+		}
+	}
+
+	@Test
+	public void noop() {
+	}
 }

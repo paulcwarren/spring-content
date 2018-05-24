@@ -28,38 +28,41 @@ import org.springframework.util.ReflectionUtils;
 
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 
-/** 
+/**
  * Adds content and content collection links to Spring Data REST Entity Resources.
  * 
  * @author warrep
  *
  */
-public class ContentLinksResourceProcessor implements ResourceProcessor<PersistentEntityResource> {
-	
+public class ContentLinksResourceProcessor
+		implements ResourceProcessor<PersistentEntityResource> {
+
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
-	
+
 	private ContentStoreService stores;
-	
+
 	public ContentLinksResourceProcessor(ContentStoreService stores) {
 		this.stores = stores;
 	}
-	
+
 	public PersistentEntityResource process(final PersistentEntityResource resource) {
-	
+
 		Object object = resource.getContent();
 		if (object == null)
 			return resource;
 
 		// entity
-	    ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
+		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
+				object.getClass());
 		if (store != null) {
 			Object id = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
 			if (id != null) {
-				resource.add(BasicLinkBuilder.linkToCurrentMapping().slash(ContentStoreUtils.storePath(store)).slash(id).withRel(ContentStoreUtils.storePath(store)));
+				resource.add(BasicLinkBuilder.linkToCurrentMapping()
+						.slash(ContentStoreUtils.storePath(store)).slash(id)
+						.withRel(ContentStoreUtils.storePath(store)));
 			}
 		}
-		
-		
+
 		List<Field> processed = new ArrayList<>();
 
 		// public fields
@@ -67,7 +70,7 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 			processed.add(field);
 			handleField(field, resource);
 		}
-		
+
 		// handle properties
 		BeanWrapper wrapper = new BeanWrapperImpl(object);
 		for (PropertyDescriptor descriptor : wrapper.getPropertyDescriptors()) {
@@ -77,10 +80,15 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 				if (processed.contains(field) == false) {
 					handleField(field, resource);
 				}
-			} catch (NoSuchFieldException nsfe) {
-				log.trace(String.format("No field for property %s, ignoring", descriptor.getName()));
-			} catch (SecurityException se) {
-				log.warn(String.format("Unexpected security error while handling content links for property %s", descriptor.getName()));
+			}
+			catch (NoSuchFieldException nsfe) {
+				log.trace(String.format("No field for property %s, ignoring",
+						descriptor.getName()));
+			}
+			catch (SecurityException se) {
+				log.warn(String.format(
+						"Unexpected security error while handling content links for property %s",
+						descriptor.getName()));
 			}
 		}
 
@@ -88,50 +96,63 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 	}
 
 	private void handleField(Field field, final PersistentEntityResource resource) {
-		
+
 		Class<?> fieldType = field.getType();
 		if (fieldType.isArray()) {
 			fieldType = fieldType.getComponentType();
 
-			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
+			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
+					fieldType);
 			if (store != null) {
-				resource.add(new Link(resource.getLink("self").getHref() + "/" + field.getName(), field.getName()));
+				resource.add(new Link(
+						resource.getLink("self").getHref() + "/" + field.getName(),
+						field.getName()));
 			}
-		} else if (Collection.class.isAssignableFrom(fieldType)) {
+		}
+		else if (Collection.class.isAssignableFrom(fieldType)) {
 			Type type = field.getGenericType();
 
-		    if (type instanceof ParameterizedType) {
+			if (type instanceof ParameterizedType) {
 
-		        ParameterizedType pType = (ParameterizedType)type;
-		        Type[] arr = pType.getActualTypeArguments();
+				ParameterizedType pType = (ParameterizedType) type;
+				Type[] arr = pType.getActualTypeArguments();
 
-		        for (Type tp: arr) {
-		            fieldType = (Class<?>)tp;
-		        }
-				
-		        ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
+				for (Type tp : arr) {
+					fieldType = (Class<?>) tp;
+				}
+
+				ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
+						fieldType);
 				if (store != null) {
 					Object object = resource.getContent();
 					BeanWrapper wrapper = new BeanWrapperImpl(object);
 					Object value = null;
 					try {
 						value = wrapper.getPropertyValue(field.getName());
-					} catch (InvalidPropertyException ipe) {
+					}
+					catch (InvalidPropertyException ipe) {
 						try {
 							value = ReflectionUtils.getField(field, object);
-						} catch (IllegalStateException ise) {
-							log.trace(String.format("Didn't get value for property %s", field.getName()));
+						}
+						catch (IllegalStateException ise) {
+							log.trace(String.format("Didn't get value for property %s",
+									field.getName()));
 						}
 					}
 					if (value != null) {
-						int i=0;
-						Iterator iter = ((Collection)value).iterator();
+						int i = 0;
+						Iterator iter = ((Collection) value).iterator();
 						while (iter.hasNext()) {
 							Object o = iter.next();
 							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
-								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
-								resource.add(new Link(resource.getLink("self").getHref() + "/" + field.getName() + "/" + cid, field.getName() /*+ "#" + i*/));
-								
+								String cid = BeanUtils
+										.getFieldWithAnnotation(o, ContentId.class)
+										.toString();
+								resource.add(new Link(
+										resource.getLink("self").getHref() + "/"
+												+ field.getName() + "/" + cid,
+										field.getName() /* + "#" + i */));
+
 								LinkBuilder lb = BasicLinkBuilder.linkToCurrentMapping();
 								int j = 0;
 							}
@@ -139,26 +160,33 @@ public class ContentLinksResourceProcessor implements ResourceProcessor<Persiste
 						}
 					}
 				}
-		    }
-		} else {
-		    ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
+			}
+		}
+		else {
+			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
+					fieldType);
 			if (store != null) {
 				Object object = resource.getContent();
 				BeanWrapper wrapper = new BeanWrapperImpl(object);
 				Object value = null;
 				try {
 					value = wrapper.getPropertyValue(field.getName());
-				} catch (InvalidPropertyException ipe) {
+				}
+				catch (InvalidPropertyException ipe) {
 					try {
 						value = ReflectionUtils.getField(field, object);
-					} catch (IllegalStateException ise) {
-						log.trace(String.format("Didn't get value for property %s", field.getName()));
+					}
+					catch (IllegalStateException ise) {
+						log.trace(String.format("Didn't get value for property %s",
+								field.getName()));
 					}
 				}
 				if (value != null) {
-					String id = BeanUtils.getFieldWithAnnotation(value, ContentId.class).toString();
+					String id = BeanUtils.getFieldWithAnnotation(value, ContentId.class)
+							.toString();
 					Assert.notNull(id);
-					resource.add(new Link(resource.getLink("self").getHref() + "/" + field.getName() + "/" + id, field.getName()));
+					resource.add(new Link(resource.getLink("self").getHref() + "/"
+							+ field.getName() + "/" + id, field.getName()));
 				}
 			}
 		}

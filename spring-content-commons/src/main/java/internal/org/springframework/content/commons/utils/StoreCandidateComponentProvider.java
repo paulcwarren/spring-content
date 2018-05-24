@@ -10,14 +10,15 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
-public class StoreCandidateComponentProvider extends ClassPathScanningCandidateComponentProvider {
+public class StoreCandidateComponentProvider
+		extends ClassPathScanningCandidateComponentProvider {
 
 	public StoreCandidateComponentProvider(boolean useDefaultFilters) {
 		super(useDefaultFilters);
 		this.addIncludeFilter(new InterfaceTypeFilter(ContentRepository.class));
 		this.addIncludeFilter(new InterfaceTypeFilter(Store.class));
 	}
-	
+
 	@Override
 	protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
 		return true;
@@ -39,12 +40,18 @@ public class StoreCandidateComponentProvider extends ClassPathScanningCandidateC
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.core.type.filter.AbstractTypeHierarchyTraversingFilter#match(org.springframework.core.type.classreading.MetadataReader, org.springframework.core.type.classreading.MetadataReaderFactory)
+		 * 
+		 * @see
+		 * org.springframework.core.type.filter.AbstractTypeHierarchyTraversingFilter#
+		 * match(org.springframework.core.type.classreading.MetadataReader,
+		 * org.springframework.core.type.classreading.MetadataReaderFactory)
 		 */
 		@Override
-		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+		public boolean match(MetadataReader metadataReader,
+				MetadataReaderFactory metadataReaderFactory) throws IOException {
 
-			return metadataReader.getClassMetadata().isInterface() && super.match(metadataReader, metadataReaderFactory);
+			return metadataReader.getClassMetadata().isInterface()
+					&& super.match(metadataReader, metadataReaderFactory);
 		}
 	}
 }

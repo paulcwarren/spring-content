@@ -19,21 +19,26 @@ import org.springframework.core.convert.ConversionService;
 @ComponentScan(basePackageClasses = SolrAutoConfiguration.class)
 public class SolrExtensionAutoConfiguration {
 
-    @Autowired private SolrProperties props;
-    @Autowired private SolrClient solrClient;
-    @Autowired @Qualifier("solrConversionService") private ConversionService solrConversionService;
+	@Autowired
+	private SolrProperties props;
+	@Autowired
+	private SolrClient solrClient;
+	@Autowired
+	@Qualifier("solrConversionService")
+	private ConversionService solrConversionService;
 
 	public SolrExtensionAutoConfiguration() {
 	}
-	
+
 	@Bean
 	public Object solrFulltextEventListener() {
 		return new SolrIndexer(solrClient, props);
 	}
 
-    @Bean
-    public StoreExtension solrFulltextSearcher() {
-        return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), solrConversionService, props);
-    }
+	@Bean
+	public StoreExtension solrFulltextSearcher() {
+		return new SolrSearchContentRepositoryExtension(solrClient,
+				new ReflectionServiceImpl(), solrConversionService, props);
+	}
 
 }

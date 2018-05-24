@@ -7,6 +7,6 @@ import java.io.InputStream;
 
 public interface POIService {
 
-    XWPFDocument xwpfDocument(InputStream stream) throws IOException;
+	XWPFDocument xwpfDocument(InputStream stream) throws IOException;
 
 }

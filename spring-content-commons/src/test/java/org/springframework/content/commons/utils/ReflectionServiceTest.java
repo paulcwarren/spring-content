@@ -19,19 +19,21 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class ReflectionServiceTest {
 
 	private ReflectionService reflectionService;
-	
+
 	// mocks
 	private HelloWorldService service;
-	
+
 	{
 		Describe("ReflectionService", () -> {
-			Context("invokeMethod",  () -> {
+			Context("invokeMethod", () -> {
 				BeforeEach(() -> {
 					service = mock(HelloWorldService.class);
 				});
 				JustBeforeEach(() -> {
 					reflectionService = new ReflectionServiceImpl();
-					reflectionService.invokeMethod(ReflectionUtils.findMethod(HelloWorldService.class, "helloWorld"), service, new Object[]{});
+					reflectionService.invokeMethod(ReflectionUtils
+							.findMethod(HelloWorldService.class, "helloWorld"), service,
+							new Object[] {});
 				});
 				It("should invoke the method", () -> {
 					verify(service).helloWorld();
@@ -39,7 +41,7 @@ public class ReflectionServiceTest {
 			});
 		});
 	}
-	
+
 	public interface HelloWorldService {
 		void helloWorld();
 	}

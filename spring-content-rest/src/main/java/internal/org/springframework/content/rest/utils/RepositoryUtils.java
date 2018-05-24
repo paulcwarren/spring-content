@@ -8,14 +8,17 @@ import org.springframework.util.StringUtils;
 
 public final class RepositoryUtils {
 
-	private RepositoryUtils() {}
+	private RepositoryUtils() {
+	}
 
 	public static String repositoryPath(RepositoryInformation info) {
 		Class<?> clazz = info.getRepositoryInterface();
-		RepositoryRestResource annotation = AnnotationUtils.findAnnotation(clazz, RepositoryRestResource.class);
+		RepositoryRestResource annotation = AnnotationUtils.findAnnotation(clazz,
+				RepositoryRestResource.class);
 		String path = annotation == null ? null : annotation.path().trim();
-		path = StringUtils.hasText(path) ? path : English.plural(StringUtils.uncapitalize(info.getDomainType().getSimpleName()));
+		path = StringUtils.hasText(path) ? path : English
+				.plural(StringUtils.uncapitalize(info.getDomainType().getSimpleName()));
 		return path;
 	}
-	
+
 }

@@ -13,14 +13,14 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 public class StreamConverterTests {
-	
+
 	private StreamConverter converter;
-	
+
 	{
 		Describe("StreamConverter", () -> {
 			Context("#convert", () -> {
 				It("should convert a stream into a byte array", () -> {
-					
+
 				});
 			});
 		});

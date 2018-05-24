@@ -57,28 +57,42 @@ import internal.org.springframework.content.rest.support.TestEntityContentReposi
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
-@ContextConfiguration(classes = {StoreConfig.class, DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class, RestConfiguration.class, HypermediaConfiguration.class})
+@ContextConfiguration(classes = { StoreConfig.class, DelegatingWebMvcConfiguration.class,
+		RepositoryRestMvcConfiguration.class, RestConfiguration.class,
+		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
 public class ContentLinksResourceProcessorIntegrationTest {
-	
-	@Autowired Repositories repositories;
-	@Autowired RepositoryInvokerFactory invokerFactory;
-	@Autowired ResourceMappings mappings;
-	
-	@Autowired TestEntityRepository repository;
-	@Autowired TestEntityContentRepository contentRepository;
-	@Autowired TestEntity2Repository repository2;
-	@Autowired TestEntityChildContentRepository contentRepository2;
-	@Autowired TestEntity3Repository repository3;
-	@Autowired TestEntity3ContentRepository contentRepository3;
-	
-	@Autowired ContentPropertyCollectionRestController collectionCtrlr;
-	@Autowired ContentPropertyRestController propCtrlr;
-	
-	@Autowired private WebApplicationContext context;
+
+	@Autowired
+	Repositories repositories;
+	@Autowired
+	RepositoryInvokerFactory invokerFactory;
+	@Autowired
+	ResourceMappings mappings;
+
+	@Autowired
+	TestEntityRepository repository;
+	@Autowired
+	TestEntityContentRepository contentRepository;
+	@Autowired
+	TestEntity2Repository repository2;
+	@Autowired
+	TestEntityChildContentRepository contentRepository2;
+	@Autowired
+	TestEntity3Repository repository3;
+	@Autowired
+	TestEntity3ContentRepository contentRepository3;
+
+	@Autowired
+	ContentPropertyCollectionRestController collectionCtrlr;
+	@Autowired
+	ContentPropertyRestController propCtrlr;
+
+	@Autowired
+	private WebApplicationContext context;
 
 	private MockMvc mvc;
 
@@ -89,81 +103,116 @@ public class ContentLinksResourceProcessorIntegrationTest {
 	{
 		Describe("ContentLinksResourceProcessor", () -> {
 			BeforeEach(() -> {
-				mvc = MockMvcBuilders
-						.webAppContextSetup(context)
-						.build();
+				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
-			
+
 			Context("given an Entity and a Store with a default store path", () -> {
 				BeforeEach(() -> {
 					testEntity3 = repository3.save(new TestEntity3());
 				});
 				Context("given content is associated", () -> {
 					BeforeEach(() -> {
-						contentRepository3.setContent(testEntity3, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						contentRepository3.setContent(testEntity3,
+								new ByteArrayInputStream(
+										"Hello Spring Content World!".getBytes()));
 						repository3.save(testEntity3);
 					});
 					Context("a GET to /repository/id", () -> {
 						It("should provide a response with a content link", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntity3s/" + testEntity3.id)
-									.accept("application/hal+json"))
-									.andExpect(status().isOk())
-									.andReturn().getResponse();
+							MockHttpServletResponse response = mvc
+									.perform(get("/testEntity3s/" + testEntity3.id)
+											.accept("application/hal+json"))
+									.andExpect(status().isOk()).andReturn().getResponse();
 							assertThat(response, is(not(nullValue())));
-							
+
 							RepresentationFactory representationFactory = new StandardRepresentationFactory();
-							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+							ReadableRepresentation halResponse = representationFactory
+									.readRepresentation("application/hal+json",
+											new StringReader(
+													response.getContentAsString()));
 							assertThat(halResponse, is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("testEntity3s"), is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("testEntity3s").size(), is(1));
-							assertThat(halResponse.getLinksByRel("testEntity3s").get(0).getHref(), is("http://localhost/testEntity3s/"+testEntity3.contentId));
+							assertThat(halResponse.getLinksByRel("testEntity3s"),
+									is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntity3s").size(),
+									is(1));
+							assertThat(
+									halResponse.getLinksByRel("testEntity3s").get(0)
+											.getHref(),
+									is("http://localhost/testEntity3s/"
+											+ testEntity3.contentId));
 						});
 					});
 				});
 				Context("a GET to /repository/id", () -> {
 					It("should provide a response without a content link", () -> {
-						MockHttpServletResponse response = mvc.perform(get("/testEntity3s/" + testEntity3.id)
-								.accept("application/hal+json"))
-								.andExpect(status().isOk())
-								.andReturn().getResponse();
+						MockHttpServletResponse response = mvc
+								.perform(get("/testEntity3s/" + testEntity3.id)
+										.accept("application/hal+json"))
+								.andExpect(status().isOk()).andReturn().getResponse();
 						assertThat(response, is(not(nullValue())));
 
 						RepresentationFactory representationFactory = new StandardRepresentationFactory();
-						ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+						ReadableRepresentation halResponse = representationFactory
+								.readRepresentation("application/hal+json",
+										new StringReader(response.getContentAsString()));
 						assertThat(halResponse, is(not(nullValue())));
-						assertThat(halResponse.getLinksByRel("testEntity3s"), is(not(nullValue())));
-						assertThat(halResponse.getLinksByRel("testEntity3s").size(), is(0));
+						assertThat(halResponse.getLinksByRel("testEntity3s"),
+								is(not(nullValue())));
+						assertThat(halResponse.getLinksByRel("testEntity3s").size(),
+								is(0));
 					});
 				});
 			});
 
-			Context("given an Entity with associated content and a Store specifying a store path", () -> {
-				BeforeEach(() -> {
-					testEntity = repository.save(new TestEntity());
-				});
-				Context("given content is associated", () -> {
-					BeforeEach(() -> {
-						contentRepository.setContent(testEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-						repository.save(testEntity);
-					});
-					Context("a GET to /repository/id", () -> {
-						It("should provide a response with a content link", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/testEntities/" + testEntity.id)
-									.accept("application/hal+json"))
-									.andExpect(status().isOk())
-									.andReturn().getResponse();
-							assertThat(response, is(not(nullValue())));
-							
-							RepresentationFactory representationFactory = new StandardRepresentationFactory();
-							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
-							assertThat(halResponse, is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("testEntitiesContent"), is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("testEntitiesContent").size(), is(1));
-							assertThat(halResponse.getLinksByRel("testEntitiesContent").get(0).getHref(), is("http://localhost/testEntitiesContent/"+testEntity.contentId));
+			Context("given an Entity with associated content and a Store specifying a store path",
+					() -> {
+						BeforeEach(() -> {
+							testEntity = repository.save(new TestEntity());
+						});
+						Context("given content is associated", () -> {
+							BeforeEach(() -> {
+								contentRepository.setContent(testEntity,
+										new ByteArrayInputStream(
+												"Hello Spring Content World!"
+														.getBytes()));
+								repository.save(testEntity);
+							});
+							Context("a GET to /repository/id", () -> {
+								It("should provide a response with a content link",
+										() -> {
+											MockHttpServletResponse response = mvc
+													.perform(get("/testEntities/"
+															+ testEntity.id).accept(
+																	"application/hal+json"))
+													.andExpect(status().isOk())
+													.andReturn().getResponse();
+											assertThat(response, is(not(nullValue())));
+
+											RepresentationFactory representationFactory = new StandardRepresentationFactory();
+											ReadableRepresentation halResponse = representationFactory
+													.readRepresentation(
+															"application/hal+json",
+															new StringReader(response
+																	.getContentAsString()));
+											assertThat(halResponse, is(not(nullValue())));
+											assertThat(
+													halResponse.getLinksByRel(
+															"testEntitiesContent"),
+													is(not(nullValue())));
+											assertThat(halResponse
+													.getLinksByRel("testEntitiesContent")
+													.size(), is(1));
+											assertThat(
+													halResponse
+															.getLinksByRel(
+																	"testEntitiesContent")
+															.get(0).getHref(),
+													is("http://localhost/testEntitiesContent/"
+															+ testEntity.contentId));
+										});
+							});
 						});
 					});
-				});
-			});
 
 			Context("given an Entity with content properties", () -> {
 				BeforeEach(() -> {
@@ -174,69 +223,88 @@ public class ContentLinksResourceProcessorIntegrationTest {
 					BeforeEach(() -> {
 						TestEntityChild child = new TestEntityChild();
 						child.mimeType = "text/plain";
-						contentRepository2.setContent(child, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-						
+						contentRepository2.setContent(child, new ByteArrayInputStream(
+								"Hello Spring Content World!".getBytes()));
+
 						testEntity2.child = child;
 						repository2.save(testEntity2);
 					});
 					Context("a GET to /repository/id", () -> {
 						It("should return the content link", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id)
-									.accept("application/hal+json"))
-									.andExpect(status().isOk())
-									.andReturn().getResponse();
+							MockHttpServletResponse response = mvc
+									.perform(get("/files/" + testEntity2.id)
+											.accept("application/hal+json"))
+									.andExpect(status().isOk()).andReturn().getResponse();
 							assertThat(response, is(not(nullValue())));
-							
-							RepresentationFactory representationFactory = new StandardRepresentationFactory();
-							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
-							assertThat(halResponse, is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("child"), is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("child").size(), is(1));
-							assertThat(halResponse.getLinksByRel("child").get(0).getHref(), is("http://localhost/files/"+testEntity2.id+"/child/"+testEntity2.child.contentId));
-						});
-					});
-				});
-				
-				Context("given a collection content property with several contents", () -> {
-					BeforeEach(() -> {
-						TestEntityChild child1 = new TestEntityChild();
-						child1.mimeType = "text/plain";
-						contentRepository2.setContent(child1, new ByteArrayInputStream("Content 1".getBytes()));
 
-						TestEntityChild child2 = new TestEntityChild();
-						child2.mimeType = "text/plain";
-						contentRepository2.setContent(child2, new ByteArrayInputStream("Content 2".getBytes()));
-						
-						List<TestEntityChild> children = new ArrayList<>();
-						children.add(child1);
-						children.add(child2);
-						
-						testEntity2.children = children;
-						repository2.save(testEntity2);
-					});
-					Context("a GET to /repository/id", () -> {
-						It("should return the content collection link", () -> {
-							MockHttpServletResponse response = mvc.perform(get("/files/" + testEntity2.id)
-									.accept("application/hal+json"))
-									.andExpect(status().isOk())
-									.andReturn().getResponse();
-							assertThat(response, is(not(nullValue())));
-							
 							RepresentationFactory representationFactory = new StandardRepresentationFactory();
-							ReadableRepresentation halResponse = representationFactory.readRepresentation("application/hal+json", new StringReader(response.getContentAsString()));
+							ReadableRepresentation halResponse = representationFactory
+									.readRepresentation("application/hal+json",
+											new StringReader(
+													response.getContentAsString()));
 							assertThat(halResponse, is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("children"), is(not(nullValue())));
-							assertThat(halResponse.getLinksByRel("children").size(), is(2));
+							assertThat(halResponse.getLinksByRel("child"),
+									is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("child").size(), is(1));
+							assertThat(
+									halResponse.getLinksByRel("child").get(0).getHref(),
+									is("http://localhost/files/" + testEntity2.id
+											+ "/child/" + testEntity2.child.contentId));
 						});
 					});
 				});
+
+				Context("given a collection content property with several contents",
+						() -> {
+							BeforeEach(() -> {
+								TestEntityChild child1 = new TestEntityChild();
+								child1.mimeType = "text/plain";
+								contentRepository2.setContent(child1,
+										new ByteArrayInputStream("Content 1".getBytes()));
+
+								TestEntityChild child2 = new TestEntityChild();
+								child2.mimeType = "text/plain";
+								contentRepository2.setContent(child2,
+										new ByteArrayInputStream("Content 2".getBytes()));
+
+								List<TestEntityChild> children = new ArrayList<>();
+								children.add(child1);
+								children.add(child2);
+
+								testEntity2.children = children;
+								repository2.save(testEntity2);
+							});
+							Context("a GET to /repository/id", () -> {
+								It("should return the content collection link", () -> {
+									MockHttpServletResponse response = mvc
+											.perform(get("/files/" + testEntity2.id)
+													.accept("application/hal+json"))
+											.andExpect(status().isOk()).andReturn()
+											.getResponse();
+									assertThat(response, is(not(nullValue())));
+
+									RepresentationFactory representationFactory = new StandardRepresentationFactory();
+									ReadableRepresentation halResponse = representationFactory
+											.readRepresentation("application/hal+json",
+													new StringReader(response
+															.getContentAsString()));
+									assertThat(halResponse, is(not(nullValue())));
+									assertThat(halResponse.getLinksByRel("children"),
+											is(not(nullValue())));
+									assertThat(
+											halResponse.getLinksByRel("children").size(),
+											is(2));
+								});
+							});
+						});
 			});
 		});
 	}
 
 	@Test
-	public void noop() {}
-	
+	public void noop() {
+	}
+
 	protected RootResourceInformation getResourceInformation(Class<?> domainType) {
 
 		Assert.notNull(domainType, "Domain type must not be null!");

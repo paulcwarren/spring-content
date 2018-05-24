@@ -14,21 +14,22 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	FileSystemResourceLoader loader;
-	
+
 	@Autowired
 	ConversionService filesystemStoreConverter;
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
-		
+
 		Assert.notNull(loader, "resource loader cannot be null");
 		Assert.notNull(loader, "filesystemStoreConverter cannot be null");
 	}
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter, new FileServiceImpl());
+		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter,
+				new FileServiceImpl());
 	}
 
 }

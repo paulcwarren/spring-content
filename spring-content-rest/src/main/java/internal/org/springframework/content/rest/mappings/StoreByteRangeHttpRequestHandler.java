@@ -13,18 +13,18 @@ public class StoreByteRangeHttpRequestHandler extends ResourceHttpRequestHandler
 	public StoreByteRangeHttpRequestHandler() {
 	}
 
-    @Override
-    protected Resource getResource(HttpServletRequest request) throws IOException {
-	    return (Resource)request.getAttribute("SPRING_CONTENT_RESOURCE");
-    }
+	@Override
+	protected Resource getResource(HttpServletRequest request) throws IOException {
+		return (Resource) request.getAttribute("SPRING_CONTENT_RESOURCE");
+	}
 
 	@Override
 	protected MediaType getMediaType(HttpServletRequest request, Resource resource) {
 		if (request.getAttribute("SPRING_CONTENT_CONTENTTYPE") != null) {
-			return MediaType.valueOf((String)request.getAttribute("SPRING_CONTENT_CONTENTTYPE")); 
+			return MediaType
+					.valueOf((String) request.getAttribute("SPRING_CONTENT_CONTENTTYPE"));
 		}
 		return super.getMediaType(request, resource);
 	}
-    
-    
+
 }

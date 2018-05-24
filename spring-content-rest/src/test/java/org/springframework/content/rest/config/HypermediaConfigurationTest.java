@@ -39,7 +39,7 @@ import com.mongodb.ServerAddress;
 public class HypermediaConfigurationTest {
 
 	private AnnotationConfigWebApplicationContext context;
-	
+
 	{
 		Describe("HypermediaConfiguration", () -> {
 			Context("given a context with a ContentRestConfiguration", () -> {
@@ -52,14 +52,15 @@ public class HypermediaConfigurationTest {
 							HypermediaConfiguration.class);
 					context.refresh();
 				});
-				
+
 				It("should have a content links processor bean", () -> {
-					MatcherAssert.assertThat(context.getBean("contentLinksProcessor"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					MatcherAssert.assertThat(context.getBean("contentLinksProcessor"),
+							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 				});
 			});
 		});
 	}
-	
+
 	@Configuration
 	@EnableMongoContentRepositories
 	public static class TestConfig extends AbstractMongoConfiguration {
@@ -67,7 +68,7 @@ public class HypermediaConfigurationTest {
 		public GridFsTemplate gridFsTemplate() throws Exception {
 			return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
 		}
-		
+
 		@Override
 		protected String getDatabaseName() {
 			return "spring-content";
@@ -75,31 +76,34 @@ public class HypermediaConfigurationTest {
 
 		@Override
 		public MongoDbFactory mongoDbFactory() {
-			
-			if (System.getenv("spring_eg_content_mongo_host") != null) {
-		    	String host = System.getenv("spring_eg_content_mongo_host");
-		    	String port = System.getenv("spring_eg_content_mongo_port");
-		    	String username = System.getenv("spring_eg_content_mongo_username");
-		    	String password = System.getenv("spring_eg_content_mongo_password");
 
-				 // Set credentials      
-			    MongoCredential credential = MongoCredential.createCredential(username, getDatabaseName(), password.toCharArray());
-			    ServerAddress serverAddress = new ServerAddress(host, Integer.parseInt(port));
-		
-			    // Mongo Client
-			    MongoClient mongoClient = new MongoClient(serverAddress,Arrays.asList(credential)); 
-		
-			    // Mongo DB Factory
-			    return new SimpleMongoDbFactory(mongoClient, getDatabaseName());
+			if (System.getenv("spring_eg_content_mongo_host") != null) {
+				String host = System.getenv("spring_eg_content_mongo_host");
+				String port = System.getenv("spring_eg_content_mongo_port");
+				String username = System.getenv("spring_eg_content_mongo_username");
+				String password = System.getenv("spring_eg_content_mongo_password");
+
+				// Set credentials
+				MongoCredential credential = MongoCredential.createCredential(username,
+						getDatabaseName(), password.toCharArray());
+				ServerAddress serverAddress = new ServerAddress(host,
+						Integer.parseInt(port));
+
+				// Mongo Client
+				MongoClient mongoClient = new MongoClient(serverAddress,
+						Arrays.asList(credential));
+
+				// Mongo DB Factory
+				return new SimpleMongoDbFactory(mongoClient, getDatabaseName());
 			}
 			return super.mongoDbFactory();
 		}
 
 		public MongoClient mongoClient() {
-	        return new MongoClient();
+			return new MongoClient();
 		}
 	}
-	
+
 	@Document
 	@Content
 	public class TestEntity {

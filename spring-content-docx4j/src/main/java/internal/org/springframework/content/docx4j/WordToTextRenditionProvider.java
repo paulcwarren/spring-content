@@ -23,36 +23,39 @@ public class WordToTextRenditionProvider implements RenditionProvider {
 
 	@Override
 	public String[] produces() {
-		return new String[] {"text/plain"};
+		return new String[] { "text/plain" };
 	}
 
 	@Override
 	public InputStream convert(InputStream fromInputSource, String toMimeType) {
 		try {
 			WordprocessingMLPackage pkg = WordprocessingMLPackage.load(fromInputSource);
-	
-			MainDocumentPart documentPart = pkg.getMainDocumentPart();		
-			
-			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document)documentPart.getJaxbElement();
-			
+
+			MainDocumentPart documentPart = pkg.getMainDocumentPart();
+
+			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document) documentPart
+					.getJaxbElement();
+
 			OutputStream os = new FileOutputStream("/tmp/temp.txt");
 			Writer out = new OutputStreamWriter(os);
-			
+
 			TextUtils.extractText(wmlDocumentEl, out);
 			out.close();
-			
-			if (pkg.getMainDocumentPart().getFontTablePart()!=null) {
-				pkg.getMainDocumentPart().getFontTablePart().deleteEmbeddedFontTempFiles();
-			}		
+
+			if (pkg.getMainDocumentPart().getFontTablePart() != null) {
+				pkg.getMainDocumentPart().getFontTablePart()
+						.deleteEmbeddedFontTempFiles();
+			}
 			// This would also do it, via finalize() methods
 			pkg = null;
 
 			return new FileInputStream("/tmp/temp.txt");
 
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 

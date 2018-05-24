@@ -22,23 +22,24 @@ import internal.org.springframework.content.docx4j.WordToHtmlRenditionProvider;
 public class WordToHtmlRenditionProviderTest {
 
 	private RenditionProvider service;
-	
+
 	@Before
 	public void setUp() {
 		service = new WordToHtmlRenditionProvider();
 	}
-	
+
 	@Test
 	public void testCanConvert() {
-		assertThat(service.consumes(), is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+		assertThat(service.consumes(), is(
+				"application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
 		assertThat(Arrays.asList(service.produces()), hasItems("text/html"));
 	}
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx.docx"), 
-												"text/html");
-	
+		InputStream converted = service.convert(
+				this.getClass().getResourceAsStream("/sample-docx.docx"), "text/html");
+
 		Document doc = Jsoup.parse(converted, "UTF8", "http://example.com");
 		Elements htmls = doc.getElementsByTag("HTML");
 		assertThat(htmls.size(), is(1));

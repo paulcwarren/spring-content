@@ -4,6 +4,6 @@ import org.springframework.core.io.ResourceLoader;
 
 public interface BlobResourceLoader extends ResourceLoader {
 
-    String getDatabaseName();
+	String getDatabaseName();
 
 }

@@ -23,14 +23,14 @@ public class SolrIndexer extends AbstractStoreEventListener<Object> {
 
 	private SolrClient solrClient;
 	private SolrProperties properties;
-	
-    @Autowired
-    public SolrIndexer(SolrClient solrClient, SolrProperties properties) {
-        Assert.notNull(solrClient, "solrClient must not be null");
-        Assert.notNull(properties, "properties must not be null");
+
+	@Autowired
+	public SolrIndexer(SolrClient solrClient, SolrProperties properties) {
+		Assert.notNull(solrClient, "solrClient must not be null");
+		Assert.notNull(properties, "properties must not be null");
 
 		this.solrClient = solrClient;
-        this.properties = properties;
+		this.properties = properties;
 	}
 
 	@Override
@@ -44,23 +44,31 @@ public class SolrIndexer extends AbstractStoreEventListener<Object> {
 			return;
 		}
 
-	    ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
+		ContentStreamUpdateRequest up = new ContentStreamUpdateRequest("/update/extract");
 		if (properties.getUser() != null) {
 			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
 		}
-		up.addContentStream(new ContentEntityStream(event.getStore().getContent(contentEntity)));
-		String id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class).toString();
-	    up.setParam("literal.id", contentEntity.getClass().getCanonicalName() + ":" + id);
-	    up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
-	    try {
-			/*NamedList<Object> request = */solrClient.request(up, null);
-		} catch (SolrServerException e) {
-			throw new StoreAccessException(String.format("Error updating entry in solr index %s", id), e);
-		} catch (IOException e) {
-			throw new StoreAccessException(String.format("Error updating entry in solr index %s", id), e);
+		up.addContentStream(
+				new ContentEntityStream(event.getStore().getContent(contentEntity)));
+		String id = BeanUtils.getFieldWithAnnotation(contentEntity, ContentId.class)
+				.toString();
+		up.setParam("literal.id", contentEntity.getClass().getCanonicalName() + ":" + id);
+		up.setAction(
+				org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT,
+				true, true);
+		try {
+			/* NamedList<Object> request = */solrClient.request(up, null);
+		}
+		catch (SolrServerException e) {
+			throw new StoreAccessException(
+					String.format("Error updating entry in solr index %s", id), e);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Error updating entry in solr index %s", id), e);
 		}
 	}
-	
+
 	@Override
 	protected void onBeforeUnsetContent(BeforeUnsetContentEvent event) {
 		Object contentEntity = event.getSource();
@@ -74,33 +82,39 @@ public class SolrIndexer extends AbstractStoreEventListener<Object> {
 		}
 
 		UpdateRequest up = new UpdateRequest();
-		up.setAction(org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT, true, true);
+		up.setAction(
+				org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT,
+				true, true);
 		up.deleteById(contentEntity.getClass().getCanonicalName() + ":" + id.toString());
 		if (properties.getUser() != null) {
-            up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
-        }
+			up.setBasicAuthCredentials(properties.getUser(), properties.getPassword());
+		}
 		try {
 			solrClient.request(up, null);
-		} catch (SolrServerException e) {
-			throw new StoreAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
-		} catch (IOException e) {
-			throw new StoreAccessException(String.format("Error deleting entry from solr index %s", id.toString()), e);
+		}
+		catch (SolrServerException e) {
+			throw new StoreAccessException(String
+					.format("Error deleting entry from solr index %s", id.toString()), e);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(String
+					.format("Error deleting entry from solr index %s", id.toString()), e);
 		}
 	}
 
 	public class ContentEntityStream extends ContentStreamBase {
 
 		private InputStream stream;
-		
+
 		public ContentEntityStream(InputStream stream) {
 			this.stream = stream;
 		}
-		
+
 		@Override
 		public InputStream getStream() throws IOException {
 			return stream;
 		}
-		
+
 	}
-	
+
 }

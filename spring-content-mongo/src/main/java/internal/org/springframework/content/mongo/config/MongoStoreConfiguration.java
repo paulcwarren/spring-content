@@ -12,13 +12,14 @@ import org.springframework.core.convert.support.DefaultConversionService;
 @Configuration
 public class MongoStoreConfiguration {
 
-	@Autowired(required=false) private List<MongoStoreConverter<?,String>> customConverters;
+	@Autowired(required = false)
+	private List<MongoStoreConverter<?, String>> customConverters;
 
 	@Bean
 	public DefaultConversionService mongoStoreConverter() {
 		DefaultConversionService conversion = new DefaultConversionService();
 		if (customConverters != null) {
-			for (Converter<?,String> converter : customConverters) {
+			for (Converter<?, String> converter : customConverters) {
 				conversion.addConverter(converter);
 			}
 		}

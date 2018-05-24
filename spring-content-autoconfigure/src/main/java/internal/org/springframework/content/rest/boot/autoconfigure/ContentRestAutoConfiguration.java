@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnWebApplication()
-@ConditionalOnClass({RestConfiguration.class})
+@ConditionalOnClass({ RestConfiguration.class })
 @Import(RestConfiguration.class)
 public class ContentRestAutoConfiguration {
 }

@@ -18,11 +18,12 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 @Configuration
 @ComponentScan("internal.org.springframework.content.rest.controllers")
 public class RestConfiguration extends HateoasAwareSpringDataWebConfiguration {
-	
-	@Autowired 
+
+	@Autowired
 	ContentStoreService stores;
 
-	public RestConfiguration(ApplicationContext context, @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
+	public RestConfiguration(ApplicationContext context,
+			@Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
 		super(context, conversionService);
 	}
 
@@ -30,7 +31,7 @@ public class RestConfiguration extends HateoasAwareSpringDataWebConfiguration {
 	RequestMappingHandlerMapping contentHandlerMapping() {
 		return new ContentHandlerMapping(stores);
 	}
-	
+
 	@Bean
 	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
 		return new StoreByteRangeHttpRequestHandler();

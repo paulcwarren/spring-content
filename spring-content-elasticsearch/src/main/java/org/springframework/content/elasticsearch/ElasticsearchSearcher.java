@@ -16,166 +16,182 @@ import java.util.stream.Collectors;
 
 public class ElasticsearchSearcher implements Searchable<Serializable> {
 
-    private JestClient client;
+	private JestClient client;
 
-    public ElasticsearchSearcher(JestClient client) {
-        this.client = client;
-    }
+	public ElasticsearchSearcher(JestClient client) {
+		this.client = client;
+	}
 
-    @Override
-    public Iterable<Serializable> findKeyword(String query) {
-        Search search = getSearch(query);
+	@Override
+	public Iterable<Serializable> findKeyword(String query) {
+		Search search = getSearch(query);
 
-        SearchResult result;
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for %s", query), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Exception while searching for %s", query), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findAllKeywords(String... terms) {
-        StringBuilder qb = join("AND", terms);
+	@Override
+	public Iterable<Serializable> findAllKeywords(String... terms) {
+		StringBuilder qb = join("AND", terms);
 
-        Search search = getSearch(qb.toString());
+		Search search = getSearch(qb.toString());
 
-        SearchResult result;
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for %s", qb), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Exception while searching for %s", qb), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findAnyKeywords(String... terms) {
+	@Override
+	public Iterable<Serializable> findAnyKeywords(String... terms) {
 
-        StringBuilder qb = join("OR", terms);
-        Search search = getSearch(qb.toString());
+		StringBuilder qb = join("OR", terms);
+		Search search = getSearch(qb.toString());
 
-        SearchResult result;
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for %s", qb), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Exception while searching for %s", qb), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findKeywordsNear(int proximity, String... terms) {
-        StringBuilder sb = join("", terms);
-        String finalString = String.format("\\\"%s\\\"~%s", sb.toString(), proximity);
-        Search search = getSearch(finalString);
+	@Override
+	public Iterable<Serializable> findKeywordsNear(int proximity, String... terms) {
+		StringBuilder sb = join("", terms);
+		String finalString = String.format("\\\"%s\\\"~%s", sb.toString(), proximity);
+		Search search = getSearch(finalString);
 
-        SearchResult result;
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for keywords %s near %s",
-                    sb.toString(), proximity), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Exception while searching for keywords %s near %s",
+							sb.toString(), proximity),
+					e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findKeywordStartsWith(String term) {
-        String finalString = String.format("%s*",term);
-        Search search = getSearch(finalString);
-        SearchResult result;
+	@Override
+	public Iterable<Serializable> findKeywordStartsWith(String term) {
+		String finalString = String.format("%s*", term);
+		Search search = getSearch(finalString);
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for keyword %s that start with %s",
-                    finalString, term), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(String.format(
+					"Exception while searching for keyword %s that start with %s",
+					finalString, term), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findKeywordStartsWithAndEndsWith(String a, String b) {
-        String finalString = String.format("%s*%s",a,b);
-        Search search = getSearch(finalString);
-        SearchResult result;
+	@Override
+	public Iterable<Serializable> findKeywordStartsWithAndEndsWith(String a, String b) {
+		String finalString = String.format("%s*%s", a, b);
+		Search search = getSearch(finalString);
+		SearchResult result;
 
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for keyword %s that start with %s and ends with %s",
-                    finalString, a, b), e);
-        }
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(String.format(
+					"Exception while searching for keyword %s that start with %s and ends with %s",
+					finalString, a, b), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    @Override
-    public Iterable<Serializable> findAllKeywordsWithWeights(String[] terms, double[] weights) {
-        String finalString = "";
-        for(int i =0; i< weights.length; i++) {
-            finalString = String.format("%s%s^%s ", finalString, terms[i], weights[i]);
-        }
-        finalString = finalString.substring(0, finalString.length() - 1);
+	@Override
+	public Iterable<Serializable> findAllKeywordsWithWeights(String[] terms,
+			double[] weights) {
+		String finalString = "";
+		for (int i = 0; i < weights.length; i++) {
+			finalString = String.format("%s%s^%s ", finalString, terms[i], weights[i]);
+		}
+		finalString = finalString.substring(0, finalString.length() - 1);
 
-        Search search = getSearch(finalString);
+		Search search = getSearch(finalString);
 
-        SearchResult result;
-        try {
-            result = client.execute(search);
-        } catch (IOException e) {
-            throw new StoreAccessException(String.format("Exception while searching for %s.", finalString), e);
-        }
+		SearchResult result;
+		try {
+			result = client.execute(search);
+		}
+		catch (IOException e) {
+			throw new StoreAccessException(
+					String.format("Exception while searching for %s.", finalString), e);
+		}
 
-        return getIDs(result);
-    }
+		return getIDs(result);
+	}
 
-    private Search getSearch(String query) {
-        JsonParser parser = new JsonParser();
-        JsonObject payload = parser.parse(String.format("{\"query\":{\"query_string\":{\"query\":\"%s\"}}}", query)).getAsJsonObject();
+	private Search getSearch(String query) {
+		JsonParser parser = new JsonParser();
+		JsonObject payload = parser.parse(
+				String.format("{\"query\":{\"query_string\":{\"query\":\"%s\"}}}", query))
+				.getAsJsonObject();
 
-        return new Search.Builder(payload.toString())
-                .addIndex("docs")
-                .addType("doc")
-                .build();
-    }
+		return new Search.Builder(payload.toString()).addIndex("docs").addType("doc")
+				.build();
+	}
 
-    private List<Serializable> getIDs(SearchResult result) {
-        List<Serializable> contents = new ArrayList<>();
+	private List<Serializable> getIDs(SearchResult result) {
+		List<Serializable> contents = new ArrayList<>();
 
-        if (result != null) {
-            List<SearchResult.Hit<Content, Void>> hits = result.getHits(Content.class);
+		if (result != null) {
+			List<SearchResult.Hit<Content, Void>> hits = result.getHits(Content.class);
 
-            contents = hits.stream()
-                    .map(hit -> hit.source.getId())
-                    .collect(Collectors.toList());
-        }
-        return contents;
-    }
+			contents = hits.stream().map(hit -> hit.source.getId())
+					.collect(Collectors.toList());
+		}
+		return contents;
+	}
 
-    private StringBuilder join(String delimiter, String... terms) {
-        StringBuilder qb = new StringBuilder();
-        for (int i = 0; i < terms.length; i++) {
-            if (i > 0) {
-                if(delimiter.isEmpty()){
-                    qb.append(" ");
-                } else {
-                    qb.append(String.format(" %s ", delimiter));
-                }
-            }
-            qb.append(terms[i]);
-        }
-        return qb;
-    }
+	private StringBuilder join(String delimiter, String... terms) {
+		StringBuilder qb = new StringBuilder();
+		for (int i = 0; i < terms.length; i++) {
+			if (i > 0) {
+				if (delimiter.isEmpty()) {
+					qb.append(" ");
+				}
+				else {
+					qb.append(String.format(" %s ", delimiter));
+				}
+			}
+			qb.append(terms[i]);
+		}
+		return qb;
+	}
 }

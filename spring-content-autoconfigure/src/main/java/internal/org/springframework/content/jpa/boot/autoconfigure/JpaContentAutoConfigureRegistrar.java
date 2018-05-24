@@ -18,30 +18,39 @@ import java.util.Set;
 public class JpaContentAutoConfigureRegistrar extends JpaStoresRegistrar {
 
 	@Override
-	protected void registerContentStoreBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	protected void registerContentStoreBeanDefinitions(
+			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
-		AnnotationMetadata metadata = new StandardAnnotationMetadata(EnableJpaContentAutoConfiguration.class);
-		AnnotationAttributes attributes = new AnnotationAttributes(metadata.getAnnotationAttributes(this.getAnnotation().getName()));
+		AnnotationMetadata metadata = new StandardAnnotationMetadata(
+				EnableJpaContentAutoConfiguration.class);
+		AnnotationAttributes attributes = new AnnotationAttributes(
+				metadata.getAnnotationAttributes(this.getAnnotation().getName()));
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getResourceLoader(), basePackages);
+		Set<GenericBeanDefinition> definitions = StoreUtils
+				.getStoreCandidates(this.getResourceLoader(), basePackages);
 
 		for (BeanDefinition definition : definitions) {
 
 			String factoryBeanName = StoreUtils.getStoreFactoryBeanName(attributes);
 
-			BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(factoryBeanName);
+			BeanDefinitionBuilder builder = BeanDefinitionBuilder
+					.rootBeanDefinition(factoryBeanName);
 
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
-			builder.addPropertyValue(AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY, definition.getBeanClassName());
+			builder.addPropertyValue(
+					AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY,
+					definition.getBeanClassName());
 
-			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition), builder.getBeanDefinition());
+			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition),
+					builder.getBeanDefinition());
 		}
 	}
 
 	protected String[] getBasePackages() {
-		return AutoConfigurationPackages.get(this.getBeanFactory()).toArray(new String[] {});
+		return AutoConfigurationPackages.get(this.getBeanFactory())
+				.toArray(new String[] {});
 	}
 
 	@EnableJpaStores

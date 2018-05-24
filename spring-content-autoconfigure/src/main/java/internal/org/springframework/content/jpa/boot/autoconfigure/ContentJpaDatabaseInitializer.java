@@ -10,26 +10,27 @@ import javax.sql.DataSource;
 
 public class ContentJpaDatabaseInitializer extends AbstractDataSourceInitializer {
 
-    private ContentJpaProperties properties;
+	private ContentJpaProperties properties;
 
-    public ContentJpaDatabaseInitializer(DataSource ds, ResourceLoader resourceLoader, ContentJpaProperties properties) {
-        super(ds, resourceLoader);
-        Assert.notNull(properties, "ContentJpaProperties must not be null");
-        this.properties = properties;
-    }
+	public ContentJpaDatabaseInitializer(DataSource ds, ResourceLoader resourceLoader,
+			ContentJpaProperties properties) {
+		super(ds, resourceLoader);
+		Assert.notNull(properties, "ContentJpaProperties must not be null");
+		this.properties = properties;
+	}
 
-    @PostConstruct
-    public void initialize() {
-        super.initialize();
-    }
+	@PostConstruct
+	public void initialize() {
+		super.initialize();
+	}
 
-    @Override
-    protected DataSourceInitializationMode getMode() {
-        return properties.getInitializer().getInitializeSchema();
-    }
+	@Override
+	protected DataSourceInitializationMode getMode() {
+		return properties.getInitializer().getInitializeSchema();
+	}
 
-    @Override
-    protected String getSchemaLocation() {
-        return properties.getSchema();
-    }
+	@Override
+	protected String getSchemaLocation() {
+		return properties.getSchema();
+	}
 }

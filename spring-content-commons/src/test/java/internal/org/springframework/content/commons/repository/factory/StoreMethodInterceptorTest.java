@@ -49,7 +49,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 public class StoreMethodInterceptorTest {
 
 	private StoreMethodInterceptor interceptor;
-	
+
 	// mocks
 	private ContentStore<Object, Serializable> store;
 	private MethodInvocation invocation;
@@ -57,9 +57,9 @@ public class StoreMethodInterceptorTest {
 	private ApplicationEventPublisher publisher;
 
 	private Exception e;
-	
+
 	private Map<Method, StoreExtension> extensions = null;
-	
+
 	{
 		Describe("#invoke", () -> {
 			BeforeEach(() -> {
@@ -67,29 +67,35 @@ public class StoreMethodInterceptorTest {
 				publisher = mock(ApplicationEventPublisher.class);
 			});
 			JustBeforeEach(() -> {
-				interceptor = new StoreMethodInterceptor(store, Object.class, String.class, extensions, publisher);
+				interceptor = new StoreMethodInterceptor(store, Object.class,
+						String.class, extensions, publisher);
 				try {
-				    interceptor.invoke(invocation);
-                } catch (Exception invokeException) {
-				    e = invokeException;
-                }
+					interceptor.invoke(invocation);
+				}
+				catch (Exception invokeException) {
+					e = invokeException;
+				}
 			});
 			Context("when getContent is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
+					final Method getContentMethod = storeClazz.getMethod("getContent",
+							Object.class);
 
 					when(invocation.getMethod()).thenReturn(getContentMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { new ContentObject("plain/text") });
 				});
 				It("should proceed", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
 
-					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(BeforeGetContentEvent.class)));
 					inOrder.verify(invocation).proceed();
-					inOrder.verify(publisher).publishEvent(argThat(isA(AfterGetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(AfterGetContentEvent.class)));
 				});
 			});
 			Context("when getContent is invoked with illegal arguments", () -> {
@@ -97,19 +103,22 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method getContentMethod = storeClazz.getMethod("getContent", Object.class);
+					final Method getContentMethod = storeClazz.getMethod("getContent",
+							Object.class);
 
 					when(invocation.getMethod()).thenReturn(getContentMethod);
 
-					//no arguments!
-					when(invocation.getArguments()).thenReturn(new Object[]{});
+					// no arguments!
+					when(invocation.getArguments()).thenReturn(new Object[] {});
 				});
 				It("should proceed", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
 
-					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(publisher, never())
+							.publishEvent(argThat(isA(BeforeGetContentEvent.class)));
 					inOrder.verify(invocation).proceed();
-					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterGetContentEvent.class)));
+					inOrder.verify(publisher, never())
+							.publishEvent(argThat(isA(AfterGetContentEvent.class)));
 				});
 			});
 			Context("when setContent is invoked", () -> {
@@ -117,17 +126,21 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
+					final Method setContentMethod = storeClazz.getMethod("setContent",
+							Object.class, InputStream.class);
 
 					when(invocation.getMethod()).thenReturn(setContentMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { new ContentObject("plain/text") });
 				});
 				It("should proceed", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
 
-					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(BeforeSetContentEvent.class)));
 					verify(invocation).proceed();
-					inOrder.verify(publisher).publishEvent(argThat(isA(AfterSetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(AfterSetContentEvent.class)));
 				});
 			});
 			Context("when setContent is invoked with illegal arguments", () -> {
@@ -135,19 +148,22 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method setContentMethod = storeClazz.getMethod("setContent", Object.class, InputStream.class);
+					final Method setContentMethod = storeClazz.getMethod("setContent",
+							Object.class, InputStream.class);
 
 					when(invocation.getMethod()).thenReturn(setContentMethod);
 
 					// no arguments!
-					when(invocation.getArguments()).thenReturn(new Object[]{});
+					when(invocation.getArguments()).thenReturn(new Object[] {});
 				});
 				It("should proceed", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
 
-					inOrder.verify(publisher, never()).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+					inOrder.verify(publisher, never())
+							.publishEvent(argThat(isA(BeforeSetContentEvent.class)));
 					verify(invocation).proceed();
-					inOrder.verify(publisher, never()).publishEvent(argThat(isA(AfterSetContentEvent.class)));
+					inOrder.verify(publisher, never())
+							.publishEvent(argThat(isA(AfterSetContentEvent.class)));
 				});
 			});
 			Context("when unsetContent is invoked", () -> {
@@ -155,17 +171,21 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
+					final Method unsetContentMethod = storeClazz.getMethod("unsetContent",
+							Object.class);
 
 					when(invocation.getMethod()).thenReturn(unsetContentMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { new ContentObject("plain/text") });
 				});
 				It("should proceed", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
 
-					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
 					verify(invocation).proceed();
-					inOrder.verify(publisher).publishEvent(argThat(isA(AfterUnsetContentEvent.class)));
+					inOrder.verify(publisher)
+							.publishEvent(argThat(isA(AfterUnsetContentEvent.class)));
 				});
 			});
 			Context("when unsetContent is invoked with illegal arguments", () -> {
@@ -173,12 +193,13 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = ContentStore.class;
-					final Method unsetContentMethod = storeClazz.getMethod("unsetContent", Object.class);
+					final Method unsetContentMethod = storeClazz.getMethod("unsetContent",
+							Object.class);
 
 					when(invocation.getMethod()).thenReturn(unsetContentMethod);
 
 					// no arguments!
-					when(invocation.getArguments()).thenReturn(new Object[]{});
+					when(invocation.getArguments()).thenReturn(new Object[] {});
 				});
 				It("should not publish events", () -> {
 					InOrder inOrder = Mockito.inOrder(publisher, invocation);
@@ -193,10 +214,12 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = Store.class;
-					final Method getResourceMethod = storeClazz.getMethod("getResource", Serializable.class);
+					final Method getResourceMethod = storeClazz.getMethod("getResource",
+							Serializable.class);
 
 					when(invocation.getMethod()).thenReturn(getResourceMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{"some-id"});
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { "some-id" });
 				});
 				It("should proceed", () -> {
 					verify(invocation).proceed();
@@ -207,10 +230,12 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = AssociativeStore.class;
-					final Method getResourceMethod = storeClazz.getMethod("associate", Object.class, Serializable.class);
+					final Method getResourceMethod = storeClazz.getMethod("associate",
+							Object.class, Serializable.class);
 
 					when(invocation.getMethod()).thenReturn(getResourceMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text"), "some-id"});
+					when(invocation.getArguments()).thenReturn(
+							new Object[] { new ContentObject("plain/text"), "some-id" });
 				});
 				It("should proceed", () -> {
 					verify(invocation).proceed();
@@ -221,10 +246,12 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 
 					Class<?> storeClazz = AssociativeStore.class;
-					final Method getResourceMethod = storeClazz.getMethod("unassociate", Object.class);
+					final Method getResourceMethod = storeClazz.getMethod("unassociate",
+							Object.class);
 
 					when(invocation.getMethod()).thenReturn(getResourceMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("plain/text")});
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { new ContentObject("plain/text") });
 				});
 				It("should proceed", () -> {
 					verify(invocation).proceed();
@@ -235,11 +262,15 @@ public class StoreMethodInterceptorTest {
 					invocation = mock(MethodInvocation.class);
 					extension = mock(StoreExtension.class);
 
-					extensions = Collections.singletonMap(AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class), extension);
+					extensions = Collections
+							.singletonMap(AContentRepositoryExtension.class.getMethod(
+									"getCustomContent", Object.class), extension);
 
-					final Method getCustomMethod = AContentRepositoryExtension.class.getMethod("getCustomContent", Object.class);
+					final Method getCustomMethod = AContentRepositoryExtension.class
+							.getMethod("getCustomContent", Object.class);
 					when(invocation.getMethod()).thenReturn(getCustomMethod);
-					when(invocation.getArguments()).thenReturn(new Object[]{new ContentObject("application/pdf")});
+					when(invocation.getArguments()).thenReturn(
+							new Object[] { new ContentObject("application/pdf") });
 				});
 				Context("when an extension implementation is provided", () -> {
 					It("should invoke the extension's implementation", () -> {
@@ -250,27 +281,28 @@ public class StoreMethodInterceptorTest {
 						verify(publisher, never()).publishEvent(anyObject());
 					});
 				});
-                Context("when the extension implementation is not provided", () -> {
-                    BeforeEach(() -> {
-                        extensions = new HashMap<>();
-                    });
-                    It("should throw a Missing Extension error", () -> {
-                        assertThat(e.getMessage(), startsWith("No implementation found for"));
-                    });
-                });
-            });
+				Context("when the extension implementation is not provided", () -> {
+					BeforeEach(() -> {
+						extensions = new HashMap<>();
+					});
+					It("should throw a Missing Extension error", () -> {
+						assertThat(e.getMessage(),
+								startsWith("No implementation found for"));
+					});
+				});
+			});
 		});
 	}
-	
+
 	public static class ContentObject {
 		@MimeType
 		public String mimeType;
-		
+
 		public ContentObject(String mimeType) {
-			this.mimeType = mimeType; 
+			this.mimeType = mimeType;
 		}
 	}
-	
+
 	public interface AContentRepositoryExtension<S> {
 		void getCustomContent(S property);
 	}

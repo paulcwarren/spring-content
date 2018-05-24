@@ -20,7 +20,7 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 	private static Log logger = LogFactory.getLog(FileSystemDeletableResource.class);
 
 	private FileSystemResource resource;
-	
+
 	public FileSystemDeletableResource(FileSystemResource resource) {
 		this.resource = resource;
 	}
@@ -29,8 +29,10 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 	public void delete() {
 		try {
 			FileUtils.forceDelete(this.getFile());
-		} catch (IOException ioe) {
-			logger.debug(String.format("Unexpected error deleting resource %s", this), ioe);
+		}
+		catch (IOException ioe) {
+			logger.debug(String.format("Unexpected error deleting resource %s", this),
+					ioe);
 		}
 	}
 

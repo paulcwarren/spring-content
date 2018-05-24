@@ -13,8 +13,9 @@ public class CorsConfigurationBuilder {
 
 	public CorsConfiguration build(Class<?> storeInterface) {
 		CorsConfiguration config = new CorsConfiguration();
-		
-		CrossOrigin annotation = AnnotatedElementUtils.findMergedAnnotation(storeInterface, CrossOrigin.class);
+
+		CrossOrigin annotation = AnnotatedElementUtils
+				.findMergedAnnotation(storeInterface, CrossOrigin.class);
 		if (annotation == null) {
 			return null;
 		}
@@ -26,7 +27,7 @@ public class CorsConfigurationBuilder {
 		if (CollectionUtils.isEmpty(config.getAllowedOrigins())) {
 			config.setAllowedOrigins(Arrays.asList(CrossOrigin.DEFAULT_ORIGINS));
 		}
-		
+
 		for (String header : annotation.allowedHeaders()) {
 			config.addAllowedHeader(header);
 		}
@@ -34,7 +35,7 @@ public class CorsConfigurationBuilder {
 		if (CollectionUtils.isEmpty(config.getAllowedHeaders())) {
 			config.setAllowedHeaders(Arrays.asList(CrossOrigin.DEFAULT_ALLOWED_HEADERS));
 		}
-		
+
 		for (String header : annotation.exposedHeaders()) {
 			config.addExposedHeader(header);
 		}
@@ -48,18 +49,22 @@ public class CorsConfigurationBuilder {
 				config.addAllowedMethod(httpMethod);
 			}
 		}
-		
+
 		String allowCredentials = annotation.allowCredentials();
 
 		if ("true".equalsIgnoreCase(allowCredentials)) {
 			config.setAllowCredentials(true);
-		} else if ("false".equalsIgnoreCase(allowCredentials)) {
-			config.setAllowCredentials(false);
-		} else if (!allowCredentials.isEmpty()) {
-			throw new IllegalStateException("@CrossOrigin's allowCredentials value must be \"true\", \"false\", "
-					+ "or an empty string (\"\"): current value is [" + allowCredentials + "]");
 		}
-		
+		else if ("false".equalsIgnoreCase(allowCredentials)) {
+			config.setAllowCredentials(false);
+		}
+		else if (!allowCredentials.isEmpty()) {
+			throw new IllegalStateException(
+					"@CrossOrigin's allowCredentials value must be \"true\", \"false\", "
+							+ "or an empty string (\"\"): current value is ["
+							+ allowCredentials + "]");
+		}
+
 		if (config.getAllowCredentials() == null) {
 			config.setAllowCredentials(CrossOrigin.DEFAULT_ALLOW_CREDENTIALS);
 		}

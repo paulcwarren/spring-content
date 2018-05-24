@@ -18,12 +18,12 @@ import internal.org.springframework.content.docx4j.JpegToPngRenditionProvider;
 public class JpegToPngRenditionProviderTest {
 
 	private RenditionProvider service;
-	
+
 	@Before
 	public void setUp() {
 		service = new JpegToPngRenditionProvider();
 	}
-	
+
 	@Test
 	public void testCanConvert() {
 		assertThat(service.consumes(), is("image/jpeg"));
@@ -32,11 +32,12 @@ public class JpegToPngRenditionProviderTest {
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample.jpeg"), 
-												"image/png");
+		InputStream converted = service.convert(
+				this.getClass().getResourceAsStream("/sample.jpeg"), "image/png");
 
 		assertThat(converted.available(), is(greaterThan(0)));
-		assertThat(IOUtils.contentEquals(converted, this.getClass().getResourceAsStream("/sample.png")), is(true));
+		assertThat(IOUtils.contentEquals(converted,
+				this.getClass().getResourceAsStream("/sample.png")), is(true));
 	}
 
 }

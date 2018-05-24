@@ -27,11 +27,11 @@ public class CorsConfigurationBuilderTest {
 
 	private CorsConfigurationBuilder builder;
 	private CorsConfiguration config;
-	
+
 	private Class<?> storeInterface;
-	
+
 	private Exception e;
-	
+
 	{
 		Describe("CorsConfigurationBuilder", () -> {
 			Context("#build", () -> {
@@ -39,7 +39,8 @@ public class CorsConfigurationBuilderTest {
 					builder = new CorsConfigurationBuilder();
 					try {
 						config = builder.build(storeInterface);
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						this.e = e;
 					}
 				});
@@ -56,14 +57,15 @@ public class CorsConfigurationBuilderTest {
 						storeInterface = StoreWithOrigins.class;
 					});
 					It("should create a cors configuration with those origins", () -> {
-						assertThat(config.getAllowedOrigins(), hasItems("http://domain1.com", "http://domain2.com"));
+						assertThat(config.getAllowedOrigins(),
+								hasItems("http://domain1.com", "http://domain2.com"));
 					});
 				});
 				Context("given an empty origins value", () -> {
 					BeforeEach(() -> {
 						storeInterface = StoreWithEmptyOrigins.class;
 					});
-					It("should set the default origin", ()-> {
+					It("should set the default origin", () -> {
 						assertThat(config.getAllowedOrigins(), hasItems("*"));
 					});
 				});
@@ -71,31 +73,36 @@ public class CorsConfigurationBuilderTest {
 					BeforeEach(() -> {
 						storeInterface = StoreWithAllowedMethods.class;
 					});
-					It("should create a cors configuration with those allowed methods", () -> {
-						assertThat(config.getAllowedMethods(), hasItems("GET", "PUT", "POST", "DELETE"));
-					});
+					It("should create a cors configuration with those allowed methods",
+							() -> {
+								assertThat(config.getAllowedMethods(),
+										hasItems("GET", "PUT", "POST", "DELETE"));
+							});
 				});
 				Context("given an empty allowedMethods value", () -> {
 					BeforeEach(() -> {
 						storeInterface = StoreWithEmptyAllowedMethods.class;
 					});
-					It("should set the default allowedMethods", ()-> {
-						assertThat(config.getAllowedMethods(), hasItems("GET", "PUT", "POST", "DELETE", "HEAD", "PATCH", "OPTIONS", "TRACE"));
+					It("should set the default allowedMethods", () -> {
+						assertThat(config.getAllowedMethods(), hasItems("GET", "PUT",
+								"POST", "DELETE", "HEAD", "PATCH", "OPTIONS", "TRACE"));
 					});
 				});
 				Context("given an allowedHeaders value", () -> {
 					BeforeEach(() -> {
 						storeInterface = StoreWithAllowedHeaders.class;
 					});
-					It("should create a cors configuration with those allowed headers", () -> {
-						assertThat(config.getAllowedHeaders(), hasItems("header1", "header2"));
-					});
+					It("should create a cors configuration with those allowed headers",
+							() -> {
+								assertThat(config.getAllowedHeaders(),
+										hasItems("header1", "header2"));
+							});
 				});
 				Context("given an empty allowedHeaders value", () -> {
 					BeforeEach(() -> {
 						storeInterface = StoreWithEmptyAllowedHeaders.class;
 					});
-					It("should set the default allowedHeaders", ()-> {
+					It("should set the default allowedHeaders", () -> {
 						assertThat(config.getAllowedHeaders(), hasItems("*"));
 					});
 				});
@@ -103,17 +110,20 @@ public class CorsConfigurationBuilderTest {
 					BeforeEach(() -> {
 						storeInterface = StoreWithExposedHeaders.class;
 					});
-					It("should create a cors configuration with those exposed headers", () -> {
-						assertThat(config.getExposedHeaders(), hasItems("exposed1", "exposed2"));
-					});
+					It("should create a cors configuration with those exposed headers",
+							() -> {
+								assertThat(config.getExposedHeaders(),
+										hasItems("exposed1", "exposed2"));
+							});
 				});
 				Context("given an empty exposedHeaders value", () -> {
 					BeforeEach(() -> {
 						storeInterface = StoreWithEmptyExposedHeaders.class;
 					});
-					It("should create a cors configuration with a null exposedHeaders", ()-> {
-						assertThat(config.getExposedHeaders(), is(nullValue()));
-					});
+					It("should create a cors configuration with a null exposedHeaders",
+							() -> {
+								assertThat(config.getExposedHeaders(), is(nullValue()));
+							});
 				});
 				Context("given an allowCredentials value of 'true'", () -> {
 					BeforeEach(() -> {
@@ -143,9 +153,10 @@ public class CorsConfigurationBuilderTest {
 					BeforeEach(() -> {
 						storeInterface = StoreWithEmptyAllowCredentials.class;
 					});
-					It("should create a cors configuration with the default allow credentials value", () -> {
-						assertThat(config.getAllowCredentials(), is(false));
-					});
+					It("should create a cors configuration with the default allow credentials value",
+							() -> {
+								assertThat(config.getAllowCredentials(), is(false));
+							});
 				});
 				Context("given a positive max-age specification", () -> {
 					BeforeEach(() -> {
@@ -167,58 +178,76 @@ public class CorsConfigurationBuilderTest {
 					BeforeEach(() -> {
 						storeInterface = StoreWithNegativeMaxAge.class;
 					});
-					It("should create a cors configuration with the default max age", () -> {
-						assertThat(config.getMaxAge(), is(1800L));
-					});
+					It("should create a cors configuration with the default max age",
+							() -> {
+								assertThat(config.getMaxAge(), is(1800L));
+							});
 				});
 			});
 		});
 	}
-	
-	public interface StoreWithNoCrossOrigin extends Store<UUID> {}
 
-	@CrossOrigin(origins={"http://domain1.com", "http://domain2.com"})
-	public interface StoreWithOrigins extends Store<UUID> {}
+	public interface StoreWithNoCrossOrigin extends Store<UUID> {
+	}
 
-	@CrossOrigin(origins={})
-	public interface StoreWithEmptyOrigins extends Store<UUID> {}
+	@CrossOrigin(origins = { "http://domain1.com", "http://domain2.com" })
+	public interface StoreWithOrigins extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowedHeaders={"header1", "header2"})
-	public interface StoreWithAllowedHeaders extends Store<UUID> {}
+	@CrossOrigin(origins = {})
+	public interface StoreWithEmptyOrigins extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowedHeaders={})
-	public interface StoreWithEmptyAllowedHeaders extends Store<UUID> {}
+	@CrossOrigin(allowedHeaders = { "header1", "header2" })
+	public interface StoreWithAllowedHeaders extends Store<UUID> {
+	}
 
-	@CrossOrigin(exposedHeaders={"exposed1", "exposed2"})
-	public interface StoreWithExposedHeaders extends Store<UUID> {}
+	@CrossOrigin(allowedHeaders = {})
+	public interface StoreWithEmptyAllowedHeaders extends Store<UUID> {
+	}
 
-	@CrossOrigin(exposedHeaders={})
-	public interface StoreWithEmptyExposedHeaders extends Store<UUID> {}
+	@CrossOrigin(exposedHeaders = { "exposed1", "exposed2" })
+	public interface StoreWithExposedHeaders extends Store<UUID> {
+	}
 
-	@CrossOrigin(methods={RequestMethod.GET, RequestMethod.PUT, RequestMethod.POST, RequestMethod.DELETE})
-	public interface StoreWithAllowedMethods extends Store<UUID> {}
+	@CrossOrigin(exposedHeaders = {})
+	public interface StoreWithEmptyExposedHeaders extends Store<UUID> {
+	}
 
-	@CrossOrigin(methods={})
-	public interface StoreWithEmptyAllowedMethods extends Store<UUID> {}
+	@CrossOrigin(methods = { RequestMethod.GET, RequestMethod.PUT, RequestMethod.POST,
+			RequestMethod.DELETE })
+	public interface StoreWithAllowedMethods extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowCredentials="true")
-	public interface StoreWithAllowCredentials extends Store<UUID> {}
+	@CrossOrigin(methods = {})
+	public interface StoreWithEmptyAllowedMethods extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowCredentials="false")
-	public interface StoreWithDisallowCredentials extends Store<UUID> {}
+	@CrossOrigin(allowCredentials = "true")
+	public interface StoreWithAllowCredentials extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowCredentials="something-else")
-	public interface StoreWithMisconfiguredAllowCredentials extends Store<UUID> {}
+	@CrossOrigin(allowCredentials = "false")
+	public interface StoreWithDisallowCredentials extends Store<UUID> {
+	}
 
-	@CrossOrigin(allowCredentials="")
-	public interface StoreWithEmptyAllowCredentials extends Store<UUID> {}
+	@CrossOrigin(allowCredentials = "something-else")
+	public interface StoreWithMisconfiguredAllowCredentials extends Store<UUID> {
+	}
 
-	@CrossOrigin(maxAge=1000L)
-	public interface StoreWithMaxAge extends Store<UUID> {}
+	@CrossOrigin(allowCredentials = "")
+	public interface StoreWithEmptyAllowCredentials extends Store<UUID> {
+	}
 
-	@CrossOrigin(maxAge=0L)
-	public interface StoreWithZeroMaxAge extends Store<UUID> {}
+	@CrossOrigin(maxAge = 1000L)
+	public interface StoreWithMaxAge extends Store<UUID> {
+	}
 
-	@CrossOrigin(maxAge=-1000L)
-	public interface StoreWithNegativeMaxAge extends Store<UUID> {}
+	@CrossOrigin(maxAge = 0L)
+	public interface StoreWithZeroMaxAge extends Store<UUID> {
+	}
+
+	@CrossOrigin(maxAge = -1000L)
+	public interface StoreWithNegativeMaxAge extends Store<UUID> {
+	}
 }

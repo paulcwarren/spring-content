@@ -21,37 +21,46 @@ public final class BeanUtils {
 		}
 	};
 
-	private BeanUtils() {}
-	
-	public static boolean hasFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
+	private BeanUtils() {
+	}
+
+	public static boolean hasFieldWithAnnotation(Object domainObj,
+			Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 
-        Field field = findFieldWithAnnotation(domainObj, annotationClass);
-        if (field != null && field.getAnnotation(annotationClass) != null) {
-            return true;
-        }
+		Field field = findFieldWithAnnotation(domainObj, annotationClass);
+		if (field != null && field.getAnnotation(annotationClass) != null) {
+			return true;
+		}
 
 		return false;
 	}
 
-	public static Field findFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
+	public static Field findFieldWithAnnotation(Object domainObj,
+			Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-		Field candidate = findFieldWithAnnotation(domainObj.getClass(), annotationClass, wrapper);
-		if (candidate != null) return candidate;
+		Field candidate = findFieldWithAnnotation(domainObj.getClass(), annotationClass,
+				wrapper);
+		if (candidate != null)
+			return candidate;
 		return null;
 	}
 
-	public static Field findFieldWithAnnotation(Class<?> domainObjClass, Class<? extends Annotation> annotationClass)
+	public static Field findFieldWithAnnotation(Class<?> domainObjClass,
+			Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 
 		BeanWrapper wrapper = new BeanWrapperImpl(domainObjClass);
-		Field candidate = findFieldWithAnnotation(domainObjClass, annotationClass, wrapper);
-		if (candidate != null) return candidate;
+		Field candidate = findFieldWithAnnotation(domainObjClass, annotationClass,
+				wrapper);
+		if (candidate != null)
+			return candidate;
 		return null;
 	}
 
-	private static Field findFieldWithAnnotation(Class<?> domainObjClass, Class<? extends Annotation> annotationClass, BeanWrapper wrapper) {
+	private static Field findFieldWithAnnotation(Class<?> domainObjClass,
+			Class<? extends Annotation> annotationClass, BeanWrapper wrapper) {
 		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
 		for (PropertyDescriptor descriptor : descriptors) {
 			Field candidate = getField(domainObjClass, descriptor.getName());
@@ -72,25 +81,25 @@ public final class BeanUtils {
 
 	protected static List<Field> getAllFields(Class<?> type) {
 		List<Field> fields = new ArrayList<>();
-	    fields.addAll(Arrays.asList(type.getDeclaredFields()));
+		fields.addAll(Arrays.asList(type.getDeclaredFields()));
 
-	    if (type.getSuperclass() != null) {
-	        getAllFields(fields, type.getSuperclass());
-	    }
+		if (type.getSuperclass() != null) {
+			getAllFields(fields, type.getSuperclass());
+		}
 
-	    return fields;
+		return fields;
 	}
 
 	protected static List<Field> getAllFields(List<Field> fields, Class<?> type) {
-	    fields.addAll(Arrays.asList(type.getDeclaredFields()));
+		fields.addAll(Arrays.asList(type.getDeclaredFields()));
 
-	    if (type.getSuperclass() != null) {
-	        getAllFields(fields, type.getSuperclass());
-	    }
+		if (type.getSuperclass() != null) {
+			getAllFields(fields, type.getSuperclass());
+		}
 
-	    return fields;
+		return fields;
 	}
-	
+
 	protected static Field getField(Class<?> type, String fieldName) {
 		for (Field field : getAllFields(type)) {
 			if (field.getName().equals(fieldName)) {
@@ -100,35 +109,41 @@ public final class BeanUtils {
 		return null;
 	}
 
-	public static Class<?> getFieldWithAnnotationType(Object domainObj, Class<? extends Annotation> annotationClass)
+	public static Class<?> getFieldWithAnnotationType(Object domainObj,
+			Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Class<?> type = null;
 
-        Field field = findFieldWithAnnotation(domainObj, annotationClass);
-        if (field != null && field.getAnnotation(annotationClass) != null) {
-            type = field.getType();
-        }
+		Field field = findFieldWithAnnotation(domainObj, annotationClass);
+		if (field != null && field.getAnnotation(annotationClass) != null) {
+			type = field.getType();
+		}
 
 		return type;
 	}
 
-	public static Object getFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
+	public static Object getFieldWithAnnotation(Object domainObj,
+			Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Object value = null;
 
-        Field field = findFieldWithAnnotation(domainObj, annotationClass);
-        if (field != null && field.getAnnotation(annotationClass) != null) {
-            try {
-                PropertyDescriptor descriptor = org.springframework.beans.BeanUtils.getPropertyDescriptor(domainObj.getClass(), field.getName());
-                if (descriptor != null) {
-                    BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-                    value = wrapper.getPropertyValue(field.getName());
-                } else {
-                    value = ReflectionUtils.getField(field, domainObj);
-                }
-                return value;
-            } catch (IllegalArgumentException iae) {}
-        }
+		Field field = findFieldWithAnnotation(domainObj, annotationClass);
+		if (field != null && field.getAnnotation(annotationClass) != null) {
+			try {
+				PropertyDescriptor descriptor = org.springframework.beans.BeanUtils
+						.getPropertyDescriptor(domainObj.getClass(), field.getName());
+				if (descriptor != null) {
+					BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+					value = wrapper.getPropertyValue(field.getName());
+				}
+				else {
+					value = ReflectionUtils.getField(field, domainObj);
+				}
+				return value;
+			}
+			catch (IllegalArgumentException iae) {
+			}
+		}
 
 		return value;
 	}
@@ -136,44 +151,47 @@ public final class BeanUtils {
 	/**
 	 * Sets object's field annotated with annotationClass to value.
 	 *
-	 * @param domainObj
-	 * 					the object containing the field
-	 * @param annotationClass
-	 * 					the annotation to look for
-	 * @param value
-	 * 					the value to set
+	 * @param domainObj the object containing the field
+	 * @param annotationClass the annotation to look for
+	 * @param value the value to set
 	 */
-	public static void setFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass, Object value) {
-		setFieldWithAnnotationConditionally(domainObj, annotationClass, value, MATCHING_CONDITION);
+	public static void setFieldWithAnnotation(Object domainObj,
+			Class<? extends Annotation> annotationClass, Object value) {
+		setFieldWithAnnotationConditionally(domainObj, annotationClass, value,
+				MATCHING_CONDITION);
 	}
-	
+
 	/**
-	 * Sets object's field annotated with annotationClass to value only if the condition matches.
+	 * Sets object's field annotated with annotationClass to value only if the condition
+	 * matches.
 	 *
-	 * @param domainObj
-	 * 					the object containing the field
-	 * @param annotationClass
-	 * 					the annotation to look for
-	 * @param value
-	 * 					the value to set
-	 * @param condition
-	 * 					the condition that must be satisfied to allow the match
+	 * @param domainObj the object containing the field
+	 * @param annotationClass the annotation to look for
+	 * @param value the value to set
+	 * @param condition the condition that must be satisfied to allow the match
 	 */
-	public static void setFieldWithAnnotationConditionally(Object domainObj, Class<? extends Annotation> annotationClass, Object value, Condition condition) {
+	public static void setFieldWithAnnotationConditionally(Object domainObj,
+			Class<? extends Annotation> annotationClass, Object value,
+			Condition condition) {
 
 		Field field = findFieldWithAnnotation(domainObj, annotationClass);
-		if (field != null && field.getAnnotation(annotationClass) != null && condition.matches(field)) {
+		if (field != null && field.getAnnotation(annotationClass) != null
+				&& condition.matches(field)) {
 			try {
-			    PropertyDescriptor descriptor = org.springframework.beans.BeanUtils.getPropertyDescriptor(domainObj.getClass(), field.getName());
-			    if (descriptor != null) {
-                    BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
-			        wrapper.setPropertyValue(field.getName(), value);
-                    return;
-                } else {
-                    ReflectionUtils.setField(field, domainObj, value);
-                }
+				PropertyDescriptor descriptor = org.springframework.beans.BeanUtils
+						.getPropertyDescriptor(domainObj.getClass(), field.getName());
+				if (descriptor != null) {
+					BeanWrapper wrapper = new BeanWrapperImpl(domainObj);
+					wrapper.setPropertyValue(field.getName(), value);
+					return;
+				}
+				else {
+					ReflectionUtils.setField(field, domainObj, value);
+				}
 				return;
-			} catch (IllegalArgumentException iae) {}
+			}
+			catch (IllegalArgumentException iae) {
+			}
 		}
 	}
 }

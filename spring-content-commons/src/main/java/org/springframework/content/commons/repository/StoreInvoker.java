@@ -5,9 +5,9 @@ import java.io.Serializable;
 
 public interface StoreInvoker {
 
-    Class<?> getDomainClass();
+	Class<?> getDomainClass();
 
-    Class<? extends Serializable> getContentIdClass();
+	Class<? extends Serializable> getContentIdClass();
 
 	InputStream invokeGetContent();
 

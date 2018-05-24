@@ -44,15 +44,15 @@ public class AnnotatedStoreEventInvoker
 	public AnnotatedStoreEventInvoker() {
 		reflectionService = new ReflectionServiceImpl();
 	}
-	
+
 	public AnnotatedStoreEventInvoker(ReflectionService reflectionService) {
 		this.reflectionService = reflectionService;
 	}
-	
+
 	MultiValueMap<Class<? extends StoreEvent>, EventHandlerMethod> getHandlers() {
 		return handlerMethods;
 	}
-	
+
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
@@ -64,25 +64,32 @@ public class AnnotatedStoreEventInvoker
 			throws BeansException {
 
 		Class<?> beanType = ClassUtils.getUserClass(bean);
-		StoreEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType, StoreEventHandler.class);
+		StoreEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType,
+				StoreEventHandler.class);
 
 		if (typeAnno == null) {
 			return bean;
 		}
-		
+
 		ReflectionUtils.doWithMethods(beanType, new ReflectionUtils.MethodCallback() {
 
 			@Override
 			public void doWith(Method method)
 					throws IllegalArgumentException, IllegalAccessException {
-				findHandler(bean, method, HandleBeforeGetContent.class, BeforeGetContentEvent.class);
-				findHandler(bean, method, HandleAfterGetContent.class, AfterGetContentEvent.class);
-				findHandler(bean, method, HandleBeforeSetContent.class, BeforeSetContentEvent.class);
-				findHandler(bean, method, HandleAfterSetContent.class, AfterSetContentEvent.class);
-				findHandler(bean, method, HandleBeforeUnsetContent.class, BeforeUnsetContentEvent.class);
-				findHandler(bean, method, HandleAfterUnsetContent.class, AfterUnsetContentEvent.class);
+				findHandler(bean, method, HandleBeforeGetContent.class,
+						BeforeGetContentEvent.class);
+				findHandler(bean, method, HandleAfterGetContent.class,
+						AfterGetContentEvent.class);
+				findHandler(bean, method, HandleBeforeSetContent.class,
+						BeforeSetContentEvent.class);
+				findHandler(bean, method, HandleAfterSetContent.class,
+						AfterSetContentEvent.class);
+				findHandler(bean, method, HandleBeforeUnsetContent.class,
+						BeforeUnsetContentEvent.class);
+				findHandler(bean, method, HandleAfterUnsetContent.class,
+						AfterUnsetContentEvent.class);
 			}
-			
+
 		});
 
 		return bean;
@@ -106,16 +113,19 @@ public class AnnotatedStoreEventInvoker
 
 			List<Object> parameters = new ArrayList<Object>();
 			parameters.add(src);
-			
+
 			if (logger.isDebugEnabled()) {
-				logger.debug(String.format("Invoking {} handler for {}.", event.getClass().getSimpleName(), event.getSource()));
+				logger.debug(String.format("Invoking {} handler for {}.",
+						event.getClass().getSimpleName(), event.getSource()));
 			}
 
-			reflectionService.invokeMethod(handlerMethod.method, handlerMethod.handler, parameters.toArray());
+			reflectionService.invokeMethod(handlerMethod.method, handlerMethod.handler,
+					parameters.toArray());
 		}
 	}
-	
-	<H extends Annotation, E> void findHandler(Object bean, Method method, Class<H> handler, Class<? extends StoreEvent>  eventType) {
+
+	<H extends Annotation, E> void findHandler(Object bean, Method method,
+			Class<H> handler, Class<? extends StoreEvent> eventType) {
 		H annotation = AnnotationUtils.findAnnotation(method, handler);
 
 		if (annotation == null) {
@@ -125,12 +135,16 @@ public class AnnotatedStoreEventInvoker
 		Class<?>[] parameterTypes = method.getParameterTypes();
 
 		if (parameterTypes.length == 0) {
-			throw new IllegalStateException(String.format("Event handler method %s must have a content object argument", method.getName()));
+			throw new IllegalStateException(String.format(
+					"Event handler method %s must have a content object argument",
+					method.getName()));
 		}
 
-		EventHandlerMethod handlerMethod = new EventHandlerMethod(parameterTypes[0], bean, method);
+		EventHandlerMethod handlerMethod = new EventHandlerMethod(parameterTypes[0], bean,
+				method);
 
-		logger.debug(String.format("Annotated handler method found: {%s}", handlerMethod));
+		logger.debug(
+				String.format("Annotated handler method found: {%s}", handlerMethod));
 
 		handlerMethods.add(eventType, handlerMethod);
 	}
@@ -152,7 +166,9 @@ public class AnnotatedStoreEventInvoker
 
 		@Override
 		public String toString() {
-			return String.format("EventHandlerMethod{ targetType=%s, method=%s, handler=%s }", targetType, method, handler);
+			return String.format(
+					"EventHandlerMethod{ targetType=%s, method=%s, handler=%s }",
+					targetType, method, handler);
 		}
 	}
 }

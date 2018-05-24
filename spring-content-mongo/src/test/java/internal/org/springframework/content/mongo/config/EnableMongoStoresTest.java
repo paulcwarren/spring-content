@@ -42,22 +42,25 @@ public class EnableMongoStoresTest {
 	private AnnotationConfigApplicationContext context;
 	{
 		Describe("EnableMongoStores", () -> {
-			Context("given an enabled configuration with a mongo content repository bean", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(TestConfig.class);
-					context.refresh();
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-				It("should have a mongo content repository bean", () -> {
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have a mongo store converter", () -> {
-					assertThat(context.getBean("mongoStoreConverter"), is(not(nullValue())));
-				});
-			});
+			Context("given an enabled configuration with a mongo content repository bean",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(TestConfig.class);
+							context.refresh();
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						It("should have a mongo content repository bean", () -> {
+							assertThat(context.getBean(TestEntityContentRepository.class),
+									is(not(nullValue())));
+						});
+						It("should have a mongo store converter", () -> {
+							assertThat(context.getBean("mongoStoreConverter"),
+									is(not(nullValue())));
+						});
+					});
 
 			Context("given a context with a custom converter", () -> {
 				BeforeEach(() -> {
@@ -69,48 +72,61 @@ public class EnableMongoStoresTest {
 					context.close();
 				});
 				It("should use that converter", () -> {
-					ConversionService converters = (ConversionService) context.getBean("mongoStoreConverter");
-					assertThat(converters.convert(UUID.fromString("e49d5464-26ce-11e7-93ae-92361f002671"), String.class), is("/e49d5464/26ce/11e7/93ae/92361f002671"));
+					ConversionService converters = (ConversionService) context
+							.getBean("mongoStoreConverter");
+					assertThat(
+							converters.convert(
+									UUID.fromString(
+											"e49d5464-26ce-11e7-93ae-92361f002671"),
+									String.class),
+							is("/e49d5464/26ce/11e7/93ae/92361f002671"));
 				});
 			});
 
-			Context("given an enabled configuration with no mongo content repository beans", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(EmptyConfig.class);
-					context.refresh();
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-				It("should load the context but have no mongo repository beans", () -> {
-					try {
-						context.getBean(TestEntityContentRepository.class);
-						fail("expected no such bean");
-					} catch (NoSuchBeanDefinitionException e) {
-						assertThat(true, is(true));
-					}
-				});
-			});
+			Context("given an enabled configuration with no mongo content repository beans",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(EmptyConfig.class);
+							context.refresh();
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						It("should load the context but have no mongo repository beans",
+								() -> {
+									try {
+										context.getBean(
+												TestEntityContentRepository.class);
+										fail("expected no such bean");
+									}
+									catch (NoSuchBeanDefinitionException e) {
+										assertThat(true, is(true));
+									}
+								});
+					});
 		});
 
 		Describe("EnableMongoContentRepositories", () -> {
-			Context("given an enabled configuration with a mongo content repository bean", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(EnableMongoContentRepositoriesConfig.class);
-					context.refresh();
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-				It("should have a mongo content repository bean", () -> {
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have a mongo store converter", () -> {
-					assertThat(context.getBean("mongoStoreConverter"), is(not(nullValue())));
-				});
-			});
+			Context("given an enabled configuration with a mongo content repository bean",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(EnableMongoContentRepositoriesConfig.class);
+							context.refresh();
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						It("should have a mongo content repository bean", () -> {
+							assertThat(context.getBean(TestEntityContentRepository.class),
+									is(not(nullValue())));
+						});
+						It("should have a mongo store converter", () -> {
+							assertThat(context.getBean("mongoStoreConverter"),
+									is(not(nullValue())));
+						});
+					});
 		});
 	}
 
@@ -120,7 +136,7 @@ public class EnableMongoStoresTest {
 	}
 
 	@Configuration
-	@EnableMongoStores(basePackages="contains.no.mongo.repositores")
+	@EnableMongoStores(basePackages = "contains.no.mongo.repositores")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 		//
@@ -145,12 +161,12 @@ public class EnableMongoStoresTest {
 	@Import(InfrastructureConfig.class)
 	public static class ConverterConfig {
 		@Bean
-		public MongoStoreConverter<UUID,String> uuidConverter() {
-			return new MongoStoreConverter<UUID,String>() {
+		public MongoStoreConverter<UUID, String> uuidConverter() {
+			return new MongoStoreConverter<UUID, String>() {
 
 				@Override
 				public String convert(UUID source) {
-					return String.format("/%s", source.toString().replaceAll("-","/"));
+					return String.format("/%s", source.toString().replaceAll("-", "/"));
 				}
 
 			};
@@ -163,16 +179,19 @@ public class EnableMongoStoresTest {
 		public GridFsTemplate gridFsTemplate() throws Exception {
 			return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
 		}
+
 		@Override
 		protected String getDatabaseName() {
 			return "spring-content";
 		}
+
 		@Override
 		public MongoDbFactory mongoDbFactory() {
 			return super.mongoDbFactory();
 		}
+
 		public MongoClient mongoClient() {
-	        return new MongoClient();
+			return new MongoClient();
 		}
 	}
 
@@ -184,6 +203,7 @@ public class EnableMongoStoresTest {
 		private String contentId;
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

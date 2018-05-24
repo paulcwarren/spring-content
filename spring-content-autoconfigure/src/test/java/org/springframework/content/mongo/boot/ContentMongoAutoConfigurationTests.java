@@ -24,7 +24,8 @@ public class ContentMongoAutoConfigurationTests {
 		context.register(TestConfig.class);
 		context.refresh();
 
-		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean(TestEntityContentRepository.class),
+				CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 
 		context.close();
 	}
@@ -32,7 +33,7 @@ public class ContentMongoAutoConfigurationTests {
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
@@ -48,6 +49,7 @@ public class ContentMongoAutoConfigurationTests {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

@@ -19,16 +19,20 @@ import org.springframework.core.PriorityOrdered;
 import org.springframework.util.ClassUtils;
 
 /**
- * A {@link org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor} implementing
- * {@code #predictBeanType(Class, String)} to return the configured content repository interface from
- * {@link AbstractStoreFactoryBean}s. This is done as shortcut to prevent the need of instantiating
- * {@link AbstractStoreFactoryBean}s just to find out what repository interface they actually create.
- * <br/><br/>
+ * A
+ * {@link org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor}
+ * implementing {@code #predictBeanType(Class, String)} to return the configured content
+ * repository interface from {@link AbstractStoreFactoryBean}s. This is done as shortcut
+ * to prevent the need of instantiating {@link AbstractStoreFactoryBean}s just to find out
+ * what repository interface they actually create. <br/>
+ * <br/>
  */
-class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter implements
-		BeanFactoryAware, PriorityOrdered {
+class StoreInterfaceAwareBeanPostProcessor
+		extends InstantiationAwareBeanPostProcessorAdapter
+		implements BeanFactoryAware, PriorityOrdered {
 
-	private static final Log LOGGER = LogFactory.getLog(StoreInterfaceAwareBeanPostProcessor.class);
+	private static final Log LOGGER = LogFactory
+			.getLog(StoreInterfaceAwareBeanPostProcessor.class);
 	private static final Class<?> REPOSITORY_TYPE = AbstractStoreFactoryBean.class;
 
 	private final Map<String, Class<?>> cache = new ConcurrentHashMap<String, Class<?>>();
@@ -36,7 +40,9 @@ class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostPro
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
+	 * 
+	 * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.
+	 * springframework.beans.factory.BeanFactory)
 	 */
 	public void setBeanFactory(BeanFactory beanFactory) {
 
@@ -47,7 +53,10 @@ class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostPro
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter#predictBeanType(java.lang.Class, java.lang.String)
+	 * 
+	 * @see
+	 * org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter
+	 * #predictBeanType(java.lang.Class, java.lang.String)
 	 */
 	@Override
 	public Class<?> predictBeanType(Class<?> beanClass, String beanName) {
@@ -63,7 +72,8 @@ class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostPro
 		}
 
 		BeanDefinition definition = context.getBeanDefinition(beanName);
-		PropertyValue value = definition.getPropertyValues().getPropertyValue(AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY);
+		PropertyValue value = definition.getPropertyValues().getPropertyValue(
+				AbstractStoreBeanDefinitionRegistrar.STORE_INTERFACE_PROPERTY);
 
 		resolvedBeanClass = getClassForPropertyValue(value, beanName);
 		cache.put(beanName, resolvedBeanClass);
@@ -72,39 +82,47 @@ class StoreInterfaceAwareBeanPostProcessor extends InstantiationAwareBeanPostPro
 	}
 
 	/**
-	 * Returns the class which is configured in the given {@link PropertyValue}. In case it is not a
-	 * {@link TypedStringValue} or the value contained cannot be interpreted as {@link Class} it will return null.
+	 * Returns the class which is configured in the given {@link PropertyValue}. In case
+	 * it is not a {@link TypedStringValue} or the value contained cannot be interpreted
+	 * as {@link Class} it will return null.
 	 * 
 	 * @param propertyValue
 	 * @param beanName
 	 * @return
 	 */
-	private Class<?> getClassForPropertyValue(PropertyValue propertyValue, String beanName) {
+	private Class<?> getClassForPropertyValue(PropertyValue propertyValue,
+			String beanName) {
 
 		Object value = propertyValue.getValue();
 		String className = null;
 
 		if (value instanceof TypedStringValue) {
 			className = ((TypedStringValue) value).getValue();
-		} else if (value instanceof String) {
+		}
+		else if (value instanceof String) {
 			className = (String) value;
-		} else if (value instanceof Class<?>) {
+		}
+		else if (value instanceof Class<?>) {
 			return (Class<?>) value;
-		} else {
+		}
+		else {
 			return Void.class;
 		}
 
 		try {
 			return ClassUtils.resolveClassName(className, context.getBeanClassLoader());
-		} catch (IllegalArgumentException ex) {
-			LOGGER.warn(String.format("Couldn't load class %s referenced as repository interface in bean %s!", className,
-					beanName));
+		}
+		catch (IllegalArgumentException ex) {
+			LOGGER.warn(String.format(
+					"Couldn't load class %s referenced as repository interface in bean %s!",
+					className, beanName));
 			return Void.class;
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.springframework.core.Ordered#getOrder()
 	 */
 	public int getOrder() {

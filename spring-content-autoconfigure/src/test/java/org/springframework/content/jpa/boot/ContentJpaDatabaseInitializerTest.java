@@ -27,53 +27,55 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 @RunWith(Ginkgo4jRunner.class)
 public class ContentJpaDatabaseInitializerTest {
 
-    private ContentJpaDatabaseInitializer initializer;
+	private ContentJpaDatabaseInitializer initializer;
 
-    private DataSource ds;
-    private ResourceLoader resourceLoader;
-    private ContentJpaProperties props;
+	private DataSource ds;
+	private ResourceLoader resourceLoader;
+	private ContentJpaProperties props;
 
-    //mocks
-    private Statement stmt;
+	// mocks
+	private Statement stmt;
 
-
-    {
-        Describe("ContentJpaDatabaseInitializer", () -> {
-            JustBeforeEach(() -> {
-                initializer = new ContentJpaDatabaseInitializer(ds, resourceLoader, props);
-            });
-            BeforeEach(() -> {
-                ds = mock(DataSource.class);
-                resourceLoader = new DefaultResourceLoader();
-                props = new ContentJpaProperties();
-            });
-            Context("#initialize", () -> {
-                BeforeEach(() -> {
-                    Connection conn = mock(Connection.class);
-                    when(ds.getConnection()).thenReturn(conn);
-                    stmt = mock(Statement.class);
-                    when(conn.createStatement()).thenReturn(stmt);
-                    DatabaseMetaData metadata = mock(DatabaseMetaData.class);
-                    when(conn.getMetaData()).thenReturn(metadata);
-                    when(metadata.getDatabaseProductName()).thenReturn("h2");
-                });
-                Context("when initialization is enabled", () -> {
-                    JustBeforeEach(() -> {
-                        initializer.initialize();
-                    });
-                    It("should execute CREATE TABLE statements on the database", () -> {
-                        verify(stmt, atLeastOnce()).execute(argThat(containsString("CREATE TABLE")));
-                    });
-                });
-                Context("when initialization is disabled", () -> {
-                    BeforeEach(() -> {
-                        props.getInitializer().setInitializeSchema(DataSourceInitializationMode.NEVER);
-                    });
-                    It("should not execute any statements on the database", () -> {
-                        verify(stmt, never()).execute(anyString());
-                    });
-                });
-            });
-        });
-    }
+	{
+		Describe("ContentJpaDatabaseInitializer", () -> {
+			JustBeforeEach(() -> {
+				initializer = new ContentJpaDatabaseInitializer(ds, resourceLoader,
+						props);
+			});
+			BeforeEach(() -> {
+				ds = mock(DataSource.class);
+				resourceLoader = new DefaultResourceLoader();
+				props = new ContentJpaProperties();
+			});
+			Context("#initialize", () -> {
+				BeforeEach(() -> {
+					Connection conn = mock(Connection.class);
+					when(ds.getConnection()).thenReturn(conn);
+					stmt = mock(Statement.class);
+					when(conn.createStatement()).thenReturn(stmt);
+					DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+					when(conn.getMetaData()).thenReturn(metadata);
+					when(metadata.getDatabaseProductName()).thenReturn("h2");
+				});
+				Context("when initialization is enabled", () -> {
+					JustBeforeEach(() -> {
+						initializer.initialize();
+					});
+					It("should execute CREATE TABLE statements on the database", () -> {
+						verify(stmt, atLeastOnce())
+								.execute(argThat(containsString("CREATE TABLE")));
+					});
+				});
+				Context("when initialization is disabled", () -> {
+					BeforeEach(() -> {
+						props.getInitializer()
+								.setInitializeSchema(DataSourceInitializationMode.NEVER);
+					});
+					It("should not execute any statements on the database", () -> {
+						verify(stmt, never()).execute(anyString());
+					});
+				});
+			});
+		});
+	}
 }
