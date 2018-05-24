@@ -100,9 +100,7 @@
       xsi:type="maven:MavenImportTask">
     <sourceLocator
         rootFolder="${checkout.location}"
-        locateNestedProjects="true">
-      <excludedPath>spring-boot-project/spring-boot-tools/spring-boot-gradle-plugin</excludedPath>
-    </sourceLocator>
+        locateNestedProjects="true"/>
     <description></description>
   </setupTask>
   <setupTask
