@@ -14,4 +14,4 @@ echo "Importing GPG keys"
 openssl aes-256-cbc -K $encrypted_2d46c2ddc73e_key -iv $encrypted_2d46c2ddc73e_iv -in codesigning.asc.enc -out codesigning.asc -d
 gpg --fast-import codesigning.asc
 
-mvn -B -U -P ci deploy --settings settings.xml -DskipTests=true scm-publish:publish-scm
+mvn -B -U -P ci,docs deploy --settings settings.xml -DskipTests=true scm-publish:publish-scm
