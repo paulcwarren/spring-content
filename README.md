@@ -50,6 +50,16 @@ If you want to build with the regular `mvn` command, you will need
 _Also see [CONTRIBUTING.md](CONTRIBUTING.md) if you wish to submit pull requests,
 and in particular please fill out the [Contributor's License Agreement](https://cla-assistant.io/paulcwarren/spring-content) before your first change, however trivial._
 
+#### Building reference documentation
+
+The reference documentation can be included in the build by specifying the `docs` profile.
+
+```
+$ BUILD_TYPE=dev ./mvnw -P docs clean install 
+```
+
+TIP: The generated documentation is available from `spring-content/target/generated-docs/refs/dev/`
+
 ## Guides
 The [https://paulcwarren.github.io/spring-content/](https://paulcwarren.github.io/spring-content/) site contains several guides that show how to use Spring
 Content step-by-step:
