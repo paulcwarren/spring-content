@@ -16,4 +16,4 @@ For more information [see our docs](https://paulcwarren.github.io/spring-content
   and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>,
   innovative and intelligent tools for profiling Java and .NET applications.
   
-  [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/java/profiler/index.jsp)
+  [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/java/profiler/index.jsp) [![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
