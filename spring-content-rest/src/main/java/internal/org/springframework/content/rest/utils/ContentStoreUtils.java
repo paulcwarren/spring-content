@@ -23,61 +23,70 @@ import internal.org.springframework.content.rest.annotations.ContentStoreRestRes
 
 public final class ContentStoreUtils {
 
-	private ContentStoreUtils() {}
-	
+	private ContentStoreUtils() {
+	}
+
 	/**
-	 * Given a store and a collection of mime types this method will iterate the mime-types returning the
-	 * first input stream that it can find from the store itself or, if the store implements Renderable
-	 * from a rendition.
+	 * Given a store and a collection of mime types this method will iterate the
+	 * mime-types returning the first input stream that it can find from the store itself
+	 * or, if the store implements Renderable from a rendition.
 	 * 
-	 * @param store		store the store to fetch the content from
-	 * @param mimeTypes	the mime types requested
-	 * @param entity 	the entity whose content is being fetched
-	 * @param headers 	headers that will be sent back to the client
+	 * @param store store the store to fetch the content from
+	 * @param mimeTypes the mime types requested
+	 * @param entity the entity whose content is being fetched
+	 * @param headers headers that will be sent back to the client
 	 * 
 	 * @return input stream
 	 */
 	@SuppressWarnings("unchecked")
-	public static InputStream getContent(ContentStore<Object,Serializable> store, Object entity, List<MediaType> mimeTypes, HttpHeaders headers) {
+	public static InputStream getContent(ContentStore<Object, Serializable> store,
+			Object entity, List<MediaType> mimeTypes, HttpHeaders headers) {
 		InputStream content = null;
-		
-		Object entityMimeType = BeanUtils.getFieldWithAnnotation(entity, org.springframework.content.commons.annotations.MimeType.class);
+
+		Object entityMimeType = BeanUtils.getFieldWithAnnotation(entity,
+				org.springframework.content.commons.annotations.MimeType.class);
 		if (entityMimeType == null)
 			return content;
-		
+
 		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
-		
+
 		MediaType.sortBySpecificityAndQuality(mimeTypes);
-		
+
 		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
-		
-		//Modified to show download
-		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
+
+		// Modified to show download
+		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity,
+				OriginalFileName.class);
 		if (originalFileName != null) {
-			headers.setContentDispositionFormData("attachment", (String)originalFileName);
+			headers.setContentDispositionFormData("attachment",
+					(String) originalFileName);
 		}
-		
-		for (int i=0; i < arrMimeTypes.length && content == null; i++) {
+
+		for (int i = 0; i < arrMimeTypes.length && content == null; i++) {
 			MediaType mimeType = arrMimeTypes[i];
 			if (mimeType.includes(targetMimeType)) {
 				headers.setContentType(targetMimeType);
-				
+
 				long contentLength = 0L;
-				Object len = BeanUtils.getFieldWithAnnotation(entity, ContentLength.class);
+				Object len = BeanUtils.getFieldWithAnnotation(entity,
+						ContentLength.class);
 				if (len != null)
 					headers.setContentLength(Long.parseLong(len.toString()));
-				
+
 				content = store.getContent(entity);
 				break;
-			} else if (store instanceof Renderable) {
-				content = ((Renderable<Object>)store).getRendition(entity, mimeType.toString());
+			}
+			else if (store instanceof Renderable) {
+				content = ((Renderable<Object>) store).getRendition(entity,
+						mimeType.toString());
 			}
 		}
 		return content;
 	}
-	
-	public static ContentStoreInfo findContentStore(ContentStoreService stores, Class<?> contentEntityClass) {
-		
+
+	public static ContentStoreInfo findContentStore(ContentStoreService stores,
+			Class<?> contentEntityClass) {
+
 		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
 			if (contentEntityClass.equals(info.getDomainObjectClass()))
 				return info;
@@ -85,8 +94,9 @@ public final class ContentStoreUtils {
 		return null;
 	}
 
-	public static ContentStoreInfo findContentStore(ContentStoreService stores, String store) {
-		
+	public static ContentStoreInfo findContentStore(ContentStoreService stores,
+			String store) {
+
 		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
 			if (store.equals(storePath(info))) {
 				return info;
@@ -103,25 +113,30 @@ public final class ContentStoreUtils {
 		}
 		return null;
 	}
-	
+
 	public static String storePath(ContentStoreInfo info) {
 		Class<?> clazz = info.getInterface();
 		String path = null;
 
-		ContentStoreRestResource oldAnnotation = AnnotationUtils.findAnnotation(clazz, ContentStoreRestResource.class);
+		ContentStoreRestResource oldAnnotation = AnnotationUtils.findAnnotation(clazz,
+				ContentStoreRestResource.class);
 		if (oldAnnotation != null) {
 			path = oldAnnotation == null ? null : oldAnnotation.path().trim();
-		} else {
-			StoreRestResource newAnnotation = AnnotationUtils.findAnnotation(clazz, StoreRestResource.class);
+		}
+		else {
+			StoreRestResource newAnnotation = AnnotationUtils.findAnnotation(clazz,
+					StoreRestResource.class);
 			path = newAnnotation == null ? null : newAnnotation.path().trim();
 		}
-		path = StringUtils.hasText(path) ? path : English.plural(StringUtils.uncapitalize(getSimpleName(info)));
+		path = StringUtils.hasText(path) ? path
+				: English.plural(StringUtils.uncapitalize(getSimpleName(info)));
 		return path;
 	}
-	
+
 	public static String getSimpleName(ContentStoreInfo info) {
 		Class<?> clazz = info.getDomainObjectClass();
-		return clazz != null ? clazz.getSimpleName() : stripStoreName(info.getImplementation(Store.class));
+		return clazz != null ? clazz.getSimpleName()
+				: stripStoreName(info.getImplementation(Store.class));
 	}
 
 	public static String stripStoreName(Store implementation) {

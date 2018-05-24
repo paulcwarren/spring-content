@@ -34,7 +34,7 @@ import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemCont
 import org.springframework.jmx.support.RegistrationPolicy;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class ContentFilesystemAutoConfigurationTest {
 
 	{
@@ -45,37 +45,45 @@ public class ContentFilesystemAutoConfigurationTest {
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+					assertThat(context.getBean(TestEntityContentRepository.class),
+							is(not(nullValue())));
 
 					context.close();
 				});
 			});
 
-			Context("given an environment specifying a filesystem root using spring prefix", () -> {
-				BeforeEach(() -> {
-					System.setProperty("spring.content.fs.filesystem-root", "${java.io.tmpdir}/UPPERCASE/NOTATION/");
-				});
-				AfterEach(() -> {
-					System.clearProperty("spring.content.fs.filesystem-root");
-				});
-				It("should have a filesystem properties bean with the correct root set", () -> {
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(TestConfig.class);
-					context.refresh();
+			Context("given an environment specifying a filesystem root using spring prefix",
+					() -> {
+						BeforeEach(() -> {
+							System.setProperty("spring.content.fs.filesystem-root",
+									"${java.io.tmpdir}/UPPERCASE/NOTATION/");
+						});
+						AfterEach(() -> {
+							System.clearProperty("spring.content.fs.filesystem-root");
+						});
+						It("should have a filesystem properties bean with the correct root set",
+								() -> {
+									AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+									context.register(TestConfig.class);
+									context.refresh();
 
-					assertThat(context.getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).getFilesystemRoot(), endsWith("/UPPERCASE/NOTATION/"));
+									assertThat(context.getBean(
+											FilesystemContentAutoConfiguration.FilesystemProperties.class)
+											.getFilesystemRoot(),
+											endsWith("/UPPERCASE/NOTATION/"));
 
-					context.close();
-				});
-			});
+									context.close();
+								});
+					});
 
-            Context("given a configuration that contributes a loader bean", () -> {
+			Context("given a configuration that contributes a loader bean", () -> {
 				It("should have that loader bean in the context", () -> {
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(ConfigWithLoaderBean.class);
 					context.refresh();
 
-					FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+					FileSystemResourceLoader loader = context
+							.getBean(FileSystemResourceLoader.class);
 					assertThat(loader.getFilesystemRoot(), is("/some/random/path/"));
 
 					context.close();
@@ -85,18 +93,17 @@ public class ContentFilesystemAutoConfigurationTest {
 		});
 	}
 
-
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
 	@Configuration
 	@AutoConfigurationPackage
 	@EnableAutoConfiguration
-	@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class ConfigWithLoaderBean {
 
 		@Bean
@@ -119,6 +126,7 @@ public class ContentFilesystemAutoConfigurationTest {
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

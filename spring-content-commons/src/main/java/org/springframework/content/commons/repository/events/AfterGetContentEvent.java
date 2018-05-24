@@ -9,7 +9,7 @@ public class AfterGetContentEvent extends StoreEvent {
 
 	private static final long serialVersionUID = -3209578443616933734L;
 
-	public AfterGetContentEvent(Object source, ContentStore<Object,Serializable> store) {
+	public AfterGetContentEvent(Object source, ContentStore<Object, Serializable> store) {
 		super(source, store);
 	}
 }

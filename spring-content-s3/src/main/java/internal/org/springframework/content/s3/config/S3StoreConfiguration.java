@@ -12,8 +12,9 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
 public class S3StoreConfiguration {
-	
-	@Autowired(required=false) private List<S3StoreConfigurer> configurers;
+
+	@Autowired(required = false)
+	private List<S3StoreConfigurer> configurers;
 
 	@Bean
 	public S3ObjectIdResolvers contentIdResolvers() {

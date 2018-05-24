@@ -17,7 +17,8 @@ import org.springframework.data.rest.core.annotation.RestResource;
 public class TestEntity2 {
 	public @Id @GeneratedValue Long id;
 	public @Content @Embedded TestEntityChild child;
-	public @RestResource @Content @ElementCollection(fetch=FetchType.EAGER) List<TestEntityChild> children = new ArrayList<>();
+	public @RestResource @Content @ElementCollection(fetch = FetchType.EAGER) List<TestEntityChild> children = new ArrayList<>();
+
 	public List<TestEntityChild> getChildren() {
 		return children;
 	}

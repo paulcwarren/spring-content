@@ -29,7 +29,8 @@ import org.springframework.core.io.WritableResource;
 
 import javax.annotation.PostConstruct;
 
-public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S,SID> {
+public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -37,8 +38,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 	private ConversionService conversion;
 	private FileService fileService;
 
-
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader,
+			ConversionService conversion, FileService fileService) {
 		this.loader = loader;
 		this.conversion = conversion;
 		this.fileService = fileService;
@@ -72,25 +73,33 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
 		Resource resource = getResourceInternal(id);
 		try {
-			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for %s", id.toString()), e);
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
+					resource.contentLength());
+		}
+		catch (IOException e) {
+			logger.error(String.format("Unexpected error setting content length for %s",
+					id.toString()), e);
 		}
 	}
-	
+
 	@Override
 	public void unassociate(S entity) {
-		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null, new Condition() {
-			@Override
-			public boolean matches(Field field) {
-				for (Annotation annotation : field.getAnnotations()) {
-					if ("javax.persistence.Id".equals(annotation.annotationType().getCanonicalName()) ||
-						"org.springframework.data.annotation.Id".equals(annotation.annotationType().getCanonicalName())) {
-						return false;
+		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null,
+				new Condition() {
+					@Override
+					public boolean matches(Field field) {
+						for (Annotation annotation : field.getAnnotations()) {
+							if ("javax.persistence.Id".equals(
+									annotation.annotationType().getCanonicalName())
+									|| "org.springframework.data.annotation.Id"
+											.equals(annotation.annotationType()
+													.getCanonicalName())) {
+								return false;
+							}
+						}
+						return true;
 					}
-				}
-				return true;
-			}});
+				});
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
@@ -99,31 +108,39 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Resource resource = getResource(property);
 		OutputStream os = null;
 		try {
-		    if (resource.exists() == false) {
-		        File resourceFile = resource.getFile();
-		        File parent = resourceFile.getParentFile();
-		        this.fileService.mkdirs(parent);
-            }
+			if (resource.exists() == false) {
+				File resourceFile = resource.getFile();
+				File parent = resourceFile.getParentFile();
+				this.fileService.mkdirs(parent);
+			}
 			if (resource instanceof WritableResource) {
-				os = ((WritableResource)resource).getOutputStream();
+				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content for resource %s", property.toString()), e);
-		} finally {
-	        try {
-	            if (os != null) {
-	                os.close();
-	            }
-	        } catch (IOException ioe) {
-	            // ignore
-	        }
 		}
-			
+		catch (IOException e) {
+			logger.error(String.format("Unexpected error setting content for resource %s",
+					property.toString()), e);
+		}
+		finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+			}
+			catch (IOException ioe) {
+				// ignore
+			}
+		}
+
 		try {
-			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, resource.contentLength());
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for content for resource %s", resource.toString()), e);
+			BeanUtils.setFieldWithAnnotation(property, ContentLength.class,
+					resource.contentLength());
+		}
+		catch (IOException e) {
+			logger.error(String.format(
+					"Unexpected error setting content length for content for resource %s",
+					resource.toString()), e);
 		}
 	}
 
@@ -136,15 +153,17 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 			return null;
 
 		Resource resource = getResourceInternal(contentId);
-		
+
 		try {
 			if (resource.exists()) {
 				return resource.getInputStream();
 			}
-		} catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content %s", contentId.toString()), e);
 		}
-		
+		catch (IOException e) {
+			logger.error(String.format("Unexpected error getting content %s",
+					contentId.toString()), e);
+		}
+
 		return null;
 	}
 
@@ -156,21 +175,25 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable> implements 
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return;
-	
-		// delete any existing content object	
+
+		// delete any existing content object
 		Resource resource = getResourceInternal(contentId);
 
 		if (resource.exists() && resource instanceof DeletableResource) {
-			((DeletableResource)resource).delete();
+			((DeletableResource) resource).delete();
 		}
 
 		// reset content fields
 		unassociate(property);
 	}
-	
+
 	private Object convertToExternalContentIdType(S property, Object contentId) {
-		if (conversion.canConvert(TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)))) {
-			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId), TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property, ContentId.class)));
+		if (conversion.canConvert(TypeDescriptor.forObject(contentId),
+				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
+						ContentId.class)))) {
+			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId),
+					TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
+							ContentId.class)));
 			return contentId;
 		}
 		return contentId.toString();

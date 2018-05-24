@@ -28,75 +28,90 @@ import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 
 public class StoreMethodInterceptor implements MethodInterceptor {
 
-	private Map<Method,StoreExtension> extensions;
+	private Map<Method, StoreExtension> extensions;
 	private ContentStore<Object, Serializable> store = null;
 	private ApplicationEventPublisher publisher;
-	
-	private static Method getContentMethod; 
-	private static Method setContentMethod; 
+
+	private static Method getContentMethod;
+	private static Method setContentMethod;
 	private static Method unsetContentMethod;
 	private static Method getResourceMethod;
 	private static Method associativeGetResourceMethod;
 	private static Method associateResourceMethod;
 	private static Method unassociateResourceMethod;
-    private Class<?> domainClass = null;
-    private Class<? extends Serializable> contentIdClass = null;
-	
+	private Class<?> domainClass = null;
+	private Class<? extends Serializable> contentIdClass = null;
+
 	static {
-		getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class);
+		getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent",
+				Object.class);
 		Assert.notNull(getContentMethod);
-		setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class);
+		setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent",
+				Object.class, InputStream.class);
 		Assert.notNull(setContentMethod);
-		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class);
+		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,
+				"unsetContent", Object.class);
 		Assert.notNull(unsetContentMethod);
-		getResourceMethod = ReflectionUtils.findMethod(Store.class, "getResource", Serializable.class);
+		getResourceMethod = ReflectionUtils.findMethod(Store.class, "getResource",
+				Serializable.class);
 		Assert.notNull(getResourceMethod);
-		associativeGetResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class, "getResource", Object.class);
+		associativeGetResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
+				"getResource", Object.class);
 		Assert.notNull(associativeGetResourceMethod);
-		associateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class, "associate", Object.class, Serializable.class);
+		associateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
+				"associate", Object.class, Serializable.class);
 		Assert.notNull(getResourceMethod);
-		unassociateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class, "unassociate", Object.class);
+		unassociateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
+				"unassociate", Object.class);
 		Assert.notNull(getResourceMethod);
 	}
-	
-	public StoreMethodInterceptor(ContentStore<Object, Serializable> store, Class<?> domainClass, Class<? extends Serializable> contentIdClass, Map<Method,StoreExtension> extensions, ApplicationEventPublisher publisher) {
+
+	public StoreMethodInterceptor(ContentStore<Object, Serializable> store,
+			Class<?> domainClass, Class<? extends Serializable> contentIdClass,
+			Map<Method, StoreExtension> extensions, ApplicationEventPublisher publisher) {
 		if (extensions == null) {
 			extensions = Collections.<Method, StoreExtension>emptyMap();
 		}
 		this.store = store;
-        this.domainClass = domainClass;
-        this.contentIdClass = contentIdClass;
+		this.domainClass = domainClass;
+		this.contentIdClass = contentIdClass;
 		this.extensions = extensions;
 		this.publisher = publisher;
 	}
-	
+
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Method method = invocation.getMethod();
 		StoreExtension extension = extensions.get(method);
 		if (extension != null) {
-			return extension.invoke(invocation, new StoreInvokerImpl(domainClass, contentIdClass, invocation));
-		} else {
+			return extension.invoke(invocation,
+					new StoreInvokerImpl(domainClass, contentIdClass, invocation));
+		}
+		else {
 			if (!isStoreMethod(invocation)) {
-				throw new StoreAccessException(String.format("No implementation found for %s", method.getName()));
+				throw new StoreAccessException(String
+						.format("No implementation found for %s", method.getName()));
 			}
 		}
-		
+
 		StoreEvent before = null;
 		StoreEvent after = null;
-		
+
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
 				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
 				after = new AfterGetContentEvent(invocation.getArguments()[0], store);
 			}
-		} else if (setContentMethod.equals(invocation.getMethod())) {
+		}
+		else if (setContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
 				before = new BeforeSetContentEvent(invocation.getArguments()[0], store);
 				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
-		} else if (unsetContentMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0 && invocation.getArguments()[0] != null) {
+		}
+		else if (unsetContentMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0
+					&& invocation.getArguments()[0] != null) {
 				before = new BeforeUnsetContentEvent(invocation.getArguments()[0], store);
 				after = new AfterUnsetContentEvent(invocation.getArguments()[0], store);
 			}
@@ -108,7 +123,8 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		Object result;
 		try {
 			result = invocation.proceed();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw e;
 		}
 
@@ -119,16 +135,15 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	}
 
 	private boolean isStoreMethod(MethodInvocation invocation) {
-		if (getContentMethod.equals(invocation.getMethod()) || 
-			setContentMethod.equals(invocation.getMethod()) || 
-			unsetContentMethod.equals(invocation.getMethod()) || 
-			getResourceMethod.equals(invocation.getMethod()) ||
-			associativeGetResourceMethod.equals(invocation.getMethod()) ||
-			associateResourceMethod.equals(invocation.getMethod()) ||
-			unassociateResourceMethod.equals(invocation.getMethod())) {
+		if (getContentMethod.equals(invocation.getMethod())
+				|| setContentMethod.equals(invocation.getMethod())
+				|| unsetContentMethod.equals(invocation.getMethod())
+				|| getResourceMethod.equals(invocation.getMethod())
+				|| associativeGetResourceMethod.equals(invocation.getMethod())
+				|| associateResourceMethod.equals(invocation.getMethod())
+				|| unassociateResourceMethod.equals(invocation.getMethod())) {
 			return true;
 		}
 		return false;
 	}
 }
-

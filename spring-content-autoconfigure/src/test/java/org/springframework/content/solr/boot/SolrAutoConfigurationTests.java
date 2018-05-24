@@ -32,41 +32,49 @@ import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConf
 public class SolrAutoConfigurationTests {
 
 	private AnnotationConfigApplicationContext context;
-	
+
 	{
 		Describe("solr", () -> {
-			Context("given an application context with a SolrClient bean and SolrAutoConfiguration", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(StarterTestConfig.class);
-					context.register(TestConfig.class);
-					context.refresh();
-				});
+			Context("given an application context with a SolrClient bean and SolrAutoConfiguration",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(StarterTestConfig.class);
+							context.register(TestConfig.class);
+							context.refresh();
+						});
 
-				It("should include the autoconfigured annotated event handler bean", () -> {
-					MatcherAssert.assertThat(context, CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(context.getBean("solrFulltextEventListener"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-				});
-			});
+						It("should include the autoconfigured annotated event handler bean",
+								() -> {
+									MatcherAssert.assertThat(context, CoreMatchers.is(
+											CoreMatchers.not(CoreMatchers.nullValue())));
+									MatcherAssert.assertThat(
+											context.getBean("solrFulltextEventListener"),
+											CoreMatchers.is(CoreMatchers
+													.not(CoreMatchers.nullValue())));
+								});
+					});
 		});
 	}
-	
+
 	@Test
 	public void test() {
 	}
 
 	@Configuration
-	public static class StarterTestConfig extends SolrAutoConfiguration{
+	public static class StarterTestConfig extends SolrAutoConfiguration {
 	}
-	
+
 	@Configuration
 	@ComponentScan(basePackageClasses = StarterTestConfig.class)
-	public static class TestConfig{
+	public static class TestConfig {
 
 		@Autowired
 		private SolrProperties props;
-		@Autowired private SolrClient solrClient;
-		@Autowired private ConversionService contentConversionService;
+		@Autowired
+		private SolrClient solrClient;
+		@Autowired
+		private ConversionService contentConversionService;
 
 		public TestConfig() {
 		}
@@ -78,9 +86,9 @@ public class SolrAutoConfigurationTests {
 
 		@Bean
 		public StoreExtension solrFulltextSearcher() {
-			return new SolrSearchContentRepositoryExtension(solrClient, new ReflectionServiceImpl(), contentConversionService, props);
+			return new SolrSearchContentRepositoryExtension(solrClient,
+					new ReflectionServiceImpl(), contentConversionService, props);
 		}
-
 
 	}
 }

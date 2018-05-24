@@ -37,247 +37,249 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(Ginkgo4jRunner.class)
-@PrepareForTest({GridFsTemplate.class, GridFSFile.class})
+@PrepareForTest({ GridFsTemplate.class, GridFSFile.class })
 public class GridFSResourceTest {
 
-    private GridFsStoreResource r;
+	private GridFsStoreResource r;
 
-    private String location;
-    private GridFsTemplate gridfs;
+	private String location;
+	private GridFsTemplate gridfs;
 
-    private GridFSFile file;
+	private GridFSFile file;
 
-    private Object rc;
+	private Object rc;
 
-    {
-        Describe("GridFsStoreResource", () -> {
-            BeforeEach(() -> {
-                location = "some-location";
-                gridfs = mock(GridFsTemplate.class);
-            });
-            JustBeforeEach(() -> {
-                r = new GridFsStoreResource(location, gridfs);
-            });
-            Describe("Resource", () -> {
-                Context("#contentLength", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSFile.class);
-                    });
-                    JustBeforeEach(() -> {
-                        rc = r.contentLength();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                        });
-                        It("should return the file's length", () -> {
-                            verify(file).getLength();
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            verify(file, never()).getLength();
-                            assertThat(rc, is(0L));
-                        });
-                    });
-                });
-                Context("#getFilename", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.getFilename();
-                    });
-                    It("should return the location", () -> {
-                        assertThat(rc, is("some-location"));
-                    });
-                });
-                Context("#getId", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSFile.class);
-                    });
-                    JustBeforeEach(() -> {
-                        rc = r.getId();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                        });
-                        It("should return the file's id", () -> {
-                            verify(file).getId();
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            verify(file, never()).getId();
-                            assertThat(rc, is(nullValue()));
-                        });
-                    });
-                });
-                Context("#getContentType", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSFile.class);
-                    });
-                    JustBeforeEach(() -> {
-                        rc = r.getContentType();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                        });
-                        It("should return the file's content type", () -> {
-                            verify(file).getContentType();
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            verify(file, never()).getContentType();
-                            assertThat(rc, is(nullValue()));
-                        });
-                    });
-                });
-                Context("#exists", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSFile.class);
-                    });
-                    JustBeforeEach(() -> {
-                        rc = r.exists();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                        });
-                        It("should return true", () -> {
-                            assertThat(rc, is(true));
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            assertThat(rc, is(false));
-                        });
-                    });
-                });
-                Context("#isOpen", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.isOpen();
-                    });
-                    It("should return true", () -> {
-                        assertThat(rc, is(true));
-                    });
-                });
-                Context("#getInputStream", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.getInputStream(); });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                            when(gridfs.getResource(location)).thenReturn(mock(GridFsResource.class));
-                        });
-                        It("should return the file's input stream", () -> {
-                            verify(gridfs).getResource(location);
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            verify(gridfs, never()).getResource(location);
-                            assertThat(rc, is(nullValue()));
-                        });
-                    });
-                });
-                Context("#getDescription", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.getDescription();
-                    });
-                    It("should return something", () -> {
-                        assertThat(rc, is(not(nullValue())));
-                    });
-                });
-                Context("#isReadable", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.isReadable();
-                    });
-                    It("should return true", () -> {
-                        assertThat(rc, is(true));
-                    });
-                });
-                Context("#lastModified", () -> {
-                    BeforeEach(() -> {
-                        file = mock(GridFSFile.class);
-                    });
-                    JustBeforeEach(() -> {
-                        rc = r.lastModified();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                            when(gridfs.findOne(anyObject())).thenReturn(file);
-                            when(file.getUploadDate()).thenReturn(new Date());
-                        });
-                        It("should return the file's input stream", () -> {
-                            verify(file).getUploadDate();
-                        });
-                    });
-                    Context("given the file doesn't exist", () -> {
-                        It("should return null", () -> {
-                            verify(file, never()).getUploadDate();
-                            assertThat(rc, is(-1L));
-                        });
-                    });
-                });
-            });
-            Describe("WritableResource", () -> {
-                Context("#isWritable", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.isWritable();
-                    });
-                    It("should return true", () -> {
-                        assertThat(rc, is(true));
-                    });
-                });
-                Context("getOutputStream", () -> {
-                    JustBeforeEach(() -> {
-                        rc = r.getOutputStream();
-                    });
-                    Context("when content is written", () -> {
-                        JustBeforeEach(() -> {
-                            ((OutputStream)rc).write(new byte[]{32}, 0, 1);
-                            IOUtils.closeQuietly((OutputStream)rc);
-                        });
-                        It("should store the content", () -> {
-                            verify(gridfs).store(any(InputStream.class), eq(location));
-                        });
-                        It("should delete existing content", () -> {
-                            verify(gridfs).delete(anyObject());
-                        });
-                    });
-                });
-            });
-            Describe("DeletableResource", () -> {
-                Context("#delete", () -> {
-                    JustBeforeEach(() -> {
-                        r.delete();
-                    });
-                    Context("given the file exists", () -> {
-                        BeforeEach(() -> {
-                            file = mock(GridFSFile.class);
-                        });
-                        Context("given the file exists", () -> {
-                            BeforeEach(() -> {
-                                when(gridfs.findOne(anyObject())).thenReturn(file);
-                            });
-                            It("should delete the file", () -> {
-                                verify(gridfs).delete(anyObject());
-                            });
-                        });
-                        Context("given the file doesn't exist", () -> {
-                            It("should return null", () -> {
-                                verify(gridfs, never()).delete(anyObject());
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    }
+	{
+		Describe("GridFsStoreResource", () -> {
+			BeforeEach(() -> {
+				location = "some-location";
+				gridfs = mock(GridFsTemplate.class);
+			});
+			JustBeforeEach(() -> {
+				r = new GridFsStoreResource(location, gridfs);
+			});
+			Describe("Resource", () -> {
+				Context("#contentLength", () -> {
+					BeforeEach(() -> {
+						file = mock(GridFSFile.class);
+					});
+					JustBeforeEach(() -> {
+						rc = r.contentLength();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+						});
+						It("should return the file's length", () -> {
+							verify(file).getLength();
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							verify(file, never()).getLength();
+							assertThat(rc, is(0L));
+						});
+					});
+				});
+				Context("#getFilename", () -> {
+					JustBeforeEach(() -> {
+						rc = r.getFilename();
+					});
+					It("should return the location", () -> {
+						assertThat(rc, is("some-location"));
+					});
+				});
+				Context("#getId", () -> {
+					BeforeEach(() -> {
+						file = mock(GridFSFile.class);
+					});
+					JustBeforeEach(() -> {
+						rc = r.getId();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+						});
+						It("should return the file's id", () -> {
+							verify(file).getId();
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							verify(file, never()).getId();
+							assertThat(rc, is(nullValue()));
+						});
+					});
+				});
+				Context("#getContentType", () -> {
+					BeforeEach(() -> {
+						file = mock(GridFSFile.class);
+					});
+					JustBeforeEach(() -> {
+						rc = r.getContentType();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+						});
+						It("should return the file's content type", () -> {
+							verify(file).getContentType();
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							verify(file, never()).getContentType();
+							assertThat(rc, is(nullValue()));
+						});
+					});
+				});
+				Context("#exists", () -> {
+					BeforeEach(() -> {
+						file = mock(GridFSFile.class);
+					});
+					JustBeforeEach(() -> {
+						rc = r.exists();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+						});
+						It("should return true", () -> {
+							assertThat(rc, is(true));
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							assertThat(rc, is(false));
+						});
+					});
+				});
+				Context("#isOpen", () -> {
+					JustBeforeEach(() -> {
+						rc = r.isOpen();
+					});
+					It("should return true", () -> {
+						assertThat(rc, is(true));
+					});
+				});
+				Context("#getInputStream", () -> {
+					JustBeforeEach(() -> {
+						rc = r.getInputStream();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+							when(gridfs.getResource(location))
+									.thenReturn(mock(GridFsResource.class));
+						});
+						It("should return the file's input stream", () -> {
+							verify(gridfs).getResource(location);
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							verify(gridfs, never()).getResource(location);
+							assertThat(rc, is(nullValue()));
+						});
+					});
+				});
+				Context("#getDescription", () -> {
+					JustBeforeEach(() -> {
+						rc = r.getDescription();
+					});
+					It("should return something", () -> {
+						assertThat(rc, is(not(nullValue())));
+					});
+				});
+				Context("#isReadable", () -> {
+					JustBeforeEach(() -> {
+						rc = r.isReadable();
+					});
+					It("should return true", () -> {
+						assertThat(rc, is(true));
+					});
+				});
+				Context("#lastModified", () -> {
+					BeforeEach(() -> {
+						file = mock(GridFSFile.class);
+					});
+					JustBeforeEach(() -> {
+						rc = r.lastModified();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+							when(gridfs.findOne(anyObject())).thenReturn(file);
+							when(file.getUploadDate()).thenReturn(new Date());
+						});
+						It("should return the file's input stream", () -> {
+							verify(file).getUploadDate();
+						});
+					});
+					Context("given the file doesn't exist", () -> {
+						It("should return null", () -> {
+							verify(file, never()).getUploadDate();
+							assertThat(rc, is(-1L));
+						});
+					});
+				});
+			});
+			Describe("WritableResource", () -> {
+				Context("#isWritable", () -> {
+					JustBeforeEach(() -> {
+						rc = r.isWritable();
+					});
+					It("should return true", () -> {
+						assertThat(rc, is(true));
+					});
+				});
+				Context("getOutputStream", () -> {
+					JustBeforeEach(() -> {
+						rc = r.getOutputStream();
+					});
+					Context("when content is written", () -> {
+						JustBeforeEach(() -> {
+							((OutputStream) rc).write(new byte[] { 32 }, 0, 1);
+							IOUtils.closeQuietly((OutputStream) rc);
+						});
+						It("should store the content", () -> {
+							verify(gridfs).store(any(InputStream.class), eq(location));
+						});
+						It("should delete existing content", () -> {
+							verify(gridfs).delete(anyObject());
+						});
+					});
+				});
+			});
+			Describe("DeletableResource", () -> {
+				Context("#delete", () -> {
+					JustBeforeEach(() -> {
+						r.delete();
+					});
+					Context("given the file exists", () -> {
+						BeforeEach(() -> {
+							file = mock(GridFSFile.class);
+						});
+						Context("given the file exists", () -> {
+							BeforeEach(() -> {
+								when(gridfs.findOne(anyObject())).thenReturn(file);
+							});
+							It("should delete the file", () -> {
+								verify(gridfs).delete(anyObject());
+							});
+						});
+						Context("given the file doesn't exist", () -> {
+							It("should return null", () -> {
+								verify(gridfs, never()).delete(anyObject());
+							});
+						});
+					});
+				});
+			});
+		});
+	}
 }

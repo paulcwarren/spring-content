@@ -22,53 +22,56 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 public class POIServiceTest {
 
-    private POIService poi;
+	private POIService poi;
 
-    private InputStream stream;
+	private InputStream stream;
 
-    {
-        Describe("POIService", () -> {
-            BeforeEach(() -> {
-                poi = new POIServiceImpl();
-            });
-            Context("#xwpfDocument", () -> {
-                Context("given an input stream", () -> {
-                    BeforeEach(()-> {
-                        stream = this.getClass().getResourceAsStream("/sample-docx.docx");
-                    });
-                    It("should return an instance of an XPWFDocument", () -> {
-                        assertThat(poi.xwpfDocument(stream), is(not(nullValue())));
-                    });
-                });
-                Context("given a null inputstream", () -> {
-                   It("should throw an exception", () -> {
-                       try {
-                           poi.xwpfDocument(stream);
-                           fail("no exception thrown");
-                       } catch (Exception e) {
-                           assertThat(e, is(not(nullValue())));
-                           assertThat(e, is(instanceOf(IllegalArgumentException.class)));
-                       }
-                   });
-                });
-                Context("given an invalid inputstream", () -> {
-                    BeforeEach(() -> {
-                        stream = new ByteArrayInputStream("".getBytes());
-                    });
-                    It("should throw an exception", () -> {
-                        try {
-                            poi.xwpfDocument(stream);
-                            fail("no exception thrown");
-                        } catch (Exception e) {
-                            assertThat(e, is(not(nullValue())));
-                            assertThat(e, is(instanceOf(NotOfficeXmlFileException.class)));
-                        }
-                    });
-                });
-            });
-        });
-    }
+	{
+		Describe("POIService", () -> {
+			BeforeEach(() -> {
+				poi = new POIServiceImpl();
+			});
+			Context("#xwpfDocument", () -> {
+				Context("given an input stream", () -> {
+					BeforeEach(() -> {
+						stream = this.getClass().getResourceAsStream("/sample-docx.docx");
+					});
+					It("should return an instance of an XPWFDocument", () -> {
+						assertThat(poi.xwpfDocument(stream), is(not(nullValue())));
+					});
+				});
+				Context("given a null inputstream", () -> {
+					It("should throw an exception", () -> {
+						try {
+							poi.xwpfDocument(stream);
+							fail("no exception thrown");
+						}
+						catch (Exception e) {
+							assertThat(e, is(not(nullValue())));
+							assertThat(e, is(instanceOf(IllegalArgumentException.class)));
+						}
+					});
+				});
+				Context("given an invalid inputstream", () -> {
+					BeforeEach(() -> {
+						stream = new ByteArrayInputStream("".getBytes());
+					});
+					It("should throw an exception", () -> {
+						try {
+							poi.xwpfDocument(stream);
+							fail("no exception thrown");
+						}
+						catch (Exception e) {
+							assertThat(e, is(not(nullValue())));
+							assertThat(e,
+									is(instanceOf(NotOfficeXmlFileException.class)));
+						}
+					});
+				});
+			});
+		});
+	}
 }

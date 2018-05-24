@@ -15,16 +15,18 @@ import java.util.List;
 @Configuration
 public class JpaStoreConfiguration {
 
-    @Autowired
-    private DataSource dataSource;
+	@Autowired
+	private DataSource dataSource;
 
-    @Bean
-    public DelegatingBlobResourceLoader blobResourceLoader(DataSource ds, List<BlobResourceLoader> loaders) {
-        return new DelegatingBlobResourceLoader(ds, loaders);
-    }
+	@Bean
+	public DelegatingBlobResourceLoader blobResourceLoader(DataSource ds,
+			List<BlobResourceLoader> loaders) {
+		return new DelegatingBlobResourceLoader(ds, loaders);
+	}
 
-    @Bean
-    public BlobResourceLoader genericBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
-        return new GenericBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
-    }
+	@Bean
+	public BlobResourceLoader genericBlobResourceLoader(DataSource ds,
+			PlatformTransactionManager txnMgr) {
+		return new GenericBlobResourceLoader(new JdbcTemplate(ds), txnMgr);
+	}
 }

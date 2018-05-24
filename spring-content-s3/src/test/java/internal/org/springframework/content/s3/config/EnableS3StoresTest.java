@@ -53,27 +53,30 @@ public class EnableS3StoresTest {
 	static S3StoreConfigurer configurer;
 	{
 		Describe("EnableS3Stores", () -> {
-			Context("given a context and a configuration with an S3 content repository bean", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(TestConfig.class);
-					context.refresh();
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-				It("should have a Content Repository bean", () -> {
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have an s3 store converter", () -> {
-					assertThat(context.getBean("s3StoreConverter"), is(not(nullValue())));
-				});
-			});
-			
+			Context("given a context and a configuration with an S3 content repository bean",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(TestConfig.class);
+							context.refresh();
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						It("should have a Content Repository bean", () -> {
+							assertThat(context.getBean(TestEntityContentRepository.class),
+									is(not(nullValue())));
+						});
+						It("should have an s3 store converter", () -> {
+							assertThat(context.getBean("s3StoreConverter"),
+									is(not(nullValue())));
+						});
+					});
+
 			Context("given a context with a configurer", () -> {
 				BeforeEach(() -> {
 					configurer = mock(S3StoreConfigurer.class);
-					
+
 					context = new AnnotationConfigApplicationContext();
 					context.register(ConverterConfig.class);
 					context.refresh();
@@ -100,40 +103,43 @@ public class EnableS3StoresTest {
 					try {
 						context.getBean(TestEntityContentRepository.class);
 						fail("expected no such bean");
-					} catch (NoSuchBeanDefinitionException e) {
+					}
+					catch (NoSuchBeanDefinitionException e) {
 						assertThat(true, is(true));
 					}
 				});
 			});
 		});
-		
+
 		Describe("EnableS3ContentRepositories", () -> {
-			Context("given a context and a configuration with an S3 content repository bean", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigApplicationContext();
-					context.register(EnableS3ContentRepositoriesConfig.class);
-					context.refresh();
-				});
-				AfterEach(() -> {
-					context.close();
-				});
-				It("should have a Content Repository bean", () -> {
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-				});
-				It("should have an s3 store converter", () -> {
-					assertThat(context.getBean("s3StoreConverter"), is(not(nullValue())));
-				});
-			});
+			Context("given a context and a configuration with an S3 content repository bean",
+					() -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(EnableS3ContentRepositoriesConfig.class);
+							context.refresh();
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						It("should have a Content Repository bean", () -> {
+							assertThat(context.getBean(TestEntityContentRepository.class),
+									is(not(nullValue())));
+						});
+						It("should have an s3 store converter", () -> {
+							assertThat(context.getBean("s3StoreConverter"),
+									is(not(nullValue())));
+						});
+					});
 		});
 	}
-
 
 	@Test
 	public void noop() {
 	}
 
 	@Configuration
-	@EnableS3Stores(basePackages="contains.no.fs.repositores")
+	@EnableS3Stores(basePackages = "contains.no.fs.repositores")
 	@Import(InfrastructureConfig.class)
 	public static class EmptyConfig {
 	}
@@ -143,7 +149,7 @@ public class EnableS3StoresTest {
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
 	}
-	
+
 	@Configuration
 	@EnableS3Stores
 	@Import(InfrastructureConfig.class)
@@ -163,14 +169,15 @@ public class EnableS3StoresTest {
 			return new S3StoreConfigurer() {
 
 				@Override
-				public void configureS3StoreConverters (ConverterRegistry registry){
+				public void configureS3StoreConverters(ConverterRegistry registry) {
 				}
 
 				@Override
-				public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers){
+				public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
 					resolvers.add(new S3ObjectIdResolver<S3ObjectId>() {
 						@Override
-						public String getBucket(S3ObjectId idOrEntity, String defaultBucketName) {
+						public String getBucket(S3ObjectId idOrEntity,
+								String defaultBucketName) {
 							return idOrEntity.getBucket();
 						}
 
@@ -192,14 +199,14 @@ public class EnableS3StoresTest {
 	@Import(InfrastructureConfig.class)
 	public static class EnableS3ContentRepositoriesConfig {
 	}
-	
+
 	@Configuration
 	public static class InfrastructureConfig {
 
 		public Region region() {
 			return Region.getRegion(Regions.US_WEST_1);
 		}
-		
+
 		@Bean
 		public AmazonS3 client() {
 			AmazonS3Client client = new AmazonS3Client();
@@ -219,6 +226,7 @@ public class EnableS3StoresTest {
 		private String contentId;
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

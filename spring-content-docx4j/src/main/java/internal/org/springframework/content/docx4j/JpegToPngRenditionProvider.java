@@ -19,7 +19,7 @@ public class JpegToPngRenditionProvider implements RenditionProvider {
 
 	@Override
 	public String[] produces() {
-		return new String[] {"image/png"};
+		return new String[] { "image/png" };
 	}
 
 	@Override
@@ -27,14 +27,16 @@ public class JpegToPngRenditionProvider implements RenditionProvider {
 		try {
 			// read a jpeg from a inputFile
 			BufferedImage bufferedImage = ImageIO.read(fromInputSource);
-	
+
 			// write the bufferedImage back to outputFile
 			ImageIO.write(bufferedImage, "png", new File("/tmp/temp.png"));
-	
+
 			return new FileInputStream("/tmp/temp.png");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
-		} finally {
+		}
+		finally {
 			IOUtils.closeQuietly(fromInputSource);
 		}
 		return null;

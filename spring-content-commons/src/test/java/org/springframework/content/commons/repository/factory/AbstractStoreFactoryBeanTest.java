@@ -17,56 +17,68 @@ import org.springframework.content.commons.repository.ContentStore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-@RunWith(Ginkgo4jRunner.class )
-@Ginkgo4jConfiguration(threads=1)
+@RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads = 1)
 public class AbstractStoreFactoryBeanTest {
 
-    {
-        Describe("AbstractContentStoreFactoryBean", () -> {
+	{
+		Describe("AbstractContentStoreFactoryBean", () -> {
 
-        	Context("#getDomainClass", () -> {
-                It("gets the domain class", () -> {
-                    TestContentStoreFactory factory = new TestContentStoreFactory();
-                    Class<?> domainClass = factory.getDomainClass(TestStore.class);
-                    assertThat(domainClass, is(equalTo(String.class)));
-                });
-                It("when ContentStore isn't the first extended interface it still get the domain type", () -> {
-                    TestContentStoreFactory factory = new TestContentStoreFactory();
-                    Class<?> domainClass = factory.getDomainClass(ContentStoreNotFirstIntefaceStore.class);
-                    assertThat(domainClass, is(equalTo(String.class)));
-                });
-            });
+			Context("#getDomainClass", () -> {
+				It("gets the domain class", () -> {
+					TestContentStoreFactory factory = new TestContentStoreFactory();
+					Class<?> domainClass = factory.getDomainClass(TestStore.class);
+					assertThat(domainClass, is(equalTo(String.class)));
+				});
+				It("when ContentStore isn't the first extended interface it still get the domain type",
+						() -> {
+							TestContentStoreFactory factory = new TestContentStoreFactory();
+							Class<?> domainClass = factory.getDomainClass(
+									ContentStoreNotFirstIntefaceStore.class);
+							assertThat(domainClass, is(equalTo(String.class)));
+						});
+			});
 
-            Context("#getContentIdClass", () -> {
-                It("gets the domain id", () -> {
-                    TestContentStoreFactory factory = new TestContentStoreFactory();
-                    Class<? extends Serializable> domainId = factory.getContentIdClass(TestStore.class);
-                    assertThat(domainId, is(equalTo(UUID.class)));
-                });
-            });
-        });
-    }
+			Context("#getContentIdClass", () -> {
+				It("gets the domain id", () -> {
+					TestContentStoreFactory factory = new TestContentStoreFactory();
+					Class<? extends Serializable> domainId = factory
+							.getContentIdClass(TestStore.class);
+					assertThat(domainId, is(equalTo(UUID.class)));
+				});
+			});
+		});
+	}
 
-    public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
-        @Override
-        protected Object getContentStoreImpl() {
-            return new TestConfigStoreImpl();
-        }
-    }
+	public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
+		@Override
+		protected Object getContentStoreImpl() {
+			return new TestConfigStoreImpl();
+		}
+	}
 
-    public static class TestConfigStoreImpl implements ContentStore<Object,Serializable> {
+	public static class TestConfigStoreImpl
+			implements ContentStore<Object, Serializable> {
 
-		@Override public void setContent(Object property, InputStream content) {}
+		@Override
+		public void setContent(Object property, InputStream content) {
+		}
 
-		@Override public void unsetContent(Object property) {}
+		@Override
+		public void unsetContent(Object property) {
+		}
 
-		@Override public InputStream getContent(Object property) { return null; }
+		@Override
+		public InputStream getContent(Object property) {
+			return null;
+		}
 
-    }
+	}
 
-    public interface TestStore extends ContentStore<String, UUID> {
-    }
+	public interface TestStore extends ContentStore<String, UUID> {
+	}
 
-    public interface ContentStoreNotFirstIntefaceStore extends Serializable, ContentStore<String, UUID> {
-    }
+	public interface ContentStoreNotFirstIntefaceStore
+			extends Serializable, ContentStore<String, UUID> {
+	}
 }

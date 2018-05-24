@@ -22,61 +22,67 @@ import static org.mockito.Mockito.*;
 @RunWith(Ginkgo4jRunner.class)
 public class DelegatingBlobResourceLoaderTest {
 
-    private DelegatingBlobResourceLoader service;
+	private DelegatingBlobResourceLoader service;
 
-    private DataSource ds;
-    private List<BlobResourceLoader> loaders;
+	private DataSource ds;
+	private List<BlobResourceLoader> loaders;
 
-    private BlobResourceLoader customLoader;
+	private BlobResourceLoader customLoader;
 
-    private JdbcTemplate template;
-    private PlatformTransactionManager txnMgr;
+	private JdbcTemplate template;
+	private PlatformTransactionManager txnMgr;
 
-    private Resource resource;
+	private Resource resource;
 
-    {
-        Describe("DelegatingBlobResourceLoader", ()->{
-            Context("#getResource", () -> {
-                JustBeforeEach(() -> {
-                    service = new DelegatingBlobResourceLoader(ds, loaders);
-                    resource = service.getResource("some-id");
-                });
-                Context("given a custom blob resource loader", () -> {
-                    BeforeEach(() -> {
-                        ds = mock(DataSource.class);
-                        Connection conn = mock(Connection.class);
-                        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
-                        when(ds.getConnection()).thenReturn(conn);
-                        when(conn.getMetaData()).thenReturn(metadata);
-                        when(metadata.getDatabaseProductName()).thenReturn("my-custom-db");
+	{
+		Describe("DelegatingBlobResourceLoader", () -> {
+			Context("#getResource", () -> {
+				JustBeforeEach(() -> {
+					service = new DelegatingBlobResourceLoader(ds, loaders);
+					resource = service.getResource("some-id");
+				});
+				Context("given a custom blob resource loader", () -> {
+					BeforeEach(() -> {
+						ds = mock(DataSource.class);
+						Connection conn = mock(Connection.class);
+						DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+						when(ds.getConnection()).thenReturn(conn);
+						when(conn.getMetaData()).thenReturn(metadata);
+						when(metadata.getDatabaseProductName())
+								.thenReturn("my-custom-db");
 
-                        customLoader = mock(BlobResourceLoader.class);
-                        when(customLoader.getDatabaseName()).thenReturn("my-custom-db");
+						customLoader = mock(BlobResourceLoader.class);
+						when(customLoader.getDatabaseName()).thenReturn("my-custom-db");
 
-                        loaders = new ArrayList<>();
-                        loaders.add(customLoader);
-                    });
-                    It("should return a PostgresBlobResource", () -> {
-                        verify(customLoader).getResource(anyObject());
-                    });
-                });
-                Context("given a datasource that doesn't have a matching blobresourceloader", () -> {
-                    BeforeEach(() -> {
-                        ds = mock(DataSource.class);
-                        Connection conn = mock(Connection.class);
-                        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
-                        when(ds.getConnection()).thenReturn(conn);
-                        when(conn.getMetaData()).thenReturn(metadata);
-                        when(metadata.getDatabaseProductName()).thenReturn("SomeOtherDatabase");
+						loaders = new ArrayList<>();
+						loaders.add(customLoader);
+					});
+					It("should return a PostgresBlobResource", () -> {
+						verify(customLoader).getResource(anyObject());
+					});
+				});
+				Context("given a datasource that doesn't have a matching blobresourceloader",
+						() -> {
+							BeforeEach(() -> {
+								ds = mock(DataSource.class);
+								Connection conn = mock(Connection.class);
+								DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+								when(ds.getConnection()).thenReturn(conn);
+								when(conn.getMetaData()).thenReturn(metadata);
+								when(metadata.getDatabaseProductName())
+										.thenReturn("SomeOtherDatabase");
 
-                        loaders = new ArrayList<>();
-                        loaders.add(new GenericBlobResourceLoader(mock(JdbcTemplate.class), mock(PlatformTransactionManager.class)));
-                    });
-                    It("should return a GenericBlobResource", () -> {
-                        assertThat(resource, instanceOf(GenericBlobResource.class));
-                    });
-                });
-            });
-        });
-    }
+								loaders = new ArrayList<>();
+								loaders.add(new GenericBlobResourceLoader(
+										mock(JdbcTemplate.class),
+										mock(PlatformTransactionManager.class)));
+							});
+							It("should return a GenericBlobResource", () -> {
+								assertThat(resource,
+										instanceOf(GenericBlobResource.class));
+							});
+						});
+			});
+		});
+	}
 }

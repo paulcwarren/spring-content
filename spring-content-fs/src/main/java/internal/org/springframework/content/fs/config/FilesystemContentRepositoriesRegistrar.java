@@ -14,5 +14,5 @@ public class FilesystemContentRepositoriesRegistrar extends FilesystemStoreRegis
 	protected Class<? extends Annotation> getAnnotation() {
 		return EnableFilesystemContentRepositories.class;
 	}
-	
+
 }

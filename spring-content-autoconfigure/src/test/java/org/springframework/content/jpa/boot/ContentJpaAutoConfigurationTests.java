@@ -41,7 +41,7 @@ public class ContentJpaAutoConfigurationTests {
 
 	private AnnotationConfigApplicationContext context;
 
-	//mocks
+	// mocks
 	private static ContentJpaDatabaseInitializer initializer;
 
 	{
@@ -59,17 +59,20 @@ public class ContentJpaAutoConfigurationTests {
 				context.close();
 			});
 			It("should have a content repository", () -> {
-				assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+				assertThat(context.getBean(TestEntityContentRepository.class),
+						is(not(nullValue())));
 			});
 			It("should have a database initializer", () -> {
-				assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(not(nullValue())));
+				assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
+						is(not(nullValue())));
 			});
 			Context("when a custom bean configuration is used", () -> {
 				BeforeEach(() -> {
 					context.register(CustomBeanConfig.class);
 				});
 				It("should use the supplied custom bean", () -> {
-					assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(initializer));
+					assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
+							is(initializer));
 				});
 			});
 		});
@@ -96,7 +99,8 @@ public class ContentJpaAutoConfigurationTests {
 
 			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 			factory.setJpaVendorAdapter(vendorAdapter);
-			factory.setPackagesToScan("examples");  	// Tell Hibernate where to find Entities
+			factory.setPackagesToScan("examples"); // Tell Hibernate where to find
+													// Entities
 			factory.setDataSource(dataSource());
 
 			return factory;
@@ -137,6 +141,7 @@ public class ContentJpaAutoConfigurationTests {
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

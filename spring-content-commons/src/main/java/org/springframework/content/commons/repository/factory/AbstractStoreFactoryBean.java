@@ -26,58 +26,74 @@ import org.springframework.util.Assert;
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
 public abstract class AbstractStoreFactoryBean
-	implements InitializingBean, FactoryBean<Store<? extends Serializable>>, BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
+		implements InitializingBean, FactoryBean<Store<? extends Serializable>>,
+		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
 
 	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
-	
+
 	private Class<? extends Store<Serializable>> storeInterface;
 	private ClassLoader classLoader;
 	private ApplicationEventPublisher publisher;
-	
+
 	private Store<? extends Serializable> store;
-	
-    @Autowired(required=false)
-    private Set<StoreExtension> extensions;
+
+	@Autowired(required = false)
+	private Set<StoreExtension> extensions;
 
 	@Autowired
 	public void setStoreInterface(Class<? extends Store<Serializable>> storeInterface) {
 		Assert.notNull(storeInterface);
 		this.storeInterface = storeInterface;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStoreInterface()
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#
+	 * getContentStoreInterface()
 	 */
 	public Class<?> getStoreInterface() {
 		return this.storeInterface;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#getContentStore()
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#
+	 * getContentStore()
 	 */
 	@SuppressWarnings("unchecked")
 	public Store<Serializable> getStore() {
 		return (Store<Serializable>) getObject();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang.ClassLoader)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang
+	 * .ClassLoader)
 	 */
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.context.ApplicationEventPublisherAware#setApplicationEventPublisher(org.springframework.context.ApplicationEventPublisher)
-	 */
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-		this.publisher = applicationEventPublisher;
-	}
-	
 	/*
 	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.context.ApplicationEventPublisherAware#
+	 * setApplicationEventPublisher(org.springframework.context.ApplicationEventPublisher)
+	 */
+	@Override
+	public void setApplicationEventPublisher(
+			ApplicationEventPublisher applicationEventPublisher) {
+		this.publisher = applicationEventPublisher;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	public Store<? extends Serializable> getObject() {
@@ -86,22 +102,27 @@ public abstract class AbstractStoreFactoryBean
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 	 */
 	@SuppressWarnings("unchecked")
 	public Class<? extends Store<? extends Serializable>> getObjectType() {
-		return (Class<? extends Store<? extends Serializable>>) (null == storeInterface ? Store.class : storeInterface);
+		return (Class<? extends Store<? extends Serializable>>) (null == storeInterface
+				? Store.class : storeInterface);
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
 	 */
 	public boolean isSingleton() {
 		return true;
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
 	@Override
@@ -123,65 +144,74 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class });
-		
+		result.setInterfaces(
+				new Class[] { storeInterface, Store.class, ContentStore.class });
+
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
-            for (StoreExtension extension : extensions) {
-                for (Method method : extension.getMethods()) {
-                    extensionsMap.put(method, extension);
-                }
-            }
-		} catch (Exception e) {
+			for (StoreExtension extension : extensions) {
+				for (Method method : extension.getMethods()) {
+					extensionsMap.put(method, extension);
+				}
+			}
+		}
+		catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-		StoreMethodInterceptor intercepter = new StoreMethodInterceptor((ContentStore<Object,Serializable>)target, 
-																								getDomainClass(storeInterface), 
-																								getContentIdClass(storeInterface), 
-																								extensionsMap, 
-																								publisher);
+		StoreMethodInterceptor intercepter = new StoreMethodInterceptor(
+				(ContentStore<Object, Serializable>) target,
+				getDomainClass(storeInterface), getContentIdClass(storeInterface),
+				extensionsMap, publisher);
 		result.addAdvice(intercepter);
 
-		return (Store<? extends Serializable>)result.getProxy(classLoader);
+		return (Store<? extends Serializable>) result.getProxy(classLoader);
 	}
 
-    protected Class<?> getDomainClass(Class<?> repositoryClass) {
-        return getStoreParameter(repositoryClass, 0);
-    }
+	protected Class<?> getDomainClass(Class<?> repositoryClass) {
+		return getStoreParameter(repositoryClass, 0);
+	}
 
-    protected Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
-        return (Class<? extends Serializable>) getStoreParameter(repositoryClass, 1);
-    }
+	protected Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
+		return (Class<? extends Serializable>) getStoreParameter(repositoryClass, 1);
+	}
 
-    private Class<?> getStoreParameter(Class<?> repositoryClass, int index) {
-        Class<?> clazz = null;
-        Type[] types = repositoryClass.getGenericInterfaces();
+	private Class<?> getStoreParameter(Class<?> repositoryClass, int index) {
+		Class<?> clazz = null;
+		Type[] types = repositoryClass.getGenericInterfaces();
 
-        for ( Type t : types ) {
-            if (t instanceof ParameterizedType) {
-                ParameterizedType pt = (ParameterizedType) t;
-				if (pt.getRawType().getTypeName().equals(Store.class.getCanonicalName())) {
+		for (Type t : types) {
+			if (t instanceof ParameterizedType) {
+				ParameterizedType pt = (ParameterizedType) t;
+				if (pt.getRawType().getTypeName()
+						.equals(Store.class.getCanonicalName())) {
 					types = pt.getActualTypeArguments();
 					if (types.length != 1) {
-						throw new IllegalStateException(String.format("Store class %s must have a contentId type", repositoryClass.getCanonicalName()));
+						throw new IllegalStateException(
+								String.format("Store class %s must have a contentId type",
+										repositoryClass.getCanonicalName()));
 					}
 					if (types[0] instanceof Class) {
 						clazz = (Class<?>) types[0];
 					}
-				} else if (pt.getRawType().getTypeName().equals(AssociativeStore.class.getCanonicalName()) ||
-						pt.getRawType().getTypeName().equals(ContentStore.class.getCanonicalName())) {
-                    types = pt.getActualTypeArguments();
-                    if (types.length != 2) {
-                        throw new IllegalStateException(String.format("ContentRepository class %s must have domain and contentId types", repositoryClass.getCanonicalName()));
-                    }
-                    if (types[index] instanceof Class) {
-                        clazz = (Class<?>) types[index];
-                    }
-                }
-            }
-        }
-        return clazz;
-    }
+				}
+				else if (pt.getRawType().getTypeName()
+						.equals(AssociativeStore.class.getCanonicalName())
+						|| pt.getRawType().getTypeName()
+								.equals(ContentStore.class.getCanonicalName())) {
+					types = pt.getActualTypeArguments();
+					if (types.length != 2) {
+						throw new IllegalStateException(String.format(
+								"ContentRepository class %s must have domain and contentId types",
+								repositoryClass.getCanonicalName()));
+					}
+					if (types[index] instanceof Class) {
+						clazz = (Class<?>) types[index];
+					}
+				}
+			}
+		}
+		return clazz;
+	}
 
 	protected abstract Object getContentStoreImpl();
 }

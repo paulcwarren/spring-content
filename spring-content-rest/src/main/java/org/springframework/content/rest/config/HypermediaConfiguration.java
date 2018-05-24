@@ -11,8 +11,9 @@ import internal.org.springframework.content.rest.links.ContentLinksResourceProce
 @Configuration
 public class HypermediaConfiguration {
 
-	@Bean 
-	public ResourceProcessor<PersistentEntityResource> contentLinksProcessor(ContentStoreService stores) {
-        return new ContentLinksResourceProcessor(stores);
-    }
+	@Bean
+	public ResourceProcessor<PersistentEntityResource> contentLinksProcessor(
+			ContentStoreService stores) {
+		return new ContentLinksResourceProcessor(stores);
+	}
 }

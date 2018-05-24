@@ -9,8 +9,10 @@ import internal.org.springframework.content.mongo.repository.DefaultMongoStoreIm
 
 public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 
-	@Autowired private GridFsTemplate gridFs;
-	@Autowired private ConversionService mongoStoreConverter;
+	@Autowired
+	private GridFsTemplate gridFs;
+	@Autowired
+	private ConversionService mongoStoreConverter;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {

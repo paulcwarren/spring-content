@@ -17,21 +17,23 @@ import javax.sql.DataSource;
 
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
-@ConditionalOnClass({DataSource.class, JpaStoresRegistrar.class})
-@Import({JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class})
+@ConditionalOnClass({ DataSource.class, JpaStoresRegistrar.class })
+@Import({ JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class })
 @EnableConfigurationProperties(ContentJpaProperties.class)
 public class JpaContentAutoConfiguration {
 
-    private final ContentJpaProperties properties;
+	private final ContentJpaProperties properties;
 
-    public JpaContentAutoConfiguration(ContentJpaProperties properties) {
-        this.properties = properties;
-    }
+	public JpaContentAutoConfiguration(ContentJpaProperties properties) {
+		this.properties = properties;
+	}
 
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(DataSource.class)
-    public ContentJpaDatabaseInitializer databaseInitializer(DataSource dataSource, ResourceLoader resourceLoader) {
-        return new ContentJpaDatabaseInitializer(dataSource, resourceLoader, this.properties);
-    }
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnBean(DataSource.class)
+	public ContentJpaDatabaseInitializer databaseInitializer(DataSource dataSource,
+			ResourceLoader resourceLoader) {
+		return new ContentJpaDatabaseInitializer(dataSource, resourceLoader,
+				this.properties);
+	}
 }

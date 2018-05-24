@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnClass(AmazonS3Client.class)
-@Import({S3StoreConfiguration.class, S3ContentAutoConfigureRegistrar.class})
+@Import({ S3StoreConfiguration.class, S3ContentAutoConfigureRegistrar.class })
 public class S3ContentAutoConfiguration {
 
 	@Bean

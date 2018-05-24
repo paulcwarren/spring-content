@@ -6,11 +6,11 @@ public class ContentPropertyUtils {
 
 	public static Class<?> getContentPropertyType(PersistentProperty<?> prop) {
 		Class<?> contentEntityClass = null;
-		
+
 		// null single-valued content property
 		if (!PersistentEntityUtils.isPropertyMultiValued(prop)) {
 			contentEntityClass = prop.getActualType();
-		} 
+		}
 		// null multi-valued content property
 		else if (PersistentEntityUtils.isPropertyMultiValued(prop)) {
 			if (prop.isArray()) {
@@ -20,10 +20,11 @@ public class ContentPropertyUtils {
 				contentEntityClass = prop.getActualType();
 			}
 		}
-		
+
 		return contentEntityClass;
 	}
-	
-	private ContentPropertyUtils() {}
-	
+
+	private ContentPropertyUtils() {
+	}
+
 }

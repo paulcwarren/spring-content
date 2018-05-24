@@ -33,196 +33,214 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
-
 @RunWith(Ginkgo4jRunner.class)
 public class GenericBlobResourceTest {
 
-    private GenericBlobResource resource;
+	private GenericBlobResource resource;
 
-    private String id;
-    private JdbcTemplate template;
-    private PlatformTransactionManager txnMgr;
+	private String id;
+	private JdbcTemplate template;
+	private PlatformTransactionManager txnMgr;
 
-    private DataSource ds;
-    private Connection conn;
-    private Statement statement;
-    private PreparedStatement preparedStatement;
-    private ResultSet rs;
+	private DataSource ds;
+	private Connection conn;
+	private Statement statement;
+	private PreparedStatement preparedStatement;
+	private ResultSet rs;
 
-    private InputStream in;
+	private InputStream in;
 
-    private Object result;
+	private Object result;
 
+	{
+		Describe("GenericBlobResource", () -> {
+			BeforeEach(() -> {
+				ds = mock(DataSource.class);
+				template = new JdbcTemplate(ds);
+				txnMgr = new DataSourceTransactionManager(ds);
+			});
+			Context("#exists", () -> {
+				BeforeEach(() -> {
+					conn = mock(Connection.class);
+					statement = mock(Statement.class);
+					rs = mock(ResultSet.class);
 
-    {
-        Describe("GenericBlobResource", () -> {
-            BeforeEach(() -> {
-                ds = mock(DataSource.class);
-                template = new JdbcTemplate(ds);
-                txnMgr = new DataSourceTransactionManager(ds);
-            });
-            Context("#exists", () -> {
-                BeforeEach(() -> {
-                    conn = mock(Connection.class);
-                    statement = mock(Statement.class);
-                    rs = mock(ResultSet.class);
+					when(ds.getConnection()).thenReturn(conn);
+					when(conn.createStatement()).thenReturn(statement);
+					when(statement.executeQuery(anyObject())).thenReturn(rs);
+				});
+				JustBeforeEach(() -> {
+					resource = new GenericBlobResource(id, template, txnMgr);
+					result = resource.exists();
+				});
+				Context("given the blob exists in the database", () -> {
+					BeforeEach(() -> {
+						when(rs.next()).thenReturn(true);
+						when(rs.getInt(1)).thenReturn(1);
+					});
+					It("should return true", () -> {
+						assertThat(result, is(true));
+					});
+				});
+				Context("given the blob does not exist in the database", () -> {
+					BeforeEach(() -> {
+						when(rs.next()).thenReturn(true);
+						when(rs.getInt(1)).thenReturn(0);
+					});
+					It("should return false", () -> {
+						assertThat(result, is(false));
+					});
+				});
+				Context("given no blobs exist in the database", () -> {
+					BeforeEach(() -> {
+						when(rs.next()).thenReturn(false);
+					});
+					It("should return false", () -> {
+						assertThat(result, is(false));
+					});
+				});
+			});
+			Context("#getInputStream", () -> {
+				BeforeEach(() -> {
+					conn = mock(Connection.class);
+					statement = mock(Statement.class);
+					rs = mock(ResultSet.class);
 
-                    when(ds.getConnection()).thenReturn(conn);
-                    when(conn.createStatement()).thenReturn(statement);
-                    when(statement.executeQuery(anyObject())).thenReturn(rs);
-                });
-                JustBeforeEach(() -> {
-                    resource = new GenericBlobResource(id, template, txnMgr);
-                    result = resource.exists();
-                });
-                Context("given the blob exists in the database", () -> {
-                    BeforeEach(() -> {
-                        when(rs.next()).thenReturn(true);
-                        when(rs.getInt(1)).thenReturn(1);
-                    });
-                    It("should return true", () -> {
-                        assertThat(result, is(true));
-                    });
-                });
-                Context("given the blob does not exist in the database", () -> {
-                    BeforeEach(() -> {
-                        when(rs.next()).thenReturn(true);
-                        when(rs.getInt(1)).thenReturn(0);
-                    });
-                    It("should return false", () -> {
-                        assertThat(result, is(false));
-                    });
-                });
-                Context("given no blobs exist in the database", () -> {
-                    BeforeEach(() -> {
-                        when(rs.next()).thenReturn(false);
-                    });
-                    It("should return false", () -> {
-                        assertThat(result, is(false));
-                    });
-                });
-            });
-            Context("#getInputStream", () -> {
-                BeforeEach(() -> {
-                    conn = mock(Connection.class);
-                    statement = mock(Statement.class);
-                    rs = mock(ResultSet.class);
+					when(ds.getConnection()).thenReturn(conn);
+					when(conn.createStatement()).thenReturn(statement);
+					when(statement.executeQuery(anyObject())).thenReturn(rs);
+				});
+				JustBeforeEach(() -> {
+					resource = new GenericBlobResource(id, template, txnMgr);
+					result = resource.getInputStream();
+				});
+				Context("given the blob exists in the database", () -> {
+					BeforeEach(() -> {
+						when(rs.next()).thenReturn(true);
+						when(rs.getBinaryStream(1)).thenReturn(new ByteArrayInputStream(
+								"Hello Spring Content PostgreSQL BLOBby world!"
+										.getBytes()));
+					});
+					It("should be an ObservableInputStream with a file remover", () -> {
+						assertThat(result, instanceOf(
+								AbstractBlobResource.ClosingInputStream.class));
+					});
+					It("should return the correct content", () -> {
+						InputStream expected = null;
+						try {
+							expected = new ByteArrayInputStream(
+									"Hello Spring Content PostgreSQL BLOBby world!"
+											.getBytes());
+							assertThat(
+									IOUtils.contentEquals(expected, (InputStream) result),
+									is(true));
+						}
+						finally {
+							IOUtils.closeQuietly(expected);
+							IOUtils.closeQuietly((InputStream) result);
+						}
+					});
+				});
+				Context("given the blob does not exist in the database", () -> {
+					BeforeEach(() -> {
+						when(rs.next()).thenReturn(false);
+					});
+					It("should return false", () -> {
+						assertThat(result, is(nullValue()));
+					});
+				});
+			});
+			Context("#getOutputStream", () -> {
+				BeforeEach(() -> {
+					conn = mock(Connection.class);
+					statement = mock(Statement.class);
+					rs = mock(ResultSet.class);
 
-                    when(ds.getConnection()).thenReturn(conn);
-                    when(conn.createStatement()).thenReturn(statement);
-                    when(statement.executeQuery(anyObject())).thenReturn(rs);
-                });
-                JustBeforeEach(() -> {
-                    resource = new GenericBlobResource(id, template, txnMgr);
-                    result = resource.getInputStream();
-                });
-                Context("given the blob exists in the database", () -> {
-                    BeforeEach(() -> {
-                        when(rs.next()).thenReturn(true);
-                        when(rs.getBinaryStream(1)).thenReturn(new ByteArrayInputStream("Hello Spring Content PostgreSQL BLOBby world!".getBytes()));
-                    });
-                    It("should be an ObservableInputStream with a file remover", () -> {
-                        assertThat(result, instanceOf(AbstractBlobResource.ClosingInputStream.class));
-                    });
-                    It("should return the correct content", () -> {
-                        InputStream expected = null;
-                        try {
-                            expected = new ByteArrayInputStream("Hello Spring Content PostgreSQL BLOBby world!".getBytes());
-                            assertThat(IOUtils.contentEquals(expected, (InputStream) result), is(true));
-                        } finally {
-                            IOUtils.closeQuietly(expected);
-                            IOUtils.closeQuietly((InputStream)result);
-                        }
-                    });
-                });
-                Context("given the blob does not exist in the database", () -> {
-                    BeforeEach(() -> {
-                        when(rs.next()).thenReturn(false);
-                    });
-                    It("should return false", () -> {
-                        assertThat(result, is(nullValue()));
-                    });
-                });
-            });
-            Context("#getOutputStream", () -> {
-                BeforeEach(() -> {
-                    conn = mock(Connection.class);
-                    statement = mock(Statement.class);
-                    rs = mock(ResultSet.class);
+					when(ds.getConnection()).thenReturn(conn);
+					when(conn.createStatement()).thenReturn(statement);
+					when(statement.executeQuery(anyObject())).thenReturn(rs);
+				});
+				JustBeforeEach(() -> {
+					id = "999";
+					resource = new GenericBlobResource(id, template, txnMgr);
+					result = resource.getOutputStream();
+				});
+				Context("given the blob exists in the database", () -> {
+					BeforeEach(() -> {
+						// exists
+						when(rs.next()).thenReturn(true);
+						when(rs.getInt(1)).thenReturn(1);
 
-                    when(ds.getConnection()).thenReturn(conn);
-                    when(conn.createStatement()).thenReturn(statement);
-                    when(statement.executeQuery(anyObject())).thenReturn(rs);
-                });
-                JustBeforeEach(() -> {
-                    id = "999";
-                    resource = new GenericBlobResource(id, template, txnMgr);
-                    result = resource.getOutputStream();
-                });
-                Context("given the blob exists in the database", () -> {
-                    BeforeEach(() -> {
-                        // exists
-                        when(rs.next()).thenReturn(true);
-                        when(rs.getInt(1)).thenReturn(1);
+						in = new ByteArrayInputStream(
+								"Hello Spring Content JPA PostreSQL World!".getBytes());
 
-                        in = new ByteArrayInputStream("Hello Spring Content JPA PostreSQL World!".getBytes());
+						// update
+						preparedStatement = mock(PreparedStatement.class);
+						when(conn.prepareStatement(anyString()))
+								.thenReturn(preparedStatement);
+					});
+					JustBeforeEach(() -> {
+						IOUtils.copy(in, (OutputStream) result);
 
-                        // update
-                        preparedStatement = mock(PreparedStatement.class);
-                        when(conn.prepareStatement(anyString())).thenReturn(preparedStatement);
-                    });
-                    JustBeforeEach(() ->{
-                        IOUtils.copy(in, (OutputStream)result);
+						IOUtils.closeQuietly(in);
+						IOUtils.closeQuietly((OutputStream) result);
+					});
+					It("should use update to overwrite the content", () -> {
+						verify(conn, timeout(100)).prepareStatement(
+								argThat(containsString("UPDATE BLOBS")));
 
-                        IOUtils.closeQuietly(in);
-                        IOUtils.closeQuietly((OutputStream)result);
-                    });
-                    It("should use update to overwrite the content", () -> {
-                        verify(conn, timeout(100)).prepareStatement(argThat(containsString("UPDATE BLOBS")));
+						verify(preparedStatement, timeout(100)).setBinaryStream(eq(1),
+								argThat(is(instanceOf(InputStream.class))));
+						verify(preparedStatement, timeout(100)).setString(2, "999");
+						verify(preparedStatement, timeout(100)).executeUpdate();
+					});
+				});
+				Context("given the blob does not exist in the database", () -> {
+					BeforeEach(() -> {
+						// exists
+						when(rs.next()).thenReturn(true);
+						when(rs.getInt(1)).thenReturn(0);
 
-                        verify(preparedStatement, timeout(100)).setBinaryStream(eq(1), argThat(is(instanceOf(InputStream.class))));
-                        verify(preparedStatement, timeout(100)).setString(2, "999");
-                        verify(preparedStatement, timeout(100)).executeUpdate();
-                    });
-                });
-                Context("given the blob does not exist in the database", () -> {
-                    BeforeEach(() -> {
-                        // exists
-                        when(rs.next()).thenReturn(true);
-                        when(rs.getInt(1)).thenReturn(0);
+						in = new ByteArrayInputStream(
+								"Hello Spring Content JPA PostgreSQL World!".getBytes());
 
-                        in = new ByteArrayInputStream("Hello Spring Content JPA PostgreSQL World!".getBytes());
+						// insert
+						preparedStatement = mock(PreparedStatement.class);
+						when(conn.prepareStatement(anyString(), anyInt()))
+								.thenReturn(preparedStatement);
 
-                        // insert
-                        preparedStatement = mock(PreparedStatement.class);
-                        when(conn.prepareStatement(anyString(), anyInt())).thenReturn(preparedStatement);
+						// generated keys
+						ResultSet generatedKeys = mock(ResultSet.class);
+						when(preparedStatement.getGeneratedKeys())
+								.thenReturn(generatedKeys);
+					});
+					JustBeforeEach(() -> {
+						IOUtils.copy(in, (OutputStream) result);
 
-                        // generated keys
-                        ResultSet generatedKeys = mock(ResultSet.class);
-                        when(preparedStatement.getGeneratedKeys()).thenReturn(generatedKeys);
-                    });
-                    JustBeforeEach(() ->{
-                        IOUtils.copy(in, (OutputStream)result);
+						IOUtils.closeQuietly(in);
+						IOUtils.closeQuietly((OutputStream) result);
+					});
+					It("should use insert to add the content", () -> {
+						verify(conn, timeout(100)).prepareStatement(
+								argThat(containsString("INSERT INTO BLOBS")),
+								eq(Statement.RETURN_GENERATED_KEYS));
+						verify(preparedStatement, timeout(100)).setString(eq(1),
+								argThat(is("999")));
+						verify(preparedStatement, timeout(100)).setBinaryStream(eq(2),
+								argThat(is(instanceOf(InputStream.class))));
+						verify(preparedStatement, timeout(100)).executeUpdate();
 
-                        IOUtils.closeQuietly(in);
-                        IOUtils.closeQuietly((OutputStream)result);
-                    });
-                    It("should use insert to add the content", () -> {
-                        verify(conn, timeout(100)).prepareStatement(argThat(containsString("INSERT INTO BLOBS")), eq(Statement.RETURN_GENERATED_KEYS));
-                        verify(preparedStatement, timeout(100)).setString(eq(1), argThat(is("999")));
-                        verify(preparedStatement, timeout(100)).setBinaryStream(eq(2), argThat(is(instanceOf(InputStream.class))));
-                        verify(preparedStatement, timeout(100)).executeUpdate();
-
-                        assertThat(resource.getId(), is("999"));
-                    });
-                    It("should update the ID of the resource from the ID returned by the database", () -> {
-                        while (resource.getId().equals("999") == false) {
-                            Thread.sleep(100);
-                        }
-                        assertThat(resource.getId(), is("999"));
-                    });
-                });
-            });
-        });
-    }
+						assertThat(resource.getId(), is("999"));
+					});
+					It("should update the ID of the resource from the ID returned by the database",
+							() -> {
+								while (resource.getId().equals("999") == false) {
+									Thread.sleep(100);
+								}
+								assertThat(resource.getId(), is("999"));
+							});
+				});
+			});
+		});
+	}
 }

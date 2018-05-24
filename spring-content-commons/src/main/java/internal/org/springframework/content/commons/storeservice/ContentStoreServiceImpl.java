@@ -18,31 +18,40 @@ import org.springframework.content.commons.storeservice.StoreFilter;
 public class ContentStoreServiceImpl implements ContentStoreService {
 
 	private Set<ContentStoreInfo> contentStoreInfos = new HashSet<>();
-	
+
 	public ContentStoreServiceImpl() {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Autowired(required=false)
-	public void setFactories(List<StoreFactory> factories){
+	@Autowired(required = false)
+	public void setFactories(List<StoreFactory> factories) {
 		for (StoreFactory factory : factories) {
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
-				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), (ContentStore<Object,Serializable>)factory.getStore());
+				ContentStoreInfo info = new ContentStoreInfoImpl(
+						factory.getStoreInterface(),
+						getDomainObjectClass(factory.getStoreInterface()),
+						(ContentStore<Object, Serializable>) factory.getStore());
 				contentStoreInfos.add(info);
-			} else {
-				ContentStoreInfo info = new ContentStoreInfoImpl(factory.getStoreInterface(), getDomainObjectClass(factory.getStoreInterface()), (Store<Serializable>)factory.getStore());
+			}
+			else {
+				ContentStoreInfo info = new ContentStoreInfoImpl(
+						factory.getStoreInterface(),
+						getDomainObjectClass(factory.getStoreInterface()),
+						(Store<Serializable>) factory.getStore());
 				contentStoreInfos.add(info);
 			}
 		}
 	}
-	
+
 	private Class<?> getDomainObjectClass(Class<?> contentStoreInterface) {
 		Type[] genericInterfaces = contentStoreInterface.getGenericInterfaces();
 		for (Type genericInterface : genericInterfaces) {
 			if (genericInterface instanceof ParameterizedType) {
-				if (((ParameterizedType)genericInterface).getRawType().equals(ContentStore.class)) {
-					Type t = ((ParameterizedType)genericInterface).getActualTypeArguments()[0];
-					return (Class<?>)t;
+				if (((ParameterizedType) genericInterface).getRawType()
+						.equals(ContentStore.class)) {
+					Type t = ((ParameterizedType) genericInterface)
+							.getActualTypeArguments()[0];
+					return (Class<?>) t;
 				}
 			}
 		}
@@ -65,7 +74,7 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	public ContentStoreInfo[] getStores(Class<?> storeType) {
 		return this.getStores(storeType, MATCH_ALL);
 	}
-	
+
 	@Override
 	public ContentStoreInfo[] getStores(Class<?> storeType, StoreFilter filter) {
 		Set<ContentStoreInfo> storeInfos = new HashSet<>();

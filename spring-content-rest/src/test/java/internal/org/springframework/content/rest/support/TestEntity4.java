@@ -19,33 +19,43 @@ public class TestEntity4 {
 	public @ContentId UUID contentId;
 	public @ContentLength Long len;
 	public @MimeType String mimeType;
+
 	public Long getId() {
 		return id;
 	}
+
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public UUID getContentId() {
 		return contentId;
 	}
+
 	public void setContentId(UUID contentId) {
 		this.contentId = contentId;
 	}
+
 	public Long getLen() {
 		return len;
 	}
+
 	public void setLen(Long len) {
 		this.len = len;
 	}
+
 	public String getMimeType() {
 		return mimeType;
 	}
+
 	public void setMimeType(String mimeType) {
 		this.mimeType = mimeType;
 	}

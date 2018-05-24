@@ -6,8 +6,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 public class GenericBlobResource extends AbstractBlobResource {
 
-    public GenericBlobResource(Object id, JdbcTemplate template, PlatformTransactionManager txnMgr) {
-        super(id, template, txnMgr);
-    }
+	public GenericBlobResource(Object id, JdbcTemplate template,
+			PlatformTransactionManager txnMgr) {
+		super(id, template, txnMgr);
+	}
 
 }

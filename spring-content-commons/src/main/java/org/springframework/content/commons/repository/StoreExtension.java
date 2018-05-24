@@ -7,5 +7,6 @@ import org.aopalliance.intercept.MethodInvocation;
 
 public interface StoreExtension {
 	Set<Method> getMethods();
+
 	Object invoke(MethodInvocation invocation, StoreInvoker invoker);
 }

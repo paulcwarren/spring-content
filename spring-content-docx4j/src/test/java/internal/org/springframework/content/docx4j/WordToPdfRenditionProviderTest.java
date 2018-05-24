@@ -20,25 +20,28 @@ import internal.org.springframework.content.docx4j.WordToPdfRenditionProvider;
 public class WordToPdfRenditionProviderTest {
 
 	private RenditionProvider service;
-	
+
 	@Before
 	public void setUp() {
 		service = new WordToPdfRenditionProvider();
 	}
-	
+
 	@Test
 	public void testCanConvert() {
-		assertThat(service.consumes(), is("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+		assertThat(service.consumes(), is(
+				"application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
 		assertThat(Arrays.asList(service.produces()), hasItems("application/pdf"));
 	}
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"), 
-												"application/pdf");
+		InputStream converted = service.convert(
+				this.getClass().getResourceAsStream("/sample-docx2.docx"),
+				"application/pdf");
 
 		String content = pdfToText(converted);
-		assertThat(content, is("This is the Document Title\n \nand this is the document body.\n \n \n"));
+		assertThat(content, is(
+				"This is the Document Title\n \nand this is the document body.\n \n \n"));
 	}
 
 	private String pdfToText(InputStream in) {
@@ -55,14 +58,16 @@ public class WordToPdfRenditionProviderTest {
 			pdDoc = new PDDocument(cosDoc);
 			return pdfStripper.getText(pdDoc);
 			// System.out.println(parsedText.replaceAll("[^A-Za-z0-9. ]+", ""));
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			try {
 				if (cosDoc != null)
 					cosDoc.close();
 				if (pdDoc != null)
 					pdDoc.close();
-			} catch (Exception e1) {
+			}
+			catch (Exception e1) {
 				e.printStackTrace();
 			}
 		}

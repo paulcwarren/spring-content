@@ -9,6 +9,7 @@ public interface AssociativeStore<S, SID extends Serializable> extends Store<SID
 	Resource getResource(S entity);
 
 	void associate(S entity, SID id);
+
 	void unassociate(S entity);
 
 }

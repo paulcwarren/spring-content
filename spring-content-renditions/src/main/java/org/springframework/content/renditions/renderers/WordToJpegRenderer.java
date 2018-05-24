@@ -18,49 +18,55 @@ import java.io.InputStream;
 @Service
 public class WordToJpegRenderer implements RenditionProvider {
 
-    private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
+	private static Log logger = LogFactory.getLog(WordToJpegRenderer.class);
 
-    private POIService poi = null;
+	private POIService poi = null;
 
-    public WordToJpegRenderer() {
-        poi = new POIServiceImpl();
-    };
+	public WordToJpegRenderer() {
+		poi = new POIServiceImpl();
+	};
 
-    public WordToJpegRenderer(POIService poi) {
-        this.poi = poi;
-    }
+	public WordToJpegRenderer(POIService poi) {
+		this.poi = poi;
+	}
 
-    @Override
-    public String consumes() {
-        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    }
+	@Override
+	public String consumes() {
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	}
 
-    @Override
-    public String[] produces() {
-        return new String[] {"image/jpg"};
-    }
+	@Override
+	public String[] produces() {
+		return new String[] { "image/jpg" };
+	}
 
-    @SuppressWarnings("resource")
-    @Override
-    public InputStream convert(InputStream fromInputSource, String toMimeType) {
+	@SuppressWarnings("resource")
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
 
-        Assert.notNull(fromInputSource, "input source must not be null");
+		Assert.notNull(fromInputSource, "input source must not be null");
 
-        XWPFDocument wordDoc = null;
-        try {
-            wordDoc = poi.xwpfDocument(fromInputSource);
-        } catch (Exception e) {
-            throw new RenditionException(String.format("Unexpected error reading input attempting to get mime-type rendition %s", toMimeType), e);
-        }
+		XWPFDocument wordDoc = null;
+		try {
+			wordDoc = poi.xwpfDocument(fromInputSource);
+		}
+		catch (Exception e) {
+			throw new RenditionException(String.format(
+					"Unexpected error reading input attempting to get mime-type rendition %s",
+					toMimeType), e);
+		}
 
-        if (wordDoc != null) {
-            try {
-                POIXMLProperties props = wordDoc.getProperties();
-                return props.getThumbnailImage();
-            } catch (Exception e) {
-                throw new RenditionException(String.format("Unexpected error getting thumbnail for mime-type rendition %s", toMimeType), e);
-            }
-        }
-        return null;
-    }
+		if (wordDoc != null) {
+			try {
+				POIXMLProperties props = wordDoc.getProperties();
+				return props.getThumbnailImage();
+			}
+			catch (Exception e) {
+				throw new RenditionException(String.format(
+						"Unexpected error getting thumbnail for mime-type rendition %s",
+						toMimeType), e);
+			}
+		}
+		return null;
+	}
 }

@@ -16,43 +16,44 @@ import java.util.Map;
 
 public class DelegatingBlobResourceLoader implements ResourceLoader {
 
-    private static Log logger = LogFactory.getLog(DelegatingBlobResourceLoader.class);
+	private static Log logger = LogFactory.getLog(DelegatingBlobResourceLoader.class);
 
-    private DataSource ds;
-    private Map<String, BlobResourceLoader> loaders;
+	private DataSource ds;
+	private Map<String, BlobResourceLoader> loaders;
 
-    private String database = null;
+	private String database = null;
 
-    @Autowired
-    public DelegatingBlobResourceLoader(DataSource ds, List<BlobResourceLoader> loaders) {
-        this.ds = ds;
-        this.loaders = new HashMap<>();
-        for (BlobResourceLoader loader : loaders) {
-            String database = loader.getDatabaseName();
-            if (database != null) {
-                this.loaders.put(database,loader);
-            }
-        }
-    }
+	@Autowired
+	public DelegatingBlobResourceLoader(DataSource ds, List<BlobResourceLoader> loaders) {
+		this.ds = ds;
+		this.loaders = new HashMap<>();
+		for (BlobResourceLoader loader : loaders) {
+			String database = loader.getDatabaseName();
+			if (database != null) {
+				this.loaders.put(database, loader);
+			}
+		}
+	}
 
-    @Override
-    public Resource getResource(String location) {
-        if (database == null) {
-            try {
-                database = ds.getConnection().getMetaData().getDatabaseProductName();
-            } catch (SQLException e) {
-                logger.error("Error fetching database name", e);
-            }
-        }
-        BlobResourceLoader loader = loaders.get(database);
-        if (loader == null) {
-            loader = loaders.get("GENERIC");
-        }
-        return loader.getResource(location);
-    }
+	@Override
+	public Resource getResource(String location) {
+		if (database == null) {
+			try {
+				database = ds.getConnection().getMetaData().getDatabaseProductName();
+			}
+			catch (SQLException e) {
+				logger.error("Error fetching database name", e);
+			}
+		}
+		BlobResourceLoader loader = loaders.get(database);
+		if (loader == null) {
+			loader = loaders.get("GENERIC");
+		}
+		return loader.getResource(location);
+	}
 
-    @Override
-    public ClassLoader getClassLoader() {
-        return ClassUtils.getDefaultClassLoader();
-    }
+	@Override
+	public ClassLoader getClassLoader() {
+		return ClassUtils.getDefaultClassLoader();
+	}
 }

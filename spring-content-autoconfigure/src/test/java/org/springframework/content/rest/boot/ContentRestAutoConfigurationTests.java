@@ -26,8 +26,10 @@ public class ContentRestAutoConfigurationTests {
 		context.setServletContext(new MockServletContext());
 		context.refresh();
 
-		MatcherAssert.assertThat(context.getBean("contentHandlerMapping"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-		MatcherAssert.assertThat(context.getBean("contentLinksProcessor"), CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean("contentHandlerMapping"),
+				CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+		MatcherAssert.assertThat(context.getBean("contentLinksProcessor"),
+				CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
 
 		context.close();
 	}
@@ -50,6 +52,7 @@ public class ContentRestAutoConfigurationTests {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository
+			extends ContentStore<TestEntity, String> {
 	}
 }

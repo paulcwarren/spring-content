@@ -10,8 +10,8 @@ import internal.org.springframework.content.mongo.config.MongoContentStoresRegis
 import internal.org.springframework.content.mongo.config.MongoStoreConfiguration;
 
 @Configuration
-@ConditionalOnClass({Mongo.class, MongoContentStoresRegistrar.class})
-@Import({MongoContentAutoConfigureRegistrar.class, MongoStoreConfiguration.class})
+@ConditionalOnClass({ Mongo.class, MongoContentStoresRegistrar.class })
+@Import({ MongoContentAutoConfigureRegistrar.class, MongoStoreConfiguration.class })
 public class MongoContentAutoConfiguration {
 
 }

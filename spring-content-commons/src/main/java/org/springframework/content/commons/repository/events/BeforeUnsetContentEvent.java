@@ -9,7 +9,8 @@ public class BeforeUnsetContentEvent extends StoreEvent {
 
 	private static final long serialVersionUID = 2662992853516955647L;
 
-	public BeforeUnsetContentEvent(Object source, ContentStore<Object,Serializable> store) {
+	public BeforeUnsetContentEvent(Object source,
+			ContentStore<Object, Serializable> store) {
 		super(source, store);
 	}
 

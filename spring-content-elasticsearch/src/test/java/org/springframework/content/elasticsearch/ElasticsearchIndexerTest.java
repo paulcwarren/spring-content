@@ -44,18 +44,18 @@ public class ElasticsearchIndexerTest {
 	private AfterSetContentEvent setEvent;
 	private BeforeUnsetContentEvent unsetEvent;
 	private Exception result;
-	
-	//mocks
+
+	// mocks
 	private RestOperations template;
 	private StreamConverter streamConverter;
-	private ContentStore<Object,Serializable> store;
+	private ContentStore<Object, Serializable> store;
 	{
 		Describe("ElasticsearchIndexer", () -> {
 			BeforeEach(() -> {
 				template = mock(RestOperations.class);
-				streamConverter=mock(StreamConverter.class);
-				
-				indexer = new ElasticsearchIndexer(template,streamConverter);
+				streamConverter = mock(StreamConverter.class);
+
+				indexer = new ElasticsearchIndexer(template, streamConverter);
 			});
 			Context("#onAfterSetContent", () -> {
 				BeforeEach(() -> {
@@ -66,86 +66,116 @@ public class ElasticsearchIndexerTest {
 					source.contentId = "some-id";
 					store = mock(ContentStore.class);
 					setEvent = new AfterSetContentEvent(source, store);
-					
-					when(store.getContent(eq(source))).thenReturn(new ByteArrayInputStream(content));
+
+					when(store.getContent(eq(source)))
+							.thenReturn(new ByteArrayInputStream(content));
 				});
 				JustBeforeEach(() -> {
 					try {
 						indexer.onAfterSetContent(setEvent);
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						result = e;
 					}
 				});
 				Context("when the content stream cant be converted", () -> {
 					BeforeEach(() -> {
-						when(streamConverter.convert(anyObject())).thenThrow(IOException.class);
+						when(streamConverter.convert(anyObject()))
+								.thenThrow(IOException.class);
 					});
-					It("should throw an ERROR of StoreAccessException type", () ->{
+					It("should throw an ERROR of StoreAccessException type", () -> {
 						assertThat(result, is(instanceOf(StoreAccessException.class)));
 					});
 				});
 				Context("when elasticsearch is available", () -> {
 					It("should send the content for indexing", () -> {
-						ArgumentCaptor<HttpEntity> argument = ArgumentCaptor.forClass(HttpEntity.class);
-						
-						verify(template).exchange(argThat(endsWith("/some-id")), eq(HttpMethod.PUT), argument.capture(), (Class<Object>)anyObject());
-						
-						HttpEntity entity = argument.getValue();
-						assertTrue(((String)entity.getBody()).contains("\"contentId\":\"some-id\""));
-						assertTrue(((String)entity.getBody()).contains("\"original-content\":\"SGVsbG8gZnJvbSBQYXVsIGFuZCBKaWdhciE=\""));
-					});
-					Context("when elasticsearch returns with a 400 error response", () -> {
-						It("should throw a StoreAccessException", () -> {
-							
-							// Test all 5xx cases
-							for(int i=400;i<=451;i++) {
-								ResponseEntity<Object> response = mock(ResponseEntity.class);
-								try {
-									HttpStatus httpStatus = HttpStatus.valueOf(i);
-									when(response.getStatusCode()).thenReturn(httpStatus);
-									when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenReturn(response);
-	
-									try {
-										result = null;
-										indexer.onAfterSetContent(setEvent);
-									} catch (Exception e) {
-										result = e;
-									}
-									
-									assertThat(result, is(not(nullValue())));
-									assertThat(result, is(instanceOf(StoreAccessException.class)));
-								} catch (IllegalArgumentException iae) {
-									// we dont care
-								}
-							}
-						});
-					});
-					Context("when elasticsearch returns with a 500 error response", () -> {
-						It("should throw a StoreAccessException", () -> {
-							
-							// Test all 5xx cases
-							for(int i=500;i<=511;i++) {
-								ResponseEntity<Object> response = mock(ResponseEntity.class);
-								HttpStatus httpStatus = HttpStatus.valueOf(i);
-								when(response.getStatusCode()).thenReturn(httpStatus);
-								when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenReturn(response);
+						ArgumentCaptor<HttpEntity> argument = ArgumentCaptor
+								.forClass(HttpEntity.class);
 
-								try {
-									result = null;
-									indexer.onAfterSetContent(setEvent);
-								} catch (Exception e) {
-									result = e;
-								}
-								
-								assertThat(result, is(not(nullValue())));
-								assertThat(result, is(instanceOf(StoreAccessException.class)));
-							}
-						});
+						verify(template).exchange(argThat(endsWith("/some-id")),
+								eq(HttpMethod.PUT), argument.capture(),
+								(Class<Object>) anyObject());
+
+						HttpEntity entity = argument.getValue();
+						assertTrue(((String) entity.getBody())
+								.contains("\"contentId\":\"some-id\""));
+						assertTrue(((String) entity.getBody()).contains(
+								"\"original-content\":\"SGVsbG8gZnJvbSBQYXVsIGFuZCBKaWdhciE=\""));
 					});
+					Context("when elasticsearch returns with a 400 error response",
+							() -> {
+								It("should throw a StoreAccessException", () -> {
+
+									// Test all 5xx cases
+									for (int i = 400; i <= 451; i++) {
+										ResponseEntity<Object> response = mock(
+												ResponseEntity.class);
+										try {
+											HttpStatus httpStatus = HttpStatus.valueOf(i);
+											when(response.getStatusCode())
+													.thenReturn(httpStatus);
+											when(template.exchange((String) anyObject(),
+													(HttpMethod) anyObject(),
+													(HttpEntity) anyObject(),
+													(Class<Object>) anyObject()))
+															.thenReturn(response);
+
+											try {
+												result = null;
+												indexer.onAfterSetContent(setEvent);
+											}
+											catch (Exception e) {
+												result = e;
+											}
+
+											assertThat(result, is(not(nullValue())));
+											assertThat(result, is(instanceOf(
+													StoreAccessException.class)));
+										}
+										catch (IllegalArgumentException iae) {
+											// we dont care
+										}
+									}
+								});
+							});
+					Context("when elasticsearch returns with a 500 error response",
+							() -> {
+								It("should throw a StoreAccessException", () -> {
+
+									// Test all 5xx cases
+									for (int i = 500; i <= 511; i++) {
+										ResponseEntity<Object> response = mock(
+												ResponseEntity.class);
+										HttpStatus httpStatus = HttpStatus.valueOf(i);
+										when(response.getStatusCode())
+												.thenReturn(httpStatus);
+										when(template.exchange((String) anyObject(),
+												(HttpMethod) anyObject(),
+												(HttpEntity) anyObject(),
+												(Class<Object>) anyObject()))
+														.thenReturn(response);
+
+										try {
+											result = null;
+											indexer.onAfterSetContent(setEvent);
+										}
+										catch (Exception e) {
+											result = e;
+										}
+
+										assertThat(result, is(not(nullValue())));
+										assertThat(result, is(
+												instanceOf(StoreAccessException.class)));
+									}
+								});
+							});
 				});
 				Context("when elasticsearch isnt available", () -> {
 					BeforeEach(() -> {
-						when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenThrow(RestClientException.class);
+						when(template.exchange((String) anyObject(),
+								(HttpMethod) anyObject(), (HttpEntity) anyObject(),
+								(Class<Object>) anyObject()))
+										.thenThrow(RestClientException.class);
 					});
 					It("should throw a StoreAccessException", () -> {
 						assertThat(result, is(not(nullValue())));
@@ -164,31 +194,43 @@ public class ElasticsearchIndexerTest {
 				JustBeforeEach(() -> {
 					try {
 						indexer.onBeforeUnsetContent(unsetEvent);
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						result = e;
 					}
 				});
 				Context("when elasticsearch is available", () -> {
 					It("should send a DELETE request", () -> {
-						verify(template).exchange(argThat(CoreMatchers.endsWith("/some-id")), eq(HttpMethod.DELETE), eq(null), (Class<Object>)anyObject());
+						verify(template).exchange(
+								argThat(CoreMatchers.endsWith("/some-id")),
+								eq(HttpMethod.DELETE), eq(null),
+								(Class<Object>) anyObject());
 					});
 					Context("when removing index failed", () -> {
 						It("should throw a StoreAccessException", () -> {
-							for (int i=400; i<=511; i++) {
+							for (int i = 400; i <= 511; i++) {
 								try {
 									HttpStatus status = HttpStatus.valueOf(i);
-									ResponseEntity<Object> response = new ResponseEntity(status);
-									when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenReturn(response);
-									
+									ResponseEntity<Object> response = new ResponseEntity(
+											status);
+									when(template.exchange((String) anyObject(),
+											(HttpMethod) anyObject(),
+											(HttpEntity) anyObject(),
+											(Class<Object>) anyObject()))
+													.thenReturn(response);
+
 									try {
 										result = null;
 										indexer.onBeforeUnsetContent(unsetEvent);
-									} catch (Exception e) {
+									}
+									catch (Exception e) {
 										result = e;
 									}
 
-									assertThat(result, is(instanceOf(StoreAccessException.class)));
-								} catch (IllegalArgumentException iae) {
+									assertThat(result,
+											is(instanceOf(StoreAccessException.class)));
+								}
+								catch (IllegalArgumentException iae) {
 									// ignore
 								}
 							}
@@ -197,7 +239,10 @@ public class ElasticsearchIndexerTest {
 				});
 				Context("when elasticsearch is not available", () -> {
 					BeforeEach(() -> {
-						when(template.exchange((String)anyObject(), (HttpMethod)anyObject(), (HttpEntity)anyObject(), (Class<Object>)anyObject())).thenThrow(RestClientException.class);
+						when(template.exchange((String) anyObject(),
+								(HttpMethod) anyObject(), (HttpEntity) anyObject(),
+								(Class<Object>) anyObject()))
+										.thenThrow(RestClientException.class);
 					});
 					It("should throw a StoreAccessException", () -> {
 						assertThat(result, is(instanceOf(StoreAccessException.class)));
@@ -206,9 +251,10 @@ public class ElasticsearchIndexerTest {
 			});
 		});
 	}
-	
+
 	public static class TestContent {
-		@ContentId public String contentId;
+		@ContentId
+		public String contentId;
 	}
-	
+
 }

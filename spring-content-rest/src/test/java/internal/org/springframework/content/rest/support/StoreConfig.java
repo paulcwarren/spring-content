@@ -18,10 +18,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
 @Configuration
-@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
+@EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.support")
 @EnableTransactionManagement
-//@Import(RepositoryRestMvcConfiguration.class)
-@EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.support")
+// @Import(RepositoryRestMvcConfiguration.class)
+@EnableFilesystemStores(basePackages = "internal.org.springframework.content.rest.support")
 @Profile("store")
 public class StoreConfig extends JpaInfrastructureConfig {
 
@@ -37,7 +37,7 @@ public class StoreConfig extends JpaInfrastructureConfig {
 		filesystemRoot.mkdirs();
 		return filesystemRoot;
 	}
-	
+
 	@Bean
 	public RenditionProvider textToHtml() {
 		System.out.println("adding renderer");
@@ -50,7 +50,7 @@ public class StoreConfig extends JpaInfrastructureConfig {
 
 			@Override
 			public String[] produces() {
-				return new String[] {"text/html"};
+				return new String[] { "text/html" };
 			}
 
 			@Override
@@ -58,11 +58,13 @@ public class StoreConfig extends JpaInfrastructureConfig {
 				String input = null;
 				try {
 					input = IOUtils.toString(fromInputSource);
-				} catch (IOException e) {}
-				return new ByteArrayInputStream(String.format("<html><body>%s</body></html>", input).getBytes());
+				}
+				catch (IOException e) {
+				}
+				return new ByteArrayInputStream(
+						String.format("<html><body>%s</body></html>", input).getBytes());
 			}
 		};
 	}
 
 }
-

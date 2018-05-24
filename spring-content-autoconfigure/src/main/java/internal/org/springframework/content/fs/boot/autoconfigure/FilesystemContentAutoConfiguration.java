@@ -21,14 +21,14 @@ import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 
 @Configuration
 @ConditionalOnClass(FilesystemStoreRegistrar.class)
-@Import({FilesystemContentAutoConfigureRegistrar.class, FilesystemStoreConfiguration.class})
+@Import({ FilesystemContentAutoConfigureRegistrar.class,
+		FilesystemStoreConfiguration.class })
 public class FilesystemContentAutoConfiguration {
 
-    @Autowired
-    private Environment env;
+	@Autowired
+	private Environment env;
 
-
-    @Bean
+	@Bean
 	@ConditionalOnMissingBean(FileSystemResourceLoader.class)
 	FileSystemResourceLoader fileSystemResourceLoader(FilesystemProperties props) {
 		return new FileSystemResourceLoader(props.getFilesystemRoot());
@@ -38,23 +38,27 @@ public class FilesystemContentAutoConfiguration {
 	@ConfigurationProperties(prefix = "spring.content.fs")
 	public static class FilesystemProperties {
 
-	    private static final Logger logger = LoggerFactory.getLogger(FilesystemProperties.class);
+		private static final Logger logger = LoggerFactory
+				.getLogger(FilesystemProperties.class);
 
-	    /**
-	     * The root location where file system stores place their content
-	     */
+		/**
+		 * The root location where file system stores place their content
+		 */
 		String filesystemRoot;
 
 		public String getFilesystemRoot() {
-            if (filesystemRoot == null) {
-                try {
-                    filesystemRoot = Files.createTempDirectory("").toString();
-                } catch (IOException ioe) {
-                    logger.error(String.format("Unexpected error defaulting filesystem root to %s", filesystemRoot), ioe);
-                }
-            }
+			if (filesystemRoot == null) {
+				try {
+					filesystemRoot = Files.createTempDirectory("").toString();
+				}
+				catch (IOException ioe) {
+					logger.error(String.format(
+							"Unexpected error defaulting filesystem root to %s",
+							filesystemRoot), ioe);
+				}
+			}
 
-		    return this.filesystemRoot;
+			return this.filesystemRoot;
 		}
 
 		public void setFilesystemRoot(String filesystemRoot) {
