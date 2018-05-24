@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/paulcwarren/spring-content.svg?branch=master)](https://travis-ci.org/paulcwarren/spring-content)
 [![Coverage Status](https://coveralls.io/repos/github/paulcwarren/spring-content/badge.svg?branch=master)](https://coveralls.io/github/paulcwarren/spring-content?branch=master)
+[![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Spring Content
 
@@ -16,4 +17,4 @@ For more information [see our docs](https://paulcwarren.github.io/spring-content
   and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>,
   innovative and intelligent tools for profiling Java and .NET applications.
   
-  [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/java/profiler/index.jsp) [![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+  [![](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/java/profiler/index.jsp) 
