@@ -1,7 +1,10 @@
 [[content-repositories]]
 = Working with Spring Stores
 
-The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  The Developer just provides interfaces that declare the intent for content-related functionality.  Based on these and on class-path dependencies Spring Content is then able to inject storage-specific implementations.
+The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
+and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
+the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
+class-path dependencies, Spring Content is then able to inject storage-specific implementations.
 
 [IMPORTANT]
 ====
@@ -81,15 +84,16 @@ public class Application {
 	}
 }
 ----
+====
 
 === Experimental API
 
-Spring Content storage modules now also offer support for a newer experimental Store API.
-This API offers lower-level management of content that can be used to satisfy a wider
-set of content-related use cases.
+All Spring Content storage modules also now offer support for a newer *experimental* Store API based on
+`org.springframework.core.io.Resource`.
 
-The base interface in this API is the `Store`, essentially it is a generic
-`org.springframework.core.io.ResourceLoader`.
+The base interface in this API is `Store`, a generic `org.springframework.core.io.ResourceLoader`.  When called stores
+return instances of `org.springframework.content.commons.io.DeletableResource` allowing the full lifecycle of resources to be
+managed through this API.
 
 .Store interface
 ====
@@ -102,10 +106,10 @@ public interface Store<ID extends Serializable> {
 ----
 ====
 
-This is also supported by Spring Content REST.
+This interface is supported by Spring Content REST.
 
-Derived from the `Store` is a second interface `AssociativeStore` allowing Resources
-to be associated with Spring Data Entity objects.
+Derived from the `Store` is a second interface `AssociativeStore` allowing resources to be associated with Spring Data
+Entity objects.
 
 .AssociativeStore interface
 ====
@@ -119,11 +123,11 @@ public interface AssociativeStore<S, CID extends Serializable> extends Store<CID
 ----
 ====
 
-This is not yet supported by Spring Contnet REST.
+This is not yet supported by Spring Content REST.
 
 [[content-repositories.events]]
 === Events
-Spring Content emits events.  They are:
+Spring Content emits six events.  They are:
 
 * BeforeSetContent
 
@@ -137,11 +141,10 @@ Spring Content emits events.  They are:
 
 * AfterUnsetContent
 
-==== Writing an ApplicationListener ====
+==== Writing an ApplicationListener
 
-If you wish to extend Spring Content's functionality with your own you can subclass
-the abstract class `AbstractStoreEventListener` and override the methods that you are
-interested in.  When events occur Spring Content will call the appropriate methods on
+If you wish to extend Spring Content's functionality you can subclass the abstract class `AbstractStoreEventListener` and
+override the methods that you are interested in.  When events occur Spring Content will call the appropriate methods on
 all instances of `AbstractStoreEventListener`.
 
 .AbstractContentRepositoryEventListener
@@ -164,7 +167,7 @@ public class ExampleEventListener extends AbstractContentRepositoryEventListener
 ====
 The down-side of this approach is that it does not filter events based on Entity.
 
-==== Writing an Annotated StoreEventHandler ====
+==== Writing an Annotated StoreEventHandler
 
 Another approach is to use an annotated handler, which does filter events based on Entity.
 
