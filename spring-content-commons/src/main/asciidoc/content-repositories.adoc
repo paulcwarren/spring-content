@@ -1,16 +1,16 @@
 [[content-repositories]]
 = Working with Spring Stores
 
-The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various implementations of Content Store.
+The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  The Developer just provides interfaces that declare the intent for content-related functionality.  Based on these and on class-path dependencies Spring Content is then able to inject storage-specific implementations.
 
 [IMPORTANT]
 ====
-This chapter explains the core concepts and interfaces for Spring Content stores. The information in this chapter is pulled from the Spring Content Commons.  It uses the configuration and code samples for the S3 module.  Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.
+This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.
 ====
 
 [[content-repositories.core-concepts]]
 == Core concepts
-The central interface in the Spring Content is the `ContentStore` abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to the type of the content ID attribute on that domain class. 
+The central interface in the Spring Content is the `ContentStore`.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a `@ContentId` field on that domain class.
 
 [[content-repositories.repository]]
 
@@ -21,20 +21,109 @@ The central interface in the Spring Content is the `ContentStore` abstraction.  
 public interface ContentStore<E, CID extends Serializable> {
 
 	void setContent(E entity, InputStream content); 	<1>
-	
+
 	InputStream getContent(E entity);			<2>
-	
+
 	void unsetContent(E entity);				<3>
 }
 ----
-<1> Stores content and saves its metadata on `entity` 
+<1> Stores content and associates it with `entity`
 <2> Returns the content associated with `entity`
-<3> Deletes content and unassociates it from `entity`  
+<3> Deletes content and unassociates it from `entity`
 ====
+
+For example, given an Entity `User`, a `UserRepository` and a `ProfilePictureStore` it
+is possible to associate and store a profile picture for each user.
+
+.ContentStore interface
+====
+[source, java]
+----
+@Entity
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private String username;
+
+	@ContentId
+	private String contentId;
+
+	@ContentLength
+	private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+public interface ProfilePictureStore extends ContentStore<User, String> {
+}
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+		return (args) -> {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store profile picture
+			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}
+----
+
+=== Experimental API
+
+Spring Content storage modules now also offer support for a newer experimental Store API.
+This API offers lower-level management of content that can be used to satisfy a wider
+set of content-related use cases.
+
+The base interface in this API is the `Store`, essentially it is a generic
+`org.springframework.core.io.ResourceLoader`.
+
+.Store interface
+====
+[source, java]
+----
+public interface Store<ID extends Serializable> {
+
+	Resource getResource(CID id);
+}
+----
+====
+
+This is also supported by Spring Content REST.
+
+Derived from the `Store` is a second interface `AssociativeStore` allowing Resources
+to be associated with Spring Data Entity objects.
+
+.AssociativeStore interface
+====
+[source, java]
+----
+public interface AssociativeStore<S, CID extends Serializable> extends Store<CID> {
+
+	Resource getResource(E entity);
+	Resource forgetResource(E entity);
+}
+----
+====
+
+This is not yet supported by Spring Contnet REST.
 
 [[content-repositories.events]]
 === Events
-There are 6 events that Spring Content emits whilst performing basic content access.  Those are:
+Spring Content emits events.  They are:
 
 * BeforeSetContent
 
@@ -50,19 +139,22 @@ There are 6 events that Spring Content emits whilst performing basic content acc
 
 ==== Writing an ApplicationListener ====
 
-There is an abstract class that you can subclass which listens for these kinds of events and calls the appropriate method based on the event type. You just override the methods for the events you’re interested in.
+If you wish to extend Spring Content's functionality with your own you can subclass
+the abstract class `AbstractStoreEventListener` and override the methods that you are
+interested in.  When events occur Spring Content will call the appropriate methods on
+all instances of `AbstractStoreEventListener`.
 
 .AbstractContentRepositoryEventListener
 ====
 [source, java]
 ----
 public class ExampleEventListener extends AbstractContentRepositoryEventListener {
-	
+
 	@Override
 	public void onAfterSetContent(Object entity) {
 		...logic to inspect and handle the entity and it's content after it is stored
 	}
-	
+
 	@Override
 	public void onBeforeGetContent(Object entity) {
 		...logic to inspect and handle the entity and it's content before it is fetched
@@ -70,16 +162,19 @@ public class ExampleEventListener extends AbstractContentRepositoryEventListener
 }
 ----
 ====
-This approach does not filter events based on domain type.
+The down-side of this approach is that it does not filter events based on Entity.
 
-==== Writing an Annotated ContentRepository Handler ====
+==== Writing an Annotated StoreEventHandler ====
 
-Another approach is to use an annotated handler, which does filter events based on domain type.
+Another approach is to use an annotated handler, which does filter events based on Entity.
 
-To declare a handler, create a POJO and annotate it as `@StoreEventHandler`. This tells the `BeanPostProcessor` that this class needs to be inspected for handler methods.  It iterates over the class's methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:
+To declare a handler, create a POJO and annotate it as `@StoreEventHandler`. This tells
+Spring Content that this class needs to be inspected for handler methods.  It
+iterates over the class's methods and looks for annotations that correspond to the
+event.  There are 6 handler annotations:
 
 * HandleBeforeSetContent
-  
+
 * HandleAfterSetContent
 
 * HandleBeforeGetContent
@@ -96,12 +191,12 @@ To declare a handler, create a POJO and annotate it as `@StoreEventHandler`. Thi
 ----
 @StoreEventHandler
 public class ExampleAnnotatedEventListener {
-	
+
 	@HandleAfterSetContent
 	public void handleAfterSetContent(SopDocument doc) {
 		...type-safe handling logic for SopDocument's and their content after it is stored
 	}
-	
+
 	@HandleBeforeGetContent
 	public void onBeforeGetContent(Product product) {
 		...type-safe handling logic for Product's and their content before it is fetched
@@ -110,9 +205,12 @@ public class ExampleAnnotatedEventListener {
 ----
 ====
 
-The type of interests you are interested in is determined from the type of the first parameter of each annotated method.
+The type of events you are interested in is determined from the type of the first
+ parameter of each annotated method.
 
-To register your event handler, either mark the class with one of Spring’s @Component stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or declare an instance of your annotated bean in your ApplicationContext.  
+To register your event handler, either mark the class with one of Spring’s @Component
+stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
+declare an instance of your annotated bean in your ApplicationContext.
 
 .Handler registration
 ====
@@ -121,50 +219,17 @@ To register your event handler, either mark the class with one of Spring’s @Co
 @Configuration
 public class ContentStoreConfiguration {
 
-  @Bean
-  ExampeAnnotatedEventHandler exampleEventHandler() {
-    return new ExampeAnnotatedEventHandler();
-  }
-}
-----
-====
-
-==== Experimental API ====
-
-Some Spring Content modules offer support for a new experimental Store API.  This API offers lower-level management of content that can be used to satisfy a wider set of content-related use cases.
-
-The base interface in this API is the `Store`, a generic version of a `org.springframework.core.io.ResourceLoader` that returns `org.springframework.content.commons.io.DeletableResource`s allowing them to be fully-managed.
-
-.Store interface
-====
-[source, java]
-----
-public interface Store<ID extends Serializable> {
-
-	Resource getResource(ID id);
-	
-}
-----
-====
-
-Derived from the `Store` is a second interface `AssociativeStore` allowing Resources returned by `Store`s to be associated with Spring Data Entity objects.
-
-.AssociativeStore interface
-====
-[source, java]
-----
-public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
-	
-	void associate(S entity, SID id);
-	void unassociate(S entity);
-
+	@Bean
+	ExampeAnnotatedEventHandler exampleEventHandler() {
+		return new ExampeAnnotatedEventHandler();
+	}
 }
 ----
 ====
 
 [[content-repositories.search]]
 === Search
-Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it. 
+Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.
 
 Content stores can therefore optionally be made searchable by extending the `Searchable<CID>` interface.
 
@@ -203,7 +268,7 @@ Content stores can therefore optionally also be given rendition capabilities by 
 ----
 public interface Renderable<E> {
 
-	InputStream getRendition(E entity, String mimeType); 
+	InputStream getRendition(E entity, String mimeType);
 }
 ----
 Returns a `mimeType` rendition of the content associated with `entity`.
@@ -224,8 +289,8 @@ public class SopDocument {
 	private String[] authors, keywords;
 
 	// Spring Content managed attribute
-	private @ContentId UUID contentId;  	
-	private @ContentLength Long contentLen;	
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
 }
 ----
 
@@ -245,7 +310,7 @@ public interface SopDocumentContentStore extends ContentStore<SopDocument, UUID>
 }
 ----
 
-. Optionally, make it extend `Searchable` 
+. Optionally, make it extend `Searchable`
 +
 [source, java]
 ----
@@ -265,10 +330,10 @@ public interface SopDocumentContentStore extends ContentStore<SopDocument, UUID>
 [source, java]
 ----
 @EnableJpaRepositories
-@EnableS3ContentRepositories
+@EnableS3Stores
 class Config {}
 ----
-NOTE: The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module. 
+NOTE: The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module.
 
 . Inject the repositories and use them
 +
@@ -281,19 +346,19 @@ public class SomeClass {
   	@Autowired private SopDocumentContentStore contentStore;
 
 	public void doSomething() {
-	
+
 		SopDocument doc = new SopDocument();
 		doc.setTitle("example");
 		contentStore.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); # <1>
-		doc.save(); 
+		doc.save();
 		...
-		
+
 		InputStream content = contentStore.getContent(sopDocument);
 		...
-		
+
 		List<SopDocument> docs = doc.findAllByContentId(contentStore.findKeyword("interesting"));
 		...
-		
+
 	}
 }
 ----
@@ -302,13 +367,13 @@ public class SomeClass {
 
 == Patterns of Content Association
 
-Content can be associated with a Spring Data Entity in several ways.  
+Content can be associated with a Spring Data Entity in several ways.
 
 === Entity Association
 
 The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.
 
-The following example shows a Resource associated with an Entity `Dvd`. 
+The following example shows a Resource associated with an Entity `Dvd`.
 
 ====
 [source, java]
@@ -319,9 +384,9 @@ public class Dvd {
 	private String title;
 
 	// Spring Content managed attributes
-	private @ContentId UUID contentId;  	
-	private @ContentLength Long contentLen;	
-	
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+
 	...
 }
 
@@ -335,7 +400,7 @@ public interface DvdStore extends ContentStore<Dvd, UUID> {}
 
 Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.
 
-The following example shows two Resources associated with a `Dvd` entity.  The first Resource is the Dvd's cover Image and the second is the Dvd's Stream.  
+The following example shows two Resources associated with a `Dvd` entity.  The first Resource is the Dvd's cover Image and the second is the Dvd's Stream.
 
 ====
 [source, java]
@@ -348,11 +413,11 @@ public class Dvd {
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "image_id")
 	private Image image;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "stream_id")
 	private Stream stream;
-	
+
 	...
 }
 
@@ -365,8 +430,8 @@ public class Image {
 	private Dvd dvd;
 
 	// Spring Content managed attributes
-	private @ContentId UUID contentId;  	
-	private @ContentLength Long contentLen;	
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
 }
 
 @Entity
@@ -378,8 +443,8 @@ public class Stream {
 	private Dvd dvd;
 
 	// Spring Content managed attributes
-	private @ContentId UUID contentId;  	
-	private @ContentLength Long contentLen;	
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
 }
 
 public interface DvdRepository extends CrudRepository<Dvd, Long> {}
@@ -389,8 +454,8 @@ public interface ImageStore extends ContentStore<Image, UUID> {}
 public interface StreamStore extends ContentStore<Stream, UUID> {}
 ----
 ====
- 
-Note how the Content attributes are placed on each property object of on the Entity itself.  
+
+Note how the Content attributes are placed on each property object of on the Entity itself.
 
 When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
 
@@ -409,7 +474,7 @@ public class Dvd {
 	@OneToMany
 	@JoinColumn(name = "chapter_id")
 	private List<Chapter> chapters;
-	
+
 	...
 }
 
@@ -419,8 +484,8 @@ public class Chapter {
 	private @Id @GeneratedValue Long id;
 
 	// Spring Content managed attributes
-	private @ContentId UUID contentId;  	
-	private @ContentLength Long contentLen;	
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
 }
 
 public interface DvdRepository extends CrudRepository<Dvd, Long> {}
