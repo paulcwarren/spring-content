@@ -32,6 +32,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -74,21 +75,26 @@ public class DefaultJpaStoreImplTest {
 								});
 					});
 				});
-				Context("#getResource with entity", () -> {
+			});
+			Describe("AssociativeStore", () -> {
+				BeforeEach(() -> {
+					blobResourceLoader = mock(BlobResourceLoader.class);
+				});
+				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
 						resource = store.getResource(entity);
 					});
-					Context("when the entity is not already associated with a resource",
+					Context("when the entity is not associated with a resource",
 							() -> {
 								BeforeEach(() -> {
 									entity = new TestEntity();
 								});
-								It("should load a new resource", () -> {
-									verify(blobResourceLoader).getResource(matches(
-											"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"));
+								It("should return null", () -> {
+									verify(blobResourceLoader, never()).getResource(anyObject());
+									assertThat(resource, is(nullValue()));
 								});
 							});
-					Context("when the entity is not already associated with a resource",
+					Context("when the entity is associated with a resource",
 							() -> {
 								BeforeEach(() -> {
 									entity = new TestEntity();
@@ -140,84 +146,85 @@ public class DefaultJpaStoreImplTest {
 					});
 				});
 			});
-
-			Context("#getContent", () -> {
-				BeforeEach(() -> {
-					blobResourceLoader = mock(BlobResourceLoader.class);
-					resource = mock(GenericBlobResource.class);
-
-					entity = new TestEntity("12345");
-
-					when(blobResourceLoader.getResource(entity.getContentId().toString()))
-							.thenReturn((BlobResource) resource);
-				});
-				JustBeforeEach(() -> {
-					inputStream = store.getContent(entity);
-				});
-				Context("given content", () -> {
-					BeforeEach(() -> {
-						stream = new ByteArrayInputStream(
-								"hello content world!".getBytes());
-
-						when(resource.getInputStream()).thenReturn(stream);
-					});
-
-					It("should use the blob resource factory to create a new blob resource",
-							() -> {
-								verify(blobResourceLoader)
-										.getResource(entity.getContentId().toString());
-							});
-
-					It("should return an inputstream", () -> {
-						assertThat(inputStream, is(not(nullValue())));
-					});
-				});
-				Context("given fetching the input stream fails", () -> {
-					BeforeEach(() -> {
-						when(resource.getInputStream()).thenThrow(new IOException());
-					});
-					It("should return null", () -> {
-						assertThat(inputStream, is(nullValue()));
-					});
-				});
-			});
-			Context("#setContent", () -> {
-				JustBeforeEach(() -> {
-					try {
-						store.setContent(entity, inputStream);
-					}
-					catch (Exception e) {
-						this.e = e;
-					}
-				});
-				Context("when the row does not exist", () -> {
+			Describe("ContentStore", () -> {
+				Context("#getContent", () -> {
 					BeforeEach(() -> {
 						blobResourceLoader = mock(BlobResourceLoader.class);
+						resource = mock(GenericBlobResource.class);
 
-						entity = new TestEntity();
-						byte[] content = new byte[5000];
-						new Random().nextBytes(content);
-						inputStream = new ByteArrayInputStream(content);
+						entity = new TestEntity("12345");
 
-						resource = mock(BlobResource.class);
-						when(blobResourceLoader.getResource(matches(
-								"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")))
-										.thenReturn((BlobResource) resource);
-						outputStream = mock(OutputStream.class);
-						when(((BlobResource) resource).getOutputStream())
-								.thenReturn(outputStream);
-						when(((BlobResource) resource).getId()).thenReturn(12345);
+						when(blobResourceLoader.getResource(entity.getContentId().toString()))
+								.thenReturn((BlobResource) resource);
 					});
-					It("should write the contents of the inputstream to the resource's outputstream",
-							() -> {
-								verify(outputStream, atLeastOnce()).write(anyObject(),
-										anyInt(), anyInt());
-							});
-					It("should update the @ContentId field", () -> {
-						assertThat(entity.getContentId(), is("12345"));
+					JustBeforeEach(() -> {
+						inputStream = store.getContent(entity);
 					});
-					It("should update the @ContentLength field", () -> {
-						assertThat(entity.getContentLen(), is(5000L));
+					Context("given content", () -> {
+						BeforeEach(() -> {
+							stream = new ByteArrayInputStream(
+									"hello content world!".getBytes());
+
+							when(resource.getInputStream()).thenReturn(stream);
+						});
+
+						It("should use the blob resource factory to create a new blob resource",
+								() -> {
+									verify(blobResourceLoader)
+											.getResource(entity.getContentId().toString());
+								});
+
+						It("should return an inputstream", () -> {
+							assertThat(inputStream, is(not(nullValue())));
+						});
+					});
+					Context("given fetching the input stream fails", () -> {
+						BeforeEach(() -> {
+							when(resource.getInputStream()).thenThrow(new IOException());
+						});
+						It("should return null", () -> {
+							assertThat(inputStream, is(nullValue()));
+						});
+					});
+				});
+				Context("#setContent", () -> {
+					JustBeforeEach(() -> {
+						try {
+							store.setContent(entity, inputStream);
+						}
+						catch (Exception e) {
+							this.e = e;
+						}
+					});
+					Context("when the row does not exist", () -> {
+						BeforeEach(() -> {
+							blobResourceLoader = mock(BlobResourceLoader.class);
+
+							entity = new TestEntity();
+							byte[] content = new byte[5000];
+							new Random().nextBytes(content);
+							inputStream = new ByteArrayInputStream(content);
+
+							resource = mock(BlobResource.class);
+							when(blobResourceLoader.getResource(matches(
+									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")))
+											.thenReturn((BlobResource) resource);
+							outputStream = mock(OutputStream.class);
+							when(((BlobResource) resource).getOutputStream())
+									.thenReturn(outputStream);
+							when(((BlobResource) resource).getId()).thenReturn(12345);
+						});
+						It("should write the contents of the inputstream to the resource's outputstream",
+								() -> {
+									verify(outputStream, atLeastOnce()).write(anyObject(),
+											anyInt(), anyInt());
+								});
+						It("should update the @ContentId field", () -> {
+							assertThat(entity.getContentId(), is("12345"));
+						});
+						It("should update the @ContentLength field", () -> {
+							assertThat(entity.getContentLen(), is(5000L));
+						});
 					});
 				});
 			});
