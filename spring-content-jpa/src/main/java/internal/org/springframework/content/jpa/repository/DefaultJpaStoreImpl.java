@@ -47,10 +47,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	public Resource getResource(S entity) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			contentId = convertToExternalContentIdType(entity, contentId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
-					contentId.toString());
+			return null;
 		}
 
 		return loader.getResource(contentId.toString());
@@ -110,6 +107,13 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	@Override
 	public void setContent(S metadata, InputStream content) {
 		Resource resource = getResource(metadata);
+		if (resource == null) {
+			UUID contentId = UUID.randomUUID();
+			Object convertedId = convertToExternalContentIdType(metadata, contentId);
+			resource = this.getResource((SID)convertedId);
+			BeanUtils.setFieldWithAnnotation(metadata, ContentId.class,
+					convertedId.toString());
+		}
 		OutputStream os = null;
 		long contentLen = -1L;
 		try {

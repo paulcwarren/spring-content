@@ -170,7 +170,6 @@ public class DefaultFilesystemStoresImplTest {
 					});
 				});
 			});
-
 			Describe("ContentStore", () -> {
 				BeforeEach(() -> {
 					writeableResource = mock(WritableResource.class);
