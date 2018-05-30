@@ -54,11 +54,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	public Resource getResource(S entity) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			contentId = convertToExternalContentIdType(entity, contentId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, contentId);
+			return null;
 		}
-
 		return getResourceInternal(contentId);
 	}
 
@@ -106,6 +103,12 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	public void setContent(S property, InputStream content) {
 		Resource resource = getResource(property);
+		if (resource == null) {
+			UUID contentId = UUID.randomUUID();
+			Object convertedId = convertToExternalContentIdType(property, contentId);
+			resource = getResource((SID)convertedId);
+			BeanUtils.setFieldWithAnnotation(property, ContentId.class, convertedId);
+		}
 		OutputStream os = null;
 		try {
 			if (resource.exists() == false) {

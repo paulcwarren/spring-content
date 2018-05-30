@@ -75,10 +75,7 @@ public class DefaultFilesystemStoresImplTest {
 			});
 
 			Describe("Store", () -> {
-				BeforeEach(() -> {
-					deletableResource = mock(DeletableResource.class);
-				});
-				Context("#getResource with content ID", () -> {
+				Context("#getResource", () -> {
 					BeforeEach(() -> {
 						id = "12345-67890";
 
@@ -93,7 +90,9 @@ public class DefaultFilesystemStoresImplTest {
 						verify(loader).getResource(eq("12345-67890"));
 					});
 				});
-				Context("#getResource with entity", () -> {
+			});
+			Describe("AssociativeStore", () -> {
+				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
 						resource = filesystemContentRepoImpl.getResource(entity);
 					});
@@ -101,29 +100,11 @@ public class DefaultFilesystemStoresImplTest {
 							() -> {
 								BeforeEach(() -> {
 									entity = new TestEntity();
-
-									when(conversion.canConvert(
-											(TypeDescriptor) argThat(
-													is(instanceOf(TypeDescriptor.class))),
-											argThat(is(
-													instanceOf(TypeDescriptor.class)))))
-															.thenReturn(true);
-									when(conversion.convert(
-											argThat(is(instanceOf(UUID.class))),
-											argThat(is(instanceOf(TypeDescriptor.class))),
-											argThat(is(
-													instanceOf(TypeDescriptor.class)))))
-															.thenReturn("12345-67890");
-									when(conversion.convert(eq("12345-67890"),
-											eq(String.class))).thenReturn("/12345/67890");
 								});
-								It("should use the conversion service to get a resource path",
-										() -> {
-											verify(conversion).convert(eq("12345-67890"),
-													eq(String.class));
-											verify(loader)
-													.getResource(eq("/12345/67890"));
-										});
+								It("should not return a resource",
+									() -> {
+										assertThat(resource, is(nullValue()));
+									});
 							});
 					Context("when the entity is already associated with a resource",
 							() -> {
@@ -150,10 +131,12 @@ public class DefaultFilesystemStoresImplTest {
 						entity = new TestEntity();
 
 						when(conversion.convert(eq("12345-67890"), eq(String.class)))
-								.thenReturn("12345-67890");
+								.thenReturn("/12345/67890");
 
-						when(loader.getResource(eq("12345-67890")))
+						deletableResource = mock(DeletableResource.class);
+						when(loader.getResource(eq("/12345/67890")))
 								.thenReturn(deletableResource);
+
 						when(deletableResource.contentLength()).thenReturn(20L);
 					});
 					JustBeforeEach(() -> {
@@ -161,7 +144,7 @@ public class DefaultFilesystemStoresImplTest {
 					});
 					It("should use the conversion service to get a resource path", () -> {
 						verify(conversion).convert(eq("12345-67890"), eq(String.class));
-						verify(loader).getResource(eq("12345-67890"));
+						verify(loader).getResource(eq("/12345/67890"));
 					});
 					It("should set the entity's content ID attribute", () -> {
 						assertThat(entity.getContentId(), is("12345-67890"));
