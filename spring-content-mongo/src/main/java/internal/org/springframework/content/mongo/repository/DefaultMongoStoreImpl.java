@@ -45,7 +45,6 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	@Override
 	public Resource getResource(SID id) {
 		String location = converter.convert(id, String.class);
-		// Resource delegate = gridFs.getResource(location);
 		return new GridFsStoreResource(location, gridFs);
 	}
 
@@ -69,14 +68,6 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		Object convertedId = convertToExternalContentIdType(entity, id);
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
 				convertedId.toString());
-		try {
-			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
-					resource.contentLength());
-		}
-		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for resource %s",
-					id), e);
-		}
 	}
 
 	@Override
@@ -97,7 +88,6 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 						return true;
 					}
 				});
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	@Override

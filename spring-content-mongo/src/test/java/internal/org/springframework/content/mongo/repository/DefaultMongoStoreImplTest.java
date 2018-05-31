@@ -136,9 +136,6 @@ public class DefaultMongoStoreImplTest {
 
 						when(converter.convert(eq("12345"), eq(String.class)))
 								.thenReturn("12345");
-						when(gridFsTemplate.getResource(eq("12345")))
-								.thenReturn(resource);
-						when(resource.contentLength()).thenReturn(20L);
 					});
 					JustBeforeEach(() -> {
 						mongoContentRepoImpl.associate(property, "12345");
@@ -147,14 +144,8 @@ public class DefaultMongoStoreImplTest {
 							() -> {
 								verify(converter).convert(eq("12345"), eq(String.class));
 							});
-					It("should use the conversion service to get a resource path", () -> {
-						verify(gridFsTemplate).getResource(eq("12345"));
-					});
 					It("should set the entity's content ID attribute", () -> {
 						assertThat(property.getContentId(), is("12345"));
-					});
-					It("should set the entity's content length attribute", () -> {
-						assertThat(property.getContentLen(), is(20L));
 					});
 				});
 
@@ -162,7 +153,6 @@ public class DefaultMongoStoreImplTest {
 					BeforeEach(() -> {
 						property = new TestEntity();
 						property.setContentId("12345");
-						property.setContentLen(999L);
 					});
 					JustBeforeEach(() -> {
 						mongoContentRepoImpl.unassociate(property);
@@ -170,22 +160,15 @@ public class DefaultMongoStoreImplTest {
 					It("should reset the entity's content ID attribute", () -> {
 						assertThat(property.getContentId(), is(nullValue()));
 					});
-					It("should set the entity's content length attribute", () -> {
-						assertThat(property.getContentLen(), is(0L));
-					});
 					Context("when the entity has a shared @Id @ContentId field", () -> {
 						BeforeEach(() -> {
 							property = new SharedIdContentIdEntity();
 							property.setContentId("12345");
-							property.setContentLen(999L);
 						});
 						It("should not reset the entity's @ContentId (because it is also the @Id)",
 								() -> {
 									assertThat(property.getContentId(), is("12345"));
 								});
-						It("should set the entity's content length attribute", () -> {
-							assertThat(property.getContentLen(), is(0L));
-						});
 					});
 				});
 			});
