@@ -112,7 +112,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			Object convertedId = convertToExternalContentIdType(metadata, contentId);
 			resource = this.getResource((SID)convertedId);
 			BeanUtils.setFieldWithAnnotation(metadata, ContentId.class,
-					convertedId.toString());
+					convertedId);
 		}
 		OutputStream os = null;
 		long contentLen = -1L;

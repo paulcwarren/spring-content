@@ -56,10 +56,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
 		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null) {
-			contentId = UUID.randomUUID();
-			contentId = convertToExternalContentIdType(entity, contentId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
-					contentId.toString());
+			return null;
 		}
 
 		String location = converter.convert(contentId, String.class);
@@ -68,16 +65,17 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public void associate(S entity, SID id) {
-		String location = converter.convert(id, String.class);
-		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, location);
-		Resource resource = gridFs.getResource(location);
+		Resource resource = this.getResource(id);
+		Object convertedId = convertToExternalContentIdType(entity, id);
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
+				convertedId.toString());
 		try {
 			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
 					resource.contentLength());
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for %s",
-					location), e);
+			logger.error(String.format("Unexpected error setting content length for resource %s",
+					id), e);
 		}
 	}
 
