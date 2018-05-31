@@ -13,6 +13,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,51 +77,55 @@ public class DefaultMongoStoreImplTest {
 							assertThat(genericResource, is(instanceOf(Resource.class)));
 						});
 					});
-					Context("with an entity", () -> {
+				});
+			});
+			Describe("AssociativeStore", () -> {
+				BeforeEach(() -> {
+					converter = mock(ConversionService.class);
+					gridFsTemplate = mock(GridFsTemplate.class);
+					resource = mock(GridFsResource.class);
+					mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(
+							gridFsTemplate, converter);
+				});
+				Context("getResource", () -> {
+					BeforeEach(() -> {
+						property = new TestEntity();
+					});
+					JustBeforeEach(() -> {
+						genericResource = mongoContentRepoImpl.getResource(property);
+					});
+					Context("given no resource is associated", () -> {
 						BeforeEach(() -> {
-							property = new TestEntity();
+							when(converter.convert(matches(
+									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
+									eq(String.class))).thenReturn("abcd");
+							when(gridFsTemplate.getResource(eq("abcd")))
+									.thenReturn(resource);
 						});
-						JustBeforeEach(() -> {
-							genericResource = mongoContentRepoImpl.getResource(property);
-						});
-						Context("without existing content", () -> {
-							BeforeEach(() -> {
-								when(converter.convert(matches(
+						It("should return null",
+							() -> {
+								verify(converter, never()).convert(matches(
 										"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
-										eq(String.class))).thenReturn("abcd");
-								when(gridFsTemplate.getResource(eq("abcd")))
-										.thenReturn(resource);
+										eq(String.class));
+								assertThat(genericResource, is(nullValue()));
 							});
-							It("should use the mongoStoreConverter to find the resource path",
-									() -> {
-										verify(converter).convert(matches(
-												"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
-												eq(String.class));
-									});
-							It("should get Resource", () -> {
-								assertThat(genericResource, is(not(nullValue())));
-							});
-							It("should set the entity's @ContentId", () -> {
-								assertThat(property.getContentId(), is(not(nullValue())));
-							});
-						});
-						Context("with existing content", () -> {
-							BeforeEach(() -> {
-								property.setContentId("abcd");
+					});
+					Context("with existing content", () -> {
+						BeforeEach(() -> {
+							property.setContentId("abcd");
 
-								when(converter.convert(eq("abcd"), eq(String.class)))
-										.thenReturn("abcd");
-								when(gridFsTemplate.getResource(eq("abcd")))
-										.thenReturn(resource);
-							});
-							It("should use the mongoStoreConverter to find the resource path",
-									() -> {
-										verify(converter).convert(eq("abcd"),
-												eq(String.class));
-									});
-							It("should get Resource", () -> {
-								assertThat(genericResource, is(not(nullValue())));
-							});
+							when(converter.convert(eq("abcd"), eq(String.class)))
+									.thenReturn("abcd");
+							when(gridFsTemplate.getResource(eq("abcd")))
+									.thenReturn(resource);
+						});
+						It("should use the mongoStoreConverter to find the resource path",
+								() -> {
+									verify(converter).convert(eq("abcd"),
+											eq(String.class));
+								});
+						It("should get Resource", () -> {
+							assertThat(genericResource, is(not(nullValue())));
 						});
 					});
 				});
