@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.UUID;
 
 import com.amazonaws.services.s3.model.S3ObjectId;
 import internal.org.springframework.content.s3.io.S3StoreResource;
@@ -22,6 +23,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -88,13 +90,16 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 		String bucket = this.getS3ObjectIdResolver().getBucket(entity,
 				this.defaultBucket);
-		String objectId = this.getS3ObjectIdResolver().getKey(entity);
-
 		if (bucket == null) {
 			throw new StoreAccessException("Bucket not set");
 		}
 
-		S3ObjectId s3ObjectId = new S3ObjectId(bucket.toString(), objectId.toString());
+		String key = this.getS3ObjectIdResolver().getKey(entity);
+		if (key == null) {
+			return null;
+		}
+
+		S3ObjectId s3ObjectId = new S3ObjectId(bucket.toString(), key.toString());
 		return this.getResourceInternal(s3ObjectId);
 	}
 
@@ -137,6 +142,14 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	@Override
 	public void setContent(S property, InputStream content) {
 		Resource resource = this.getResource(property);
+		if (resource == null) {
+			UUID newId = UUID.randomUUID();
+			Object convertedId = converter.convert(newId, TypeDescriptor.forObject(newId),
+					TypeDescriptor.valueOf(BeanUtils
+							.getFieldWithAnnotationType(property, ContentId.class)));
+			resource = this.getResource((SID)convertedId);
+			BeanUtils.setFieldWithAnnotation(property, ContentId.class, convertedId);
+		}
 
 		OutputStream os = null;
 		try {

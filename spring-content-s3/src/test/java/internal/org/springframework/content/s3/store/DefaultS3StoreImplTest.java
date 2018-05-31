@@ -22,14 +22,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FContext;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FDescribe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -67,7 +63,7 @@ public class DefaultS3StoreImplTest {
 	private ContentProperty entity;
 
 	private WritableResource resource;
-	private Resource nonExistentResource;
+	private Resource r, nonExistentResource;
 	private InputStream content;
 	private OutputStream output;
 	private File parent;
@@ -238,12 +234,12 @@ public class DefaultS3StoreImplTest {
 					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,
 							converter, client, resolver, defaultBucket);
 				});
-				Context("#getResourceInternal", () -> {
+				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
 						s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(
 								loader, converter, client, resolver, defaultBucket);
 						try {
-							s3StoreImpl.getResource(entity);
+							r = s3StoreImpl.getResource(entity);
 						}
 						catch (Exception e) {
 							this.e = e;
@@ -261,43 +257,52 @@ public class DefaultS3StoreImplTest {
 							Context("when called with an entity that doesn't have an @Bucket value",
 									() -> {
 										BeforeEach(() -> {
-											entity = new TestEntity();
-
-											// converter that converts new id to take
-											// contentId type
-											when(converter.convert(
-													argThat(is(instanceOf(UUID.class))),
-													argThat(is(instanceOf(
-															TypeDescriptor.class))),
-													argThat(is(instanceOf(
-															TypeDescriptor.class)))))
-																	.thenReturn(
-																			"converted-uuid");
+											entity = new TestEntity("12345-67890");
 
 											// converter that converts the object id for
 											// storage placement
-											when(converter.convert(eq("converted-uuid"),
+											when(converter.convert(eq("12345-67890"),
 													eq(String.class))).thenReturn(
-															"/converted/uuid");
+															"/12345/67890");
+
+											when(loader.getResource(matches("^s3://default-defaultBucket/12345/67890"))).thenReturn(mock(WritableResource.class));
 										});
 										It("should fetch the resource", () -> {
 											verify(loader).getResource(matches(
-													"^s3://default-defaultBucket/converted/uuid"));
+													"^s3://default-defaultBucket/12345/67890"));
 										});
-										Context("when called with an entity that has an @Bucket value",
+									});
+							Context("when called with an entity that has an @Bucket value",
+									() -> {
+										BeforeEach(() -> {
+											entity = new TestEntityWithBucketAnnotation(
+													"some-other-bucket");
+											entity.setContentId("12345-67890");
+
+											// converter that converts the object id for
+											// storage placement
+											when(converter.convert(eq("12345-67890"),
+													eq(String.class))).thenReturn(
+													"/12345/67890");
+
+											when(loader.getResource(matches("^s3://some-other-bucket/12345/67890"))).thenReturn(mock(WritableResource.class));
+										});
+										It("should fetch the correct resource",
 												() -> {
-													BeforeEach(() -> {
-														entity = new TestEntityWithBucketAnnotation(
-																"some-other-bucket");
-													});
-													It("should fetch the correct resource",
-															() -> {
-																verify(loader)
-																		.getResource(
-																				matches("^s3://some-other-bucket/converted/uuid"));
-															});
+													verify(loader)
+															.getResource(
+																	matches("^s3://some-other-bucket/12345/67890"));
 												});
 									});
+							Context("when called with an entity that has no associated resource", () -> {
+								BeforeEach(() -> {
+									entity = new TestEntity();
+								});
+								It("should return null", () -> {
+									assertThat(r, is(nullValue()));
+									assertThat(e, is(nullValue()));
+								});
+							});
 						});
 					});
 					Context("given a custom id resolver", () -> {

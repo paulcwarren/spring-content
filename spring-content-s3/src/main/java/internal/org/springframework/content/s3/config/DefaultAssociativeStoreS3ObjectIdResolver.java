@@ -15,9 +15,7 @@ import java.util.UUID;
  *
  * This default implementation will look for fields annotated with @Bucket to resolve the
  * name of the bucket. It will look for fields annotated with @ContentId to resolve the
- * key. If the @ContentId field is null - indicating no content is yet associated with the
- * entity - it will create a random ID based on java.util.UUID and attempt to convert that
- * to the the @ContentId field type.
+ * key.
  */
 public class DefaultAssociativeStoreS3ObjectIdResolver
 		implements S3ObjectIdResolver<Object> {
@@ -42,15 +40,14 @@ public class DefaultAssociativeStoreS3ObjectIdResolver
 
 	@Override
 	public String getKey(Object idOrEntity) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(idOrEntity, ContentId.class);
-		if (contentId == null) {
-			UUID newId = UUID.randomUUID();
-			contentId = converter.convert(newId, TypeDescriptor.forObject(newId),
-					TypeDescriptor.valueOf(BeanUtils
-							.getFieldWithAnnotationType(idOrEntity, ContentId.class)));
-			BeanUtils.setFieldWithAnnotation(idOrEntity, ContentId.class, contentId);
+		// if an entity return @ContentId
+		if (BeanUtils.hasFieldWithAnnotation(idOrEntity, ContentId.class)) {
+			Object contentId = BeanUtils.getFieldWithAnnotation(idOrEntity, ContentId.class);
+			return contentId != null ? contentId.toString() : null;
+		// otherwise is is the id
+		} else {
+			return idOrEntity.toString();
 		}
-		return contentId.toString();
 	}
 
 }
