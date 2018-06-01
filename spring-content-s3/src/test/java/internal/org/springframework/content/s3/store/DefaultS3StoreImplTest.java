@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.core.convert.ConversionService;
@@ -62,6 +63,7 @@ public class DefaultS3StoreImplTest {
 	private CustomContentId customId;
 	private ContentProperty entity;
 
+	private String id;
 	private WritableResource resource;
 	private Resource r, nonExistentResource;
 	private InputStream content;
@@ -236,8 +238,6 @@ public class DefaultS3StoreImplTest {
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
-						s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(
-								loader, converter, client, resolver, defaultBucket);
 						try {
 							r = s3StoreImpl.getResource(entity);
 						}
@@ -353,6 +353,36 @@ public class DefaultS3StoreImplTest {
 									});
 								});
 							});
+				});
+				Context("associate", () -> {
+					BeforeEach(() -> {
+						resolver = new DefaultAssociativeStoreS3ObjectIdResolver(
+								converter);
+
+						id = "12345-67890";
+						entity = new TestEntity();
+					});
+					JustBeforeEach(() -> {
+						s3StoreImpl.associate(entity, id);
+					});
+					It("should set the entity's content ID attribute", () -> {
+						assertThat(entity.getContentId(), is("12345-67890"));
+					});
+				});
+				Context("#unassociate", () -> {
+					BeforeEach(() -> {
+						resolver = new DefaultAssociativeStoreS3ObjectIdResolver(
+								converter);
+
+						entity = new TestEntity();
+						entity.setContentId("12345-67890");
+					});
+					JustBeforeEach(() -> {
+						s3StoreImpl.unassociate(entity);
+					});
+					It("should reset the entity's content ID attribute", () -> {
+						assertThat(entity.getContentId(), is(nullValue()));
+					});
 				});
 			});
 			Describe("ContentStore", () -> {
