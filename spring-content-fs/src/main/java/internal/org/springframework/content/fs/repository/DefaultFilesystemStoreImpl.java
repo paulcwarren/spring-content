@@ -68,15 +68,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
-		Resource resource = getResourceInternal(id);
-		try {
-			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
-					resource.contentLength());
-		}
-		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for %s",
-					id.toString()), e);
-		}
 	}
 
 	@Override
@@ -97,7 +88,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 						return true;
 					}
 				});
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	@Override
@@ -188,6 +178,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 		// reset content fields
 		unassociate(property);
+		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {

@@ -142,31 +142,20 @@ public class DefaultFilesystemStoresImplTest {
 					JustBeforeEach(() -> {
 						filesystemContentRepoImpl.associate(entity, id);
 					});
-					It("should use the conversion service to get a resource path", () -> {
-						verify(conversion).convert(eq("12345-67890"), eq(String.class));
-						verify(loader).getResource(eq("/12345/67890"));
-					});
 					It("should set the entity's content ID attribute", () -> {
 						assertThat(entity.getContentId(), is("12345-67890"));
-					});
-					It("should set the entity's content length attribute", () -> {
-						assertThat(entity.getContentLen(), is(20L));
 					});
 				});
 				Context("#unassociate", () -> {
 					BeforeEach(() -> {
 						entity = new TestEntity();
 						entity.setContentId("12345-67890");
-						entity.setContentLen(999L);
 					});
 					JustBeforeEach(() -> {
 						filesystemContentRepoImpl.unassociate(entity);
 					});
 					It("should reset the entity's content ID attribute", () -> {
 						assertThat(entity.getContentId(), is(nullValue()));
-					});
-					It("should set the entity's content length attribute", () -> {
-						assertThat(entity.getContentLen(), is(0L));
 					});
 				});
 			});
