@@ -119,14 +119,8 @@ public class DefaultJpaStoreImplTest {
 					JustBeforeEach(() -> {
 						store.associate(entity, id);
 					});
-					It("should use the conversion service to get a resource path", () -> {
-						verify(blobResourceLoader).getResource(eq("12345"));
-					});
 					It("should set the entity's content ID attribute", () -> {
 						assertThat(entity.getContentId(), CoreMatchers.is("12345"));
-					});
-					It("should set the entity's content length attribute", () -> {
-						assertThat(entity.getContentLen(), CoreMatchers.is(20L));
 					});
 				});
 				Context("#unassociate", () -> {
@@ -140,9 +134,8 @@ public class DefaultJpaStoreImplTest {
 					JustBeforeEach(() -> {
 						store.unassociate(entity);
 					});
-					It("should reset the @ContentId and @ContentLength", () -> {
+					It("should reset the @ContentId", () -> {
 						assertThat(entity.getContentId(), is(nullValue()));
-						assertThat(entity.getContentLen(), is(0L));
 					});
 				});
 			});

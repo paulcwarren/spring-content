@@ -56,15 +56,6 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
-		Resource resource = loader.getResource(id.toString());
-		try {
-			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
-					resource.contentLength());
-		}
-		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content length for %s",
-					id.toString()), e);
-		}
 	}
 
 	@Override
@@ -85,7 +76,6 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 						return true;
 					}
 				});
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	@Override
@@ -157,6 +147,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			((DeletableResource) resource).delete();
 		}
 		unassociate(metadata);
+		BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, 0);
 	}
 
 	protected Object convertToExternalContentIdType(S property, Object contentId) {
