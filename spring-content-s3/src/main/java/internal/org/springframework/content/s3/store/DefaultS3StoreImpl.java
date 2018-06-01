@@ -136,7 +136,6 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 						return true;
 					}
 				});
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	@Override
