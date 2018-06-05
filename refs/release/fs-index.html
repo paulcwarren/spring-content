@@ -431,8 +431,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content Filesystem - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.0.11,</span>
-<span id="revdate">2018-05-18</span>
+<span id="revnumber">version 0.1.0,</span>
+<span id="revdate">2018-06-05</span>
 </div>
 </div>
 <div id="content">
@@ -513,7 +513,10 @@ Copies of this document may be made for your own use and for distribution to oth
 <h2 id="content-repositories">1. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The goal of the Spring Content is to significantly reduce the amount of boilerplate code required to implement handling of rich-content resources and other media by providing content access, metadata association, search and transformation capabilities for various implementations of Content Store.</p>
+<p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
+and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
+the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
+class-path dependencies, Spring Content is then able to inject storage-specific implementations.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -523,7 +526,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </td>
 <td class="content">
 <div class="paragraph">
-<p>This chapter explains the core concepts and interfaces for Spring Content stores. The information in this chapter is pulled from the Spring Content Commons.  It uses the configuration and code samples for the S3 module.  Adapt the Java configuration and the types to be extended to the equivalents of the particular module that you are using.</p>
+<p>This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.</p>
 </div>
 </td>
 </tr>
@@ -532,7 +535,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect2">
 <h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
 <div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code> abstraction.  This interface provides CRUD functionality and metadata association for content.  It is typed to the Spring Data domain class to which the content is associated, and to the type of the content ID attribute on that domain class.</p>
+<p>The central interface in the Spring Content is the <code>ContentStore</code>.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a <code>@ContentId</code> field on that domain class.</p>
 </div>
 <div id="content-repositories.repository" class="exampleblock">
 <div class="title">Example 1. ContentStore interface</div>
@@ -552,7 +555,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="colist arabic">
 <ol>
 <li>
-<p>Stores content and saves its metadata on <code>entity</code></p>
+<p>Stores content and associates it with <code>entity</code></p>
 </li>
 <li>
 <p>Returns the content associated with <code>entity</code></p>
@@ -564,10 +567,116 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="content-repositories.events">1.1.1. Events</h4>
 <div class="paragraph">
-<p>There are 6 events that Spring Content emits whilst performing basic content access.  Those are:</p>
+<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it
+is possible to associate and store a profile picture for each user.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. ContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private String username;
+
+	@ContentId
+	private String contentId;
+
+	@ContentLength
+	private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
+
+public interface ProfilePictureStore extends ContentStore&lt;User, String&gt; {
+}
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+		return (args) -&gt; {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store profile picture
+			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_experimental_api">1.1.1. Experimental API</h4>
+<div class="paragraph">
+<p>All Spring Content storage modules also now support for a newer <strong>experimental</strong> Store API based on
+<code>org.springframework.core.io.Resource</code>.</p>
+</div>
+<div class="paragraph">
+<p>The base interface in this API is <code>Store</code>, a generic <code>org.springframework.core.io.ResourceLoader</code>.  When called stores
+return instances of <code>org.springframework.content.commons.io.DeletableResource</code> allowing the full lifecycle of resources
+to be managed through this API.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Store interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;SID extends Serializable&gt; {
+
+	Resource getResource(SID id);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This interface <strong>is</strong> supported by Spring Content REST.</p>
+</div>
+<div class="paragraph">
+<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing resources to be associated with and retrieved
+by JPA Entities.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. AssociativeStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
+
+    Resource getResource(S entity);
+
+    void associate(S entity, SID id);
+
+    void unassociate(S entity);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.events">1.1.2. Events</h4>
+<div class="paragraph">
+<p>Spring Content emits six events.  They are:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -594,10 +703,12 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect4">
 <h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
 <div class="paragraph">
-<p>There is an abstract class that you can subclass which listens for these kinds of events and calls the appropriate method based on the event type. You just override the methods for the events you’re interested in.</p>
+<p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
+override the methods that you are interested in.  When events occur Spring Content will call the appropriate methods on
+all instances of <code>AbstractStoreEventListener</code>.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. AbstractContentRepositoryEventListener</div>
+<div class="title">Example 5. AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -618,16 +729,19 @@ Copies of this document may be made for your own use and for distribution to oth
 </div>
 </div>
 <div class="paragraph">
-<p>This approach does not filter events based on domain type.</p>
+<p>The down-side of this approach is that it does not filter events based on Entity.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_writing_an_annotated_contentrepository_handler">Writing an Annotated ContentRepository Handler</h5>
+<h5 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h5>
 <div class="paragraph">
-<p>Another approach is to use an annotated handler, which does filter events based on domain type.</p>
+<p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
 </div>
 <div class="paragraph">
-<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells the <code>BeanPostProcessor</code> that this class needs to be inspected for handler methods.  It iterates over the class&#8217;s methods and looks for annotations that correspond to the content event. There are 6 handler annotations.  Those are:</p>
+<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
+Spring Content that this class needs to be inspected for handler methods.  It
+iterates over the class&#8217;s methods and looks for annotations that correspond to the
+event.  There are 6 handler annotations:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -652,7 +766,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 3. Annotated event handler</div>
+<div class="title">Example 6. Annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -674,64 +788,26 @@ public class ExampleAnnotatedEventListener {
 </div>
 </div>
 <div class="paragraph">
-<p>The type of interests you are interested in is determined from the type of the first parameter of each annotated method.</p>
+<p>The type of events you are interested in is determined from the type of the first
+ parameter of each annotated method.</p>
 </div>
 <div class="paragraph">
-<p>To register your event handler, either mark the class with one of Spring’s @Component stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or declare an instance of your annotated bean in your ApplicationContext.</p>
+<p>To register your event handler, either mark the class with one of Spring’s @Component
+stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
+declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 4. Handler registration</div>
+<div class="title">Example 7. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 public class ContentStoreConfiguration {
 
-  @Bean
-  ExampeAnnotatedEventHandler exampleEventHandler() {
-    return new ExampeAnnotatedEventHandler();
-  }
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect4">
-<h5 id="_experimental_api">Experimental API</h5>
-<div class="paragraph">
-<p>Some Spring Content modules offer support for a new experimental Store API.  This API offers lower-level management of content that can be used to satisfy a wider set of content-related use cases.</p>
-</div>
-<div class="paragraph">
-<p>The base interface in this API is the <code>Store</code>, a generic version of a <code>org.springframework.core.io.ResourceLoader</code> that returns `org.springframework.content.commons.io.DeletableResource`s allowing them to be fully-managed.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 5. Store interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;ID extends Serializable&gt; {
-
-	Resource getResource(ID id);
-
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing Resources returned by `Store`s to be associated with Spring Data Entity objects.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 6. AssociativeStore interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
-
-	void associate(S entity, SID id);
-	void unassociate(S entity);
-
+	@Bean
+	ExampeAnnotatedEventHandler exampleEventHandler() {
+		return new ExampeAnnotatedEventHandler();
+	}
 }</code></pre>
 </div>
 </div>
@@ -740,7 +816,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.search">1.1.2. Search</h4>
+<h4 id="content-repositories.search">1.1.3. Search</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
 </div>
@@ -748,7 +824,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally be made searchable by extending the <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Searchable interface</div>
+<div class="title">Example 8. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -774,7 +850,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.renditions">1.1.3. Renditions</h4>
+<h4 id="content-repositories.renditions">1.1.4. Renditions</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
 </div>
@@ -782,7 +858,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Renderable interface</div>
+<div class="title">Example 9. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -864,7 +940,7 @@ public class SopDocument {
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
-@EnableS3ContentRepositories
+@EnableS3Stores
 class Config {}</code></pre>
 </div>
 </div>
@@ -1081,7 +1157,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <p>Spring Content Filesystem Stores are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Spring Content Filesystem Stores using Java Config</div>
+<div class="title">Example 10. Spring Content Filesystem Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1152,7 +1228,7 @@ public static class ApplicationConfig {
 <p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Configuring the Filesystem Store</div>
+<div class="title">Example 11. Configuring the Filesystem Store</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1313,8 +1389,8 @@ public class FilesystemStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.0.11<br>
-Last updated 2018-05-18 02:58:16 UTC
+Version 0.1.0<br>
+Last updated 2018-06-05 04:39:55 UTC
 </div>
 </div>
 </body>

@@ -5,8 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
-<title>Spring Content JPA - Reference Documentation</title>
+<title>Working with Spring Stores</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -426,90 +425,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="book">
+<body id="content-repositories" class="book">
 <div id="header">
-<h1>Spring Content JPA - Reference Documentation</h1>
-<div class="details">
-<span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.1.0,</span>
-<span id="revdate">2018-06-05</span>
-</div>
+<h1>Working with Spring Stores</h1>
 </div>
 <div id="content">
 <div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>&#169; 2008-2017 The original authors.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
-</td>
-</tr>
-</table>
-</div>
-<div id="toc" class="toc">
-<div id="toctitle" class="title">Table of Contents</div>
-<ul class="sectlevel0">
-<li><a href="#preface">Preface</a>
-<ul class="sectlevel1">
-<li><a href="#project">Project metadata</a></li>
-<li><a href="#content-repositories">1. Working with Spring Stores</a>
-<ul class="sectlevel2">
-<li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
-<li><a href="#content-repositories.creation">1.2. Creating Content Store Instances</a></li>
-<li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
-</ul>
-</li>
-<li><a href="#_jpa_content_stores">2. JPA Content Stores</a>
-<ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">2.1. Annotation based configuration</a></li>
-<li><a href="#_persisting_content">2.2. Persisting Content</a></li>
-</ul>
-</li>
-<li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
-<ul class="sectlevel2">
-<li><a href="#_overview">3.1. Overview</a></li>
-<li><a href="#_dependencies">3.2. Dependencies</a></li>
-<li><a href="#_enabling">3.3. Enabling</a></li>
-<li><a href="#_configuring">3.4. Configuring</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<h1 id="preface" class="sect0">Preface</h1>
-<div class="sect1">
-<h2 id="project">Project metadata</h2>
-<div class="sectionbody">
-<div class="ulist">
-<ul>
-<li>
-<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
-</li>
-<li>
-<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
-</li>
-<li>
-<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
-</li>
-<li>
-<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="content-repositories">1. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
@@ -531,8 +452,11 @@ class-path dependencies, Spring Content is then able to inject storage-specific 
 </tr>
 </table>
 </div>
-<div class="sect2">
-<h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="content-repositories.core-concepts">Core concepts</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The central interface in the Spring Content is the <code>ContentStore</code>.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a <code>@ContentId</code> field on that domain class.</p>
 </div>
@@ -620,8 +544,8 @@ public class Application {
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_experimental_api">1.1.1. Experimental API</h4>
+<div class="sect2">
+<h3 id="_experimental_api">Experimental API</h3>
 <div class="paragraph">
 <p>All Spring Content storage modules also now support for a newer <strong>experimental</strong> Store API based on
 <code>org.springframework.core.io.Resource</code>.</p>
@@ -672,8 +596,8 @@ by JPA Entities.</p>
 <p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="content-repositories.events">1.1.2. Events</h4>
+<div class="sect2">
+<h3 id="content-repositories.events">Events</h3>
 <div class="paragraph">
 <p>Spring Content emits six events.  They are:</p>
 </div>
@@ -699,8 +623,8 @@ by JPA Entities.</p>
 </li>
 </ul>
 </div>
-<div class="sect4">
-<h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
+<div class="sect3">
+<h4 id="_writing_an_applicationlistener">Writing an ApplicationListener</h4>
 <div class="paragraph">
 <p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
 override the methods that you are interested in.  When events occur Spring Content will call the appropriate methods on
@@ -731,8 +655,8 @@ all instances of <code>AbstractStoreEventListener</code>.</p>
 <p>The down-side of this approach is that it does not filter events based on Entity.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h5>
+<div class="sect3">
+<h4 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h4>
 <div class="paragraph">
 <p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
 </div>
@@ -814,8 +738,8 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="content-repositories.search">1.1.3. Search</h4>
+<div class="sect2">
+<h3 id="content-repositories.search">Search</h3>
 <div class="paragraph">
 <p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
 </div>
@@ -848,8 +772,8 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="content-repositories.renditions">1.1.4. Renditions</h4>
+<div class="sect2">
+<h3 id="content-repositories.renditions">Renditions</h3>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
 </div>
@@ -874,8 +798,10 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="content-repositories.creation">1.2. Creating Content Store Instances</h3>
+</div>
+<div class="sect1">
+<h2 id="content-repositories.creation">Creating Content Store Instances</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>To use these core concepts:</p>
 </div>
@@ -998,13 +924,15 @@ public class SomeClass {
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_patterns_of_content_association">1.3. Patterns of Content Association</h3>
+</div>
+<div class="sect1">
+<h2 id="_patterns_of_content_association">Patterns of Content Association</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Content can be associated with a Spring Data Entity in several ways.</p>
 </div>
-<div class="sect3">
-<h4 id="_entity_association">1.3.1. Entity Association</h4>
+<div class="sect2">
+<h3 id="_entity_association">Entity Association</h3>
 <div class="paragraph">
 <p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
 </div>
@@ -1035,8 +963,8 @@ public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_property_association">1.3.2. Property Association</h4>
+<div class="sect2">
+<h3 id="_property_association">Property Association</h3>
 <div class="paragraph">
 <p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
 </div>
@@ -1104,8 +1032,8 @@ public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code><
 <div class="paragraph">
 <p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
 </div>
-<div class="sect4">
-<h5 id="_property_collection_associations">Property Collection Associations</h5>
+<div class="sect3">
+<h4 id="_property_collection_associations">Property Collection Associations</h4>
 <div class="paragraph">
 <p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
 </div>
@@ -1147,205 +1075,8 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="_jpa_content_stores">2. JPA Content Stores</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_annotation_based_configuration">2.1. Annotation based configuration</h3>
-<div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 10. Spring Content JPA Stores using Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaContentRepositories
-@EnableTransactionManagement
-public static class ApplicationConfig {
-
-  @Bean
-  public DataSource dataSource() {
-
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
-
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
-
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
-
-  @Bean
-  public PlatformTransactionManager transactionManager() {
-
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
-
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component declared here is the JpaTransactionManager.</p>
-</div>
-<div class="paragraph">
-<p>We activate Spring Data JPA repositories using the @EnableJpaRepositories annotation,  Spring Content JPA stores using @EnableJpaContentRepositories and enable transaction management with the @EnableTransactionManagement annotation.</p>
-</div>
-<div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the one the configuration class resides in.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_persisting_content">2.2. Persisting Content</h3>
-<div class="sect3">
-<h4 id="_setting_content">2.2.1. Setting Content</h4>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The Spring Content Commons provided <code>PlacementService</code> is used to determine the actual physical storage location by parsing the @ContentId field into a resource path.</p>
-</div>
-<div class="paragraph">
-<p>The <code>entity</code> @ContentId and @ContentLength fields will be updated.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the @ContentLength field, if appropriate.</p>
-</div>
-<div class="sect4">
-<h5 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h5>
-<div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when content is initially set.</p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_getting_content">2.2.2. Getting Content</h4>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_unsetting_content">2.2.3. Unsetting Content</h4>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="solr-search">3. Indexing &amp; Searching with Solr</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_overview">3.1. Overview</h3>
-<div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_dependencies">3.2. Dependencies</h3>
-<div class="paragraph">
-<p>Add the solrj to the classpath.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
-		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
-		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
-		&lt;exclusions&gt;
-			&lt;exclusion&gt;
-				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
-				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
-			&lt;/exclusion&gt;
-			&lt;exclusion&gt;
-				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
-				&lt;groupId&gt;log4j&lt;/groupId&gt;
-			&lt;/exclusion&gt;
-		&lt;/exclusions&gt;
-	&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>If using Spring Boot the version may be omitted</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enabling">3.3. Enabling</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
-</li>
-<li>
-<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring">3.4. Configuring</h3>
-<div class="paragraph">
-<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
-</div>
-<div class="paragraph">
-<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.0<br>
 Last updated 2018-06-05 04:39:55 UTC
 </div>
 </div>
