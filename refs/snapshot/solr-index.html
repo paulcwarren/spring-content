@@ -432,7 +432,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.1.0-SNAPSHOT,</span>
-<span id="revdate">2018-06-01</span>
+<span id="revdate">2018-06-05</span>
 </div>
 </div>
 <div id="content">
@@ -617,50 +617,53 @@ public class Application {
 <div class="sect3">
 <h4 id="_experimental_api">1.1.1. Experimental API</h4>
 <div class="paragraph">
-<p>All Spring Content storage modules also now offer support for a newer <strong>experimental</strong> Store API based on
+<p>All Spring Content storage modules also now support for a newer <strong>experimental</strong> Store API based on
 <code>org.springframework.core.io.Resource</code>.</p>
 </div>
 <div class="paragraph">
 <p>The base interface in this API is <code>Store</code>, a generic <code>org.springframework.core.io.ResourceLoader</code>.  When called stores
-return instances of <code>org.springframework.content.commons.io.DeletableResource</code> allowing the full lifecycle of resources to be
-managed through this API.</p>
+return instances of <code>org.springframework.content.commons.io.DeletableResource</code> allowing the full lifecycle of resources
+to be managed through this API.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 3. Store interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;ID extends Serializable&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;SID extends Serializable&gt; {
 
-	Resource getResource(CID id);
+	Resource getResource(SID id);
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>This interface is supported by Spring Content REST.</p>
+<p>This interface <strong>is</strong> supported by Spring Content REST.</p>
 </div>
 <div class="paragraph">
-<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing resources to be associated with Spring Data
-Entity objects.</p>
+<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing resources to be associated with and retrieved
+by JPA Entities.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 4. AssociativeStore interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, CID extends Serializable&gt; extends Store&lt;CID&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
 
-	Resource getResource(E entity);
-	Resource forgetResource(E entity);
+    Resource getResource(S entity);
+
+    void associate(S entity, SID id);
+
+    void unassociate(S entity);
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>This is not yet supported by Spring Content REST.</p>
+<p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1251,7 +1254,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 0.1.0-SNAPSHOT<br>
-Last updated 2018-06-01 03:40:23 UTC
+Last updated 2018-06-05 04:31:23 UTC
 </div>
 </div>
 </body>
