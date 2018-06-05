@@ -88,42 +88,45 @@ public class Application {
 
 === Experimental API
 
-All Spring Content storage modules also now offer support for a newer *experimental* Store API based on
+All Spring Content storage modules also now support for a newer *experimental* Store API based on
 `org.springframework.core.io.Resource`.
 
 The base interface in this API is `Store`, a generic `org.springframework.core.io.ResourceLoader`.  When called stores
-return instances of `org.springframework.content.commons.io.DeletableResource` allowing the full lifecycle of resources to be
-managed through this API.
+return instances of `org.springframework.content.commons.io.DeletableResource` allowing the full lifecycle of resources
+to be managed through this API.
 
 .Store interface
 ====
 [source, java]
 ----
-public interface Store<ID extends Serializable> {
+public interface Store<SID extends Serializable> {
 
-	Resource getResource(CID id);
+	Resource getResource(SID id);
 }
 ----
 ====
 
-This interface is supported by Spring Content REST.
+This interface *is* supported by Spring Content REST.
 
-Derived from the `Store` is a second interface `AssociativeStore` allowing resources to be associated with Spring Data
-Entity objects.
+Derived from the `Store` is a second interface `AssociativeStore` allowing resources to be associated with and retrieved
+by JPA Entities.
 
 .AssociativeStore interface
 ====
 [source, java]
 ----
-public interface AssociativeStore<S, CID extends Serializable> extends Store<CID> {
+public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
 
-	Resource getResource(E entity);
-	Resource forgetResource(E entity);
+    Resource getResource(S entity);
+
+    void associate(S entity, SID id);
+
+    void unassociate(S entity);
 }
 ----
 ====
 
-This is not yet supported by Spring Content REST.
+This interface is *not* yet supported by Spring Content REST.
 
 [[content-repositories.events]]
 === Events
