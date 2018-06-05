@@ -161,7 +161,7 @@ When you’re finished, you can check your results against the code in <code>spr
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
         &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;1.5.10.RELEASE&lt;/version&gt;
+        &lt;version&gt;2.0.2.RELEASE&lt;/version&gt;
     &lt;/parent&gt;
 
     &lt;properties&gt;
@@ -189,7 +189,7 @@ When you’re finished, you can check your results against the code in <code>spr
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;0.0.11&lt;/version&gt;
+            &lt;version&gt;0.1.0&lt;/version&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
 
@@ -387,26 +387,32 @@ public class FileContentController {
     public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file)
             throws IOException {
 
-        File f = filesRepo.findOne(id);
-        f.setMimeType(file.getContentType());
+        Optional&lt;File&gt; f = filesRepo.findById(id);
+        if (f.isPresent()) {
+            f.get().setMimeType(file.getContentType());
 
-        contentStore.setContent(f, file.getInputStream());
+            contentStore.setContent(f.get(), file.getInputStream());
 
-        // save updated content-related info
-        filesRepo.save(f);
+            // save updated content-related info
+            filesRepo.save(f.get());
 
-        return new ResponseEntity&lt;Object&gt;(HttpStatus.OK);
+            return new ResponseEntity&lt;Object&gt;(HttpStatus.OK);
+        }
+        return null;
     }
 
     @RequestMapping(value=&quot;/files/{fileId}&quot;, method = RequestMethod.GET)
     public ResponseEntity&lt;?&gt; getContent(@PathVariable(&quot;fileId&quot;) Long id) {
 
-        File f = filesRepo.findOne(id);
-        InputStreamResource inputStreamResource = new InputStreamResource(contentStore.getContent(f));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentLength(f.getContentLength());
-        headers.set(&quot;Content-Type&quot;,     f.getMimeType());
-        return new ResponseEntity&lt;Object&gt;(inputStreamResource, headers, HttpStatus.OK);
+        Optional&lt;File&gt; f = filesRepo.findById(id);
+        if (f.isPresent()) {
+            InputStreamResource inputStreamResource = new InputStreamResource(contentStore.getContent(f.get()));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentLength(f.get().getContentLength());
+            headers.set(&quot;Content-Type&quot;, f.get().getMimeType());
+            return new ResponseEntity&lt;Object&gt;(inputStreamResource, headers, HttpStatus.OK);
+        }
+        return null;
     }
 }
 </code></pre>
