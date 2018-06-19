@@ -130,7 +130,20 @@ This interface is *not* yet supported by Spring Content REST.
 
 [[content-repositories.events]]
 === Events
-Spring Content emits six events.  They are:
+
+Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:
+
+* BeforeGetResourceEvent
+
+* AfterGetResourceEvent
+
+* BeforeAssociateEvent
+
+* AfterAssociateEvent
+
+* BeforeUnassociateEvent
+
+* AfterUnassociateEvent
 
 * BeforeSetContent
 
@@ -177,7 +190,19 @@ Another approach is to use an annotated handler, which does filter events based 
 To declare a handler, create a POJO and annotate it as `@StoreEventHandler`. This tells
 Spring Content that this class needs to be inspected for handler methods.  It
 iterates over the class's methods and looks for annotations that correspond to the
-event.  There are 6 handler annotations:
+event.  There are twelve handler annotations:
+
+* HandleBeforeGetResource
+
+* HandleAfterGetResource
+
+* HandleBeforeAssociate
+
+* HandleAfterAssociate
+
+* HandleBeforeUnassociate
+
+* HandleAfterUnassociate
 
 * HandleBeforeSetContent
 

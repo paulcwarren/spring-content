@@ -3,8 +3,10 @@ package internal.org.springframework.content.commons.repository.factory;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,11 +34,17 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -222,7 +230,31 @@ public class StoreMethodInterceptorTest {
 							.thenReturn(new Object[] { "some-id" });
 				});
 				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeGetResourceEvent.class)));
 					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(AfterGetResourceEvent.class)));
+				});
+			});
+			Context("when getResource(entity) is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = AssociativeStore.class;
+					final Method getResourceMethod = storeClazz.getMethod("getResource",
+							Object.class);
+
+					when(invocation.getMethod()).thenReturn(getResourceMethod);
+					when(invocation.getArguments())
+							.thenReturn(new Object[] { "some-id" });
+				});
+				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeGetResourceEvent.class)));
+					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(AfterGetResourceEvent.class)));
 				});
 			});
 			Context("when associate is invoked", () -> {
@@ -238,7 +270,11 @@ public class StoreMethodInterceptorTest {
 							new Object[] { new ContentObject("plain/text"), "some-id" });
 				});
 				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeAssociateEvent.class)));
 					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(AfterAssociateEvent.class)));
 				});
 			});
 			Context("when unassociate is invoked", () -> {
@@ -254,7 +290,11 @@ public class StoreMethodInterceptorTest {
 							.thenReturn(new Object[] { new ContentObject("plain/text") });
 				});
 				It("should proceed", () -> {
+					InOrder inOrder = Mockito.inOrder(publisher, invocation);
+
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeUnassociateEvent.class)));
 					verify(invocation).proceed();
+					inOrder.verify(publisher).publishEvent(argThat(instanceOf(AfterUnassociateEvent.class)));
 				});
 			});
 			Context("when an extension method is invoked", () -> {

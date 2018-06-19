@@ -3,6 +3,7 @@ package internal.org.springframework.content.commons.repository;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
@@ -23,6 +24,12 @@ import java.lang.reflect.Method;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.hamcrest.MockitoHamcrest;
+import org.springframework.content.commons.annotations.HandleAfterAssociate;
+import org.springframework.content.commons.annotations.HandleAfterGetResource;
+import org.springframework.content.commons.annotations.HandleAfterUnassociate;
+import org.springframework.content.commons.annotations.HandleBeforeAssociate;
+import org.springframework.content.commons.annotations.HandleBeforeGetResource;
+import org.springframework.content.commons.annotations.HandleBeforeUnassociate;
 import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
@@ -32,11 +39,17 @@ import org.springframework.content.commons.annotations.HandleBeforeSetContent;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.util.ReflectionUtils;
@@ -59,7 +72,7 @@ public class AnnotatedStoreEventInvokerTest {
 
 	{
 		Describe("#postProcessAfterInitialization", () -> {
-			Context("when initialized with a ContentRepositoryEventHandler bean", () -> {
+			Context("when initialized with a StoreEventHandler bean", () -> {
 				BeforeEach(() -> {
 					store = mock(ContentStore.class);
 				});
@@ -70,6 +83,24 @@ public class AnnotatedStoreEventInvokerTest {
 							"custom-bean");
 				});
 				It("register the handlers", () -> {
+					assertThat(
+							invoker.getHandlers().get(BeforeGetResourceEvent.class).size(),
+							is(1));
+					assertThat(
+							invoker.getHandlers().get(AfterGetResourceEvent.class).size(),
+							is(1));
+					assertThat(
+							invoker.getHandlers().get(BeforeAssociateEvent.class).size(),
+							is(1));
+					assertThat(
+							invoker.getHandlers().get(AfterAssociateEvent.class).size(),
+							is(1));
+					assertThat(
+							invoker.getHandlers().get(BeforeUnassociateEvent.class).size(),
+							is(1));
+					assertThat(
+							invoker.getHandlers().get(AfterUnassociateEvent.class).size(),
+							is(1));
 					assertThat(
 							invoker.getHandlers().get(BeforeGetContentEvent.class).size(),
 							is(1));
@@ -99,6 +130,96 @@ public class AnnotatedStoreEventInvokerTest {
 				invoker.postProcessAfterInitialization(new CustomEventHandler(),
 						"custom-bean");
 				invoker.onApplicationEvent(event);
+			});
+			Context("given an event handler and a BeforeGetResource event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new BeforeGetResourceEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"beforeGetResource", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
+			});
+			Context("given an event handler and a AfterGetResource event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new AfterGetResourceEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"afterGetResource", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
+			});
+			Context("given an event handler and a BeforeAssociate event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new BeforeAssociateEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"beforeAssociate", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
+			});
+			Context("given an event handler and a AfterAssociate event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new AfterAssociateEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"afterAssociate", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
+			});
+			Context("given an event handler and a BeforeUnassociate event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new BeforeUnassociateEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"beforeUnassociate", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
+			});
+			Context("given an event handler and a AfterUnassociate event", () -> {
+				BeforeEach(() -> {
+					EventSource source = new EventSource();
+					event = new AfterUnassociateEvent(source, store);
+				});
+				It("should call that correct handler method", () -> {
+					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
+							"afterUnassociate", Object.class);
+					assertThat(handler, is(not(nullValue())));
+
+					verify(reflectionService).invokeMethod(argThat(is(handler)),
+							argThat(isA(CustomEventHandler.class)),
+							argThat(is(event.getSource())));
+				});
 			});
 			Context("given an event handler and a BeforeGetContent event", () -> {
 				BeforeEach(() -> {
@@ -209,6 +330,30 @@ public class AnnotatedStoreEventInvokerTest {
 
 	@StoreEventHandler
 	public class CustomEventHandler {
+
+		@HandleBeforeGetResource
+		public void beforeGetResource(Object contentObject) {
+		}
+
+		@HandleAfterGetResource
+		public void afterGetResource(Object contentObject) {
+		}
+
+		@HandleBeforeAssociate
+		public void beforeAssociate(Object contentObject) {
+		}
+
+		@HandleAfterAssociate
+		public void afterAssociate(Object contentObject) {
+		}
+
+		@HandleBeforeUnassociate
+		public void beforeUnassociate(Object contentObject) {
+		}
+
+		@HandleAfterUnassociate
+		public void afterUnassociate(Object contentObject) {
+		}
 
 		@HandleBeforeGetContent
 		public void beforeGetContent(Object contentObject) {

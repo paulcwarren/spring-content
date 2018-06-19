@@ -15,11 +15,17 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -47,6 +53,114 @@ public class AbstractStoreEventListenerTest {
 				});
 				JustBeforeEach(() -> {
 					listener.onApplicationEvent(event);
+				});
+				Context("given a before get resource event", () -> {
+					BeforeEach(() -> {
+						event = new BeforeGetResourceEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<BeforeGetResourceEvent> argumentCaptor = ArgumentCaptor
+								.forClass(BeforeGetResourceEvent.class);
+						verify(consumer).onBeforeGetResource(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onBeforeGetResource(argThat(is(event.getSource())));
+					});
+				});
+				Context("given an after get resource event", () -> {
+					BeforeEach(() -> {
+						event = new AfterGetResourceEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<AfterGetResourceEvent> argumentCaptor = ArgumentCaptor
+								.forClass(AfterGetResourceEvent.class);
+						verify(consumer).onAfterGetResource(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onAfterGetResource(argThat(is(event.getSource())));
+					});
+				});
+				Context("given a before associate event", () -> {
+					BeforeEach(() -> {
+						event = new BeforeAssociateEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<BeforeAssociateEvent> argumentCaptor = ArgumentCaptor
+								.forClass(BeforeAssociateEvent.class);
+						verify(consumer).onBeforeAssociate(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onBeforeAssociate(argThat(is(event.getSource())));
+					});
+				});
+				Context("given an after associate event", () -> {
+					BeforeEach(() -> {
+						event = new AfterAssociateEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<AfterAssociateEvent> argumentCaptor = ArgumentCaptor
+								.forClass(AfterAssociateEvent.class);
+						verify(consumer).onAfterAssociate(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onAfterAssociate(argThat(is(event.getSource())));
+					});
+				});
+				Context("given a before unassociate event", () -> {
+					BeforeEach(() -> {
+						event = new BeforeUnassociateEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<BeforeUnassociateEvent> argumentCaptor = ArgumentCaptor
+								.forClass(BeforeUnassociateEvent.class);
+						verify(consumer).onBeforeUnassociate(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onBeforeUnassociate(argThat(is(event.getSource())));
+					});
+				});
+				Context("given an after unassociate event", () -> {
+					BeforeEach(() -> {
+						event = new AfterUnassociateEvent(new EventSource(), store);
+					});
+					It("should call the event consumer", () -> {
+						ArgumentCaptor<AfterUnassociateEvent> argumentCaptor = ArgumentCaptor
+								.forClass(AfterUnassociateEvent.class);
+						verify(consumer).onAfterUnassociate(argumentCaptor.capture());
+						assertThat(argumentCaptor.getValue(), is(event));
+						assertThat(argumentCaptor.getValue().getSource(),
+								is(event.getSource()));
+						assertThat(argumentCaptor.getValue().getStore(), is(store));
+					});
+					It("should call the event source consumer", () -> {
+						verify(consumer)
+								.onAfterUnassociate(argThat(is(event.getSource())));
+					});
 				});
 				Context("given a before get content event", () -> {
 					BeforeEach(() -> {
@@ -174,6 +288,66 @@ public class AbstractStoreEventListenerTest {
 		}
 
 		@Override
+		protected void onBeforeGetResource(BeforeGetResourceEvent event) {
+			consumer.onBeforeGetResource(event);
+		}
+
+		@Override
+		protected void onBeforeGetResource(Object entity) {
+			consumer.onBeforeGetResource(entity);
+		}
+
+		@Override
+		protected void onAfterGetResource(AfterGetResourceEvent event) {
+			consumer.onAfterGetResource(event);
+		}
+
+		@Override
+		protected void onAfterGetResource(Object entity) {
+			consumer.onAfterGetResource(entity);
+		}
+
+		@Override
+		protected void onBeforeAssociate(BeforeAssociateEvent event) {
+			consumer.onBeforeAssociate(event);
+		}
+
+		@Override
+		protected void onBeforeAssociate(Object entity) {
+			consumer.onBeforeAssociate(entity);
+		}
+
+		@Override
+		protected void onAfterAssociate(AfterAssociateEvent event) {
+			consumer.onAfterAssociate(event);
+		}
+
+		@Override
+		protected void onAfterAssociate(Object entity) {
+			consumer.onAfterAssociate(entity);
+		}
+
+		@Override
+		protected void onBeforeUnassociate(BeforeUnassociateEvent event) {
+			consumer.onBeforeUnassociate(event);
+		}
+
+		@Override
+		protected void onBeforeUnassociate(Object entity) {
+			consumer.onBeforeUnassociate(entity);
+		}
+
+		@Override
+		protected void onAfterUnassociate(AfterUnassociateEvent event) {
+			consumer.onAfterUnassociate(event);
+		}
+
+		@Override
+		protected void onAfterUnassociate(Object entity) {
+			consumer.onAfterUnassociate(entity);
+		}
+
+		@Override
 		protected void onBeforeGetContent(BeforeGetContentEvent event) {
 			consumer.onBeforeGetContent(event);
 		}
@@ -235,6 +409,30 @@ public class AbstractStoreEventListenerTest {
 	}
 
 	public interface TestContentEventConsumer {
+		void onBeforeGetResource(BeforeGetResourceEvent event);
+
+		void onBeforeGetResource(Object entity);
+
+		void onAfterGetResource(AfterGetResourceEvent event);
+
+		void onAfterGetResource(Object entity);
+
+		void onBeforeAssociate(BeforeAssociateEvent event);
+
+		void onBeforeAssociate(Object entity);
+
+		void onAfterAssociate(AfterAssociateEvent event);
+
+		void onAfterAssociate(Object entity);
+
+		void onBeforeUnassociate(BeforeUnassociateEvent event);
+
+		void onBeforeUnassociate(Object entity);
+
+		void onAfterUnassociate(AfterUnassociateEvent event);
+
+		void onAfterUnassociate(Object entity);
+
 		void onBeforeGetContent(BeforeGetContentEvent event);
 
 		void onBeforeGetContent(Object entity);
