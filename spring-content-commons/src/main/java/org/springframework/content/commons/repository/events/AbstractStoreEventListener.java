@@ -27,7 +27,31 @@ public abstract class AbstractStoreEventListener<T>
 			return;
 		}
 
-		if (event instanceof BeforeGetContentEvent) {
+		if (event instanceof BeforeGetResourceEvent) {
+			onBeforeGetResource((BeforeGetResourceEvent) event);
+			onBeforeGetResource((T) event.getSource());
+		}
+		else if (event instanceof AfterGetResourceEvent) {
+			onAfterGetResource((AfterGetResourceEvent) event);
+			onAfterGetResource((T) event.getSource());
+		}
+		else if (event instanceof BeforeAssociateEvent) {
+			onBeforeAssociate((BeforeAssociateEvent) event);
+			onBeforeAssociate((T) event.getSource());
+		}
+		else if (event instanceof AfterAssociateEvent) {
+			onAfterAssociate((AfterAssociateEvent) event);
+			onAfterAssociate((T) event.getSource());
+		}
+		else if (event instanceof BeforeUnassociateEvent) {
+			onBeforeUnassociate((BeforeUnassociateEvent) event);
+			onBeforeUnassociate((T) event.getSource());
+		}
+		else if (event instanceof AfterUnassociateEvent) {
+			onAfterUnassociate((AfterUnassociateEvent) event);
+			onAfterUnassociate((T) event.getSource());
+		}
+		else if (event instanceof BeforeGetContentEvent) {
 			onBeforeGetContent((BeforeGetContentEvent) event);
 			onBeforeGetContent((T) event.getSource());
 		}
@@ -51,6 +75,102 @@ public abstract class AbstractStoreEventListener<T>
 			onAfterUnsetContent((AfterUnsetContentEvent) event);
 			onAfterUnsetContent((T) event.getSource());
 		}
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeGetResource} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onBeforeGetResource(BeforeGetResourceEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeGetResource} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onBeforeGetResource(T entity) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterGetResource} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onAfterGetResource(AfterGetResourceEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterGetResource} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onAfterGetResource(T entity) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeAssociate} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onBeforeAssociate(BeforeAssociateEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeAssociate} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onBeforeAssociate(T entity) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterAssociate} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onAfterAssociate(AfterAssociateEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterAssociate} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onAfterAssociate(T entity) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeUnassociate} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onBeforeUnassociate(BeforeUnassociateEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal beforeUnassociate} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onBeforeUnassociate(T entity) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterUnassociate} events.
+	 *
+	 * @param event The event
+	 */
+	protected void onAfterUnassociate(AfterUnassociateEvent event) {
+	}
+
+	/**
+	 * Override this method if you are interested in {@literal afterUnassociate} events.
+	 *
+	 * @param entity The content entity being fetched.
+	 */
+	protected void onAfterUnassociate(T entity) {
 	}
 
 	/**

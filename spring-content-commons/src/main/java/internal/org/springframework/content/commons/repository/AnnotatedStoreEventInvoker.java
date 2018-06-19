@@ -9,19 +9,31 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.content.commons.annotations.HandleAfterAssociate;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
+import org.springframework.content.commons.annotations.HandleAfterGetResource;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
+import org.springframework.content.commons.annotations.HandleAfterUnassociate;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
+import org.springframework.content.commons.annotations.HandleBeforeAssociate;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
+import org.springframework.content.commons.annotations.HandleBeforeGetResource;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
+import org.springframework.content.commons.annotations.HandleBeforeUnassociate;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
 import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.repository.StoreEvent;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -76,6 +88,18 @@ public class AnnotatedStoreEventInvoker
 			@Override
 			public void doWith(Method method)
 					throws IllegalArgumentException, IllegalAccessException {
+				findHandler(bean, method, HandleBeforeGetResource.class,
+						BeforeGetResourceEvent.class);
+				findHandler(bean, method, HandleAfterGetResource.class,
+						AfterGetResourceEvent.class);
+				findHandler(bean, method, HandleBeforeAssociate.class,
+						BeforeAssociateEvent.class);
+				findHandler(bean, method, HandleAfterAssociate.class,
+						AfterAssociateEvent.class);
+				findHandler(bean, method, HandleBeforeUnassociate.class,
+						BeforeUnassociateEvent.class);
+				findHandler(bean, method, HandleAfterUnassociate.class,
+						AfterUnassociateEvent.class);
 				findHandler(bean, method, HandleBeforeGetContent.class,
 						BeforeGetContentEvent.class);
 				findHandler(bean, method, HandleAfterGetContent.class,

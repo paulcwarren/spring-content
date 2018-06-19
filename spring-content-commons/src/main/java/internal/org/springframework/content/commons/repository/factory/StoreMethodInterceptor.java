@@ -14,11 +14,17 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
 import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
 import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
@@ -114,6 +120,34 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 					&& invocation.getArguments()[0] != null) {
 				before = new BeforeUnsetContentEvent(invocation.getArguments()[0], store);
 				after = new AfterUnsetContentEvent(invocation.getArguments()[0], store);
+			}
+		}
+		else if (getResourceMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0
+					&& invocation.getArguments()[0] != null) {
+				before = new BeforeGetResourceEvent(invocation.getArguments()[0], store);
+				after = new AfterGetResourceEvent(invocation.getArguments()[0], store);
+			}
+		}
+		else if (associativeGetResourceMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0
+					&& invocation.getArguments()[0] != null) {
+				before = new BeforeGetResourceEvent(invocation.getArguments()[0], store);
+				after = new AfterGetResourceEvent(invocation.getArguments()[0], store);
+			}
+		}
+		else if (associateResourceMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0
+					&& invocation.getArguments()[0] != null) {
+				before = new BeforeAssociateEvent(invocation.getArguments()[0], store);
+				after = new AfterAssociateEvent(invocation.getArguments()[0], store);
+			}
+		}
+		else if (unassociateResourceMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0
+					&& invocation.getArguments()[0] != null) {
+				before = new BeforeUnassociateEvent(invocation.getArguments()[0], store);
+				after = new AfterUnassociateEvent(invocation.getArguments()[0], store);
 			}
 		}
 
