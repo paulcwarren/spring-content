@@ -2,10 +2,11 @@ package org.springframework.content.commons.repository.events;
 
 import java.io.Serializable;
 
+import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
 
-public class AfterGetContentEvent extends StoreEvent {
+public class AfterGetContentEvent extends AfterStoreEvent {
 
 	private static final long serialVersionUID = -3209578443616933734L;
 
