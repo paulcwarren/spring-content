@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -101,7 +102,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 
 		StoreEvent before = null;
-		StoreEvent after = null;
+		AfterStoreEvent after = null;
 
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
@@ -163,6 +164,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 
 		if (after != null) {
+			after.setResult(result);
 			publisher.publishEvent(after);
 		}
 		return result;

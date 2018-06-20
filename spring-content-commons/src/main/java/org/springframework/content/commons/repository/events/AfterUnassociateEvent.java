@@ -1,11 +1,12 @@
 package org.springframework.content.commons.repository.events;
 
+import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreEvent;
 
 import java.io.Serializable;
 
-public class AfterUnassociateEvent extends StoreEvent {
+public class AfterUnassociateEvent extends AfterStoreEvent {
     public AfterUnassociateEvent(Object source, ContentStore<Object, Serializable> store) {
         super(source, store);
     }
