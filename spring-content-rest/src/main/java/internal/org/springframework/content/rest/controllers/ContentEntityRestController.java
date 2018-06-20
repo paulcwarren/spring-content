@@ -172,12 +172,12 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 					ContentId.class) == null);
 		}
 
-		info.getImpementation().setContent(domainObj, request.getInputStream());
-
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class,
 					request.getHeader("Content-Type"));
 		}
+
+		info.getImpementation().setContent(domainObj, request.getInputStream());
 
 		save(repositories, domainObj);
 
@@ -255,8 +255,6 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
 
-		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
-
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class,
 					multiPart.getContentType());
@@ -269,6 +267,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 						originalFileName);
 			}
 		}
+
+		info.getImpementation().setContent(domainObj, multiPart.getInputStream());
 
 		boolean isNew = true;
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, ContentId.class)) {
