@@ -131,12 +131,19 @@ public class AnnotatedStoreEventInvoker
 
 			Object src = event.getSource();
 
-			if (!ClassUtils.isAssignable(handlerMethod.targetType, src.getClass())) {
+			if ((ClassUtils.isAssignable(StoreEvent.class, handlerMethod.targetType) &&
+					ClassUtils.isAssignable(handlerMethod.targetType, event.getClass()) == false) ||
+					(ClassUtils.isAssignable(StoreEvent.class, handlerMethod.targetType) == false &&
+							ClassUtils.isAssignable(handlerMethod.targetType, src.getClass()) == false)) {
 				continue;
 			}
 
 			List<Object> parameters = new ArrayList<Object>();
-			parameters.add(src);
+			if (ClassUtils.isAssignable(StoreEvent.class, handlerMethod.targetType)) {
+				parameters.add(event);
+			} else {
+				parameters.add(src);
+			}
 
 			if (logger.isDebugEnabled()) {
 				logger.debug(String.format("Invoking {} handler for {}.",
