@@ -160,10 +160,13 @@ Spring Content emits twelve events.  Roughly speaking one for each Store method.
 ==== Writing an ApplicationListener
 
 If you wish to extend Spring Content's functionality you can subclass the abstract class `AbstractStoreEventListener` and
-override the methods that you are interested in.  When events occur Spring Content will call the appropriate methods on
-all instances of `AbstractStoreEventListener`.
+override the methods that you are interested in.  When these events occur your handlers will be called.
 
-.AbstractContentRepositoryEventListener
+There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
+source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
+methods that return results to the caller.
+
+.Entity-based AbstractContentRepositoryEventListener
 ====
 [source, java]
 ----
@@ -175,12 +178,13 @@ public class ExampleEventListener extends AbstractContentRepositoryEventListener
 	}
 
 	@Override
-	public void onBeforeGetContent(Object entity) {
+	public void onBeforeGetContent(BeforeGetContentEvent event) {
 		...logic to inspect and handle the entity and it's content before it is fetched
 	}
 }
 ----
 ====
+
 The down-side of this approach is that it does not filter events based on Entity.
 
 ==== Writing an Annotated StoreEventHandler
@@ -216,7 +220,7 @@ event.  There are twelve handler annotations:
 
 * HandleAfterUnsetContent
 
-.Annotated event handler
+.Entity-based annotated event handler
 ====
 [source, java]
 ----
@@ -236,8 +240,27 @@ public class ExampleAnnotatedEventListener {
 ----
 ====
 
-The type of events you are interested in is determined from the type of the first
- parameter of each annotated method.
+These handlers will be called only when the event originates from a matching entity.
+
+As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
+methods returns results to the caller.
+
+.Event-based annotated event handler
+====
+[source, java]
+----
+@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterGetResource(AfterGetResourceEvent event) {
+		SopDocument doc = event.getSource();
+		Resource resourceToBeReturned = event.getResult();
+		...code that manipulates the resource being returned...
+	}
+}
+----
+====
 
 To register your event handler, either mark the class with one of Spring’s @Component
 stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
