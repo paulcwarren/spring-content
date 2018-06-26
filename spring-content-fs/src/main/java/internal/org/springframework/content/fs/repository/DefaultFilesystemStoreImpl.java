@@ -52,14 +52,25 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public Resource getResource(S entity) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		Resource r = getResourceInternal(entity);
+		if (r != null) {
+			return r;
+		}
+
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null) {
 			return null;
 		}
 		return getResourceInternal(contentId);
 	}
 
-	protected Resource getResourceInternal(Object id) {
+	protected Resource getResourceInternal(S entity) {
+		String location = conversion.convert(entity, String.class);
+		Resource resource = loader.getResource(location);
+		return resource;
+	}
+
+	protected Resource getResourceInternal(SID id) {
 		String location = conversion.convert(id, String.class);
 		Resource resource = loader.getResource(location);
 		return resource;
@@ -141,7 +152,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	public InputStream getContent(S property) {
 		if (property == null)
 			return null;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return null;
 
@@ -165,7 +176,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		if (property == null)
 			return;
 
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
 			return;
 
