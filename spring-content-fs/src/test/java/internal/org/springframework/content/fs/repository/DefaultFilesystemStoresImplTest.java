@@ -1,11 +1,7 @@
 package internal.org.springframework.content.fs.repository;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.UUID;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Matchers;
@@ -16,22 +12,27 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -96,33 +97,47 @@ public class DefaultFilesystemStoresImplTest {
 					JustBeforeEach(() -> {
 						resource = filesystemContentRepoImpl.getResource(entity);
 					});
-					Context("when the entity is not already associated with a resource",
+					Context("when the entity is not already associated with a resource", () -> {
+						BeforeEach(() -> {
+							entity = new TestEntity();
+						});
+						It("should not return a resource",
 							() -> {
-								BeforeEach(() -> {
-									entity = new TestEntity();
-								});
-								It("should not return a resource",
-									() -> {
-										assertThat(resource, is(nullValue()));
-									});
+								assertThat(resource, is(nullValue()));
 							});
-					Context("when the entity is already associated with a resource",
-							() -> {
-								BeforeEach(() -> {
-									entity = new TestEntity();
-									entity.setContentId("12345-67890");
+					});
+					Context("when the entity is already associated with a resource", () -> {
+						BeforeEach(() -> {
+							entity = new TestEntity();
+							entity.setContentId("12345-67890");
 
-									when(conversion.convert(eq("12345-67890"),
-											eq(String.class))).thenReturn("/12345/67890");
-								});
-								It("should use the conversion service to get a resource path",
-										() -> {
-											verify(conversion).convert(eq("12345-67890"),
-													eq(String.class));
-											verify(loader)
-													.getResource(eq("/12345/67890"));
-										});
-							});
+							when(conversion.convert(eq("12345-67890"),
+									eq(String.class))).thenReturn("/12345/67890");
+						});
+						It("should use the conversion service to get a resource path", () -> {
+							verify(conversion).convert(eq("12345-67890"),
+									eq(String.class));
+							verify(loader)
+									.getResource(eq("/12345/67890"));
+						});
+					});
+					Context("when there is an entity converter", () -> {
+						BeforeEach(() -> {
+							entity = new TestEntity();
+
+							deletableResource = mock(DeletableResource.class);
+
+							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(conversion.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
+							when(loader.getResource("/abcd/efgh")).thenReturn(deletableResource);
+						});
+						It("should not need to convert the id", () -> {
+							verify(conversion, never()).convert(argThat(not(entity)), eq(String.class));
+						});
+						It("should return the resource", () -> {
+							assertThat(resource, is(deletableResource));
+						});
+					});
 				});
 				Context("#associate", () -> {
 					BeforeEach(() -> {
@@ -169,70 +184,138 @@ public class DefaultFilesystemStoresImplTest {
 						entity = new TestEntity();
 						content = new ByteArrayInputStream(
 								"Hello content world!".getBytes());
-
-						when(conversion.convert(anyObject(), eq(String.class)))
-								.thenReturn("12345-67890");
-
-						when(loader.getResource(eq("12345-67890")))
-								.thenReturn(writeableResource);
-						output = mock(OutputStream.class);
-						when(writeableResource.getOutputStream()).thenReturn(output);
-
-						when(writeableResource.contentLength()).thenReturn(20L);
 					});
 
 					JustBeforeEach(() -> {
 						filesystemContentRepoImpl.setContent(entity, content);
 					});
 
-					Context("when the content already exists", () -> {
-						BeforeEach(() -> {
-							entity.setContentId("12345-67890");
-							when(writeableResource.exists()).thenReturn(true);
+					Context("given an entity converter", () -> {
+						Context("when the content doesn't yet exist", () -> {
+							BeforeEach(() -> {
+								when(conversion.convert(matches(
+										"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
+										eq(String.class)))
+										.thenReturn("12345-67890");
+
+								when(loader.getResource(eq("12345-67890")))
+										.thenReturn(writeableResource);
+								output = mock(OutputStream.class);
+								when(writeableResource.getOutputStream()).thenReturn(output);
+
+								File resourceFile = mock(File.class);
+								parent = mock(File.class);
+								when(writeableResource.getFile()).thenReturn(resourceFile);
+								when(resourceFile.getParentFile()).thenReturn(parent);
+							});
+							It("creates a directory for the parent", () -> {
+								verify(fileService).mkdirs(eq(parent));
+							});
+							It("should make a new UUID", () -> {
+								assertThat(entity.getContentId(), is(not(nullValue())));
+							});
+							It("should create a new resource", () -> {
+								verify(loader).getResource(eq("12345-67890"));
+							});
+							It("should write to the resource's outputstream", () -> {
+								verify(writeableResource).getOutputStream();
+								verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
+										eq(20));
+							});
 						});
+						Context("when the content already exists", () -> {
+							BeforeEach(() -> {
+								when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+								when(conversion.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
+								when(loader.getResource(eq("/abcd/efgh"))).thenReturn(writeableResource);
 
-						It("should use the conversion service to get a resource path",
-								() -> {
-									verify(conversion).convert(anyObject(), anyObject());
-									verify(loader).getResource(eq("12345-67890"));
-								});
+								when(writeableResource.exists()).thenReturn(true);
 
-						It("should change the content length", () -> {
-							assertThat(entity.getContentLen(), is(20L));
-						});
+								output = mock(OutputStream.class);
+								when(writeableResource.getOutputStream()).thenReturn(output);
 
-						It("should write to the resource's outputstream", () -> {
-							verify(writeableResource).getOutputStream();
-							verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
-									eq(20));
+								when(writeableResource.contentLength()).thenReturn(20L);
+							});
+
+							It("should write to the resource's outputstream", () -> {
+								verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
+										eq(20));
+								verify(output).close();
+							});
+
+							It("should change the content length", () -> {
+								assertThat(entity.getContentLen(), is(20L));
+							});
 						});
 					});
 
-					Context("when the content does not already exist", () -> {
+					Context("given just the default ID converters", () -> {
 						BeforeEach(() -> {
-							assertThat(entity.getContentId(), is(nullValue()));
+							when(conversion.convert(eq(entity), eq(String.class)))
+									.thenReturn(null);
 
-							File resourceFile = mock(File.class);
-							parent = mock(File.class);
+							when(conversion.convert(matches(
+									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
+									eq(String.class)))
+									.thenReturn("12345-67890");
 
-							when(writeableResource.getFile()).thenReturn(resourceFile);
-							when(resourceFile.getParentFile()).thenReturn(parent);
+							when(loader.getResource(eq("12345-67890")))
+									.thenReturn(writeableResource);
+							output = mock(OutputStream.class);
+							when(writeableResource.getOutputStream()).thenReturn(output);
+
+							when(writeableResource.contentLength()).thenReturn(20L);
 						});
 
-						It("creates a directory for the parent", () -> {
-							verify(fileService).mkdirs(eq(parent));
+						Context("when the content already exists", () -> {
+							BeforeEach(() -> {
+								entity.setContentId("12345-67890");
+								when(writeableResource.exists()).thenReturn(true);
+							});
+
+							It("should use the conversion service to get a resource path",
+									() -> {
+										verify(conversion, atLeastOnce()).convert(anyObject(), anyObject());
+										verify(loader).getResource(eq("12345-67890"));
+									});
+
+							It("should change the content length", () -> {
+								assertThat(entity.getContentLen(), is(20L));
+							});
+
+							It("should write to the resource's outputstream", () -> {
+								verify(writeableResource).getOutputStream();
+								verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
+										eq(20));
+							});
 						});
 
-						It("should make a new UUID", () -> {
-							assertThat(entity.getContentId(), is(not(nullValue())));
-						});
-						It("should create a new resource", () -> {
-							verify(loader).getResource(eq("12345-67890"));
-						});
-						It("should write to the resource's outputstream", () -> {
-							verify(writeableResource).getOutputStream();
-							verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
-									eq(20));
+						Context("when the content does not already exist", () -> {
+							BeforeEach(() -> {
+								assertThat(entity.getContentId(), is(nullValue()));
+
+								File resourceFile = mock(File.class);
+								parent = mock(File.class);
+
+								when(writeableResource.getFile()).thenReturn(resourceFile);
+								when(resourceFile.getParentFile()).thenReturn(parent);
+							});
+
+							It("creates a directory for the parent", () -> {
+								verify(fileService).mkdirs(eq(parent));
+							});
+
+							It("should make a new UUID", () -> {
+								assertThat(entity.getContentId(), is(not(nullValue())));
+							});
+							It("should create a new resource", () -> {
+								verify(loader).getResource(eq("12345-67890"));
+							});
+							It("should write to the resource's outputstream", () -> {
+								verify(writeableResource).getOutputStream();
+								verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
+										eq(20));
+							});
 						});
 					});
 				});
@@ -242,6 +325,9 @@ public class DefaultFilesystemStoresImplTest {
 						entity = new TestEntity();
 						content = mock(InputStream.class);
 						entity.setContentId("abcd-efgh");
+
+						when(conversion.convert(eq(entity), eq(String.class)))
+								.thenReturn(null);
 
 						when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
 								.thenReturn("abcd-efgh");
@@ -255,49 +341,92 @@ public class DefaultFilesystemStoresImplTest {
 						result = filesystemContentRepoImpl.getContent(entity);
 					});
 
-					Context("when the resource exists", () -> {
+					Context("given an entity converter", () -> {
 						BeforeEach(() -> {
-							when(writeableResource.exists()).thenReturn(true);
+							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(conversion.convert(eq(entity), eq(String.class)))
+									.thenReturn("/abcd/efgh");
+						});
+						Context("when the resource does not exists", () -> {
+							BeforeEach(() -> {
+								nonExistentResource = mock(DeletableResource.class);
+
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(nonExistentResource);
+
+								when(writeableResource.exists()).thenReturn(false);
+							});
+
+							It("should not return the content", () -> {
+								assertThat(result, is(nullValue()));
+							});
 						});
 
-						It("should get content", () -> {
-							assertThat(result, is(content));
+						Context("when the resource exists", () -> {
+							BeforeEach(() -> {
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(writeableResource);
+
+								when(writeableResource.exists()).thenReturn(true);
+
+								when(writeableResource.getInputStream()).thenReturn(content);
+							});
+							It("should get content", () -> {
+								assertThat(result, is(content));
+							});
 						});
 					});
-					Context("when the resource does not exists", () -> {
+
+					Context("given just the default ID converter", () -> {
 						BeforeEach(() -> {
-							nonExistentResource = mock(DeletableResource.class);
-							when(writeableResource.exists()).thenReturn(true);
+							when(conversion.convert(eq(entity), eq(String.class))).thenReturn(null);
+						});
+						Context("when the resource does not exists", () -> {
+							BeforeEach(() -> {
+								nonExistentResource = mock(DeletableResource.class);
+								when(writeableResource.exists()).thenReturn(true);
 
-							when(loader.getResource(eq("/abcd/efgh")))
-									.thenReturn(nonExistentResource);
-							when(loader.getResource(eq("abcd-efgh")))
-									.thenReturn(nonExistentResource);
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(nonExistentResource);
+								when(loader.getResource(eq("abcd-efgh")))
+										.thenReturn(nonExistentResource);
+							});
+
+							It("should not find the content", () -> {
+								assertThat(result, is(nullValue()));
+							});
 						});
 
-						It("should not find the content", () -> {
-							assertThat(result, is(nullValue()));
-						});
-					});
-					Context("when the resource exists in the old location", () -> {
-						BeforeEach(() -> {
-							nonExistentResource = mock(DeletableResource.class);
-							when(loader.getResource(eq("/abcd/efgh")))
-									.thenReturn(nonExistentResource);
-							when(nonExistentResource.exists()).thenReturn(false);
+						Context("when the resource exists", () -> {
+							BeforeEach(() -> {
+								when(writeableResource.exists()).thenReturn(true);
+							});
 
-							when(loader.getResource(eq("abcd-efgh")))
-									.thenReturn(writeableResource);
-							when(writeableResource.exists()).thenReturn(true);
+							It("should get content", () -> {
+								assertThat(result, is(content));
+							});
 						});
-						It("should check the new location and then the old", () -> {
-							InOrder inOrder = Mockito.inOrder(loader);
 
-							inOrder.verify(loader).getResource(eq("abcd-efgh"));
-							inOrder.verifyNoMoreInteractions();
-						});
-						It("should get content", () -> {
-							assertThat(result, is(content));
+						Context("when the resource exists but in the old location", () -> {
+							BeforeEach(() -> {
+								nonExistentResource = mock(DeletableResource.class);
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(nonExistentResource);
+								when(nonExistentResource.exists()).thenReturn(false);
+
+								when(loader.getResource(eq("abcd-efgh")))
+										.thenReturn(writeableResource);
+								when(writeableResource.exists()).thenReturn(true);
+							});
+							It("should check the new location and then the old", () -> {
+								InOrder inOrder = Mockito.inOrder(loader);
+
+								inOrder.verify(loader).getResource(eq("abcd-efgh"));
+								inOrder.verifyNoMoreInteractions();
+							});
+							It("should get content", () -> {
+								assertThat(result, is(content));
+							});
 						});
 					});
 				});
@@ -314,64 +443,103 @@ public class DefaultFilesystemStoresImplTest {
 						filesystemContentRepoImpl.unsetContent(entity);
 					});
 
-					Context("when the content exists in the new location", () -> {
+					Context("given an entity converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
-									.thenReturn("abcd-efgh");
-
-							when(loader.getResource(eq("abcd-efgh")))
-									.thenReturn(deletableResource);
-							when(deletableResource.exists()).thenReturn(true);
+							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(conversion.convert(eq(entity), eq(String.class)))
+									.thenReturn("/abcd/efgh");
 						});
+						Context("given the resource does not exist", () -> {
+							BeforeEach(() -> {
+								nonExistentResource = mock(DeletableResource.class);
 
-						Context("when the property has a dedicated ContentId field",
-								() -> {
-									It("should reset the metadata", () -> {
-										assertThat(entity.getContentId(),
-												is(nullValue()));
-										assertThat(entity.getContentLen(), is(0L));
-									});
-								});
-						Context("when the property's ContentId field also is the javax persistence Id field",
-								() -> {
-									BeforeEach(() -> {
-										entity = new SharedIdContentIdEntity();
-										entity.setContentId("abcd-efgh");
-									});
-									It("should not reset the content id metadata", () -> {
-										assertThat(entity.getContentId(),
-												is("abcd-efgh"));
-										assertThat(entity.getContentLen(), is(0L));
-									});
-								});
-						Context("when the property's ContentId field also is the Spring Id field",
-								() -> {
-									BeforeEach(() -> {
-										entity = new SharedSpringIdContentIdEntity();
-										entity.setContentId("abcd-efgh");
-									});
-									It("should not reset the content id metadata", () -> {
-										assertThat(entity.getContentId(),
-												is("abcd-efgh"));
-										assertThat(entity.getContentLen(), is(0L));
-									});
-								});
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(nonExistentResource);
+
+								when(nonExistentResource.exists()).thenReturn(false);
+							});
+							It("should not delete the resource", () -> {
+								verify(nonExistentResource, never()).delete();
+							});
+						});
+						Context("given the resource exists", () -> {
+							BeforeEach(() -> {
+								deletableResource = mock(DeletableResource.class);
+
+								when(loader.getResource(eq("/abcd/efgh")))
+										.thenReturn(deletableResource);
+
+								when(deletableResource.exists()).thenReturn(true);
+							});
+							It("should not delete the resource", () -> {
+								verify(deletableResource, times(1)).delete();
+							});
+						});
 					});
 
-					Context("when the content doesnt exist", () -> {
+					Context("given just the default ID converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
-									.thenReturn("abcd-efgh");
-
-							nonExistentResource = mock(DeletableResource.class);
-							when(loader.getResource(eq("abcd-efgh")))
-									.thenReturn(nonExistentResource);
-							when(nonExistentResource.exists()).thenReturn(false);
+							when(conversion.convert(eq(entity), eq(String.class))).thenReturn(null);
 						});
-						It("should unset the content", () -> {
-							verify(nonExistentResource, never()).delete();
-							assertThat(entity.getContentId(), is(nullValue()));
-							assertThat(entity.getContentLen(), is(0L));
+						Context("when the content exists in the new location", () -> {
+							BeforeEach(() -> {
+								when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
+										.thenReturn("abcd-efgh");
+
+								when(loader.getResource(eq("abcd-efgh")))
+										.thenReturn(deletableResource);
+								when(deletableResource.exists()).thenReturn(true);
+							});
+
+							Context("when the property has a dedicated ContentId field",
+									() -> {
+										It("should reset the metadata", () -> {
+											assertThat(entity.getContentId(),
+													is(nullValue()));
+											assertThat(entity.getContentLen(), is(0L));
+										});
+									});
+							Context("when the property's ContentId field also is the javax persistence Id field",
+									() -> {
+										BeforeEach(() -> {
+											entity = new SharedIdContentIdEntity();
+											entity.setContentId("abcd-efgh");
+										});
+										It("should not reset the content id metadata", () -> {
+											assertThat(entity.getContentId(),
+													is("abcd-efgh"));
+											assertThat(entity.getContentLen(), is(0L));
+										});
+									});
+							Context("when the property's ContentId field also is the Spring Id field",
+									() -> {
+										BeforeEach(() -> {
+											entity = new SharedSpringIdContentIdEntity();
+											entity.setContentId("abcd-efgh");
+										});
+										It("should not reset the content id metadata", () -> {
+											assertThat(entity.getContentId(),
+													is("abcd-efgh"));
+											assertThat(entity.getContentLen(), is(0L));
+										});
+									});
+						});
+
+						Context("when the content doesnt exist", () -> {
+							BeforeEach(() -> {
+								when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
+										.thenReturn("abcd-efgh");
+
+								nonExistentResource = mock(DeletableResource.class);
+								when(loader.getResource(eq("abcd-efgh")))
+										.thenReturn(nonExistentResource);
+								when(nonExistentResource.exists()).thenReturn(false);
+							});
+							It("should unset the content", () -> {
+								verify(nonExistentResource, never()).delete();
+								assertThat(entity.getContentId(), is(nullValue()));
+								assertThat(entity.getContentLen(), is(0L));
+							});
 						});
 					});
 				});
