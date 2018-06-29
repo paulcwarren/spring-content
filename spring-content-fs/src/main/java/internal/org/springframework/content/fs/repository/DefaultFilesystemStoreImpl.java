@@ -47,33 +47,28 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public Resource getResource(SID id) {
-		return getResourceInternal(id);
+		String location = conversion.convert(id, String.class);
+		Resource resource = loader.getResource(location);
+		return resource;
 	}
 
 	@Override
 	public Resource getResource(S entity) {
-		Resource r = getResourceInternal(entity);
-		if (r != null) {
-			return r;
+		Resource resource = null;
+		if (conversion.canConvert(entity.getClass(), String.class)) {
+			String location = conversion.convert(entity, String.class);
+			resource = loader.getResource(location);
+			if (resource != null) {
+				return resource;
+			}
 		}
 
 		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-		if (contentId == null) {
-			return null;
+		if (contentId != null) {
+			return getResource(contentId);
 		}
-		return getResourceInternal(contentId);
-	}
 
-	protected Resource getResourceInternal(S entity) {
-		String location = conversion.convert(entity, String.class);
-		Resource resource = loader.getResource(location);
-		return resource;
-	}
-
-	protected Resource getResourceInternal(SID id) {
-		String location = conversion.convert(id, String.class);
-		Resource resource = loader.getResource(location);
-		return resource;
+		return null;
 	}
 
 	@Override
@@ -127,14 +122,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 					property.toString()), e);
 		}
 		finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-			}
-			catch (IOException ioe) {
-				// ignore
-			}
+			IOUtils.closeQuietly(os);
 		}
 
 		try {
@@ -149,47 +137,39 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public InputStream getContent(S property) {
-		if (property == null)
-			return null;
-		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null)
+	public InputStream getContent(S entity) {
+		if (entity == null)
 			return null;
 
-		Resource resource = getResourceInternal(contentId);
+		Resource resource = getResource(entity);
 
 		try {
-			if (resource.exists()) {
+			if (resource != null && resource.exists()) {
 				return resource.getInputStream();
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content %s",
-					contentId.toString()), e);
+			logger.error(String.format("Unexpected error getting content for entity %s",
+					entity), e);
 		}
 
 		return null;
 	}
 
 	@Override
-	public void unsetContent(S property) {
-		if (property == null)
+	public void unsetContent(S entity) {
+		if (entity == null)
 			return;
 
-		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(property, ContentId.class);
-		if (contentId == null)
-			return;
+		Resource resource = getResource(entity);
 
-		// delete any existing content object
-		Resource resource = getResourceInternal(contentId);
-
-		if (resource.exists() && resource instanceof DeletableResource) {
+		if (resource != null && resource.exists() && resource instanceof DeletableResource) {
 			((DeletableResource) resource).delete();
 		}
 
 		// reset content fields
-		unassociate(property);
-		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+		unassociate(entity);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {
