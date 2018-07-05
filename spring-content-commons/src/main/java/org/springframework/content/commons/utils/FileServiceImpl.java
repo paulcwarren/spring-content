@@ -15,4 +15,17 @@ public class FileServiceImpl implements FileService {
 		Assert.notNull(file, "file must not be null");
 		FileUtils.forceMkdir(file);
 	}
+
+	@Override
+	public void rmdirs(File from, File to) throws IOException {
+		if (from.isFile()) {
+			throw new IOException("Not a directory");
+		}
+		File dir = from;
+		while (dir != null && dir.listFiles().length == 0 && dir.equals(to) == false) {
+			File temp = dir.getParentFile();
+			dir.delete();
+			dir = temp;
+		}
+	}
 }
