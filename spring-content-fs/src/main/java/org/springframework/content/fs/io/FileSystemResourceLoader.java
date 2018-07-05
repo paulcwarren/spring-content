@@ -37,8 +37,13 @@ public class FileSystemResourceLoader
 		this.root = new FileSystemResource(suffixPath(cleanPath(root)));
 	}
 
+	@Deprecated
 	public String getFilesystemRoot() {
 		return root.getPath();
+	}
+
+	public FileSystemResource getRootResource() {
+		return root;
 	}
 
 	private String suffixPath(String path) {

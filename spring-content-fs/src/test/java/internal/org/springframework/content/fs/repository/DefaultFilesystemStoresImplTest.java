@@ -1,6 +1,5 @@
 package internal.org.springframework.content.fs.repository;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
@@ -12,6 +11,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -41,7 +41,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jRunner.class)
-@Ginkgo4jConfiguration(threads = 1)
 public class DefaultFilesystemStoresImplTest {
 	private DefaultFilesystemStoreImpl<ContentProperty, String> filesystemContentRepoImpl;
 	private FileSystemResourceLoader loader;
@@ -58,6 +57,7 @@ public class DefaultFilesystemStoresImplTest {
 	private OutputStream output;
 
 	private File parent;
+	private File root;
 
 	private String id;
 
@@ -469,10 +469,22 @@ public class DefaultFilesystemStoresImplTest {
 								when(loader.getResource(eq("/abcd/efgh")))
 										.thenReturn(deletableResource);
 
+								File resourceFile = mock(File.class);
+								parent = mock(File.class);
+								when(deletableResource.getFile()).thenReturn(resourceFile);
+								when(resourceFile.getParentFile()).thenReturn(parent);
 								when(deletableResource.exists()).thenReturn(true);
+
+								FileSystemResource rootResource = mock(FileSystemResource.class);
+								when(loader.getRootResource()).thenReturn(rootResource);
+								root = mock(File.class);
+								when(rootResource.getFile()).thenReturn(root);
 							});
-							It("should not delete the resource", () -> {
+							It("should delete the resource", () -> {
 								verify(deletableResource, times(1)).delete();
+							});
+							It("should remove orphaned directories", () -> {
+								verify(fileService, times(1)).rmdirs(parent, root);
 							});
 						});
 					});
@@ -488,41 +500,53 @@ public class DefaultFilesystemStoresImplTest {
 
 								when(loader.getResource(eq("abcd-efgh")))
 										.thenReturn(deletableResource);
+
+								File resourceFile = mock(File.class);
+								parent = mock(File.class);
+								when(deletableResource.getFile()).thenReturn(resourceFile);
+								when(resourceFile.getParentFile()).thenReturn(parent);
 								when(deletableResource.exists()).thenReturn(true);
+
+								FileSystemResource rootResource = mock(FileSystemResource.class);
+								when(loader.getRootResource()).thenReturn(rootResource);
+								root = mock(File.class);
+								when(rootResource.getFile()).thenReturn(root);
 							});
 
-							Context("when the property has a dedicated ContentId field",
-									() -> {
-										It("should reset the metadata", () -> {
-											assertThat(entity.getContentId(),
-													is(nullValue()));
-											assertThat(entity.getContentLen(), is(0L));
-										});
-									});
-							Context("when the property's ContentId field also is the javax persistence Id field",
-									() -> {
-										BeforeEach(() -> {
-											entity = new SharedIdContentIdEntity();
-											entity.setContentId("abcd-efgh");
-										});
-										It("should not reset the content id metadata", () -> {
-											assertThat(entity.getContentId(),
-													is("abcd-efgh"));
-											assertThat(entity.getContentLen(), is(0L));
-										});
-									});
-							Context("when the property's ContentId field also is the Spring Id field",
-									() -> {
-										BeforeEach(() -> {
-											entity = new SharedSpringIdContentIdEntity();
-											entity.setContentId("abcd-efgh");
-										});
-										It("should not reset the content id metadata", () -> {
-											assertThat(entity.getContentId(),
-													is("abcd-efgh"));
-											assertThat(entity.getContentLen(), is(0L));
-										});
-									});
+							It("should delete the resource", () -> {
+								verify(deletableResource, times(1)).delete();
+							});
+
+							It("should remove orphaned directories", () -> {
+								verify(fileService, times(1)).rmdirs(parent, root);
+							});
+
+							Context("when the property has a dedicated ContentId field", () -> {
+								It("should reset the metadata", () -> {
+									assertThat(entity.getContentId(), is(nullValue()));
+									assertThat(entity.getContentLen(), is(0L));
+								});
+							});
+							Context("when the property's ContentId field also is the javax persistence Id field", () -> {
+								BeforeEach(() -> {
+									entity = new SharedIdContentIdEntity();
+									entity.setContentId("abcd-efgh");
+								});
+								It("should not reset the content id metadata", () -> {
+									assertThat(entity.getContentId(), is("abcd-efgh"));
+									assertThat(entity.getContentLen(), is(0L));
+								});
+							});
+							Context("when the property's ContentId field also is the Spring Id field", () -> {
+								BeforeEach(() -> {
+									entity = new SharedSpringIdContentIdEntity();
+									entity.setContentId("abcd-efgh");
+								});
+								It("should not reset the content id metadata", () -> {
+									assertThat(entity.getContentId(), is("abcd-efgh"));
+									assertThat(entity.getContentLen(), is(0L));
+								});
+							});
 						});
 
 						Context("when the content doesnt exist", () -> {
