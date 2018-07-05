@@ -11,9 +11,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -129,6 +132,48 @@ public class FileServiceTest {
 				});
 			});
 		});
-	}
 
+		Describe("rmdirs", () -> {
+			JustBeforeEach(() -> {
+				fileService = new FileServiceImpl();
+			});
+
+			It("should delete empty directories but stop at 'to'", () -> {
+				Path p0 = Files.createTempDirectory(null);
+				Path p1 = Files.createTempDirectory(p0, null);
+				Path p2 = Files.createTempDirectory(p1, null);
+
+				fileService.rmdirs(p2.toFile(), p0.toFile());
+
+				assertThat(p2.toFile().exists(), is(false));
+				assertThat(p1.toFile().exists(), is(false));
+				assertThat(p0.toFile().exists(), is(true));
+			});
+
+			It("should reject files", () -> {
+				Path tempFile = Files.createTempFile(null, null);
+
+				try {
+					fileService.rmdirs(tempFile.toFile(), null);
+					fail("unexpected");
+				} catch (IOException e) {
+					assertThat(e, is(not(nullValue())));
+				}
+			});
+
+			It("should leave directories that are not empty", () -> {
+				Path p0 = Files.createTempDirectory(null);
+				Path p1 = Files.createTempDirectory(p0, null);
+				Path f1 = Files.createTempFile(p1, null, null);
+				Path p2 = Files.createTempDirectory(p1, null);
+
+				fileService.rmdirs(p2.toFile(), p0.toFile());
+
+				assertThat(p2.toFile().exists(), is(false));
+				assertThat(p1.toFile().exists(), is(true));
+				assertThat(f1.toFile().exists(), is(true));
+				assertThat(p0.toFile().exists(), is(true));
+			});
+		});
+	}
 }
