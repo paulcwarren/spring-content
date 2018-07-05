@@ -174,6 +174,14 @@ public class FileServiceTest {
 				assertThat(f1.toFile().exists(), is(true));
 				assertThat(p0.toFile().exists(), is(true));
 			});
+
+			It("should do nothing when 'from' and 'to' are the same", () -> {
+				Path p0 = Files.createTempDirectory(null);
+
+				fileService.rmdirs(p0.toFile(), p0.toFile());
+
+				assertThat(p0.toFile().exists(), is(true));
+			});
 		});
 	}
 }
