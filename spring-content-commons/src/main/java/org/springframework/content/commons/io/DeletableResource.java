@@ -2,6 +2,8 @@ package org.springframework.content.commons.io;
 
 import org.springframework.core.io.Resource;
 
+import java.io.IOException;
+
 public interface DeletableResource extends Resource {
 
 	/**
@@ -11,6 +13,6 @@ public interface DeletableResource extends Resource {
 	 * returns true then the resource handle itself must be considered unreliable and
 	 * should be discarded.
 	 */
-	void delete();
+	void delete() throws IOException;
 
 }
