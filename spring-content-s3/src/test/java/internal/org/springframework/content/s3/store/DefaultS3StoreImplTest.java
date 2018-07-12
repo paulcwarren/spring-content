@@ -1,5 +1,6 @@
 package internal.org.springframework.content.s3.store;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -8,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.core.convert.ConversionService;
@@ -20,6 +21,7 @@ import org.springframework.util.Assert;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -39,6 +41,7 @@ import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.endsWith;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -397,7 +400,11 @@ public class DefaultS3StoreImplTest {
 								"Hello content world!".getBytes());
 					});
 					JustBeforeEach(() -> {
-						s3StoreImpl.setContent(entity, content);
+						try {
+							s3StoreImpl.setContent(entity, content);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 					Context("given the default associative store id resolver", () -> {
 						BeforeEach(() -> {
@@ -444,6 +451,16 @@ public class DefaultS3StoreImplTest {
 									verify(resource).getOutputStream();
 									verify(output, times(1)).write(Matchers.<byte[]>any(),
 											eq(0), eq(20));
+								});
+
+								Context("when the resource output stream throws an IOException", () -> {
+									BeforeEach(() -> {
+										when(resource.getOutputStream()).thenThrow(new IOException("set-ioexception"));
+									});
+									It("should throw a StoreAccessException", () -> {
+										assertThat(e, is(instanceOf(StoreAccessException.class)));
+										assertThat(e.getCause().getMessage(), is("set-ioexception"));
+									});
 								});
 							});
 
@@ -493,12 +510,15 @@ public class DefaultS3StoreImplTest {
 				});
 				Context("#getContent", () -> {
 					JustBeforeEach(() -> {
-						result = s3StoreImpl.getContent(entity);
+						try {
+							result = s3StoreImpl.getContent(entity);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 					Context("given the default associative store id resolver", () -> {
 						BeforeEach(() -> {
-							resolver = new DefaultAssociativeStoreS3ObjectIdResolver(
-									converter);
+							resolver = new DefaultAssociativeStoreS3ObjectIdResolver(converter);
 						});
 						Context("given a default bucket is set", () -> {
 							BeforeEach(() -> {
@@ -536,6 +556,16 @@ public class DefaultS3StoreImplTest {
 									It("should get content", () -> {
 										assertThat(result, is(content));
 									});
+
+									Context("when the resource input stream throws an IOException", () -> {
+										BeforeEach(() -> {
+											when(resource.getInputStream()).thenThrow(new IOException("get-ioexception"));
+										});
+										It("should throw a StoreAccessException", () -> {
+											assertThat(e, is(instanceOf(StoreAccessException.class)));
+											assertThat(e.getCause().getMessage(), is("get-ioexception"));
+										});
+									});
 								});
 								Context("and the resource doesn't exist", () -> {
 									BeforeEach(() -> {
@@ -568,7 +598,11 @@ public class DefaultS3StoreImplTest {
 				});
 				Context("#unsetContent", () -> {
 					JustBeforeEach(() -> {
-						s3StoreImpl.unsetContent(entity);
+						try {
+							s3StoreImpl.unsetContent(entity);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 					Context("given the default associative store id resolver", () -> {
 						BeforeEach(() -> {
@@ -646,6 +680,15 @@ public class DefaultS3StoreImplTest {
 																	is(0L));
 														});
 											});
+									Context("when the amazon client throws an AmazonClientException", () -> {
+										BeforeEach(() -> {
+											doThrow(new AmazonClientException("unset-exception")).when(client).deleteObject(anyObject());
+										});
+										It("should throw a StoreAccessException", () -> {
+											assertThat(e, is(instanceOf(StoreAccessException.class)));
+											assertThat(e.getCause().getMessage(), is("unset-exception"));
+										});
+									});
 								});
 								Context("and the content doesn't exist", () -> {
 									BeforeEach(() -> {
