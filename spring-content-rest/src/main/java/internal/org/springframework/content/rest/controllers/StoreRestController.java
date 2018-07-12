@@ -130,7 +130,7 @@ public class StoreRestController extends AbstractContentPropertyController {
 	@StoreType("store")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
 	public void deleteContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store) throws HttpRequestMethodNotSupportedException {
+			@PathVariable String store) throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
 		if (info == null) {

@@ -9,6 +9,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.jpa.io.BlobResource;
@@ -26,6 +27,8 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
+
+import static java.lang.String.format;
 
 public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -79,8 +82,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public InputStream getContent(S metadata) {
-		Object id = BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
+	public InputStream getContent(S entity) {
+		Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (id == null) {
 			return null;
 		}
@@ -89,19 +92,19 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			return resource.getInputStream();
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unable to get input stream for resource %s", id));
+			logger.error(format("Unexpected error getting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Getting content for entity %s", entity), e);
 		}
-		return null;
 	}
 
 	@Override
-	public void setContent(S metadata, InputStream content) {
-		Resource resource = getResource(metadata);
+	public void setContent(S entity, InputStream content) {
+		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
-			Object convertedId = convertToExternalContentIdType(metadata, contentId);
+			Object convertedId = convertToExternalContentIdType(entity, contentId);
 			resource = this.getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(metadata, ContentId.class,
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
 					convertedId);
 		}
 		OutputStream os = null;
@@ -113,8 +116,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unable to get output stream for resource %s",
-					resource));
+			logger.error(format("Unexpected error setting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 		finally {
 			IOUtils.closeQuietly(content);
@@ -123,9 +126,9 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 		waitForCommit((BlobResource) resource);
 
-		BeanUtils.setFieldWithAnnotation(metadata, ContentId.class,
+		BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
 				((BlobResource) resource).getId());
-		BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, contentLen);
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, contentLen);
 
 		return;
 	}
@@ -144,7 +147,12 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		}
 		Resource resource = loader.getResource(id.toString());
 		if (resource instanceof DeletableResource) {
-			((DeletableResource) resource).delete();
+			try {
+				((DeletableResource) resource).delete();
+			} catch (Exception e) {
+				logger.error(format("Unexpected error unsetting content for entity %s", metadata));
+				throw new StoreAccessException(format("Unsetting content for entity %s", metadata), e);
+			}
 		}
 		unassociate(metadata);
 		BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, 0);

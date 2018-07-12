@@ -269,7 +269,7 @@ public abstract class AbstractBlobResource implements BlobResource {
 	}
 
 	@Override
-	public void delete() {
+	public void delete() throws IOException {
 		final Object id = this.id;
 		String sql = "DELETE FROM BLOBS WHERE id='" + this.id + "'";
 		this.template.update(sql);
