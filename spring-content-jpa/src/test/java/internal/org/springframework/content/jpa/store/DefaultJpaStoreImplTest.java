@@ -7,6 +7,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.core.io.Resource;
@@ -22,6 +23,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,6 +33,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,6 +51,7 @@ public class DefaultJpaStoreImplTest {
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private Resource resource;
+	private BlobResource blobResource;
 	private String id;
 	private Exception e;
 
@@ -151,7 +155,11 @@ public class DefaultJpaStoreImplTest {
 								.thenReturn((BlobResource) resource);
 					});
 					JustBeforeEach(() -> {
-						inputStream = store.getContent(entity);
+						try {
+							inputStream = store.getContent(entity);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 					Context("given content", () -> {
 						BeforeEach(() -> {
@@ -173,10 +181,12 @@ public class DefaultJpaStoreImplTest {
 					});
 					Context("given fetching the input stream fails", () -> {
 						BeforeEach(() -> {
-							when(resource.getInputStream()).thenThrow(new IOException());
+							when(resource.getInputStream()).thenThrow(new IOException("get-ioexception"));
 						});
-						It("should return null", () -> {
+						It("should return null and throw a StoreAccessException", () -> {
 							assertThat(inputStream, is(nullValue()));
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getCause().getMessage(), is("get-ioexception"));
 						});
 					});
 				});
@@ -189,34 +199,71 @@ public class DefaultJpaStoreImplTest {
 							this.e = e;
 						}
 					});
-					Context("when the row does not exist", () -> {
+					BeforeEach(() -> {
+						blobResourceLoader = mock(BlobResourceLoader.class);
+
+						entity = new TestEntity();
+						byte[] content = new byte[5000];
+						new Random().nextBytes(content);
+						inputStream = new ByteArrayInputStream(content);
+
+						resource = mock(BlobResource.class);
+						when(blobResourceLoader.getResource(matches(
+								"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")))
+										.thenReturn((BlobResource) resource);
+						outputStream = mock(OutputStream.class);
+						when(((BlobResource) resource).getOutputStream())
+								.thenReturn(outputStream);
+						when(((BlobResource) resource).getId()).thenReturn(12345);
+					});
+					It("should write the contents of the inputstream to the resource's outputstream",
+							() -> {
+								verify(outputStream, atLeastOnce()).write(anyObject(),
+										anyInt(), anyInt());
+							});
+					It("should update the @ContentId field", () -> {
+						assertThat(entity.getContentId(), is("12345"));
+					});
+					It("should update the @ContentLength field", () -> {
+						assertThat(entity.getContentLen(), is(5000L));
+					});
+					Context("when the resource output stream throws an IOException", () -> {
 						BeforeEach(() -> {
-							blobResourceLoader = mock(BlobResourceLoader.class);
-
-							entity = new TestEntity();
-							byte[] content = new byte[5000];
-							new Random().nextBytes(content);
-							inputStream = new ByteArrayInputStream(content);
-
-							resource = mock(BlobResource.class);
-							when(blobResourceLoader.getResource(matches(
-									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")))
-											.thenReturn((BlobResource) resource);
-							outputStream = mock(OutputStream.class);
-							when(((BlobResource) resource).getOutputStream())
-									.thenReturn(outputStream);
-							when(((BlobResource) resource).getId()).thenReturn(12345);
+							when(((BlobResource) resource).getOutputStream()).thenThrow(new IOException("set-ioexception"));
 						});
-						It("should write the contents of the inputstream to the resource's outputstream",
-								() -> {
-									verify(outputStream, atLeastOnce()).write(anyObject(),
-											anyInt(), anyInt());
-								});
-						It("should update the @ContentId field", () -> {
-							assertThat(entity.getContentId(), is("12345"));
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getCause().getMessage(), is("set-ioexception"));
 						});
-						It("should update the @ContentLength field", () -> {
-							assertThat(entity.getContentLen(), is(5000L));
+					});
+				});
+				Context("#unsetContent", () -> {
+					JustBeforeEach(() -> {
+						try {
+							store.unsetContent(entity);
+						} catch (Exception e) {
+							this.e = e;
+						}
+					});
+					BeforeEach(() -> {
+						blobResourceLoader = mock(BlobResourceLoader.class);
+						blobResource = mock(GenericBlobResource.class);
+
+						entity = new TestEntity("12345");
+
+						when(blobResourceLoader.getResource(entity.getContentId().toString()))
+								.thenReturn(blobResource);
+					});
+					It("should delete the content", () -> {
+						verify(blobResource).delete();
+					});
+					Context("resource delete throws an Exception", () -> {
+						BeforeEach(() -> {
+							doThrow(new IOException("unset-ioexception")).when(blobResource).delete();
+						});
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getCause().getMessage(), is("unset-ioexception"));
 						});
 					});
 				});
