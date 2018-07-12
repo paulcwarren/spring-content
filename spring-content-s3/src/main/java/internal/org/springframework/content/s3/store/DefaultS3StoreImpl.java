@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
@@ -31,6 +32,8 @@ import org.springframework.util.Assert;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
+
+import static java.lang.String.format;
 
 public class DefaultS3StoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -139,15 +142,15 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void setContent(S property, InputStream content) {
-		Resource resource = this.getResource(property);
+	public void setContent(S entity, InputStream content) {
+		Resource resource = this.getResource(entity);
 		if (resource == null) {
 			UUID newId = UUID.randomUUID();
 			Object convertedId = converter.convert(newId, TypeDescriptor.forObject(newId),
 					TypeDescriptor.valueOf(BeanUtils
-							.getFieldWithAnnotationType(property, ContentId.class)));
+							.getFieldWithAnnotationType(entity, ContentId.class)));
 			resource = this.getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, convertedId);
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
 		}
 
 		OutputStream os = null;
@@ -156,10 +159,20 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
+
+			try {
+				BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
+						resource.contentLength());
+			}
+			catch (IOException e) {
+				logger.error(format(
+						"Unexpected error setting content length for resource %s",
+						resource.toString()), e);
+			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content for resource %s",
-					resource.toString()), e);
+			logger.error(format("Unexpected error setting content for entity %s", resource.toString()), e);
+			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 		finally {
 			try {
@@ -171,24 +184,14 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				// ignore
 			}
 		}
-
-		try {
-			BeanUtils.setFieldWithAnnotation(property, ContentLength.class,
-					resource.contentLength());
-		}
-		catch (IOException e) {
-			logger.error(String.format(
-					"Unexpected error setting content length for resource %s",
-					resource.toString()), e);
-		}
 	}
 
 	@Override
-	public InputStream getContent(S property) {
-		if (property == null)
+	public InputStream getContent(S entity) {
+		if (entity == null)
 			return null;
 
-		Resource resource = this.getResource(property);
+		Resource resource = this.getResource(entity);
 
 		try {
 			if (resource.exists()) {
@@ -196,44 +199,38 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content for resource %s",
-					resource.toString()), e);
+			logger.error(format("Unexpected error getting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Getting content for entity %s", entity), e);
 		}
 
 		return null;
 	}
 
 	@Override
-	public void unsetContent(S property) {
-		if (property == null)
+	public void unsetContent(S entity) {
+		if (entity == null)
 			return;
 
-		try {
-			deleteIfExists(property);
+		deleteIfExists(entity);
 
-			// reset content fields
-			BeanUtils.setFieldWithAnnotationConditionally(property, ContentId.class, null,
-					new Condition() {
-						@Override
-						public boolean matches(Field field) {
-							for (Annotation annotation : field.getAnnotations()) {
-								if ("javax.persistence.Id".equals(
-										annotation.annotationType().getCanonicalName())
-										|| "org.springframework.data.annotation.Id"
-												.equals(annotation.annotationType()
-														.getCanonicalName())) {
-									return false;
-								}
+		// reset content fields
+		BeanUtils.setFieldWithAnnotationConditionally(entity, ContentId.class, null,
+				new Condition() {
+					@Override
+					public boolean matches(Field field) {
+						for (Annotation annotation : field.getAnnotations()) {
+							if ("javax.persistence.Id".equals(
+									annotation.annotationType().getCanonicalName())
+									|| "org.springframework.data.annotation.Id"
+											.equals(annotation.annotationType()
+													.getCanonicalName())) {
+								return false;
 							}
-							return true;
 						}
-					});
-			BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
-		}
-		catch (Exception ase) {
-			logger.error(String.format("Unexpected error unsetting content for entity %s",
-					property.toString()), ase);
-		}
+						return true;
+					}
+				});
+		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
 	}
 
 	private String absolutify(String bucket, String location) {
@@ -245,17 +242,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		else {
 			locationToUse = location;
 		}
-		return String.format("s3://%s/%s", bucket, locationToUse);
-	}
-
-	private void deleteIfExists(SID contentId) {
-		String bucketName = this.idResolver.getBucket(contentId, this.defaultBucket);
-
-		Resource resource = this.getResource(contentId);
-		if (resource.exists()) {
-			client.deleteObject(
-					new DeleteObjectRequest(bucketName, resource.getFilename()));
-		}
+		return format("s3://%s/%s", bucket, locationToUse);
 	}
 
 	private void deleteIfExists(S entity) {
@@ -264,8 +251,12 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 		Resource resource = this.getResource(entity);
 		if (resource.exists()) {
-			client.deleteObject(
-					new DeleteObjectRequest(bucketName, resource.getFilename()));
+			try {
+				client.deleteObject(new DeleteObjectRequest(bucketName, resource.getFilename()));
+			} catch (AmazonClientException ace) {
+				logger.error(format("Unexpected error unsetting content for entity %s", entity));
+				throw new StoreAccessException(format("Unsetting content for entity %s", entity), ace);
+			}
 		}
 	}
 }
