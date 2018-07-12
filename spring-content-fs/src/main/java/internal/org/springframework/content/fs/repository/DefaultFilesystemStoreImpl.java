@@ -18,6 +18,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
@@ -28,6 +29,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
 import javax.annotation.PostConstruct;
+
+import static java.lang.String.format;
 
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -97,13 +100,13 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void setContent(S property, InputStream content) {
-		Resource resource = getResource(property);
+	public void setContent(S entity, InputStream content) {
+		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
-			Object convertedId = convertToExternalContentIdType(property, contentId);
+			Object convertedId = convertToExternalContentIdType(entity, contentId);
 			resource = getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(property, ContentId.class, convertedId);
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
 		}
 		OutputStream os = null;
 		try {
@@ -118,19 +121,19 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error setting content for resource %s",
-					property.toString()), e);
+			logger.error(format("Unexpected error setting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 		finally {
 			IOUtils.closeQuietly(os);
 		}
 
 		try {
-			BeanUtils.setFieldWithAnnotation(property, ContentLength.class,
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
 					resource.contentLength());
 		}
 		catch (IOException e) {
-			logger.error(String.format(
+			logger.error(format(
 					"Unexpected error setting content length for content for resource %s",
 					resource.toString()), e);
 		}
@@ -149,8 +152,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content for entity %s",
-					entity), e);
+			logger.error(format("Unexpected error getting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Getting content for entity %s", entity), e);
 		}
 
 		return null;
@@ -167,17 +170,17 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			File parent = null;
 			try {
 				parent = resource.getFile().getParentFile();
+				((DeletableResource) resource).delete();
 			} catch (IOException e) {
-				logger.warn(String.format("Unable to get file for resource %s", resource));
+				logger.warn(format("Unable to get file for resource %s", resource));
 			}
-			((DeletableResource) resource).delete();
 
 			File root = loader.getRootResource().getFile();
 			if (parent != null) {
 				try {
 					fileService.rmdirs(parent, root);
 				} catch (IOException e) {
-					logger.warn(String.format("Removing orphaned directories from %s to %s for resource %s", parent.getAbsolutePath(), root.getAbsolutePath(), resource));
+					logger.warn(format("Removing orphaned directories from %s to %s for resource %s", parent.getAbsolutePath(), root.getAbsolutePath(), resource));
 				}
 			}
 		}

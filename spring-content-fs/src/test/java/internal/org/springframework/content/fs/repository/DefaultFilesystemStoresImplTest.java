@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
@@ -17,6 +18,7 @@ import org.springframework.core.io.WritableResource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -25,6 +27,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -62,6 +65,7 @@ public class DefaultFilesystemStoresImplTest {
 	private String id;
 
 	private InputStream result;
+	private Exception e;
 
 	{
 		Describe("DefaultFilesystemContentRepositoryImpl", () -> {
@@ -187,7 +191,11 @@ public class DefaultFilesystemStoresImplTest {
 					});
 
 					JustBeforeEach(() -> {
-						filesystemContentRepoImpl.setContent(entity, content);
+						try {
+							filesystemContentRepoImpl.setContent(entity, content);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 
 					Context("given an entity converter", () -> {
@@ -317,6 +325,22 @@ public class DefaultFilesystemStoresImplTest {
 										eq(20));
 							});
 						});
+
+						Context("when getting the resource output stream throws an IOException", () -> {
+							BeforeEach(() -> {
+								File resourceFile = mock(File.class);
+								parent = mock(File.class);
+
+								when(writeableResource.getFile()).thenReturn(resourceFile);
+								when(resourceFile.getParentFile()).thenReturn(parent);
+
+								when(writeableResource.getOutputStream()).thenThrow(new IOException());
+							});
+							It("should return a StoreAccessException wrapping the IOException", () -> {
+								assertThat(e, is(instanceOf(StoreAccessException.class)));
+								assertThat(e.getCause(), is(instanceOf(IOException.class)));
+							});
+						});
 					});
 				});
 
@@ -338,7 +362,11 @@ public class DefaultFilesystemStoresImplTest {
 					});
 
 					JustBeforeEach(() -> {
-						result = filesystemContentRepoImpl.getContent(entity);
+						try {
+							result = filesystemContentRepoImpl.getContent(entity);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 
 					Context("given an entity converter", () -> {
@@ -404,6 +432,17 @@ public class DefaultFilesystemStoresImplTest {
 
 							It("should get content", () -> {
 								assertThat(result, is(content));
+							});
+
+							Context("when getting the resource inputstream throws an IOException", () -> {
+								BeforeEach(() -> {
+									when(writeableResource.getInputStream()).thenThrow(new IOException("test-ioexception"));
+								});
+								It("should return a StoreAccessException wrapping the IOException", () -> {
+									assertThat(result, is(nullValue()));
+									assertThat(e, is(instanceOf(StoreAccessException.class)));
+									assertThat(e.getCause().getMessage(), is("test-ioexception"));
+								});
 							});
 						});
 
