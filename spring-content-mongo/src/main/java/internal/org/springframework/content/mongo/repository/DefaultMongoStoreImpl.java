@@ -1,5 +1,6 @@
 package internal.org.springframework.content.mongo.repository;
 
+import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
@@ -18,6 +19,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.core.convert.ConversionService;
@@ -105,25 +107,29 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			gridFs.delete(query(whereFilename().is(resource.getFilename())));
 		}
 
-		gridFs.store(content, location);
-		resource = gridFs.getResource(location);
+		try {
+			gridFs.store(content, location);
+			resource = gridFs.getResource(location);
+		} catch (Exception e) {
+			logger.error(format("Unexpected error setting content for entity  %s", property), e);
+			throw new StoreAccessException(format("Setting content for entity %s", property), e);
+		}
 
 		long contentLen = 0L;
 		try {
 			contentLen = resource.contentLength();
 		}
 		catch (IOException ioe) {
-			logger.debug(
-					String.format("Unable to retrieve content length for %s", contentId));
+			logger.debug(format("Unable to retrieve content length for %s", contentId));
 		}
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, contentLen);
 	}
 
 	@Override
-	public InputStream getContent(S property) {
-		if (property == null)
+	public InputStream getContent(S entity) {
+		if (entity == null)
 			return null;
-		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
+		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null)
 			return null;
 
@@ -135,8 +141,8 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (IOException e) {
-			logger.error(String.format("Unexpected error getting content %s",
-					contentId.toString()), e);
+			logger.error(format("Unexpected error getting content for entityt %s", entity), e);
+			throw new StoreAccessException(format("Getting content for entity %s", entity), e);
 		}
 		return null;
 	}
@@ -177,8 +183,8 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			}
 		}
 		catch (Exception ase) {
-			logger.error(String.format("Unexpected error unsetting content %s",
-					contentId.toString()), ase);
+			logger.error(format("Unexpected error unsetting content for entity %s", property), ase);
+			throw new StoreAccessException(format("Unsetting content for entity %s", property), ase);
 		}
 	}
 

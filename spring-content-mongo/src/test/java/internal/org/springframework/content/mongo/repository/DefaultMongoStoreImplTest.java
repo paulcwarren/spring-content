@@ -12,11 +12,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
@@ -46,6 +49,7 @@ public class DefaultMongoStoreImplTest {
 
 	private InputStream content;
 	private InputStream result;
+	private Exception e;
 
 	{
 		Describe("DefaultMongoStoreImpl", () -> {
@@ -172,7 +176,6 @@ public class DefaultMongoStoreImplTest {
 					});
 				});
 			});
-
 			Describe("ContentStore", () -> {
 				BeforeEach(() -> {
 					converter = mock(ConversionService.class);
@@ -191,7 +194,11 @@ public class DefaultMongoStoreImplTest {
 					});
 
 					JustBeforeEach(() -> {
-						mongoContentRepoImpl.setContent(property, content);
+						try {
+							mongoContentRepoImpl.setContent(property, content);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 
 					Context("when content is new", () -> {
@@ -251,6 +258,16 @@ public class DefaultMongoStoreImplTest {
 						It("should update the content length", () -> {
 							assertThat(property.getContentLen(), is(1L));
 						});
+
+						Context("when the gridfs store throws an exception", () -> {
+							BeforeEach(() -> {
+								when(gridFsTemplate.store(anyObject(), anyString())).thenThrow(new RuntimeException("set-exception"));
+							});
+							It("should throw a StoreAccessException", () -> {
+								assertThat(e, is(instanceOf(StoreAccessException.class)));
+								assertThat(e.getCause().getMessage(), is("set-exception"));
+							});
+						});
 					});
 				});
 
@@ -269,7 +286,11 @@ public class DefaultMongoStoreImplTest {
 					});
 
 					JustBeforeEach(() -> {
-						result = mongoContentRepoImpl.getContent(property);
+						try {
+							result = mongoContentRepoImpl.getContent(property);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 
 					Context("when the resource exists", () -> {
@@ -287,6 +308,16 @@ public class DefaultMongoStoreImplTest {
 
 						It("should get content", () -> {
 							assertThat(result, is(content));
+						});
+
+						Context("when the resource outputstream throws an IOException", () -> {
+							BeforeEach(() -> {
+								when(resource.getInputStream()).thenThrow(new IOException("get-ioexception"));
+							});
+							It("should throw a StoreAccessException", () -> {
+								assertThat(e, is(instanceOf(StoreAccessException.class)));
+								assertThat(e.getCause().getMessage(), is("get-ioexception"));
+							});
 						});
 					});
 
@@ -314,7 +345,11 @@ public class DefaultMongoStoreImplTest {
 					});
 
 					JustBeforeEach(() -> {
-						mongoContentRepoImpl.unsetContent(property);
+						try {
+							mongoContentRepoImpl.unsetContent(property);
+						} catch (Exception e) {
+							this.e = e;
+						}
 					});
 
 					It("should use the converter to get the resource path", () -> {
@@ -328,6 +363,17 @@ public class DefaultMongoStoreImplTest {
 					It("should unset content", () -> {
 						verify(gridFsTemplate).delete(anyObject());
 					});
+
+					Context("when gridfs deletion throws an exception", () -> {
+						BeforeEach(() -> {
+							doThrow(new RuntimeException("unset-exception")).when(gridFsTemplate).delete(anyObject());
+						});
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getCause().getMessage(), is("unset-exception"));
+						});
+					});
+
 					Context("when the property has a dedicated ContentId field", () -> {
 						It("should reset the metadata", () -> {
 							assertThat(property.getContentId(), is(nullValue()));
