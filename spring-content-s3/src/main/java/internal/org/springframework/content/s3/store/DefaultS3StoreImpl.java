@@ -158,6 +158,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			if (resource instanceof WritableResource) {
 				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
+				IOUtils.closeQuietly(os);
 			}
 
 			try {
@@ -166,8 +167,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 			catch (IOException e) {
 				logger.error(format(
-						"Unexpected error setting content length for resource %s",
-						resource.toString()), e);
+						"Unexpected error setting content length for entity %s",
+						entity), e);
 			}
 		}
 		catch (IOException e) {
@@ -250,7 +251,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				this.defaultBucket);
 
 		Resource resource = this.getResource(entity);
-		if (resource.exists()) {
+		if (resource != null && resource.exists()) {
 			try {
 				client.deleteObject(new DeleteObjectRequest(bucketName, resource.getFilename()));
 			} catch (AmazonClientException ace) {
