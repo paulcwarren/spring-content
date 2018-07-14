@@ -431,8 +431,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content MongoDB - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.1.0,</span>
-<span id="revdate">2018-06-05</span>
+<span id="revnumber">version 0.2.0,</span>
+<span id="revdate">2018-07-14</span>
 </div>
 </div>
 <div id="content">
@@ -675,10 +675,28 @@ by JPA Entities.</p>
 <div class="sect3">
 <h4 id="content-repositories.events">1.1.2. Events</h4>
 <div class="paragraph">
-<p>Spring Content emits six events.  They are:</p>
+<p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p>BeforeGetResourceEvent</p>
+</li>
+<li>
+<p>AfterGetResourceEvent</p>
+</li>
+<li>
+<p>BeforeAssociateEvent</p>
+</li>
+<li>
+<p>AfterAssociateEvent</p>
+</li>
+<li>
+<p>BeforeUnassociateEvent</p>
+</li>
+<li>
+<p>AfterUnassociateEvent</p>
+</li>
 <li>
 <p>BeforeSetContent</p>
 </li>
@@ -703,11 +721,15 @@ by JPA Entities.</p>
 <h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
 <div class="paragraph">
 <p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
-override the methods that you are interested in.  When events occur Spring Content will call the appropriate methods on
-all instances of <code>AbstractStoreEventListener</code>.</p>
+override the methods that you are interested in.  When these events occur your handlers will be called.</p>
+</div>
+<div class="paragraph">
+<p>There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
+source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
+methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. AbstractContentRepositoryEventListener</div>
+<div class="title">Example 5. Entity-based AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -719,7 +741,7 @@ all instances of <code>AbstractStoreEventListener</code>.</p>
 	}
 
 	@Override
-	public void onBeforeGetContent(Object entity) {
+	public void onBeforeGetContent(BeforeGetContentEvent event) {
 		...logic to inspect and handle the entity and it's content before it is fetched
 	}
 }</code></pre>
@@ -740,10 +762,28 @@ all instances of <code>AbstractStoreEventListener</code>.</p>
 <p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
 Spring Content that this class needs to be inspected for handler methods.  It
 iterates over the class&#8217;s methods and looks for annotations that correspond to the
-event.  There are 6 handler annotations:</p>
+event.  There are twelve handler annotations:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p>HandleBeforeGetResource</p>
+</li>
+<li>
+<p>HandleAfterGetResource</p>
+</li>
+<li>
+<p>HandleBeforeAssociate</p>
+</li>
+<li>
+<p>HandleAfterAssociate</p>
+</li>
+<li>
+<p>HandleBeforeUnassociate</p>
+</li>
+<li>
+<p>HandleAfterUnassociate</p>
+</li>
 <li>
 <p>HandleBeforeSetContent</p>
 </li>
@@ -765,7 +805,7 @@ event.  There are 6 handler annotations:</p>
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 6. Annotated event handler</div>
+<div class="title">Example 6. Entity-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -787,8 +827,30 @@ public class ExampleAnnotatedEventListener {
 </div>
 </div>
 <div class="paragraph">
-<p>The type of events you are interested in is determined from the type of the first
- parameter of each annotated method.</p>
+<p>These handlers will be called only when the event originates from a matching entity.</p>
+</div>
+<div class="paragraph">
+<p>As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
+methods returns results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. Event-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterGetResource(AfterGetResourceEvent event) {
+		SopDocument doc = event.getSource();
+		Resource resourceToBeReturned = event.getResult();
+		...code that manipulates the resource being returned...
+	}
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="paragraph">
 <p>To register your event handler, either mark the class with one of Spring’s @Component
@@ -796,7 +858,7 @@ stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. 
 declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Handler registration</div>
+<div class="title">Example 8. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -823,7 +885,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally be made searchable by extending the <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Searchable interface</div>
+<div class="title">Example 9. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -857,7 +919,7 @@ public class ContentStoreConfiguration {
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Renderable interface</div>
+<div class="title">Example 10. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1156,7 +1218,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Spring Content MongoDB Stores using Java Config</div>
+<div class="title">Example 11. Spring Content MongoDB Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1334,8 +1396,8 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.0<br>
-Last updated 2018-06-05 04:39:55 UTC
+Version 0.2.0<br>
+Last updated 2018-07-14 17:50:36 UTC
 </div>
 </div>
 </body>
