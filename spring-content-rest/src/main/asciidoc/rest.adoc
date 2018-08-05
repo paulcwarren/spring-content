@@ -25,7 +25,7 @@ The simplest way to get to started is if you are building a Spring Boot applicat
 ----
 dependencies {
     ...
-    compile("comn.github.paulcwarren:spring-content-rest-boot-starter:${version}")
+    compile("com.github.paulcwarren:spring-content-rest-boot-starter:${version}")
 	... 
 }
 ----
@@ -58,7 +58,7 @@ To add Spring Content REST to a Gradle-based project, add the spring-content-res
 ----
 dependencies {
     ...
-    compile("comn.github.paulcwarren:spring-content-rest:${version}")
+    compile("com.github.paulcwarren:spring-content-rest:${version}")
 	... 
 }
 ----
