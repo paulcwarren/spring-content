@@ -9,6 +9,8 @@ import org.springframework.util.Assert;
 
 import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 
+import javax.persistence.EntityManager;
+
 @SuppressWarnings("rawtypes")
 public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
@@ -17,6 +19,9 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	ConversionService filesystemStoreConverter;
+
+	@Autowired(required=false)
+	EntityManager em;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -28,8 +33,7 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter,
-				new FileServiceImpl());
+		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter, new FileServiceImpl(), em);
 	}
 
 }

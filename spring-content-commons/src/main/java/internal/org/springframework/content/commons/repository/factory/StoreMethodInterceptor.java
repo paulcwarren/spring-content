@@ -155,6 +155,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		if (before != null) {
 			publisher.publishEvent(before);
 		}
+
 		Object result;
 		try {
 			result = invocation.proceed();

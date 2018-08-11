@@ -16,6 +16,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Version;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +35,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
@@ -45,16 +49,19 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultFilesystemStoresImplTest {
+
 	private DefaultFilesystemStoreImpl<ContentProperty, String> filesystemContentRepoImpl;
 	private FileSystemResourceLoader loader;
 	private ConversionService conversion;
+	private FileService fileService;
+	private EntityManager em;
+
 	private ContentProperty entity;
 
 	private Resource resource;
 	private WritableResource writeableResource;
 	private DeletableResource deletableResource;
 	private DeletableResource nonExistentResource;
-	private FileService fileService;
 
 	private InputStream content;
 	private OutputStream output;
@@ -63,6 +70,7 @@ public class DefaultFilesystemStoresImplTest {
 	private File root;
 
 	private String id;
+	private Long version;
 
 	private InputStream result;
 	private Exception e;
@@ -74,9 +82,11 @@ public class DefaultFilesystemStoresImplTest {
 				loader = mock(FileSystemResourceLoader.class);
 				conversion = mock(ConversionService.class);
 				fileService = mock(FileService.class);
+			});
 
-				filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
-						loader, conversion, fileService);
+			JustBeforeEach(() -> {
+				filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<>(
+						loader, conversion, fileService, em);
 			});
 
 			Describe("Store", () -> {
@@ -296,6 +306,31 @@ public class DefaultFilesystemStoresImplTest {
 								verify(output, times(1)).write(Matchers.<byte[]>any(), eq(0),
 										eq(20));
 							});
+
+							Context("when there is an entity manager", () -> {
+								BeforeEach(() -> {
+									em = mock(EntityManager.class);
+									when(em.merge(eq(entity))).thenReturn(entity);
+
+									version = entity.getVersion();
+								});
+								Context("when there is an entity with @Version", () -> {
+									It("should lock and touch the entity", () -> {
+										verify(em).merge(eq(entity));
+										verify(em).lock(eq(entity), eq(LockModeType.OPTIMISTIC));
+										assertThat(entity.getVersion(), is(version + 1));
+									});
+								});
+								Context("when there is an entity with no @Version", () -> {
+									BeforeEach(() -> {
+										entity = new SharedIdContentIdEntity();
+									});
+									It("should not lock the entity", () -> {
+										verify(em, never()).merge(entity);
+										verify(em, never()).lock(eq(entity), any(LockModeType.class));
+									});
+								});
+							});
 						});
 
 						Context("when the content does not already exist", () -> {
@@ -444,6 +479,19 @@ public class DefaultFilesystemStoresImplTest {
 									assertThat(e.getCause().getMessage(), is("test-ioexception"));
 								});
 							});
+
+							Context("when there is an entity manager", () -> {
+								BeforeEach(() -> {
+									em = mock(EntityManager.class);
+									when(em.merge(eq(entity))).thenReturn(entity);
+
+									version = entity.getVersion();
+								});
+								It("should lock the entity", () -> {
+									verify(em).merge(eq(entity));
+									verify(em).lock(eq(entity), eq(LockModeType.OPTIMISTIC));
+								});
+							});
 						});
 
 						Context("when the resource exists but in the old location", () -> {
@@ -566,6 +614,7 @@ public class DefaultFilesystemStoresImplTest {
 									assertThat(entity.getContentLen(), is(0L));
 								});
 							});
+
 							Context("when the property's ContentId field also is the javax persistence Id field", () -> {
 								BeforeEach(() -> {
 									entity = new SharedIdContentIdEntity();
@@ -576,6 +625,7 @@ public class DefaultFilesystemStoresImplTest {
 									assertThat(entity.getContentLen(), is(0L));
 								});
 							});
+
 							Context("when the property's ContentId field also is the Spring Id field", () -> {
 								BeforeEach(() -> {
 									entity = new SharedSpringIdContentIdEntity();
@@ -584,6 +634,20 @@ public class DefaultFilesystemStoresImplTest {
 								It("should not reset the content id metadata", () -> {
 									assertThat(entity.getContentId(), is("abcd-efgh"));
 									assertThat(entity.getContentLen(), is(0L));
+								});
+							});
+
+							Context("when there is an entity manager", () -> {
+								BeforeEach(() -> {
+									em = mock(EntityManager.class);
+									when(em.merge(eq(entity))).thenReturn(entity);
+
+									version = entity.getVersion();
+								});
+								It("should lock and touch the entity", () -> {
+									verify(em).merge(eq(entity));
+									verify(em).lock(eq(entity), eq(LockModeType.OPTIMISTIC));
+									assertThat(entity.getVersion(), is(version + 1));
 								});
 							});
 						});
@@ -618,9 +682,15 @@ public class DefaultFilesystemStoresImplTest {
 		long getContentLen();
 
 		void setContentLen(long contentLen);
+
+		long getVersion();
 	}
 
 	public static class TestEntity implements ContentProperty {
+
+		@Version
+		private long version;
+
 		@ContentId
 		private String contentId;
 
@@ -649,6 +719,14 @@ public class DefaultFilesystemStoresImplTest {
 
 		public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
+		}
+
+		public long getVersion() {
+			return version;
+		}
+
+		public void setVersion(long version) {
+			this.version = version;
 		}
 	}
 
@@ -680,6 +758,11 @@ public class DefaultFilesystemStoresImplTest {
 		public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
+
+		@Override
+		public long getVersion() {
+			return 0;
+		}
 	}
 
 	public static class SharedSpringIdContentIdEntity implements ContentProperty {
@@ -709,6 +792,11 @@ public class DefaultFilesystemStoresImplTest {
 
 		public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
+		}
+
+		@Override
+		public long getVersion() {
+			return 0;
 		}
 	}
 }
