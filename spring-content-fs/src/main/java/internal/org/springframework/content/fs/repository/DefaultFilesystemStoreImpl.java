@@ -27,11 +27,17 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Version;
 
 import static java.lang.String.format;
 
+@Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
@@ -40,12 +46,19 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private FileSystemResourceLoader loader;
 	private ConversionService conversion;
 	private FileService fileService;
+	private EntityManager em;
 
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader,
-			ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
 		this.loader = loader;
 		this.conversion = conversion;
 		this.fileService = fileService;
+	}
+
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService, EntityManager em) {
+		this.loader = loader;
+		this.conversion = conversion;
+		this.fileService = fileService;
+		this.em = em;
 	}
 
 	@Override
@@ -100,7 +113,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	@Transactional
 	public void setContent(S entity, InputStream content) {
+		entity = lock(entity);
+
 		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
@@ -118,6 +134,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			if (resource instanceof WritableResource) {
 				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
+
+				touch(entity);
 			}
 		}
 		catch (IOException e) {
@@ -144,6 +162,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		if (entity == null)
 			return null;
 
+		entity = lock(entity);
+
 		Resource resource = getResource(entity);
 
 		try {
@@ -160,9 +180,12 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	@Transactional
 	public void unsetContent(S entity) {
 		if (entity == null)
 			return;
+
+		entity = lock(entity);
 
 		Resource resource = getResource(entity);
 
@@ -171,6 +194,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			try {
 				parent = resource.getFile().getParentFile();
 				((DeletableResource) resource).delete();
+
+				touch(entity);
 			} catch (IOException e) {
 				logger.warn(format("Unable to get file for resource %s", resource));
 			}
@@ -188,6 +213,30 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		// reset content fields
 		unassociate(entity);
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+	}
+
+	protected S lock(S entity) {
+		if (em == null) {
+			return entity;
+		}
+
+		if (BeanUtils.hasFieldWithAnnotation(entity, Version.class) == false) {
+			return entity;
+		}
+
+		entity = em.merge(entity);
+		em.lock(entity, LockModeType.OPTIMISTIC);
+		return entity;
+	}
+
+	private void touch(Object domainObj) {
+		Object version = BeanUtils.getFieldWithAnnotation(domainObj, Version.class);
+		if (version instanceof Integer) {
+			version = Math.incrementExact((Integer)version);
+		} else if (version instanceof Long) {
+			version = Math.incrementExact((Long)version);
+		}
+		BeanUtils.setFieldWithAnnotation(domainObj, Version.class, version);
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {

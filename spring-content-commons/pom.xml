@@ -46,5 +46,12 @@
 		    <artifactId>hamcrest-library</artifactId>
 		    <scope>test</scope>
 		</dependency>
+
+		<!-- Spike -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>5.0.7.RELEASE</version>
+        </dependency>
     </dependencies>
 </project>
