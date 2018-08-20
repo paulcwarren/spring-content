@@ -150,9 +150,9 @@ public class ContentEntityRestControllerIntegrationTest {
 
 								mvc.perform(fileUpload("/testEntitiesContent/"
 										+ testEntity.id.toString())
-												.file(new MockMultipartFile("file",
-														"test-file.txt", "text/plain",
-														content.getBytes())))
+										.file(new MockMultipartFile("file",
+												"test-file.txt", "text/plain",
+												content.getBytes())))
 										.andExpect(status().isOk());
 
 								Optional<TestEntity> fetched = repository
@@ -276,9 +276,9 @@ public class ContentEntityRestControllerIntegrationTest {
 
 							mvc.perform(fileUpload(
 									"/testEntitiesContent/" + testEntity.id.toString())
-											.file(new MockMultipartFile("file",
-													"test-file-modified.txt",
-													"text/plain", content.getBytes())))
+									.file(new MockMultipartFile("file",
+											"test-file-modified.txt",
+											"text/plain", content.getBytes())))
 									.andExpect(status().isOk());
 
 							Optional<TestEntity> fetched = repository

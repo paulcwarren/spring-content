@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Version;
 
 import org.springframework.content.commons.annotations.*;
 
@@ -17,6 +18,7 @@ public class TestEntity {
 	public @OriginalFileName String originalFileName;
 	public @ContentLength Long len;
 	public @MimeType String mimeType;
+	public @Version Integer version;
 
 	public Long getId() {
 		return id;
@@ -65,4 +67,8 @@ public class TestEntity {
 	public void setMimeType(String mimeType) {
 		this.mimeType = mimeType;
 	}
+
+	public Integer getVersion() { return version; }
+
+	public void setVersion(Integer version) { this.version = version; }
 }

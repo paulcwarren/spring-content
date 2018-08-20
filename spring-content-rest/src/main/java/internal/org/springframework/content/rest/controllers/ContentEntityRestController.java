@@ -54,7 +54,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 	@Autowired
 	public ContentEntityRestController(ApplicationContext context,
-			ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
+									   ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		try {
 			this.repositories = context.getBean(Repositories.class);
 		}
@@ -69,7 +69,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers = {
 			"accept!=application/hal+json", "range" })
 	public void getContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store, @PathVariable String id)
+						   @PathVariable String store, @PathVariable String id)
 			throws HttpRequestMethodNotSupportedException {
 
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
@@ -111,8 +111,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<InputStreamResource> getContent(@PathVariable String store,
-			@PathVariable String id,
-			@RequestHeader(value = "Accept", required = false) String mimeType)
+														  @PathVariable String id,
+														  @RequestHeader(value = "Accept", required = false) String mimeType)
 			throws HttpRequestMethodNotSupportedException {
 
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
@@ -153,7 +153,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			"content-type!=multipart/form-data", "accept!=application/hal+json" })
 	@ResponseBody
 	public void putContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store, @PathVariable String id)
+						   @PathVariable String store, @PathVariable String id)
 			throws IOException, HttpRequestMethodNotSupportedException,
 			InstantiationException, IllegalAccessException {
 
@@ -193,8 +193,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void putMultipartContent(HttpServletResponse response,
-			@PathVariable String store, @PathVariable String id,
-			@RequestParam("file") MultipartFile multiPart)
+									@PathVariable String store, @PathVariable String id,
+									@RequestParam("file") MultipartFile multiPart)
 			throws IOException, HttpRequestMethodNotSupportedException,
 			InstantiationException, IllegalAccessException {
 		handleMultipart(response, store, id, multiPart);
@@ -204,8 +204,8 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void postMultipartContent(HttpServletResponse response,
-			@PathVariable String store, @PathVariable String id,
-			@RequestParam("file") MultipartFile multiPart)
+									 @PathVariable String store, @PathVariable String id,
+									 @RequestParam("file") MultipartFile multiPart)
 			throws IOException, HttpRequestMethodNotSupportedException,
 			InstantiationException, IllegalAccessException {
 		handleMultipart(response, store, id, multiPart);
@@ -214,7 +214,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
 	public void deleteContent(HttpServletResponse response, @PathVariable String store,
-			@PathVariable String id)
+							  @PathVariable String id)
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);
@@ -243,7 +243,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	}
 
 	protected void handleMultipart(HttpServletResponse response, String store, String id,
-			MultipartFile multiPart)
+								   MultipartFile multiPart)
 			throws HttpRequestMethodNotSupportedException, IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, store);

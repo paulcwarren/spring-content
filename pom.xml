@@ -98,6 +98,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<module>./content-rest-spring-boot-starter</module>
 		<module>./content-s3-spring-boot-starter</module>
 		<module>./content-solr-spring-boot-starter</module>
+        <module>./spring-versions-commons</module>
+		<module>./spring-versions-jpa</module>
 	</modules>
 
 	<build>

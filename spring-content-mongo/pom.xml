@@ -53,11 +53,10 @@
 			<version>${powermock.version}</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-			<version>1.0</version>
-			<scope>test</scope>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.2.Final</version>
+		</dependency>
+	</dependencies>
 </project>
