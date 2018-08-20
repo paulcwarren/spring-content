@@ -46,5 +46,19 @@
 		    <artifactId>hamcrest-library</artifactId>
 		    <scope>test</scope>
 		</dependency>
-    </dependencies>
+
+		<!-- Locking and Versioning Spike -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>5.0.7.RELEASE</version>
+        </dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-versions-commons</artifactId>
+			<version>0.3.0-SNAPSHOT</version>
+		</dependency>
+		<!-- Locking and Versioning Spike -->
+
+	</dependencies>
 </project>

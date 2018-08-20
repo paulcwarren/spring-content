@@ -27,11 +27,17 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Version;
 
 import static java.lang.String.format;
 
+@Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
@@ -41,8 +47,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private ConversionService conversion;
 	private FileService fileService;
 
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader,
-			ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
 		this.loader = loader;
 		this.conversion = conversion;
 		this.fileService = fileService;
@@ -89,8 +94,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 							if ("javax.persistence.Id".equals(
 									annotation.annotationType().getCanonicalName())
 									|| "org.springframework.data.annotation.Id"
-											.equals(annotation.annotationType()
-													.getCanonicalName())) {
+									.equals(annotation.annotationType()
+											.getCanonicalName())) {
 								return false;
 							}
 						}
@@ -100,6 +105,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	@Transactional
 	public void setContent(S entity, InputStream content) {
 		Resource resource = getResource(entity);
 		if (resource == null) {
@@ -160,6 +166,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	@Transactional
 	public void unsetContent(S entity) {
 		if (entity == null)
 			return;
