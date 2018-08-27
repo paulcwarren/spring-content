@@ -29,6 +29,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Autowired(required=false)
     public LockingAndVersioningRepositoryImpl() {
     }
+
     @Autowired(required=false)
     public LockingAndVersioningRepositoryImpl(EntityManager em, AuthenticationFacade auth, LockingService versioning) {
         this.em = em;
@@ -36,12 +37,17 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         this.lockingService = versioning;
     }
 
+//    public LockingAndVersioningRepositoryImpl(EntityManager em, AuthenticationFacade auth, LockingService versioning, JpaEntityInformation<T, ?>  entityInformation) {
+//        this(em, auth, versioning);
+//        this.entityInformation = entityInformation;
+//    }
+
     @Override
     @Transactional
     public <S extends T> S lock(S entity) {
         Authentication authentication = auth.getAuthentication();
         Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
-        if (    id == null) {
+        if (id == null) {
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
         }
         if (id == null) {
