@@ -53,8 +53,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	private StoreByteRangeHttpRequestHandler handler;
 
 	@Autowired
-	public ContentEntityRestController(ApplicationContext context,
-									   ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
+	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		try {
 			this.repositories = context.getBean(Repositories.class);
 		}
