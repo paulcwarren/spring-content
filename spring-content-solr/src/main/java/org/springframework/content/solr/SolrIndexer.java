@@ -18,6 +18,7 @@ import org.springframework.content.commons.repository.events.AbstractStoreEventL
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.util.Assert;
 
 @StoreEventHandler
@@ -36,6 +37,7 @@ public class SolrIndexer {
 	}
 
 	@HandleAfterSetContent
+	@Order(100)
 	protected void onAfterSetContent(AfterSetContentEvent event) {
 		Object contentEntity = event.getSource();
 		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
@@ -72,6 +74,7 @@ public class SolrIndexer {
 	}
 
 	@HandleBeforeUnsetContent
+	@Order(100)
 	protected void onBeforeUnsetContent(BeforeUnsetContentEvent event) {
 		Object contentEntity = event.getSource();
 		if (BeanUtils.hasFieldWithAnnotation(contentEntity, ContentId.class) == false) {
