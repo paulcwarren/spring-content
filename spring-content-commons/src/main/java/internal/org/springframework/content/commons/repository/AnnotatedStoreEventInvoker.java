@@ -3,6 +3,7 @@ package internal.org.springframework.content.commons.repository;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -38,6 +39,7 @@ import org.springframework.content.commons.repository.events.BeforeUnsetContentE
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -177,10 +179,23 @@ public class AnnotatedStoreEventInvoker
 		logger.debug(
 				String.format("Annotated handler method found: {%s}", handlerMethod));
 
-		handlerMethods.add(eventType, handlerMethod);
+		List<EventHandlerMethod> events = handlerMethods.get(eventType);
+
+		if (events == null) {
+			events = new ArrayList<>();
+		}
+
+		if (events.isEmpty()) {
+			handlerMethods.add(eventType, handlerMethod);
+			return;
+		}
+
+		events.add(handlerMethod);
+		Collections.sort(events);
+		handlerMethods.put(eventType, events);
 	}
 
-	static class EventHandlerMethod {
+	static class EventHandlerMethod implements Comparable<EventHandlerMethod> {
 
 		final Class<?> targetType;
 		final Method method;
@@ -193,6 +208,15 @@ public class AnnotatedStoreEventInvoker
 			this.handler = handler;
 
 			ReflectionUtils.makeAccessible(this.method);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Comparable#compareTo(java.lang.Object)
+		 */
+		@Override
+		public int compareTo(EventHandlerMethod o) {
+			return AnnotationAwareOrderComparator.INSTANCE.compare(this.method, o.method);
 		}
 
 		@Override

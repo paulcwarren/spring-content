@@ -52,6 +52,8 @@ import org.springframework.content.commons.repository.events.BeforeSetContentEve
 import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.ReflectionService;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.util.ReflectionUtils;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -69,6 +71,9 @@ public class AnnotatedStoreEventInvokerTest {
 	// mocks
 	private ReflectionService reflectionService;
 	private ContentStore<Object, Serializable> store;
+
+	// event handlers
+	private HighestPriorityCustomEventHandler priorityHandler = new HighestPriorityCustomEventHandler();
 
 	{
 		Describe("#postProcessAfterInitialization", () -> {
@@ -119,6 +124,20 @@ public class AnnotatedStoreEventInvokerTest {
 					assertThat(
 							invoker.getHandlers().get(AfterUnsetContentEvent.class) .size(),
 							is(2));
+				});
+
+				Context("when initialized with another event handler of highest priority", () -> {
+					JustBeforeEach(() -> {
+						invoker.postProcessAfterInitialization(priorityHandler,
+								"high-priority-custom-bean");
+					});
+					FIt("should order the handlers by priority", () -> {
+						assertThat(
+								invoker.getHandlers().get(BeforeGetResourceEvent.class).size(),
+								is(3));
+
+						assertThat(invoker.getHandlers().get(BeforeGetResourceEvent.class).get(0).handler, is(priorityHandler));
+					});
 				});
 			});
 		});
@@ -610,7 +629,16 @@ public class AnnotatedStoreEventInvokerTest {
 		}
 	}
 
-	public class EventSource {
+	@StoreEventHandler
+	public class HighestPriorityCustomEventHandler {
+
+		@HandleBeforeGetResource
+		@Order(Ordered.HIGHEST_PRECEDENCE)
+		public void beforeGetResource(Object contentObject) {
+		}
+	}
+
+		public class EventSource {
 	}
 
 	public class UnknownContentEvent extends StoreEvent {
