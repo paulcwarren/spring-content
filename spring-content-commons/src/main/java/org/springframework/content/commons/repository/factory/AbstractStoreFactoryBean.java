@@ -12,8 +12,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +21,18 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
-import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
 public abstract class AbstractStoreFactoryBean
 		implements InitializingBean, FactoryBean<Store<? extends Serializable>>,
-		BeanClassLoaderAware, BeanFactoryAware, ApplicationEventPublisherAware, StoreFactory {
+		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
 
 	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
 
 	private Class<? extends Store<Serializable>> storeInterface;
 	private ClassLoader classLoader;
-	private BeanFactory beanFactory;
 	private ApplicationEventPublisher publisher;
 
 	private Store<? extends Serializable> store;
@@ -144,8 +139,6 @@ public abstract class AbstractStoreFactoryBean
 
 	@SuppressWarnings("unchecked")
 	protected Store<? extends Serializable> createContentStore() {
-		Assert.notNull(beanFactory, "BeanFactory null");
-
 		Object target = getContentStoreImpl();
 
 		// Create proxy
@@ -165,14 +158,6 @@ public abstract class AbstractStoreFactoryBean
 		catch (Exception e) {
 			logger.error("Failed to setup extensions", e);
 		}
-
-		TransactionInterceptor transactionInterceptor = new TransactionInterceptor(null, new AnnotationTransactionAttributeSource());
-		transactionInterceptor.setTransactionManagerBeanName("transactionManager");
-		transactionInterceptor.setBeanFactory(beanFactory);
-		transactionInterceptor.afterPropertiesSet();
-
-		result.addAdvice(transactionInterceptor);
-
 		StoreMethodInterceptor intercepter = new StoreMethodInterceptor(
 				(ContentStore<Object, Serializable>) target,
 				getDomainClass(storeInterface), getContentIdClass(storeInterface),
@@ -226,14 +211,6 @@ public abstract class AbstractStoreFactoryBean
 			}
 		}
 		return clazz;
-	}
-
-	/*
- * (non-Javadoc)
- * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
- */
-	public void setBeanFactory(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
 	}
 
 	protected abstract Object getContentStoreImpl();
