@@ -18,17 +18,10 @@ public static class ApplicationConfig {
 		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
 		return amazonS3Client;
 	}
-
-	@Bean
-	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<2>
-		return new SimpleStorageResourceLoader(client);
-	}
-
 }
 ----
 <1> The Amazon S3 client used by the S3 ResourceLoader
-<2> The S3 ResourceLoader used by the S3 Store
-<3> The default bucket also needs to be set (see Configuring below)
+<2> A default bucket also needs to be set (see Configuring below)
 ====
 
 == Configuring
