@@ -7,7 +7,6 @@ import com.amazonaws.services.s3.model.S3ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
@@ -212,11 +211,6 @@ public class EnableS3StoresTest {
 			AmazonS3Client client = new AmazonS3Client();
 			client.setRegion(region());
 			return client;
-		}
-
-		@Bean
-		public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
-			return new SimpleStorageResourceLoader(client);
 		}
 	}
 

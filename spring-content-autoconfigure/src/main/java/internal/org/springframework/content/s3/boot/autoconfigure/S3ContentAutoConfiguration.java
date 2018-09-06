@@ -7,7 +7,6 @@ import internal.org.springframework.content.s3.config.S3StoreConfiguration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -23,11 +22,4 @@ public class S3ContentAutoConfiguration {
 		AmazonS3 s3Client = new AmazonS3Client();
 		return s3Client;
 	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
-		return new SimpleStorageResourceLoader(client);
-	}
-
 }

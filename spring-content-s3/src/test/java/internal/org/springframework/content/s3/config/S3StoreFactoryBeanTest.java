@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 import org.junit.runner.RunWith;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.s3.S3ObjectIdResolver;
@@ -28,7 +27,6 @@ public class S3StoreFactoryBeanTest {
 	private S3StoreFactoryBean factory;
 
 	private AmazonS3 client;
-	private SimpleStorageResourceLoader loader;
 	private ConversionService converter;
 	private S3ObjectIdResolvers resolvers;
 
@@ -38,11 +36,10 @@ public class S3StoreFactoryBeanTest {
 		Describe("S3StoreFactoryBean", () -> {
 			BeforeEach(() -> {
 				client = mock(AmazonS3.class);
-				loader = mock(SimpleStorageResourceLoader.class);
 				converter = mock(ConversionService.class);
 				resolvers = new S3ObjectIdResolvers();
 
-				factory = new S3StoreFactoryBean(client, loader, converter, resolvers);
+				factory = new S3StoreFactoryBean(client, converter, resolvers);
 			});
 			Context("given a Store", () -> {
 				BeforeEach(() -> {

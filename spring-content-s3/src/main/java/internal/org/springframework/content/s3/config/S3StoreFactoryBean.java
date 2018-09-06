@@ -2,7 +2,7 @@ package internal.org.springframework.content.s3.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -14,6 +14,7 @@ import org.springframework.core.convert.ConversionService;
 import com.amazonaws.services.s3.AmazonS3;
 
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
+import org.springframework.core.io.DefaultResourceLoader;
 
 import java.io.Serializable;
 
@@ -25,9 +26,6 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private AmazonS3 client;
-
-	@Autowired
-	private SimpleStorageResourceLoader loader;
 
 	@Autowired
 	private ConversionService s3StoreConverter;
@@ -42,10 +40,8 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	}
 
 	@Autowired
-	public S3StoreFactoryBean(AmazonS3 client, SimpleStorageResourceLoader loader,
-			ConversionService s3StoreConverter, S3ObjectIdResolvers resolvers) {
+	public S3StoreFactoryBean(AmazonS3 client, ConversionService s3StoreConverter, S3ObjectIdResolvers resolvers) {
 		this.client = client;
-		this.loader = loader;
 		this.s3StoreConverter = s3StoreConverter;
 		this.resolvers = resolvers;
 	}
@@ -73,6 +69,13 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 				resolver = DEFAULT_S3OBJECTID_RESOLVER_STORE;
 			}
 		}
-		return new DefaultS3StoreImpl(loader, s3StoreConverter, client, resolver, bucket);
+
+		SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+		s3Protocol.afterPropertiesSet();
+
+		DefaultResourceLoader loader = new DefaultResourceLoader();
+		loader.addProtocolResolver(s3Protocol);
+
+		return new DefaultS3StoreImpl(/* Edited */loader, s3StoreConverter, client, resolver, bucket);
 	}
 }
