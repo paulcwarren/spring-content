@@ -451,12 +451,6 @@ public static class ApplicationConfig {
 		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
 		return amazonS3Client;
 	}
-
-	@Bean
-	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<b class="conum">(2)</b>
-		return new SimpleStorageResourceLoader(client);
-	}
-
 }</code></pre>
 </div>
 </div>
@@ -466,10 +460,7 @@ public static class ApplicationConfig {
 <p>The Amazon S3 client used by the S3 ResourceLoader</p>
 </li>
 <li>
-<p>The S3 ResourceLoader used by the S3 Store</p>
-</li>
-<li>
-<p>The default bucket also needs to be set (see Configuring below)</p>
+<p>A default bucket also needs to be set (see Configuring below)</p>
 </li>
 </ol>
 </div>
@@ -669,7 +660,7 @@ in <code>java.util.UUID</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-09-06 03:46:27 UTC
+Last updated 2018-09-06 05:49:06 UTC
 </div>
 </div>
 </body>
