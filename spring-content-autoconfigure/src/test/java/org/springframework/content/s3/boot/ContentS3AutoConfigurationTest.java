@@ -15,7 +15,6 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -64,11 +63,6 @@ public class ContentS3AutoConfigurationTest {
 			AmazonS3 s3Client = new AmazonS3Client();
 			s3Client.setRegion(region());
 			return s3Client;
-		}
-
-		@Bean
-		public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
-			return new SimpleStorageResourceLoader(client);
 		}
 	}
 

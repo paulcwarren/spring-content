@@ -47,6 +47,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 	<properties>
 		<ginkgo4j-version>1.0.9</ginkgo4j-version>
 		<springboot-version>2.0.3.RELEASE</springboot-version>
+		<spring-cloud.version>Finchley.SR1</spring-cloud.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
@@ -59,6 +60,13 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
 				<version>${springboot-version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
