@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Version;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -178,6 +179,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		info.getImpementation().setContent(domainObj, request.getInputStream());
 
+		// re-fetch to make sure we have the latest
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
+			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+		}
+
 		save(repositories, domainObj);
 
 		if (isNew) {
@@ -231,6 +237,11 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 
 		info.getImpementation().unsetContent(domainObj);
+
+		// re-fetch to make sure we have the latest
+		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
+			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+		}
 
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
