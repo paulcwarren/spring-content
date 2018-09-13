@@ -1,6 +1,7 @@
 package org.springframework.content.renditions.renderers;
 
 import internal.org.springframework.renditions.pdf.PDFServiceImpl;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.io.ScratchFile;
@@ -8,6 +9,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.renditions.RenditionException;
 import org.springframework.renditions.poi.PDFService;
@@ -15,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -56,20 +62,19 @@ public class PdfToJpegRenderer implements RenditionProvider {
 			document = pdfService.load(fromInputSource);
 			PDFRenderer pdfRenderer = pdfService.renderer(document);
 			if (document.getNumberOfPages() > 0) {
-				BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
-				PipedInputStream in = new PipedInputStream();
-				PipedOutputStream out = new PipedOutputStream(in);
-				new Thread(
-						() -> {
-							try {
-								pdfService.writeImage(bim, "jpeg", out);
-							} catch (IOException e) {
-								logger.error("Error writing buffered image to output stream");
-								throw new RenditionException("Error writing buffered image to output stream", e);
-							}
-						}
-				).start();
-				return in;
+  				BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
+  				File tmp = File.createTempFile("pdftojpegrenderer", ".tmp");
+  				tmp.deleteOnExit();
+				FileOutputStream out = new FileOutputStream(tmp);
+				try {
+					pdfService.writeImage(bim, "jpeg", out);
+				} catch (IOException e) {
+					logger.error("Error writing buffered image to output stream");
+					throw new RenditionException("Error writing buffered image to output stream", e);
+				} finally {
+					IOUtils.closeQuietly(out);
+				}
+				return new ObservableInputStream(new FileInputStream(tmp), new FileRemover(tmp));
 			}
 		} catch (IOException e) {
 			logger.error("Error rendering application/pdf to image/jpeg");
