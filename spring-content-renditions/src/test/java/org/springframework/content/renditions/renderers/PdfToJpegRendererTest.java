@@ -16,6 +16,7 @@ import org.springframework.renditions.poi.PDFService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -30,6 +31,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -93,9 +95,9 @@ public class PdfToJpegRendererTest {
 						It("should get the embedded thumbnail from the XWPFDocument's properties", () -> {
 							verify(pdfRenderer).renderImageWithDPI(0, 300, ImageType.RGB);
 						});
-//						It("should output the rendered image", () -> {
-//							verify(pdf).writeImage(anyObject(), eq("jpeg"), anyObject());
-//						});
+						It("should output the rendered image", () -> {
+							verify(pdf).writeImage(anyObject(), eq("jpeg"), isA(OutputStream.class));
+						});
 						Context("when the pdf document fails to return a thumbnail", () -> {
 							BeforeEach(() -> {
 								doThrow(IOException.class).when(pdfRenderer).renderImageWithDPI(0, 300, ImageType.RGB);
