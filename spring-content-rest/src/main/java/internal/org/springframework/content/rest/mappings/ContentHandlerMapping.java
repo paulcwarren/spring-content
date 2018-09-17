@@ -68,6 +68,13 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		if (path.length < 3)
 			return null;
 
+		// HACKETY HACK HACK: let repository rest resource handle locks
+		if (path[path.length - 1].equals("version") ||
+			path[path.length - 1].equals("findAllLatestVersion") ||
+			path[path.length - 1].equals("findAllVersions")) {
+			return null;
+		}
+
 		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
 		if (info2 != null && isHalOrJsonRequest(request) == false) {
 			return super.lookupHandlerMethod(lookupPath, request);
