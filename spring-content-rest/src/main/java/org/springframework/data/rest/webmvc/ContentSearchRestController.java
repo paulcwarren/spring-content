@@ -3,6 +3,7 @@ package org.springframework.data.rest.webmvc;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.security.Principal;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrappers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.versions.LockingAndVersioningRepository;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
@@ -164,19 +167,21 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 					}
 				}
 			}
-			return ResponseEntity.ok(toResources(results, assembler, entityType, null));
+			return ResponseEntity.ok(toResources(results, assembler, pagedResourcesAssembler, entityType, null));
 		}
 
 		return ResponseEntity.ok(new Resources(ControllerUtils.EMPTY_RESOURCE_LIST));
 	}
 
-	protected Resources<?> toResources(Iterable<?> source,
-			PersistentEntityResourceAssembler assembler, Class<?> domainType,
-			Link baseLink) {
+	public static Resources<?> toResources(Iterable<?> source,
+										   PersistentEntityResourceAssembler assembler,
+										   PagedResourcesAssembler resourcesAssembler,
+										   Class<?> domainType,
+										   Link baseLink) {
 
 		if (source instanceof Page) {
 			Page<Object> page = (Page<Object>) source;
-			return entitiesToResources(page, assembler, domainType, baseLink);
+			return entitiesToResources(page, assembler, resourcesAssembler, domainType, baseLink);
 		}
 		else if (source instanceof Iterable) {
 			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
@@ -186,19 +191,93 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 		}
 	}
 
-	protected Resources<?> entitiesToResources(Page<Object> page,
-			PersistentEntityResourceAssembler assembler, Class<?> domainType,
-			Link baseLink) {
+	private static Method VERSION_METHOD = null;
 
-		if (page.getContent().isEmpty()) {
-			return pagedResourcesAssembler.toEmptyResource(page, domainType, baseLink);
-		}
-
-		return baseLink == null ? pagedResourcesAssembler.toResource(page, assembler)
-				: pagedResourcesAssembler.toResource(page, assembler, baseLink);
+	static {
+		VERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "version", Object.class);
 	}
 
-	protected Resources<?> entitiesToResources(Iterable<Object> entities,
+	private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/version";
+
+	@ResponseBody
+	@RequestMapping(value = ENTITY_VERSION_MAPPING, method = RequestMethod.PUT)
+	public ResponseEntity<org.springframework.hateoas.Resource<?>> version(RootResourceInformation repoInfo,
+																		   @PathVariable String repository,
+																		   @PathVariable String id, Principal principal)
+			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
+
+		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+
+		System.out.println(VERSION_METHOD);
+		System.out.println(repositories.getRepositoryFor(domainObj.getClass()).get());
+		System.out.println(domainObj);
+
+		domainObj = ReflectionUtils.invokeMethod(VERSION_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
+
+		return ResponseEntity.ok().build();
+	}
+
+	private static Method FINDALLLATESTVERSION_METHOD = null;
+
+	static {
+		FINDALLLATESTVERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllLatestVersion");
+	}
+
+	private static final String ENTITY_FINDALLLATESTVERSION_MAPPING = "/{repository}/{id}/findAllLatestVersion";
+
+	@ResponseBody
+	@RequestMapping(value = ENTITY_FINDALLLATESTVERSION_MAPPING, method = RequestMethod.GET)
+	public ResponseEntity<?> findAllLatestVersion(RootResourceInformation repoInfo,
+												  PersistentEntityResourceAssembler assembler,
+												  @PathVariable String repository,
+												  @PathVariable String id)
+			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
+
+		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+
+		List result = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get());
+
+		return ResponseEntity.ok(ContentSearchRestController.toResources(result, assembler, this.pagedResourcesAssembler, domainObj.getClass(), null));
+//		return ResponseEntity.ok().build();
+	}
+
+	private static Method FINDALLVERSIONS_METHOD = null;
+
+	static {
+		FINDALLVERSIONS_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersions", Object.class);
+	}
+
+	private static final String FINDALLVERSIONS_METHOD_MAPPING = "/{repository}/{id}/findAllVersions";
+
+	@ResponseBody
+	@RequestMapping(value = FINDALLVERSIONS_METHOD_MAPPING, method = RequestMethod.GET)
+	public ResponseEntity<?> findAllVersions(RootResourceInformation repoInfo,
+											 PersistentEntityResourceAssembler assembler,
+											 @PathVariable String repository,
+											 @PathVariable String id)
+			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
+
+		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+
+		List result = (List)ReflectionUtils.invokeMethod(FINDALLVERSIONS_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
+
+		return ResponseEntity.ok(ContentSearchRestController.toResources(result, assembler, this.pagedResourcesAssembler, domainObj.getClass(), null));
+//		return ResponseEntity.ok().build();
+	}
+
+	protected static Resources<?> entitiesToResources(Page<Object> page,
+											   PersistentEntityResourceAssembler assembler, PagedResourcesAssembler resourcesAssembler, Class<?> domainType,
+											   Link baseLink) {
+
+		if (page.getContent().isEmpty()) {
+			return resourcesAssembler.toEmptyResource(page, domainType, baseLink);
+		}
+
+		return baseLink == null ? resourcesAssembler.toResource(page, assembler)
+				: resourcesAssembler.toResource(page, assembler, baseLink);
+	}
+
+	protected static Resources<?> entitiesToResources(Iterable<Object> entities,
 			PersistentEntityResourceAssembler assembler, Class<?> domainType) {
 
 		if (!entities.iterator().hasNext()) {
@@ -217,7 +296,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 		return new Resources<Resource<Object>>(resources, getDefaultSelfLink());
 	}
 
-	protected Link getDefaultSelfLink() {
+	protected static Link getDefaultSelfLink() {
 		return new Link(
 				ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
 	}

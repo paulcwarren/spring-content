@@ -1,5 +1,6 @@
 package org.springframework.content.rest.config;
 
+import internal.org.springframework.content.rest.controllers.ContentRestExceptionHandler;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,5 +25,10 @@ public class RestConfiguration {
 	@Bean
 	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
 		return new StoreByteRangeHttpRequestHandler();
+	}
+
+	@Bean
+    ContentRestExceptionHandler contentRestExceptionHandler() {
+		return new ContentRestExceptionHandler();
 	}
 }

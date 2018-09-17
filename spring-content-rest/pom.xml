@@ -46,6 +46,14 @@
 			<version>1.2.1</version>
 		</dependency>
 
+		<!-- Locking and Versioning Spike -->
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-versions-commons</artifactId>
+			<version>0.4.0-SNAPSHOT</version>
+		</dependency>
+		<!-- Locking and Versioning Spike -->
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
