@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import internal.org.springframework.content.rest.annotations.ContentRestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -18,8 +17,10 @@ import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvoker;
+import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
@@ -79,9 +80,12 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	@StoreType("contentstore")
 	@RequestMapping(value = ENTITY_CONTENTSEARCH_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<?> searchContent(RootResourceInformation repoInfo,
-			PersistentEntityResourceAssembler assembler, @PathVariable String repository,
-			@PathVariable String searchMethod,
-			@RequestParam(name = "keyword") List<String> keywords)
+										   DefaultedPageable pageable,
+										   Sort sort,
+										   PersistentEntityResourceAssembler assembler,
+										   @PathVariable String repository,
+										   @PathVariable String searchMethod,
+										   @RequestParam(name = "keyword") List<String> keywords)
 			throws HttpRequestMethodNotSupportedException {
 
 		ContentStoreInfo[] infos = stores.getStores(ContentStore.class,
@@ -146,8 +150,8 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 				}
 			}
 			else {
-				Pageable pageable = null;
-				Iterable<?> entities = repoInfo.getInvoker().invokeFindAll(pageable);
+				RepositoryInvoker invoker = repoInfo.getInvoker();
+				Iterable<?> entities = pageable.getPageable() != null ? invoker.invokeFindAll(pageable.getPageable()) : invoker.invokeFindAll(sort);
 
 				for (Object entity : entities) {
 					for (Object contentId : contentIds) {
