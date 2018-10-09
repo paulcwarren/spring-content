@@ -1,0 +1,41 @@
+= Spring Content S3 - Reference Documentation
+Paul Warren, Peter Blum, Jeff Pak
+:revnumber: {version}
+:revdate: {localdate}
+:toc:
+:toc-placement!:
+:spring-content-commons-docs: ../../../../spring-content-commons/src/main/asciidoc
+:spring-content-solr-docs: ../../../../spring-content-solr/src/main/asciidoc
+
+(C) 2008-2017 The original authors.
+
+NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+
+toc::[]
+
+:numbered:
+
+include::s3-preface.adoc[]
+
+:leveloffset: +1
+// include::new-features.adoc[]
+include::{spring-content-commons-docs}/content-repositories.adoc[]
+:leveloffset: -1
+
+:leveloffset: +1
+include::s3.adoc[]
+include::{spring-content-solr-docs}/solr-search.adoc[]
+:leveloffset: -1
+
+//[[appendix]]
+//= Appendix
+
+//:numbered!:
+// :leveloffset: +1
+// include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+// include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[]
+// include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
+// include::{spring-data-commons-docs}/repository-query-return-types-reference.adoc[]
+// include::faq.adoc[]
+// include::glossary.adoc[]
+// :leveloffset: -1

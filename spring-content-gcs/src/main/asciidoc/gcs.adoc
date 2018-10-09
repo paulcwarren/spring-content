@@ -1,0 +1,172 @@
+= S3 Content Stores
+
+== Annotation based configuration
+
+Spring Content S3 is enabled with the following Java Config.
+
+.Enabling Spring Content S3 using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+	@Bean
+	public AmazonS3 client() {	<1>
+		BasicAWSCredentials creds = new BasicAWSCredentials(...)
+		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
+		return amazonS3Client;
+	}
+
+	@Bean
+	public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {	<2>
+		return new SimpleStorageResourceLoader(client);
+	}
+
+}
+----
+<1> The Amazon S3 client used by the S3 ResourceLoader
+<2> The S3 ResourceLoader used by the S3 Store
+<3> The default bucket also needs to be set (see Configuring below)
+====
+
+== Configuring
+
+The following configuration properties (prefix `spring.content.s3`) are supported.
+
+[cols="3*", options="header"]
+|=========
+| Property | Required | Description
+| bucket | No | Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET
+|=========
+
+== Accessing Content
+
+=== Storage Model
+
+In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
+flat
+structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
+of
+buckets and objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports
+the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.
+
+==== Bucket Resolution
+
+Unless configured to do otherwise Spring Content S3 will store all content in the default bucket (see Configuring for
+details on how to configure the default bucket for your application).
+
+===== @Bucket annotation
+
+The bucket can be determined by annotating one of your Entity's fields with the `@Bucket` annotation.  It is
+important that this field exhibits non-null semantics.  This approach makes it possible to store content in different
+buckets and not just the default bucket.
+
+===== S3ObjectIdResolver
+
+If the `@Bucket` annotation is not suitable it is also possible to configure Spring Content S3 with one or more
+`S3ObjectIdResolver` objects.  This approach is more flexible than the `@Bucket` annotation as it provides an approach
+to determining the bucket from either the Entity or from an Entity's composite custom `@ContentId` field.
+
+.Configuring the S3 Store with a custom S3ObjectIdResolver
+====
+[source, java]
+----
+@Configuration
+public class S3StoreConfiguration  {
+
+	public S3ObjectIdResolver<CustomContentId> bucketResolver() {
+		return S3ObjectIdResolver<CustomContentId>() {
+
+            public String getBucket(CustomContentId id, String defaultBucketName) {
+                return id.getCustomerId();
+            }
+
+            public String getKey(CustomContentId id) {
+                return id.getObjectId();
+            }
+		};
+	}
+
+	@Bean
+	public S3StoreConfigurer configurer() {
+		return new S3StoreConfigurer() {
+
+			@Override
+			public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
+			    resolvers.add(bucketResolver());
+			}
+		};
+	}
+}
+----
+====
+
+===== S3ObjectId
+
+Ultimately, the S3 store uses instances of `S3ObjectId` to identify and place content.  It is therefore also possible to
+create S3 stores using this type as the `@ContentId` type.
+
+==== Key Resolution
+
+By default, Spring Content S3 will store all content using simple keys.  This maps well onto primitive datatypes and
+`java.util.UUID`.
+
+The S3 Store uses a dedicated `ConversionService` to convert the Entity's `@ContentId` into a resource path.  By
+configuring your application to contribute one (or more) instances of `org.springframework.core.concert.converter.Converter`
+it is possible to configure the Store to take advantage of S3's console folder concepts.
+
+For example, @ContentId fields of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that
+will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.
+
+.Configuring the S3 Store with a custom converter
+====
+[source, java]
+----
+@Configuration
+public class S3StoreConfiguration  {
+
+	public Converter<UUID,String> converter() {
+		return new S3StoreConverter<UUID,String>() {
+
+			@Override
+			public String convert(UUID source) {
+				return String.format("/%s", source.toString().replaceAll("-", "/"));
+			}
+		};
+	}
+
+	@Bean
+	public S3StoreConfigurer configurer() {
+		return new S3StoreConfigurer() {
+
+			@Override
+			public void configureS3StoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
+			}
+		};
+	}
+}
+----
+====
+
+=== Setting Content
+
+Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.
+
+If content has not yet been stored with this entity and an Id has not been assigned one will be generated
+based
+in `java.util.UUID`.
+
+The @ContentId and @ContentLength annotations will be updated on `entity`.
+
+If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.
+
+=== Getting Content
+
+Content can be accessed using the `ContentStore.getContent(entity)` method.
+
+=== Unsetting Content
+
+Content can be removed using the `ContentStore.unsetContent(entity)` method.
