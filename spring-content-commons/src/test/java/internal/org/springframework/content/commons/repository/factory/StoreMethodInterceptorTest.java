@@ -326,6 +326,20 @@ public class StoreMethodInterceptorTest {
 					assertThat(captor.getValue().getResult(), is(result));
 				});
 			});
+			Context("when toString is invoked", () -> {
+				BeforeEach(() -> {
+					invocation = mock(MethodInvocation.class);
+
+					Class<?> storeClazz = Object.class;
+					final Method toStringMethod = storeClazz.getMethod("toString");
+
+					when(invocation.getMethod()).thenReturn(toStringMethod);
+				});
+				It("should proceed", () -> {
+					verify(publisher, never()).publishEvent(anyObject());
+					verify(invocation).proceed();
+				});
+			});
 			Context("when an extension method is invoked", () -> {
 				BeforeEach(() -> {
 					invocation = mock(MethodInvocation.class);

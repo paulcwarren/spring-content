@@ -46,6 +46,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	private static Method associativeGetResourceMethod;
 	private static Method associateResourceMethod;
 	private static Method unassociateResourceMethod;
+	private static Method toStringMethod;
 	private Class<?> domainClass = null;
 	private Class<? extends Serializable> contentIdClass = null;
 
@@ -71,6 +72,8 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		unassociateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
 				"unassociate", Object.class);
 		Assert.notNull(getResourceMethod);
+		toStringMethod = ReflectionUtils.findMethod(Object.class, "toString");
+		Assert.notNull(toStringMethod);
 	}
 
 	public StoreMethodInterceptor(ContentStore<Object, Serializable> store,
@@ -172,12 +175,13 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 
 	private boolean isStoreMethod(MethodInvocation invocation) {
 		if (getContentMethod.equals(invocation.getMethod())
-				|| setContentMethod.equals(invocation.getMethod())
-				|| unsetContentMethod.equals(invocation.getMethod())
-				|| getResourceMethod.equals(invocation.getMethod())
-				|| associativeGetResourceMethod.equals(invocation.getMethod())
-				|| associateResourceMethod.equals(invocation.getMethod())
-				|| unassociateResourceMethod.equals(invocation.getMethod())) {
+		 || setContentMethod.equals(invocation.getMethod())
+		 || unsetContentMethod.equals(invocation.getMethod())
+		 || getResourceMethod.equals(invocation.getMethod())
+		 || associativeGetResourceMethod.equals(invocation.getMethod())
+		 || associateResourceMethod.equals(invocation.getMethod())
+		 || unassociateResourceMethod.equals(invocation.getMethod())
+		 || toStringMethod.equals(invocation.getMethod())) {
 			return true;
 		}
 		return false;
