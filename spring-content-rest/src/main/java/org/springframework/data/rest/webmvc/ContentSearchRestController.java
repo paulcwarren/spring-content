@@ -19,19 +19,26 @@ import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
+import org.springframework.data.rest.webmvc.support.DefaultedPageable;
+import org.springframework.data.rest.extensions.versioning.LockResource;
 import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrappers;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.versions.Lock;
 import org.springframework.versions.LockingAndVersioningRepository;
+import org.springframework.versions.VersionInfo;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -127,8 +134,8 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 			throw new BadRequestException();
 		}
 
-		List contentIds = (List) reflectionService.invokeMethod(method, store,
-				keywords.get(0));
+			List contentIds = (List) reflectionService.invokeMethod(method, store,
+					keywords.get(0));
 
 		if (contentIds != null && contentIds.size() > 0) {
 			Class<?> entityType = repoInfo.getDomainType();
@@ -191,10 +198,55 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 		}
 	}
 
+	private static final String ENTITY_LOCK_MAPPING = "/{repository}/{id}/lock";
+	private static Method LOCK_METHOD = null;
+	private static Method UNLOCK_METHOD = null;
+
+	static {
+		LOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "lock", Object.class);
+		UNLOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "unlock", Object.class);
+	}
+
+	@ResponseBody
+	@RequestMapping(value = ENTITY_LOCK_MAPPING, method = RequestMethod.PUT)
+	public ResponseEntity<org.springframework.hateoas.Resource<?>> lock(RootResourceInformation repoInfo,
+																	   @PathVariable String repository,
+																	   @PathVariable String id, Principal principal)
+			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
+
+		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+
+		domainObj = ReflectionUtils.invokeMethod(LOCK_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
+
+		if (domainObj != null) {
+			return new ResponseEntity<>(new LockResource(new Lock(id, principal.getName())), HttpStatus.OK);
+		} else {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
+	}
+
+	@ResponseBody
+	@RequestMapping(value = ENTITY_LOCK_MAPPING, method = RequestMethod.DELETE)
+	public ResponseEntity<org.springframework.hateoas.Resource<?>> unlock(RootResourceInformation repoInfo,
+																		@PathVariable String repository,
+																		@PathVariable String id, Principal principal)
+			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
+
+		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+
+		domainObj = ReflectionUtils.invokeMethod(UNLOCK_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
+
+		if (domainObj != null) {
+			return ResponseEntity.ok().build();
+		} else {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
+	}
+
 	private static Method VERSION_METHOD = null;
 
 	static {
-		VERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "version", Object.class);
+		VERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "version", Object.class, VersionInfo.class);
 	}
 
 	private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/version";
@@ -203,18 +255,21 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	@RequestMapping(value = ENTITY_VERSION_MAPPING, method = RequestMethod.PUT)
 	public ResponseEntity<org.springframework.hateoas.Resource<?>> version(RootResourceInformation repoInfo,
 																		   @PathVariable String repository,
-																		   @PathVariable String id, Principal principal)
+																		   @PathVariable String id,
+																		   @RequestBody VersionInfo info,
+																		   Principal principal,
+																		   PersistentEntityResourceAssembler assembler)
 			throws org.springframework.data.rest.webmvc.ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
 		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
 
-		System.out.println(VERSION_METHOD);
-		System.out.println(repositories.getRepositoryFor(domainObj.getClass()).get());
-		System.out.println(domainObj);
+		domainObj = ReflectionUtils.invokeMethod(VERSION_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj, info);
 
-		domainObj = ReflectionUtils.invokeMethod(VERSION_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
-
-		return ResponseEntity.ok().build();
+		if (domainObj != null) {
+			return new ResponseEntity(assembler.toResource(domainObj), HttpStatus.OK);
+		} else {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
 	}
 
 	private static Method FINDALLLATESTVERSION_METHOD = null;

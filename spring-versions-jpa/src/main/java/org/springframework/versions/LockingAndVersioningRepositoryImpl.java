@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -91,6 +90,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         if (entityInformation.isNew(entity)) {
+            BeanUtils.setFieldWithAnnotation(entity, VersionNumber.class, "1.0");
+
             em.persist(entity);
             return entity;
         }
@@ -108,14 +109,14 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Transactional
-    public <S extends T> S version(S entity) {
+    public <S extends T> S version(S entity, VersionInfo info) {
         Authentication authentication = auth.getAuthentication();
         Object id = getId(entity);
         if (id == null) return null;
 
         Principal lockOwner;
         if ((lockOwner = lockingService.lockOwner(id)) != null && authentication.getName().equals(lockOwner.getName()) == false) {
-            throw new LockOwnerException(format("entity not locked by you"));
+            throw new LockOwnerException(format("not lock owner"));
         }
 
         S old = em.find((Class<S>) entity.getClass(), id);
@@ -133,6 +134,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         entity = clone(entity);
         BeanUtils.setFieldWithAnnotation(entity, Id.class, null);
         BeanUtils.setFieldWithAnnotation(entity, Version.class, 0);
+        BeanUtils.setFieldWithAnnotation(entity, VersionNumber.class, info.getNumber());
+        BeanUtils.setFieldWithAnnotation(entity, VersionLabel.class, info.getLabel());
         entity = updateVersionAttributes(entity, id, getAncestralRootId(old), true);
         em.persist(entity);
         entity = this.lock(entity);
