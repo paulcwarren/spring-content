@@ -31,7 +31,7 @@ import java.security.Principal;
 public class RepositoryEntityLockController implements ApplicationEventPublisherAware {
 
     private static final String ENTITY_LOCK_MAPPING = "/{repository}/{id}/lock";
-    private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/version";
+    private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/versionWithEntity";
 
     private static Method LOCK_METHOD = null;
 
@@ -87,22 +87,5 @@ public class RepositoryEntityLockController implements ApplicationEventPublisher
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }
-
-    @ResponseBody
-    @RequestMapping(value = ENTITY_LOCK_MAPPING, method = RequestMethod.PUT)
-    public ResponseEntity<Resource<?>> setLock(@PathVariable String id,
-                                               Principal principal)
-            throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
-
-        if (locker == null) {
-            throw new IllegalStateException("locking and versioning not enabled");
-        }
-
-        if (locker.lock(id, principal)) {
-            return new ResponseEntity<>(new LockResource(new Lock(id, principal.getName())), HttpStatus.OK);
-        }
-
-        return null;
     }
 }

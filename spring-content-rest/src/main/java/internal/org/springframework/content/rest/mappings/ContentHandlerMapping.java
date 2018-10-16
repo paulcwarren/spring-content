@@ -68,8 +68,11 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 		if (path.length < 3)
 			return null;
 
-		// HACKETY HACK HACK: let repository rest resource handle locks
-		if (path[path.length - 1].equals("version") ||
+		// HACKETY HACK HACK: let repository rest resource handle locking and versioning
+		// making those handler's consume and produce json will probably fix this
+		if (path[path.length - 1].equals("lock") ||
+			path[path.length - 1].equals("unlock") ||
+			path[path.length - 1].equals("version") ||
 			path[path.length - 1].equals("findAllLatestVersion") ||
 			path[path.length - 1].equals("findAllVersions")) {
 			return null;

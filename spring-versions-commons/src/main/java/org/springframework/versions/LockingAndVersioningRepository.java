@@ -36,19 +36,22 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
     <S extends T> S save(S entity);
 
     /**
-     * Creates a new version of the entity.  This new version becomes the latest version.  The given entity becomes the
-     * previous version and its lock is removed.
+     * Creates a new versionWithEntity of the entity.  This new versionWithEntity becomes the latest versionWithEntity.  The given entity becomes the
+     * previous versionWithEntity and its lock is removed.
      *
-     * @param entity the entity to base the new version on
-     * @return the new version
+     * After updating the existing entity's versioning attributes, persists and flushes those changes this method then
+     * detaches the entity from the persistence context to effect a 'clone' that becomes the new versionWithEntity.
+     *
+     * @param entity the entity to base the new versionWithEntity on
+     * @return the new versionWithEntity
      */
-    <S extends T> S version(S entity);
+    <S extends T> S version(S entity, VersionInfo info);
 
     /**
-     * Returns the latest version of all entities.  When using LockingAndVersioningRepository this method would
+     * Returns the latest versionWithEntity of all entities.  When using LockingAndVersioningRepository this method would
      * usually be preferred over CrudRepository's findAll that would find all versions of all entities.
      *
-     * @return list of latest version entities
+     * @return list of latest versionWithEntity entities
      */
     @Query("select t from #{#entityName} t where t.latest = true")
     <S extends T> List<S> findAllLatestVersion();

@@ -27,6 +27,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -125,8 +126,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
+			logger.error(format("Unexpected io error setting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+		} catch (Exception e) {
 			logger.error(format("Unexpected error setting content for entity %s", entity), e);
 			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}

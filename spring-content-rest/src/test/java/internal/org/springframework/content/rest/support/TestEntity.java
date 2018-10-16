@@ -18,7 +18,7 @@ public class TestEntity {
 	public @OriginalFileName String originalFileName;
 	public @ContentLength Long len;
 	public @MimeType String mimeType;
-//	public @Version Integer version;
+//	public @Version Integer versionWithEntity;
 
 	public Long getId() {
 		return id;
@@ -68,7 +68,7 @@ public class TestEntity {
 		this.mimeType = mimeType;
 	}
 
-//	public Integer getVersion() { return version; }
+//	public Integer getNumber() { return versionWithEntity; }
 //
-//	public void setVersion(Integer version) { this.version = version; }
+//	public void setNumber(Integer versionWithEntity) { this.versionWithEntity = versionWithEntity; }
 }
