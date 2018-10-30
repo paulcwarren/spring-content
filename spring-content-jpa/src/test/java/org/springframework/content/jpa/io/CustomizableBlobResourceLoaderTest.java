@@ -1,7 +1,10 @@
-package internal.org.springframework.content.jpa.io;
+package org.springframework.content.jpa.io;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.jpa.io.GenericBlobResource;
 import org.junit.runner.RunWith;
+import org.springframework.content.jpa.io.CustomizableBlobResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -18,9 +21,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
-public class GenericBlobResourceLoaderTest {
+public class CustomizableBlobResourceLoaderTest {
 
-	private GenericBlobResourceLoader loader;
+	private CustomizableBlobResourceLoader loader;
 
 	private JdbcTemplate template;
 	private PlatformTransactionManager txnMgr;
@@ -29,12 +32,14 @@ public class GenericBlobResourceLoaderTest {
 	private Connection conn;
 	private Statement stmt;
 
+	private Resource customDBResource;
+
 	private Object result;
 
 	{
-		Describe("GenericBlobResourceLoader", () -> {
+		Describe("CustomizableBlobResourceLoader", () -> {
 			JustBeforeEach(() -> {
-				loader = new GenericBlobResourceLoader(template, txnMgr);
+				loader = new CustomizableBlobResourceLoader(template, txnMgr);
 			});
 			Context("#getDatabaseName", () -> {
 				JustBeforeEach(() -> {
@@ -68,6 +73,27 @@ public class GenericBlobResourceLoaderTest {
 				});
 				It("should return a class loader", () -> {
 					assertThat(result, instanceOf(ClassLoader.class));
+				});
+			});
+			Context("given a resource provider", () -> {
+				BeforeEach(()->{
+					customDBResource = mock(Resource.class);
+				});
+				JustBeforeEach(() -> {
+					loader = new CustomizableBlobResourceLoader(template, txnMgr, "CUSTOM_DB", (l, t, txn) -> { return customDBResource; });
+				});
+				Context("#getResource", () -> {
+					BeforeEach(() -> {
+						ds = mock(DataSource.class);
+						template = new JdbcTemplate(ds);
+						txnMgr = new DataSourceTransactionManager(ds);
+					});
+					JustBeforeEach(() -> {
+						result = loader.getResource("some-id");
+					});
+					It("should return the resource providers custom resource", () -> {
+						assertThat(result, is(customDBResource));
+					});
 				});
 			});
 		});

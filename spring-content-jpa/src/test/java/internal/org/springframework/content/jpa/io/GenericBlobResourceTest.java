@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -117,13 +118,14 @@ public class GenericBlobResourceTest {
 				Context("given the blob exists in the database", () -> {
 					BeforeEach(() -> {
 						when(rs.next()).thenReturn(true);
-						when(rs.getBinaryStream(1)).thenReturn(new ByteArrayInputStream(
+						Blob blob = mock(Blob.class);
+						when(rs.getBlob(2)).thenReturn(blob);
+						when(blob.getBinaryStream()).thenReturn(new ByteArrayInputStream(
 								"Hello Spring Content PostgreSQL BLOBby world!"
 										.getBytes()));
 					});
 					It("should be an ObservableInputStream with a file remover", () -> {
-						assertThat(result, instanceOf(
-								AbstractBlobResource.ClosingInputStream.class));
+						assertThat(result, instanceOf(AbstractBlobResource.ClosingInputStream.class));
 					});
 					It("should return the correct content", () -> {
 						InputStream expected = null;
@@ -189,8 +191,7 @@ public class GenericBlobResourceTest {
 						verify(conn, timeout(100)).prepareStatement(
 								argThat(containsString("UPDATE BLOBS")));
 
-						verify(preparedStatement, timeout(100)).setBinaryStream(eq(1),
-								argThat(is(instanceOf(InputStream.class))));
+						verify(preparedStatement, timeout(100)).setBlob(eq(1),(InputStream)argThat(is(instanceOf(InputStream.class))));
 						verify(preparedStatement, timeout(100)).setString(2, "999");
 						verify(preparedStatement, timeout(100)).executeUpdate();
 					});
@@ -224,10 +225,8 @@ public class GenericBlobResourceTest {
 						verify(conn, timeout(100)).prepareStatement(
 								argThat(containsString("INSERT INTO BLOBS")),
 								eq(Statement.RETURN_GENERATED_KEYS));
-						verify(preparedStatement, timeout(100)).setString(eq(1),
-								argThat(is("999")));
-						verify(preparedStatement, timeout(100)).setBinaryStream(eq(2),
-								argThat(is(instanceOf(InputStream.class))));
+						verify(preparedStatement, timeout(100)).setString(eq(1),argThat(is("999")));
+						verify(preparedStatement, timeout(100)).setBlob(eq(2),(InputStream)argThat(is(instanceOf(InputStream.class))));
 						verify(preparedStatement, timeout(100)).executeUpdate();
 
 						assertThat(resource.getId(), is("999"));

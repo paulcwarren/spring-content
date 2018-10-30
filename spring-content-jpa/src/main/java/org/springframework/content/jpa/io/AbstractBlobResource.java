@@ -51,6 +51,10 @@ public abstract class AbstractBlobResource implements BlobResource {
 		}
 	}
 
+	protected JdbcTemplate getTemplate() {
+		return template;
+	}
+
 	@Override
 	public boolean isWritable() {
 		return true;
@@ -126,7 +130,7 @@ public abstract class AbstractBlobResource implements BlobResource {
 							// mark the resource as being updated
 							resource.setId(-1);
 
-							ps.setBinaryStream(1, fin);
+							ps.setBlob(1, fin);
 							ps.setString(2, id.toString());
 							ps.executeUpdate();
 							IOUtils.closeQuietly(fin);
@@ -150,8 +154,9 @@ public abstract class AbstractBlobResource implements BlobResource {
 							ResultSet set = null;
 							try {
 								ps.setString(1, rid.toString());
-								ps.setBinaryStream(2, fin);
+								ps.setBlob(2, fin);
 								ps.executeUpdate();
+								IOUtils.closeQuietly(fin);
 								return rid.toString();
 							}
 							catch (SQLException sqle) {
@@ -248,10 +253,16 @@ public abstract class AbstractBlobResource implements BlobResource {
 	@Override
 	public InputStream getInputStream() throws IOException {
 		final Object id = this.id;
-		String sql = "SELECT content FROM BLOBS WHERE id='" + this.id + "'";
+
+		String sql = getSelectBlobSQL(this.id);
 
 		DataSource ds = this.template.getDataSource();
 		Connection conn = DataSourceUtils.getConnection(ds);
+		try {
+			conn.setAutoCommit(false);
+		} catch (SQLException e) {
+			logger.error(format("getting content %s", id), e);
+		}
 		InputStream is = null;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -260,7 +271,8 @@ public abstract class AbstractBlobResource implements BlobResource {
 			rs = stmt.executeQuery(sql);
 			if (!rs.next())
 				return null;
-			is = rs.getBinaryStream(1);
+			Blob b = rs.getBlob(2);
+			is = b.getBinaryStream();
 		}
 		catch (SQLException e) {
 			logger.error(format("getting content %s", id), e);
@@ -273,6 +285,11 @@ public abstract class AbstractBlobResource implements BlobResource {
 		final Object id = this.id;
 		String sql = "DELETE FROM BLOBS WHERE id='" + this.id + "'";
 		this.template.update(sql);
+	}
+
+
+	protected String getSelectBlobSQL(Object id) {
+		return "SELECT id, content FROM BLOBS WHERE id='" + id + "'";
 	}
 
 	public class ClosingInputStream extends InputStream {

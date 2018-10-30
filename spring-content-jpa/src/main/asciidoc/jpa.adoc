@@ -10,7 +10,7 @@ Spring Content JPA Stores are enabled with the following Java Config.
 ----
 @Configuration
 @EnableJpaRepositories
-@EnableJpaContentRepositories
+@EnableJpaStores
 @EnableTransactionManagement
 public static class ApplicationConfig {  
 
@@ -46,11 +46,35 @@ public static class ApplicationConfig {
 ----
 ====
 
-This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component declared here is the JpaTransactionManager.  
+This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
+then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
+declared here is the JpaTransactionManager.
 
-We activate Spring Data JPA repositories using the @EnableJpaRepositories annotation,  Spring Content JPA stores using @EnableJpaContentRepositories and enable transaction management with the @EnableTransactionManagement annotation.
+We activate Spring Data JPA repositories using the `@EnableJpaRepositories` annotation.  We activate Spring Content JPA
+stores using `@EnableJpaStores` and enable transaction management with the `@EnableTransactionManagement` annotation.
 
-If no base packages are configured both Spring Data JPA and Spring Content JPA will use the one the configuration class resides in.
+If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
+configuration class resides in as the base package.
+
+=== Content Streaming
+
+Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
+the entire BLOB into memory.  In order to do this the following database-specific implementation are used.
+
+==== MySQL
+
+The MySQL implementation requires MySQL's locator emulation to be turned on.  Your JDBC connection string must
+include the `emulateLocators=true` parameter.
+
+=== Postgresql
+
+The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
+streams it does comes with a significant performance disadvantage over bytea fields.
+
+=== SQL Server
+
+The SQL Server implementation uses [adaptive buffering](https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering)
+to serve BLOBs in a memory efficient way.
 
 == Persisting Content
 
@@ -58,15 +82,15 @@ If no base packages are configured both Spring Data JPA and Spring Content JPA w
 
 Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
 
-The Spring Content Commons provided `PlacementService` is used to determine the actual physical storage location by parsing the @ContentId field into a resource path.
+The entity's `@ContentId` and `@ContentLength` fields will be updated.
 
-The `entity` @ContentId and @ContentLength fields will be updated.  
-
-If content has been previously stored this will overwritten with the new content updating just the @ContentLength field, if appropriate.
+If content has been previously stored this will overwritten with the new content updating just the `@ContentLength`
+field, if appropriate.
 
 ==== How the @ContentId field is handled 
 
-Spring Data JPA requires that content entities have an `@ContentId` field for identity that will be generated when content is initially set.  
+Spring Data JPA requires that content entities have an `@ContentId` field for identity that will be generated when
+content is initially set.
 
 === Getting Content
 
@@ -75,3 +99,4 @@ Content can be accessed using the `ContentStore.getContent(entity)` method.
 === Unsetting Content
 
 Content can be removed using the `ContentStore.unsetContent(entity)` method.
+
