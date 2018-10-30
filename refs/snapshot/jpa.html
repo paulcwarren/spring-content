@@ -448,7 +448,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableJpaRepositories
-@EnableJpaContentRepositories
+@EnableJpaStores
 @EnableTransactionManagement
 public static class ApplicationConfig {
 
@@ -486,13 +486,45 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component declared here is the JpaTransactionManager.</p>
+<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
+then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
+declared here is the JpaTransactionManager.</p>
 </div>
 <div class="paragraph">
-<p>We activate Spring Data JPA repositories using the @EnableJpaRepositories annotation,  Spring Content JPA stores using @EnableJpaContentRepositories and enable transaction management with the @EnableTransactionManagement annotation.</p>
+<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
+stores using <code>@EnableJpaStores</code> and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
 </div>
 <div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the one the configuration class resides in.</p>
+<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
+configuration class resides in as the base package.</p>
+</div>
+<div class="sect2">
+<h3 id="_content_streaming">Content Streaming</h3>
+<div class="paragraph">
+<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
+the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
+</div>
+<div class="sect3">
+<h4 id="_mysql">MySQL</h4>
+<div class="paragraph">
+<p>The MySQL implementation requires MySQL&#8217;s locator emulation to be turned on.  Your JDBC connection string must
+include the <code>emulateLocators=true</code> parameter.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_postgresql">Postgresql</h3>
+<div class="paragraph">
+<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
+streams it does comes with a significant performance disadvantage over bytea fields.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sql_server">SQL Server</h3>
+<div class="paragraph">
+<p>The SQL Server implementation uses [adaptive buffering](<a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering" class="bare">https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering</a>)
+to serve BLOBs in a memory efficient way.</p>
+</div>
 </div>
 </div>
 </div>
@@ -505,18 +537,17 @@ public static class ApplicationConfig {
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>The Spring Content Commons provided <code>PlacementService</code> is used to determine the actual physical storage location by parsing the @ContentId field into a resource path.</p>
+<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
 </div>
 <div class="paragraph">
-<p>The <code>entity</code> @ContentId and @ContentLength fields will be updated.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the @ContentLength field, if appropriate.</p>
+<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
+field, if appropriate.</p>
 </div>
 <div class="sect3">
 <h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
 <div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when content is initially set.</p>
+<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
+content is initially set.</p>
 </div>
 </div>
 </div>
@@ -537,7 +568,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-10-11 16:17:27 UTC
+Last updated 2018-10-30 04:18:19 UTC
 </div>
 </div>
 </body>
