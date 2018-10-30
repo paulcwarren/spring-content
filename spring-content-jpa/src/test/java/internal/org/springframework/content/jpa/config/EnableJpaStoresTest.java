@@ -3,7 +3,8 @@ package internal.org.springframework.content.jpa.config;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
-import internal.org.springframework.content.jpa.io.GenericBlobResourceLoader;
+import internal.org.springframework.content.jpa.io.MySQLBlobResource;
+import internal.org.springframework.content.jpa.io.SQLServerBlobResource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -12,6 +13,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
+import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,34 +43,13 @@ import static org.junit.Assert.fail;
 @Ginkgo4jConfiguration(threads = 1) // required
 public class EnableJpaStoresTest {
 
-	private AnnotationConfigApplicationContext context;
+	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
 	{
 		Describe("EnableJpaStores", () -> {
-			Context("given a context and a configuration with a jpa content repository bean",
-					() -> {
-						BeforeEach(() -> {
-							context = new AnnotationConfigApplicationContext();
-							context.register(TestConfig.class);
-							context.refresh();
-						});
-						AfterEach(() -> {
-							context.close();
-						});
-						It("should have a content repository bean", () -> {
-							assertThat(context.getBean(TestEntityContentRepository.class),
-									is(not(nullValue())));
-						});
-						It("should have a delegating blob resource loader", () -> {
-							assertThat(
-									context.getBean(DelegatingBlobResourceLoader.class),
-									is(not(nullValue())));
-						});
-						It("should have a generic blob resource loader", () -> {
-							assertThat(context.getBean(GenericBlobResourceLoader.class),
-									is(not(nullValue())));
-						});
-					});
+
+			basicConfigurationTests(context, TestConfig.class);
+
 			Context("given a context with an empty configuration", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigApplicationContext();
@@ -91,31 +72,46 @@ public class EnableJpaStoresTest {
 		});
 
 		Describe("EnableJpaContentRepositories", () -> {
-			Context("given a context and a configuration with a jpa content repository bean",
-					() -> {
-						BeforeEach(() -> {
-							context = new AnnotationConfigApplicationContext();
-							context.register(EnableJpaContentRepositoriesConfig.class);
-							context.refresh();
-						});
-						AfterEach(() -> {
-							context.close();
-						});
-						It("should have a content repository bean", () -> {
-							assertThat(context.getBean(TestEntityContentRepository.class),
-									is(not(nullValue())));
-						});
-						It("should have a delegating blob resource loader", () -> {
-							assertThat(
-									context.getBean(DelegatingBlobResourceLoader.class),
-									is(not(nullValue())));
-						});
-						It("should have a generic blob resource loader", () -> {
-							assertThat(context.getBean(GenericBlobResourceLoader.class),
-									is(not(nullValue())));
-						});
-					});
+			basicConfigurationTests(context, EnableJpaContentRepositoriesConfig.class);
 		});
+	}
+
+	private static void basicConfigurationTests(AnnotationConfigApplicationContext context, Class configClass) {
+		Context("given a context and a configuration with a jpa content repository bean",
+				() -> {
+					BeforeEach(() -> {
+						context.register(configClass);
+						context.refresh();
+					});
+					AfterEach(() -> {
+						context.close();
+					});
+					It("should have a content repository bean", () -> {
+						assertThat(context.getBean(TestEntityContentRepository.class),
+								is(not(nullValue())));
+					});
+					It("should have a delegating blob resource loader", () -> {
+						assertThat(
+								context.getBean(DelegatingBlobResourceLoader.class),
+								is(not(nullValue())));
+					});
+					It("should have a generic blob resource loader", () -> {
+						assertThat(context.getBean("genericBlobResourceLoader"),
+								is(not(nullValue())));
+					});
+					It("should have a MySQL blob resource loader", () -> {
+						BlobResourceLoader loader = (BlobResourceLoader)context.getBean("mysqlBlobResourceLoader");
+						assertThat(loader, is(not(nullValue())));
+						assertThat(loader.getDatabaseName(), is("MySQL"));
+						assertThat(loader.getResource("some-id"), is(instanceOf(MySQLBlobResource.class)));
+					});
+					It("should have a SQL Server blob resource loader", () -> {
+						BlobResourceLoader loader = (BlobResourceLoader)context.getBean("sqlServerBlobResourceLoader");
+						assertThat(loader, is(not(nullValue())));
+						assertThat(loader.getDatabaseName(), is("Microsoft SQL Server"));
+						assertThat(loader.getResource("some-id"), is(instanceOf(SQLServerBlobResource.class)));
+					});
+				});
 
 	}
 

@@ -3,6 +3,7 @@ package internal.org.springframework.content.jpa.io;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.runner.RunWith;
 import org.springframework.content.jpa.io.BlobResourceLoader;
+import org.springframework.content.jpa.io.CustomizableBlobResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -73,7 +74,7 @@ public class DelegatingBlobResourceLoaderTest {
 										.thenReturn("SomeOtherDatabase");
 
 								loaders = new ArrayList<>();
-								loaders.add(new GenericBlobResourceLoader(
+								loaders.add(new CustomizableBlobResourceLoader(
 										mock(JdbcTemplate.class),
 										mock(PlatformTransactionManager.class)));
 							});
