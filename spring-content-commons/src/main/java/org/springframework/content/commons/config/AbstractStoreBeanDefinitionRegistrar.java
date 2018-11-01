@@ -76,11 +76,11 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		// return;
 		// }
 
-		RootBeanDefinition repositoryInterfacePostProcessor = new RootBeanDefinition(
-				REPOSITORY_INTERFACE_POST_PROCESSOR);
+		RootBeanDefinition repositoryInterfacePostProcessor = new RootBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR);
 		repositoryInterfacePostProcessor.setSource(importingClassMetadata);
-		registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR,
-				repositoryInterfacePostProcessor);
+		if (registry.containsBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR) == false) {
+			registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR,repositoryInterfacePostProcessor);
+		}
 
 		BeanDefinition storeServiceBeanDef = createBeanDefinition(
 				ContentStoreServiceImpl.class);
