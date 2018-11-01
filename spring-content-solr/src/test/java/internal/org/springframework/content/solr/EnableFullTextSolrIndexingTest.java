@@ -50,7 +50,7 @@ public class EnableFullTextSolrIndexingTest {
 
 		@Bean
 		public SolrClient solrClient() {
-			SolrClient sc = new HttpSolrClient("http://some/url");
+			SolrClient sc = new HttpSolrClient.Builder("http://some/url").build();
 			return sc;
 		}
 
