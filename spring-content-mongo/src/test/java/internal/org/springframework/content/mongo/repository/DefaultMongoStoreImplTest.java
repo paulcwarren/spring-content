@@ -233,8 +233,7 @@ public class DefaultMongoStoreImplTest {
 
 							when(converter.convert(eq("abcd-efghi"), eq(String.class)))
 									.thenReturn("abcd-efghi");
-							when(gridFsTemplate.getResource(anyObject()))
-									.thenReturn(resource);
+							when(gridFsTemplate.getResource("abcd-efghi")).thenReturn(resource);
 							// when(gridFsTemplate.store(anyObject(),
 							// anyString())).thenReturn(gridFSFile);
 							when(resource.exists()).thenReturn(true);
@@ -280,8 +279,7 @@ public class DefaultMongoStoreImplTest {
 
 						when(converter.convert(eq("abcd"), eq(String.class)))
 								.thenReturn("abcd");
-						when(gridFsTemplate.getResource(anyObject()))
-								.thenReturn(resource);
+						when(gridFsTemplate.getResource("abcd")).thenReturn(resource);
 						when(resource.getInputStream()).thenReturn(content);
 					});
 
@@ -339,8 +337,7 @@ public class DefaultMongoStoreImplTest {
 
 						when(converter.convert(eq("abcd"), eq(String.class)))
 								.thenReturn("abcd");
-						when(gridFsTemplate.getResource(anyObject()))
-								.thenReturn(resource);
+						when(gridFsTemplate.getResource("abcd")).thenReturn(resource);
 						when(resource.exists()).thenReturn(true);
 					});
 
