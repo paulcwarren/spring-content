@@ -82,18 +82,20 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR,repositoryInterfacePostProcessor);
 		}
 
-		BeanDefinition storeServiceBeanDef = createBeanDefinition(
-				ContentStoreServiceImpl.class);
-		registry.registerBeanDefinition("contentStoreService", storeServiceBeanDef);
+		BeanDefinition storeServiceBeanDef = createBeanDefinition(ContentStoreServiceImpl.class);
+		if (registry.containsBeanDefinition("contentStoreService") == false) {
+			registry.registerBeanDefinition("contentStoreService", storeServiceBeanDef);
+		}
 
-		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(
-				AnnotatedStoreEventInvoker.class);
-		registry.registerBeanDefinition("annotatedStoreEventHandler",
-				annotatedStoreEventHandlerDef);
+		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(AnnotatedStoreEventInvoker.class);
+		if (registry.containsBeanDefinition("annotatedStoreEventHandler") == false) {
+			registry.registerBeanDefinition("annotatedStoreEventHandler", annotatedStoreEventHandlerDef);
+		}
 
-		BeanDefinition renditionServiceBeanDef = createBeanDefinition(
-				RenditionServiceImpl.class);
-		registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
+		BeanDefinition renditionServiceBeanDef = createBeanDefinition(RenditionServiceImpl.class);
+		if (registry.containsBeanDefinition("renditionService") == false) {
+			registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
+		}
 
 		createOperationsBean(registry);
 
