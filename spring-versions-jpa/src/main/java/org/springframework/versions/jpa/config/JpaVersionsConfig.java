@@ -2,6 +2,7 @@ package org.springframework.versions.jpa.config;
 
 import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
+import internal.org.springframework.versions.jpa.JpaLockingAndVersioningServiceImpl;
 import internal.org.springframework.versions.jpa.JpaLockingServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,12 @@ public class JpaVersionsConfig {
     }
 
     @Bean
-    public LockingService versioningService(DataSource dataSource, PlatformTransactionManager txnMgr, AuthenticationFacade auth) {
+    public LockingService lockingService(DataSource dataSource, PlatformTransactionManager txnMgr, AuthenticationFacade auth) {
         return new JpaLockingServiceImpl(new JdbcTemplate(dataSource), txnMgr, auth);
+    }
+
+    @Bean
+    public JpaLockingAndVersioningServiceImpl lockingAndVersioningService() {
+        return new JpaLockingAndVersioningServiceImpl();
     }
 }

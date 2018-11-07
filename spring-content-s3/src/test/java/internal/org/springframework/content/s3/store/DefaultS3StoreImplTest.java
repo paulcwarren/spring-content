@@ -29,6 +29,7 @@ import java.io.Serializable;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -590,6 +591,15 @@ public class DefaultS3StoreImplTest {
 
 									It("should not find the content", () -> {
 										assertThat(result, is(nullValue()));
+									});
+								});
+								Context("with an null @ContentId", () -> {
+									BeforeEach(() -> {
+										entity.setContentId(null);
+									});
+									It("should return null", () -> {
+										assertThat(result, is(nullValue()));
+										assertThat(e, is(nullValue()));
 									});
 								});
 							});
