@@ -7,7 +7,6 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.versions.ContentVersion;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -55,7 +54,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
                 entity = lock(entity);
                 ((ReflectiveMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
                 methodInvocation.proceed();
-                touch(entity, ContentVersion.class);
+                touch(entity, Version.class);
             }
         }
         else if (unsetContentMethod.equals(methodInvocation.getMethod())) {
@@ -64,7 +63,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
                 entity = lock(entity);
                 ((ReflectiveMethodInvocation)methodInvocation).setArguments(entity);
                 methodInvocation.proceed();
-                touch(entity, ContentVersion.class);
+                touch(entity, Version.class);
             }
         } else {
             rc = methodInvocation.proceed();

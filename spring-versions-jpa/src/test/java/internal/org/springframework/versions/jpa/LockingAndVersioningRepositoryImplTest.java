@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
 import org.springframework.security.core.Authentication;
 import org.springframework.versions.LockOwner;
-import org.springframework.versions.LockingAndVersioningRepositoryImpl;
+import org.springframework.versions.impl.LockingAndVersioningRepositoryImpl;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;

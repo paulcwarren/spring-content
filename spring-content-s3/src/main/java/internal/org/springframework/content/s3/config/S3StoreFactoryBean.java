@@ -1,5 +1,7 @@
 package internal.org.springframework.content.s3.config;
 
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
@@ -15,6 +17,7 @@ import com.amazonaws.services.s3.AmazonS3;
 
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.versions.LockingAndVersioningService;
 
 import java.io.Serializable;
 
@@ -33,6 +36,9 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired
 	private S3ObjectIdResolvers resolvers;
 
+	@Autowired(required=false)
+	private LockingAndVersioningService versioning;
+
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 
@@ -44,6 +50,13 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		this.client = client;
 		this.s3StoreConverter = s3StoreConverter;
 		this.resolvers = resolvers;
+	}
+
+	@Override
+	protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
+		if (versioning != null) {
+			versioning.enableLockingAndVersioning(result, beanFactory);
+		}
 	}
 
 	@Override

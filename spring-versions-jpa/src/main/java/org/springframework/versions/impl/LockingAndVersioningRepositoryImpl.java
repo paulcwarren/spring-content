@@ -1,4 +1,4 @@
-package org.springframework.versions;
+package org.springframework.versions.impl;
 
 import internal.org.springframework.versions.LockingService;
 import internal.org.springframework.versions.AuthenticationFacade;
@@ -8,6 +8,15 @@ import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.versions.AncestorId;
+import org.springframework.versions.AncestorRootId;
+import org.springframework.versions.LockOwner;
+import org.springframework.versions.LockOwnerException;
+import org.springframework.versions.LockingAndVersioningRepository;
+import org.springframework.versions.VersionInfo;
+import org.springframework.versions.VersionLabel;
+import org.springframework.versions.VersionNumber;
+import org.springframework.versions.VersionStatus;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -35,11 +44,6 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         this.auth = auth;
         this.lockingService = versioning;
     }
-
-//    public LockingAndVersioningRepositoryImpl(EntityManager em, AuthenticationFacade auth, LockingService versioning, JpaEntityInformation<T, ?>  entityInformation) {
-//        this(em, auth, versioning);
-//        this.entityInformation = entityInformation;
-//    }
 
     @Override
     @Transactional

@@ -195,7 +195,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		Resource resource = this.getResource(entity);
 
 		try {
-			if (resource.exists()) {
+			if (resource != null && resource.exists()) {
 				return resource.getInputStream();
 			}
 		}
