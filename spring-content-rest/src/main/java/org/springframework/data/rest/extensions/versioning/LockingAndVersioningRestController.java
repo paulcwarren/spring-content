@@ -1,9 +1,11 @@
 package org.springframework.data.rest.extensions.versioning;
 
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.domain.Page;
+import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
@@ -43,7 +45,7 @@ public class LockingAndVersioningRestController {
 
 	private static final String ENTITY_LOCK_MAPPING = "/{repository}/{id}/lock";
 	private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/version";
-	private static final String ENTITY_FINDALLLATESTVERSION_MAPPING = "/{repository}/{id}/findAllLatestVersion";
+	private static final String ENTITY_FINDALLLATESTVERSION_MAPPING = "/{repository}/findAllLatestVersion";
 	private static final String FINDALLVERSIONS_METHOD_MAPPING = "/{repository}/{id}/findAllVersions";
 
 	private static Method LOCK_METHOD = null;
@@ -138,15 +140,15 @@ public class LockingAndVersioningRestController {
 	@RequestMapping(value = ENTITY_FINDALLLATESTVERSION_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<?> findAllLatestVersion(RootResourceInformation repoInfo,
 												  PersistentEntityResourceAssembler assembler,
-												  @PathVariable String repository,
-												  @PathVariable String id)
+												  @PathVariable String repository)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
-		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
+		RepositoryInformation repositoryInfo = RepositoryUtils.findRepositoryInformation(repositories, repository);
+		Class<?> domainType = repositoryInfo.getDomainType();
 
-		List result = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get());
+		List result = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainType).get());
 
-		return ResponseEntity.ok(toResources(result, assembler, this.pagedResourcesAssembler, domainObj.getClass(), null));
+		return ResponseEntity.ok(toResources(result, assembler, this.pagedResourcesAssembler, domainType, null));
 	}
 
 	@ResponseBody
