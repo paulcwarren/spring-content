@@ -28,6 +28,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -35,6 +36,7 @@ import com.amazonaws.services.s3.model.DeleteObjectRequest;
 
 import static java.lang.String.format;
 
+@Transactional
 public class DefaultS3StoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
 
@@ -141,6 +143,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				});
 	}
 
+	@Transactional
 	@Override
 	public void setContent(S entity, InputStream content) {
 		Resource resource = this.getResource(entity);
@@ -187,6 +190,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 	}
 
+	@Transactional
 	@Override
 	public InputStream getContent(S entity) {
 		if (entity == null)
@@ -207,6 +211,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		return null;
 	}
 
+	@Transactional
 	@Override
 	public void unsetContent(S entity) {
 		if (entity == null)
