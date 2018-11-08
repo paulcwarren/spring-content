@@ -112,7 +112,7 @@ public abstract class AbstractContentPropertyController {
 
 		Optional<Object> domainObj = null;
 
-		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
+		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
 
 		if (ri == null) {
 			throw new ResourceNotFoundException();
@@ -142,7 +142,7 @@ public abstract class AbstractContentPropertyController {
 
 		Optional<Object> domainObj = null;
 
-		RepositoryInformation ri = findRepositoryInformation(repositories,
+		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories,
 				domainObjClass);
 
 		if (ri == null) {
@@ -169,7 +169,7 @@ public abstract class AbstractContentPropertyController {
 
 		Iterable entities = null;
 
-		RepositoryInformation ri = findRepositoryInformation(repositories, repository);
+		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
 
 		if (ri == null) {
 			throw new ResourceNotFoundException();
@@ -196,7 +196,7 @@ public abstract class AbstractContentPropertyController {
 	public static Object save(Repositories repositories, Object domainObj)
 			throws HttpRequestMethodNotSupportedException {
 
-		RepositoryInformation ri = findRepositoryInformation(repositories,
+		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories,
 				domainObj.getClass());
 
 		if (ri == null) {
@@ -217,31 +217,4 @@ public abstract class AbstractContentPropertyController {
 		return domainObj;
 	}
 
-	public static RepositoryInformation findRepositoryInformation(
-			Repositories repositories, String repository) {
-		RepositoryInformation ri = null;
-		for (Class<?> clazz : repositories) {
-			Optional<RepositoryInformation> candidate = repositories
-					.getRepositoryInformationFor(clazz);
-			if (candidate.isPresent() == false) {
-				continue;
-			}
-			if (repository.equals(RepositoryUtils.repositoryPath(candidate.get()))) {
-				ri = candidate.get();
-				break;
-			}
-		}
-		return ri;
-	}
-
-	public static RepositoryInformation findRepositoryInformation(
-			Repositories repositories, Class<?> domainObjectClass) {
-		RepositoryInformation ri = null;
-		for (Class<?> clazz : repositories) {
-			if (clazz.equals(domainObjectClass)) {
-				return repositories.getRepositoryInformationFor(clazz).get();
-			}
-		}
-		return ri;
-	}
 }
