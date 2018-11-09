@@ -1,11 +1,7 @@
-package org.springframework.data.rest.webmvc;
+package org.springframework.data.rest.extensions.contentsearch;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.security.Principal;
-import java.util.*;
-
+import internal.org.springframework.content.rest.controllers.BadRequestException;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -19,34 +15,37 @@ import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.rest.webmvc.support.DefaultedPageable;
-import org.springframework.data.rest.extensions.versioning.LockResource;
+import org.springframework.data.rest.webmvc.ControllerUtils;
+import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
+import org.springframework.data.rest.webmvc.RepositoryRestController;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrappers;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.versions.Lock;
-import org.springframework.versions.LockingAndVersioningRepository;
-import org.springframework.versions.VersionInfo;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import internal.org.springframework.content.rest.controllers.BadRequestException;
-import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
 

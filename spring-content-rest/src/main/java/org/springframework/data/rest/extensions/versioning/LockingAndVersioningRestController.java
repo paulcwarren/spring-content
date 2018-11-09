@@ -91,7 +91,7 @@ public class LockingAndVersioningRestController {
 		domainObj = ReflectionUtils.invokeMethod(LOCK_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
 
 		if (domainObj != null) {
-			return new ResponseEntity<>(new LockResource(new Lock(id, principal.getName())), HttpStatus.OK);
+			return ResponseEntity.ok().build();
 		} else {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		}
