@@ -1,18 +1,19 @@
 package internal.org.springframework.versions.jpa;
 
-import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
-
-import static java.lang.String.format;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 @Service
 public class JpaLockingServiceImpl implements LockingService {
@@ -20,14 +21,10 @@ public class JpaLockingServiceImpl implements LockingService {
     private static Log logger = LogFactory.getLog(JpaLockingServiceImpl.class);
 
     private JdbcTemplate template;
-    private PlatformTransactionManager txnMgr;
-    private AuthenticationFacade auth;
 
     @Autowired
-    public JpaLockingServiceImpl(JdbcTemplate template, PlatformTransactionManager txnMgr, AuthenticationFacade auth){
+    public JpaLockingServiceImpl(JdbcTemplate template){
         this.template = template;
-        this.txnMgr = txnMgr;
-        this.auth = auth;
     }
 
     @Override
@@ -41,71 +38,62 @@ public class JpaLockingServiceImpl implements LockingService {
                         "  FROM mutex LEFT JOIN versions" +
                         "  ON entity_id = ?" +
                         "  WHERE i = 0 AND entity_id IS NULL;";
-        try {
-            int rc = template.update(sql, entityId, principal.getName(), entityId);
-            return (rc == 1);
-        } catch (Exception e) {
-            logger.error(format("Unexpected error locking entity with id %s", entityId), e);
-        }
-        return false;
+        int rc = template.update(sql, entityId, principal.getName(), entityId);
+        return (rc == 1);
     }
 
     @Override
     public boolean unlock(Object entityId, Principal principal) {
         if (principal == null) {
-            return false;
+            throw new SecurityException("no principal");
         }
 
         String sql = "DELETE from versions where entity_id = ? and lock_owner = ?;";
-        try {
-            int rc = template.update(sql, entityId, principal.getName());
-            return (rc == 1);
-        } catch (Exception e) {
-
-        }
-        return false;
+        int rc = template.update(sql, entityId, principal.getName());
+        return (rc == 1);
     }
 
     @Override
     public boolean isLockOwner(Object entityId, Principal principal) {
         if (principal == null) {
-            return false;
+            throw new SecurityException("no principal");
         }
 
         int count = 0;
         String sql = "SELECT count(id) from versions where entity_id = ? and lock_owner = ?;";
-        try {
-            count = template.queryForObject(sql, Integer.class, entityId, principal.getName());
-        } catch (Exception e) {
-        }
+        count = template.queryForObject(sql, Integer.class, entityId, principal.getName());
         return count == 1;
     }
 
     @Override
     public Principal lockOwner(Object entityId) {
-        String lockOwner = null;
-        String sql = "SELECT lock_owner from versions where entity_id = ?;";
-        try {
-            lockOwner = template.queryForObject(sql, String.class, entityId);
-        } catch (Exception e) {
-        }
+        String sql = "SELECT lock_owner from versions where entity_id = " + entityId;
+        List<String> lockOwners = template.query(sql, new RowMapper() {
 
-        if (lockOwner == null) {
+            public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+                return rs.getString(1);
+            }
+
+        });
+
+        if (lockOwners.isEmpty()) {
             return null;
+        } else if (lockOwners.size() > 1) {
+            throw new IncorrectResultSizeDataAccessException(1);
+        } else {
+            final String name = lockOwners.get(0);
+            return new Principal() {
+
+                @Override
+                public String getName() {
+                    return name;
+                }
+
+                @Override
+                public boolean implies(Subject subject) {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
-
-        final String name = lockOwner;
-        return new Principal() {
-
-            @Override
-            public String getName() {
-                return name;
-            }
-
-            @Override
-            public boolean implies(Subject subject) {
-                throw new UnsupportedOperationException();
-            }
-        };
     }
 }

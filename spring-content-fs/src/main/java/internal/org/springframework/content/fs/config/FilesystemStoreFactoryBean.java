@@ -9,10 +9,10 @@ import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.util.Assert;
-import org.springframework.versions.LockingAndVersioningService;
+import org.springframework.versions.LockingAndVersioningProxyFactory;
 
 @SuppressWarnings("rawtypes")
-public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean /*extends AbstractLockingAndVersioningStoreFactoryBean*/ {
+public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	FileSystemResourceLoader loader;
@@ -21,12 +21,12 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean /*exten
 	ConversionService filesystemStoreConverter;
 
 	@Autowired(required=false)
-	private LockingAndVersioningService versioning;
+	private LockingAndVersioningProxyFactory versioning;
 
 	@Override
 	protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
 		if (versioning != null) {
-			versioning.enableLockingAndVersioning(result, beanFactory);
+			versioning.apply(result);
 		}
 	}
 

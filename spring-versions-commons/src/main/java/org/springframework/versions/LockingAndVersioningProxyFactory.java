@@ -3,8 +3,8 @@ package org.springframework.versions;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-public interface LockingAndVersioningService {
+public interface LockingAndVersioningProxyFactory {
 
-    void enableLockingAndVersioning(ProxyFactory result, BeanFactory beanFactory);
+    void apply(ProxyFactory result/*, BeanFactory beanFactory*/);
 
 }

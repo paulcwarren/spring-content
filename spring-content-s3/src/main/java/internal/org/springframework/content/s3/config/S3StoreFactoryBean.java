@@ -17,7 +17,7 @@ import com.amazonaws.services.s3.AmazonS3;
 
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.versions.LockingAndVersioningService;
+import org.springframework.versions.LockingAndVersioningProxyFactory;
 
 import java.io.Serializable;
 
@@ -37,7 +37,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	private S3ObjectIdResolvers resolvers;
 
 	@Autowired(required=false)
-	private LockingAndVersioningService versioning;
+	private LockingAndVersioningProxyFactory versioning;
 
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
@@ -55,7 +55,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Override
 	protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
 		if (versioning != null) {
-			versioning.enableLockingAndVersioning(result, beanFactory);
+			versioning.apply(result);
 		}
 	}
 
