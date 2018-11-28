@@ -9,5 +9,5 @@ import static java.lang.annotation.ElementType.METHOD;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { FIELD, METHOD })
-public @interface VersionStatus {
+public @interface SuccessorId {
 }

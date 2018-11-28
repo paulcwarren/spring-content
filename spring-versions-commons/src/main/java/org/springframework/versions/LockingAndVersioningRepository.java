@@ -53,7 +53,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      *
      * @return list of latest versionWithEntity entities
      */
-    @Query("select t from #{#entityName} t where t.latest = true")
+    @Query("select t from #{#entityName} t where t.successorId = null")
     <S extends T> List<S> findAllLatestVersion();
 
     /**
@@ -64,4 +64,12 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      */
     @Query("select t from #{#entityName} t where t.ancestralRootId = ?#{#entity.ancestralRootId}")
     <S extends T> List<S> findAllVersions(@Param("entity") S entity);
+
+    /**
+     * Deletes a given entity.
+     *
+     * @param entity
+     * @throws IllegalArgumentException in case the given entity is {@literal null}.
+     */
+    <S extends T> void delete(S entity);
 }

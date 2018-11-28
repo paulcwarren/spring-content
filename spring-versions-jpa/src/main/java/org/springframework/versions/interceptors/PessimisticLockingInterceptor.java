@@ -12,6 +12,8 @@ import org.springframework.versions.LockParticipant;
 import javax.persistence.Id;
 import java.lang.reflect.Field;
 
+import static java.lang.String.format;
+
 public class PessimisticLockingInterceptor implements MethodInterceptor {
 
     private LockingService versions;
@@ -45,7 +47,7 @@ public class PessimisticLockingInterceptor implements MethodInterceptor {
             idField = ReflectionUtils.findField(entity.getClass(), DATA_ID_FILTER);
         }
         if (idField == null) {
-            return invocation.proceed();
+            throw new IllegalArgumentException(format("ID field missing: %s", entity.getClass().getCanonicalName()));
         }
 
         org.springframework.util.ReflectionUtils.makeAccessible(idField);

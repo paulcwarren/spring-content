@@ -2,6 +2,7 @@ package org.springframework.versions.interceptors;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.framework.ReflectiveMethodInvocation;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -13,6 +14,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.Version;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class OptimisticLockingInterceptor implements MethodInterceptor {
@@ -44,7 +46,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
             if (methodInvocation.getArguments().length > 0) {
                 Object entity = methodInvocation.getArguments()[0];
                 entity = lock(entity);
-                ((ReflectiveMethodInvocation)methodInvocation).setArguments(entity);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(entity);
                 rc = methodInvocation.proceed();
             }
         }
@@ -52,7 +54,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
             if (methodInvocation.getArguments().length > 0) {
                 Object entity = methodInvocation.getArguments()[0];
                 entity = lock(entity);
-                ((ReflectiveMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
                 methodInvocation.proceed();
                 touch(entity, Version.class);
             }
@@ -61,7 +63,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
             if (methodInvocation.getArguments().length > 0) {
                 Object entity = methodInvocation.getArguments()[0];
                 entity = lock(entity);
-                ((ReflectiveMethodInvocation)methodInvocation).setArguments(entity);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(entity);
                 methodInvocation.proceed();
                 touch(entity, Version.class);
             }
@@ -86,10 +88,11 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
     }
 
     private void touch(Object domainObj, Class<? extends Annotation> annotation) {
+        Field f = BeanUtils.findFieldWithAnnotation(domainObj, annotation);
         Object version = BeanUtils.getFieldWithAnnotation(domainObj, annotation);
-        if (version instanceof Integer) {
+        if (f.getType().isAssignableFrom(Integer.class)) {
             version = Math.incrementExact((Integer)version);
-        } else if (version instanceof Long) {
+        } else if (f.getType().isAssignableFrom(Long.class)) {
             version = Math.incrementExact((Long)version);
         }
         BeanUtils.setFieldWithAnnotation(domainObj, annotation, version);

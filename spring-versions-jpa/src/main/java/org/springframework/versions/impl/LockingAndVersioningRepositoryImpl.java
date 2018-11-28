@@ -1,26 +1,27 @@
 package org.springframework.versions.impl;
 
-import internal.org.springframework.versions.LockingService;
 import internal.org.springframework.versions.AuthenticationFacade;
+import internal.org.springframework.versions.LockingService;
+import internal.org.springframework.versions.jpa.CloningService;
+import internal.org.springframework.versions.jpa.EntityInformationFacade;
+import internal.org.springframework.versions.jpa.VersioningService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.data.jpa.repository.support.JpaEntityInformation;
-import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
+import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.versions.AncestorId;
 import org.springframework.versions.AncestorRootId;
 import org.springframework.versions.LockOwner;
 import org.springframework.versions.LockOwnerException;
+import org.springframework.versions.LockingAndVersioningException;
 import org.springframework.versions.LockingAndVersioningRepository;
+import org.springframework.versions.SuccessorId;
 import org.springframework.versions.VersionInfo;
-import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
-import org.springframework.versions.VersionStatus;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
-import javax.persistence.Version;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.List;
@@ -30,25 +31,34 @@ import static java.lang.String.format;
 public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> implements LockingAndVersioningRepository<T, ID> {
 
     private EntityManager em;
-    private JpaEntityInformation<T, ?>  entityInformation;
+    private EntityInformationFacade entityInfo;
+    private EntityInformation<T, ?> entityInformation;
     private AuthenticationFacade auth;
     private LockingService lockingService;
+    private VersioningService versioner;
+    private CloningService cloner;
 
     @Autowired(required=false)
     public LockingAndVersioningRepositoryImpl() {
     }
 
     @Autowired(required=false)
-    public LockingAndVersioningRepositoryImpl(EntityManager em, AuthenticationFacade auth, LockingService versioning) {
+    public LockingAndVersioningRepositoryImpl(EntityManager em, EntityInformationFacade entityInfo, AuthenticationFacade auth, LockingService locker, VersioningService versioner, CloningService cloner) {
         this.em = em;
+        this.entityInfo = entityInfo;
         this.auth = auth;
-        this.lockingService = versioning;
+        this.lockingService = locker;
+        this.versioner = versioner;
+        this.cloner = cloner;
     }
 
     @Override
     @Transactional
     public <S extends T> S lock(S entity) {
         Authentication authentication = auth.getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
         Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
         if (id == null) {
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
@@ -67,6 +77,9 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Transactional
     public <S extends T> S unlock(S entity) {
         Authentication authentication = auth.getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
         Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
         if (id == null) {
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
@@ -90,7 +103,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Transactional
     public <S extends T> S save(S entity) {
         if (entityInformation == null) {
-            this.entityInformation = JpaEntityInformationSupport.getEntityInformation((Class<T>) entity.getClass(), em);
+            this.entityInformation = this.entityInfo.getEntityInformation(entity.getClass(), em);
         }
 
         if (entityInformation.isNew(entity)) {
@@ -101,6 +114,9 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         Authentication authentication = auth.getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
         Object id = getId(entity);
         if (id == null) return null;
 
@@ -113,55 +129,111 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Transactional
-    public <S extends T> S version(S entity, VersionInfo info) {
-        Authentication authentication = auth.getAuthentication();
-        Object id = getId(entity);
+    public <S extends T> S version(S currentVersion, VersionInfo info) {
+        Object id = getId(currentVersion);
         if (id == null) return null;
 
+        if (!isHead(currentVersion)) {
+            throw new LockingAndVersioningException("not head");
+        }
+
+        Authentication authentication = auth.getAuthentication();
         Principal lockOwner;
-        if ((lockOwner = lockingService.lockOwner(id)) != null && authentication.getName().equals(lockOwner.getName()) == false) {
+        if ((lockOwner = lockingService.lockOwner(id)) == null || !authentication.isAuthenticated() || authentication.getName().equals(lockOwner.getName()) == false) {
             throw new LockOwnerException(format("not lock owner"));
         }
 
-        S old = em.find((Class<S>) entity.getClass(), id);
-        if (isAnestralRoot(old)) {
-           old = updateVersionAttributes(old, null, id, false);
+        S ancestorRoot;
+        if (isAnestralRoot(currentVersion)) {
+            currentVersion = (S)versioner.establishAncestralRoot(currentVersion);
+            ancestorRoot = currentVersion;
         } else {
-            if (BeanUtils.hasFieldWithAnnotation(old, VersionStatus.class)) {
-                BeanUtils.setFieldWithAnnotation(old, VersionStatus.class, false);
+            Object ancestorRootId = getAncestralRootId(currentVersion);
+            ancestorRoot = em.find((Class<S>) currentVersion.getClass(), ancestorRootId);
+            if (ancestorRoot == null) {
+                throw new LockingAndVersioningException(format("ancestor root not found: %s", ancestorRootId));
             }
         }
-        em.merge(old);
-        this.unlock(old);
-        em.flush();
 
-        entity = clone(entity);
-        BeanUtils.setFieldWithAnnotation(entity, Id.class, null);
-        BeanUtils.setFieldWithAnnotation(entity, Version.class, 0);
-        BeanUtils.setFieldWithAnnotation(entity, VersionNumber.class, info.getNumber());
-        BeanUtils.setFieldWithAnnotation(entity, VersionLabel.class, info.getLabel());
-        entity = updateVersionAttributes(entity, id, getAncestralRootId(old), true);
-        em.persist(entity);
-        entity = this.lock(entity);
+        S newVersion = (S)cloner.clone(currentVersion);
+        newVersion = (S)versioner.establishSuccessor(newVersion, info.getNumber(), info.getLabel(), ancestorRoot, currentVersion);
+        em.persist(newVersion);
+        this.lock(newVersion);
 
-        return entity;
+        currentVersion = (S)versioner.establishAncestor(currentVersion, newVersion);
+        this.unlock(currentVersion);
+
+        return newVersion;
     }
 
-    protected <S extends T> boolean isAnestralRoot(S old) {
+    @Override
+    public <S extends T> List<S> findAllLatestVersion() {
+        return null;
+    }
+
+    @Override
+    public <S extends T> List<S> findAllVersions(S entity) {
+        return null;
+    }
+
+    @Override
+    public <S extends T> void delete(S entity) {
+        Object id = this.getId(entity);
+        if (id == null) return;
+
+        if (!isHead(entity)) {
+            throw new LockingAndVersioningException("not head");
+        }
+
+        Authentication authentication = auth.getAuthentication();
+
+        boolean relock = false;
+        if (lockingService.lockOwner(id) != null && !lockingService.isLockOwner(id, authentication)) {
+            throw new LockOwnerException("not lock owner");
+        } else if (lockingService.lockOwner(id) != null && lockingService.isLockOwner(id, authentication)) {
+            relock = true;
+            lockingService.unlock(id, authentication);
+        }
+
+        Object ancestorRootId = getAncestralRootId(entity);
+        Object ancestorId = getAncestorId(entity);
+
+        S ancestor = null;
+        if (ancestorId == null) {
+            ancestorId = ancestorRootId;
+        }
+
+        if (ancestorId != null) {
+            ancestor = (S) em.find(entity.getClass(), ancestorId);
+            BeanUtils.setFieldWithAnnotation(ancestor, SuccessorId.class, null);
+            lockingService.lock(ancestorId, authentication);
+        }
+
+        em.remove(entity);
+    }
+
+    protected <S extends T> boolean isHead(S entity) {
+        boolean isHead = false;
+        if (BeanUtils.hasFieldWithAnnotation(entity, SuccessorId.class)) {
+            return BeanUtils.getFieldWithAnnotation(entity, SuccessorId.class) == null;
+        }
+        return isHead;
+    }
+
+    protected <S extends T> boolean isAnestralRoot(S entity) {
         boolean isAncestralRoot = false;
-        if (BeanUtils.hasFieldWithAnnotation(old, AncestorRootId.class)) {
-            return BeanUtils.getFieldWithAnnotation(old, AncestorRootId.class) == null;
+        if (BeanUtils.hasFieldWithAnnotation(entity, AncestorRootId.class)) {
+            return BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class) == null;
         }
         return isAncestralRoot;
     }
 
-    protected <S extends T> Object getAncestralRootId(S existing) {
-        return BeanUtils.getFieldWithAnnotation(existing, AncestorRootId.class);
+    protected <S extends T> Object getAncestralRootId(S entity) {
+        return BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class);
     }
 
-    protected <S extends T> S clone(S entity) {
-        em.detach(entity);
-        return entity;
+    protected <S extends T> Object getAncestorId(S entity) {
+        return BeanUtils.getFieldWithAnnotation(entity, AncestorId.class);
     }
 
     protected <S extends T> Object getId(S entity) {
@@ -173,32 +245,5 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             return null;
         }
         return id;
-    }
-
-    protected <S extends T> S updateVersionAttributes(S entity, Object ancestorId, Object ancestralRootId, boolean versionStatus) {
-
-        if (BeanUtils.hasFieldWithAnnotation(entity, AncestorId.class)) {
-            BeanUtils.setFieldWithAnnotation(entity, AncestorId.class, ancestorId);
-        }
-
-        if (BeanUtils.hasFieldWithAnnotation(entity, AncestorRootId.class) && BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class) == null) {
-            BeanUtils.setFieldWithAnnotation(entity, AncestorRootId.class, ancestralRootId);
-        }
-
-        if (BeanUtils.hasFieldWithAnnotation(entity, VersionStatus.class)) {
-            BeanUtils.setFieldWithAnnotation(entity, VersionStatus.class, versionStatus);
-        }
-
-        return entity;
-    }
-
-    @Override
-    public <S extends T> List<S> findAllLatestVersion() {
-        return null;
-    }
-
-    @Override
-    public <S extends T> List<S> findAllVersions(S entity) {
-        return null;
     }
 }
