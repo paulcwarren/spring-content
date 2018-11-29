@@ -10,6 +10,7 @@ public interface LockingService {
      * If no lock exists for the given entity then the lock will be obtained.
      *
      * @param entityId the entity to lock
+     * @param principal the lock owner
      * @return  true if lock succeeds, otherwise false
      */
     boolean lock(Object entityId, Principal principal);
@@ -20,6 +21,7 @@ public interface LockingService {
      * If the current principal holds the lock it will be released.
      *
      * @param entityId the entity to unlock
+     * @param principal the lock owner
      * @return  true if unlock succeeds, otherwise false
      */
     boolean unlock(Object entityId, Principal principal);
@@ -37,7 +39,7 @@ public interface LockingService {
      * Returns the lock owner, or null if not locked
      *
      * @param entityId  the entity with the lock
-     * @returnt lock owner
+     * @return lock owner
      */
     Principal lockOwner(Object entityId);
 }
