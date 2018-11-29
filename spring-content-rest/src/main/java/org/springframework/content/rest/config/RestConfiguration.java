@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Configuration
-@ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions.versioning")
+@ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions")
 public class RestConfiguration {
 
 	@Autowired
