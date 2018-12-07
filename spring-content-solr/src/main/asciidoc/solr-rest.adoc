@@ -1,0 +1,24 @@
+[[search]]
+= Search
+
+== The SearchContent Resource
+
+When a repository extending `Searchable` is exported a `findKeyword` endpoint will be
+available at the `/{repository}/searchContent/findKeyword` URI.
+
+====
+[source, sh]
+----
+  curl http://localhost:8080/searchContent/findKeyword?keyword=foo
+----
+====
+
+=== Supported HTTP Methods
+
+As the SearchContent resource is read-only it supports `GET` only.  All other HTTP methods will
+cause a `405 Method Not Allowed`.
+
+==== Supported media types
+
+- `application/hal+json`
+- `application/json`.
