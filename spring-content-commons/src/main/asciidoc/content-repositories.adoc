@@ -88,12 +88,14 @@ public class Application {
 
 === Experimental API
 
-All Spring Content storage modules also now support for a newer *experimental* Store API based on
-`org.springframework.core.io.Resource`.
+All Spring Content storage modules also now support an *experimental* Store API based on the
+Spring Resource API (i.e. `org.springframework.core.io.ResourceLoader` and `org.springframework.core.io.Resource`).
 
-The base interface in this API is `Store`, a generic `org.springframework.core.io.ResourceLoader`.  When called stores
-return instances of `org.springframework.content.commons.io.DeletableResource` allowing the full lifecycle of resources
-to be managed through this API.
+The base interface in this API, `Store`, is a generic `org.springframework.core.io.ResourceLoader`.  Unlike
+the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
+of Identifer, not just string-based locators, and returns Spring Resource's implementing
+`org.springframework.content.commons.io.DeletableResource` providing a set of methods to control the entire lifecycle
+from creation through to deletion.
 
 .Store interface
 ====
@@ -108,8 +110,8 @@ public interface Store<SID extends Serializable> {
 
 This interface *is* supported by Spring Content REST.
 
-Derived from the `Store` is a second interface `AssociativeStore` allowing resources to be associated with and retrieved
-by JPA Entities.
+Derived from the `Store` is a second interface `AssociativeStore` that allows Spring `Resource`s to also be associated
+with Spring Data Entities.
 
 .AssociativeStore interface
 ====

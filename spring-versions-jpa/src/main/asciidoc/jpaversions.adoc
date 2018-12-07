@@ -1,0 +1,257 @@
+= Introduction
+
+Traditional document management use cases often require content to be locked and versioned.
+
+Spring Versions JPA is supported by the following storage modules:
+
+- https://github.com/paulcwarren/spring-content/spring-content-fs[Spring Content Filesystem]
+- https://github.com/paulcwarren/spring-content/spring-content-s3[Spring Content S3]
+
+= Getting Started
+
+== Introduction
+
+Spring Versions for JPA are extensions to Spring Data (repositories) that implement the `LockingAndVersioningRepository`
+interface defined in (https://github.com/paulcwarren/spring-content/spring-versions-jpa)[Spring Version Commons].
+
+The implementation builds on JPA's optimistic locking semantics to offer optimistic or pessimistic locking as well as
+versioning to Spring Data Entities and to any associated Spring Content Resources using a JDBC-compliant database as
+a backing store for pessimistic lock information.
+
+== Adding Spring Versions JPA to a Spring Boot project
+
+Spring Versions JPA has both a starter and auto-configuration so the simplest way to get to started is with a Spring
+Boot application.  Add the `spring-versions-jpa-boot-starter` to the classpath:
+
+.Classpath configuration with Gradle
+====
+[source, java]
+----
+dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa-boot-starter:${version}")
+	... 
+}
+----
+====
+
+.Classpath configuration with Maven
+====
+[source, java]
+----
+ <dependencies>
+	...
+    <dependency>
+      <groupId>com.github.paulcwarren</groupId>
+      <artifactId>spring-versions-jpa-boot-starter</artifactId>
+      <version>${version}</version>
+    </dependency>
+	...
+  </dependencies>
+----
+====
+
+== Adding Spring Versions JPA to a Non-Spring Boot Project
+
+To add Spring Versions JPA to a non-Spring Boot project add the `spring-versions-jpa` dependency to the classpath:
+
+.Classpath configuration for Gradle
+====
+[source, java]
+----
+dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa:${version}")
+	... 
+}
+----
+====
+
+.Classpath configuration for Maven
+====
+[source, java]
+----
+ <dependencies>
+	...
+    <dependency>
+      <groupId>com.github.paulcwarren</groupId>
+      <artifactId>spring-versions-jpa</artifactId>
+      <version>${version}</version>
+    </dependency>
+	...
+  </dependencies>
+----
+====
+
+== Configuring Spring Versions JPA
+
+To configure Spring Versions JPA you need to import the `@Configuration` class
+`org.springframework.versions.jpa.JpaLockingAndVersioningConfig` into your application:
+
+====
+[source, java]
+----
+@Configuration
+@Import(JpaLockingAndVersioningConfig.class)
+public class LockingAndVersioningConfig {
+
+    @Value("/org/springframework/versions/jpa/schema-drop-hsqldb.sql") // <1>
+    private Resource dropVersionSchema;
+
+    @Value("/org/springframework/versions/jpa/schema-hsqldb.sql")
+    private Resource createVersionSchema;
+
+    @Bean
+    DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+        ResourceDatabasePopulator databasePopulator =
+                new ResourceDatabasePopulator();
+
+        databasePopulator.addScript(dropVersionSchema);
+        databasePopulator.addScript(createVersionSchema);
+        databasePopulator.setIgnoreFailedDrops(true);
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator);
+
+        return initializer;
+    }
+
+    @Bean
+    public DataSource dataSource() {
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+        return builder.setType(EmbeddedDatabaseType.HSQL).build();
+    }
+}
+----
+<1> Replace with schema resources for database
+====
+
+IMPORTANT: This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically
+enable Spring Versions JPA when you place `com.github.paulcwarren:spring-versions-jpa-boot-starter` on your application's
+classpath and your app is annotated as a `@SpringBootApplication`.
+
+Make sure you also configure the Spring Content Storage module that you wish to use.  For details on that, please consult
+the reference documentation.
+
+= Locking And Versioning
+
+== Fundamentals
+
+Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
+Entities along with any associated Spring Content Resources.
+
+== Optimistic Locking
+
+Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
+Content Resource's associated with https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm[@Versioned]
+Spring Data Entities.
+
+As a result any `ContentStore` operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
+value, will throw `javax.persistence.OptimisticLockException`.
+
+== Pessimistic Locking and Versioning
+
+To use a pessimistic locking strategy and versioning the repository should be made to extend
+`LockingAndVersioningRepository`:
+
+====
+[source, java]
+----
+  public interface DocumentRepository extends JpaRepository<Document, Long>, LockingAndVersioningRepository {}
+----
+====
+
+The `LockingAndVersioningRepository` interface adds (and overrides) the following methods to a `Repository`:
+
+====
+[source, java]
+----
+public interface LockingAndVersioningRepository<T, ID extends Serializable> {
+
+    /**
+     * Locks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to be locked
+     * @return the locked entity
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> S lock(S entity);
+
+    /**
+     * Unlocks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to unlock
+     * @return the unlocked entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> S unlock(S entity);
+
+    /**
+     * Overridden implementation of save that enforces locking semantics
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to save
+     * @return the saved entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> S save(S entity);
+
+    /**
+     * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
+     * list.
+     *
+     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to base the new versionWithEntity on
+     * @param info the version info
+     * @return the new versionWithEntity
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> S version(S entity, VersionInfo info);
+
+    /**
+     * Returns the latest version of all entities.  When extending LockingAndVersioningRepository this
+     * method would usually be preferred over CrudRepository's findAll that would find all versions
+     * of all entities.
+     *
+     * @param <S> the type of entity
+     * @return list of latest versionWithEntity entities
+     */
+    <S extends T> List<S> findAllLatestVersion();
+
+    /**
+     * Returns a list of all versions for the given entity.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to find versions for
+     * @return list of entity versions
+     */
+    <S extends T> List<S> findAllVersions(@Param("entity") S entity);
+
+    /**
+     * Deletes a given entity version.  The entity must be the head of the version list.
+     *
+     * If the entity is locked the lock will be carried over to the previous version when
+     * it becomes the new head.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to delete
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> void delete(S entity);
+}
+----
+====
+

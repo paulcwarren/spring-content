@@ -1,0 +1,104 @@
+== The Lock Resource
+
+When a repository extending `LockingAndVersioningRepository` is exported a lock endpoint
+will be available at the `/{repository}/{id}/lock` URI.
+
+====
+[source, sh]
+----
+  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock
+----
+====
+
+=== Supported HTTP Methods
+
+The Lock resource supports `PUT` and `DELETE`.  All other HTTP methods will cause a
+`405 Method Not Allowed`.
+
+==== PUT
+
+Acquires a pessimistic lock on the resource.
+
+==== DELETE
+
+If held, releases the pessimistic lock on the resource.
+
+===== Supported media types
+
+Not applicable.
+
+== The Version Resource
+
+When a repository extending `LockingAndVersioningRepository` is exported a version
+endpoint will be available at the `/{repository}/{id}/version` URI.
+
+====
+[source, sh]
+----
+  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'
+----
+====
+
+=== Supported HTTP Methods
+
+The version resource supports `PUT`.  All other HTTP methods will cause a `405 Method
+Not Allowed`.
+
+==== PUT
+
+Creates a new version of the entity.
+
+===== Supported media types
+
+application/json
+
+== The FindAllVersionsLatest Resource
+
+When a repository extending `LockingAndVersioningRepository` is exported a findAllLatestVersions
+endpoint will be available at the `/{repository}/findAllVersionsLatest` URI.
+
+====
+[source, sh]
+----
+  curl -X GET http://localhost:8080/docs/findAllVersionsLatest
+----
+====
+
+=== Supported HTTP Methods
+
+The version resource supports `GET`.  All other HTTP methods will cause a `405 Method
+Not Allowed`.
+
+==== GET
+
+Returns the latest version of all entities.
+
+===== Supported media types
+
+Not applicable.
+
+== The FindAllVersions Resource
+
+When a repository extending `LockingAndVersioningRepository` is exported a findAllLatestVersions
+endpoint will be available at the `/{repository}/{id}/findAllVersions` URI.
+
+====
+[source, sh]
+----
+  curl -X GET http://localhost:8080/docs/1234/findAllVersions
+----
+====
+
+=== Supported HTTP Methods
+
+The version resource supports `GET`.  All other HTTP methods will cause a `405 Method
+Not Allowed`.
+
+==== GET
+
+Returns all versions of the given entity.
+
+===== Supported media types
+
+Not applicable.
