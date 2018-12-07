@@ -45,7 +45,7 @@ public class LockingAndVersioningRestController {
 
 	private static final String ENTITY_LOCK_MAPPING = "/{repository}/{id}/lock";
 	private static final String ENTITY_VERSION_MAPPING = "/{repository}/{id}/version";
-	private static final String ENTITY_FINDALLLATESTVERSION_MAPPING = "/{repository}/findAllLatestVersion";
+	private static final String ENTITY_FINDALLLATESTVERSION_MAPPING = "/{repository}/findAllVersionsLatest";
 	private static final String FINDALLVERSIONS_METHOD_MAPPING = "/{repository}/{id}/findAllVersions";
 
 	private static Method LOCK_METHOD = null;
@@ -58,7 +58,7 @@ public class LockingAndVersioningRestController {
 		LOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "lock", Object.class);
 		UNLOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "unlock", Object.class);
 		VERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "version", Object.class, VersionInfo.class);
-		FINDALLLATESTVERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllLatestVersion");
+		FINDALLLATESTVERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersionsLatest");
 		FINDALLVERSIONS_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersions", Object.class);
 	}
 

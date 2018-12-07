@@ -167,7 +167,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Override
-    public <S extends T> List<S> findAllLatestVersion() {
+    public <S extends T> List<S> findAllVersionsLatest() {
         return null;
     }
 
