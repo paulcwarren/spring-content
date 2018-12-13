@@ -64,13 +64,13 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
         }
         if (id == null) {
-            return null;
+            throw new IllegalStateException("@Id missing");
         }
         if (lockingService.lock(id, authentication)) {
             BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, authentication.getName());
             return this.save(entity);
         }
-        return null;
+        throw new IllegalStateException(format("failed to lock %s", id));
     }
 
     @Override
@@ -85,10 +85,12 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
         }
         if (id == null) {
-            return null;
+            throw new IllegalStateException("@Id missing");
         }
-        if (!lockingService.isLockOwner(id, authentication)) {
-            throw new LockOwnerException("not lock owner");
+        String principal = authentication.getName();
+        Principal lockOwner = lockingService.lockOwner(id);
+        if (lockOwner == null || !principal.equals(lockOwner.getName())) {
+            throw new LockOwnerException(format("not lock owner: %s has lock owner %s", id, (lockOwner != null) ? lockOwner.getName() : ""));
         }
 
         BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, null);
@@ -97,7 +99,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         if (lockingService.unlock(id, authentication)) {
             return entity;
         }
-        return null;
+        throw new IllegalStateException(format("failed to unlock %s", id));
     }
 
     @Transactional
@@ -113,15 +115,14 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             return entity;
         }
 
-        Authentication authentication = auth.getAuthentication();
-        if (!authentication.isAuthenticated()) {
-            throw new SecurityException("no principal");
-        }
         Object id = getId(entity);
         if (id == null) return null;
 
-        Principal lockOwner;
-        if ((lockOwner = lockingService.lockOwner(id)) == null || authentication.getName().equals(lockOwner.getName())) {
+        Authentication authentication = auth.getAuthentication();
+        Principal lockOwner = lockingService.lockOwner(id);
+        if ((authentication == null || (authentication.isAuthenticated() == false) && lockOwner == null)) {
+            return em.merge(entity);
+        } else if (authentication != null && authentication.isAuthenticated() && (lockOwner == null || authentication.getName().equals(lockOwner.getName()))) {
             return em.merge(entity);
         } else {
             throw new LockOwnerException(format("entity not locked by you"));
@@ -130,6 +131,11 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
     @Transactional
     public <S extends T> S version(S currentVersion, VersionInfo info) {
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+
         Object id = getId(currentVersion);
         if (id == null) return null;
 
@@ -137,9 +143,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new LockingAndVersioningException("not head");
         }
 
-        Authentication authentication = auth.getAuthentication();
-        Principal lockOwner;
-        if ((lockOwner = lockingService.lockOwner(id)) == null || !authentication.isAuthenticated() || authentication.getName().equals(lockOwner.getName()) == false) {
+        Principal lockOwner = lockingService.lockOwner(id);
+        if (lockOwner  == null || !authentication.isAuthenticated() || authentication.getName().equals(lockOwner.getName()) == false) {
             throw new LockOwnerException(format("not lock owner"));
         }
 
@@ -156,12 +161,18 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         S newVersion = (S)cloner.clone(currentVersion);
+
+        this.unlock(currentVersion);
+
         newVersion = (S)versioner.establishSuccessor(newVersion, info.getNumber(), info.getLabel(), ancestorRoot, currentVersion);
         em.persist(newVersion);
-        this.lock(newVersion);
+        Object newId = getId(newVersion);
 
         currentVersion = (S)versioner.establishAncestor(currentVersion, newVersion);
-        this.unlock(currentVersion);
+        em.merge(currentVersion);
+
+        newVersion = this.lock(newVersion);
+        em.merge(newVersion);
 
         return newVersion;
     }
@@ -178,14 +189,17 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
     @Override
     public <S extends T> void delete(S entity) {
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+
         Object id = this.getId(entity);
         if (id == null) return;
 
         if (!isHead(entity)) {
             throw new LockingAndVersioningException("not head");
         }
-
-        Authentication authentication = auth.getAuthentication();
 
         boolean relock = false;
         if (lockingService.lockOwner(id) != null && !lockingService.isLockOwner(id, authentication)) {

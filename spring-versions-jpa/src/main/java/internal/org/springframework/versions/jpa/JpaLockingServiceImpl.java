@@ -4,16 +4,23 @@ import internal.org.springframework.versions.LockingService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.Subject;
+import javax.sql.RowSet;
 import java.security.Principal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+
+import static java.lang.String.format;
 
 @Service
 public class JpaLockingServiceImpl implements LockingService {
@@ -33,13 +40,13 @@ public class JpaLockingServiceImpl implements LockingService {
             throw new SecurityException("no principal");
         }
 
-        String sql = "INSERT INTO versions (entity_id, lock_owner)" +
-                        "  SELECT ?, ?" +
-                        "  FROM mutex LEFT JOIN versions" +
-                        "  ON entity_id = ?" +
-                        "  WHERE i = 0 AND entity_id IS NULL;";
-        int rc = template.update(sql, entityId, principal.getName(), entityId);
-        return (rc == 1);
+        try {
+            String sql = "INSERT INTO locks (entity_id, lock_owner) VALUES (?,?)";
+            int rc = template.update(sql, entityId.toString(), principal.getName());
+            return (rc == 1);
+        } catch (DuplicateKeyException e) {
+            return false;
+        }
     }
 
     @Override
@@ -48,26 +55,14 @@ public class JpaLockingServiceImpl implements LockingService {
             throw new SecurityException("no principal");
         }
 
-        String sql = "DELETE from versions where entity_id = ? and lock_owner = ?;";
-        int rc = template.update(sql, entityId, principal.getName());
+        String sql = "DELETE from locks where entity_id = ? and lock_owner = ?";
+        int rc = template.update(sql, entityId.toString(), principal.getName());
         return (rc == 1);
     }
 
     @Override
-    public boolean isLockOwner(Object entityId, Principal principal) {
-        if (principal == null) {
-            throw new SecurityException("no principal");
-        }
-
-        int count = 0;
-        String sql = "SELECT count(id) from versions where entity_id = ? and lock_owner = ?;";
-        count = template.queryForObject(sql, Integer.class, entityId, principal.getName());
-        return count == 1;
-    }
-
-    @Override
     public Principal lockOwner(Object entityId) {
-        String sql = "SELECT lock_owner from versions where entity_id = " + entityId;
+        String sql = "SELECT lock_owner from locks where entity_id = '" + entityId + "'";
         List<String> lockOwners = template.query(sql, new RowMapper() {
 
             public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -95,5 +90,16 @@ public class JpaLockingServiceImpl implements LockingService {
                 }
             };
         }
+    }
+
+    @Override
+    public boolean isLockOwner(Object entityId, Principal principal) {
+        if (principal == null) {
+            throw new SecurityException("no principal");
+        }
+
+        String sql = "SELECT entity_id from locks where entity_id = ? and lock_owner = ?";
+        SqlRowSet rs = template.queryForRowSet(sql, entityId.toString(), principal.getName());
+        return rs.next();
     }
 }

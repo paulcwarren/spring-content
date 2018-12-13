@@ -16,16 +16,16 @@ import static java.lang.String.format;
 
 public class PessimisticLockingInterceptor implements MethodInterceptor {
 
-    private LockingService versions;
+    private LockingService locker;
     private AuthenticationFacade auth;
 
     private static final ReflectionUtils.AnnotationFieldFilter ID_FILTER = new ReflectionUtils.AnnotationFieldFilter(Id.class);
     private static final ReflectionUtils.AnnotationFieldFilter DATA_ID_FILTER = new ReflectionUtils.AnnotationFieldFilter(org.springframework.data.annotation.Id.class);
 
-    public PessimisticLockingInterceptor(LockingService versions, AuthenticationFacade auth) {
-        Assert.notNull(versions, "versions cannot be null");
+    public PessimisticLockingInterceptor(LockingService locker, AuthenticationFacade auth) {
+        Assert.notNull(locker, "locker cannot be null");
         Assert.notNull(auth, "auth cannot be null");
-        this.versions = versions;
+        this.locker = locker;
         this.auth = auth;
     }
 
@@ -53,7 +53,7 @@ public class PessimisticLockingInterceptor implements MethodInterceptor {
         org.springframework.util.ReflectionUtils.makeAccessible(idField);
         Object id = org.springframework.util.ReflectionUtils.getField(idField, entity);
 
-        if (versions.lockOwner(id) == null || versions.isLockOwner(id, auth.getAuthentication())) {
+        if (locker.lockOwner(id) == null || locker.isLockOwner(id, auth.getAuthentication())) {
             return invocation.proceed();
         } else {
             throw new LockOwnerException("Not lock owner");
