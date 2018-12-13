@@ -8,5 +8,7 @@ internal.org.springframework.content.rest.boot.autoconfigure.HypermediaAutoConfi
 internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration,\
 internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration,\
 internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration,\
-internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration
+internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration,\
+internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration
+
 
