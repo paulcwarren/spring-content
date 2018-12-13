@@ -7,6 +7,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.security.Principal;
 import java.util.Arrays;
@@ -76,7 +77,7 @@ public class JpaLockingServiceImplTest {
                 });
                 Context("given creating a lock record fails", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.update(anyObject(), anyObject(), anyObject(), anyObject())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
+                        when(jdbcTemplate.update(anyString(), (Object[])anyVararg())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
                     });
                     It("should throw the DataAccessException.class", () -> {
                         assertThat(e, is(instanceOf(DataAccessException.class)));
@@ -85,13 +86,12 @@ public class JpaLockingServiceImplTest {
                 });
                 Context("given a lock record is created", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.update(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(1);
+                        when(jdbcTemplate.update(anyString(), (Object[])anyVararg())).thenReturn(1);
                     });
                     It("should return true", () -> {
-                        verify(jdbcTemplate).update(argThat(startsWith("INSERT INTO versions")),
+                        verify(jdbcTemplate).update(argThat(startsWith("INSERT INTO locks")),
                                 argThat(is("some-id")),
-                                argThat(is("some-principal")),
-                                argThat(is("some-id")));
+                                argThat(is("some-principal")));
                         assertThat(result, is(true));
                     });
                 });
@@ -130,7 +130,7 @@ public class JpaLockingServiceImplTest {
                         when(jdbcTemplate.update((String)anyObject(), (Object[])anyVararg())).thenReturn(1);
                     });
                     It("should return true", () -> {
-                        verify(jdbcTemplate).update(argThat(startsWith("DELETE from versions")),
+                        verify(jdbcTemplate).update(argThat(startsWith("DELETE from locks")),
                                                     argThat(is("some-id")),
                                                     argThat(is("some-principal")));
                         assertThat(result, is(true));
@@ -177,7 +177,7 @@ public class JpaLockingServiceImplTest {
                 });
                 Context("given the database fails", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.queryForObject(anyString(), (Class)anyObject(), anyVararg())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
+                        when(jdbcTemplate.queryForRowSet(anyString(), anyVararg())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
                     });
                     It("should throw the DataAccessException", () -> {
                         assertThat(e, is(instanceOf(DataAccessException.class)));
@@ -185,7 +185,9 @@ public class JpaLockingServiceImplTest {
                 });
                 Context("given the principal is the lock owner", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.queryForObject(anyString(), (Class)anyObject(), anyVararg())).thenReturn(1);
+                        SqlRowSet rs = mock(SqlRowSet.class);
+                        when(rs.next()).thenReturn(true);
+                        when(jdbcTemplate.queryForRowSet(anyString(), anyVararg())).thenReturn(rs);
                     });
                     It("should return true", () -> {
                         assertThat(result, is(true));
@@ -193,7 +195,9 @@ public class JpaLockingServiceImplTest {
                 });
                 Context("given the principal is not the lock owner", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.queryForObject(anyString(), (Class)anyObject(), anyVararg())).thenReturn(0);
+                        SqlRowSet rs = mock(SqlRowSet.class);
+                        when(rs.next()).thenReturn(false);
+                        when(jdbcTemplate.queryForRowSet(anyString(), anyVararg())).thenReturn(rs);
                     });
                     It("should return false", () -> {
                         assertThat(result, is(false));
