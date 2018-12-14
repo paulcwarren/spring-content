@@ -31,9 +31,7 @@ public class JpaContentAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnBean(DataSource.class)
-	public ContentJpaDatabaseInitializer databaseInitializer(DataSource dataSource,
-			ResourceLoader resourceLoader) {
-		return new ContentJpaDatabaseInitializer(dataSource, resourceLoader,
-				this.properties);
+	public ContentJpaDatabaseInitializer jpaStorageDatabaseInitializer(DataSource dataSource, ResourceLoader resourceLoader) {
+		return new ContentJpaDatabaseInitializer(dataSource, resourceLoader, this.properties);
 	}
 }

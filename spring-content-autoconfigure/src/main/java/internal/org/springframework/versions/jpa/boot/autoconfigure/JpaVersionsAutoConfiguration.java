@@ -1,6 +1,5 @@
 package internal.org.springframework.versions.jpa.boot.autoconfigure;
 
-import internal.org.springframework.content.jpa.config.JpaStoresRegistrar;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,7 +30,7 @@ public class JpaVersionsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(DataSource.class)
-    public JpaVersionsDatabaseInitializer databaseInitializer(DataSource dataSource,
+    public JpaVersionsDatabaseInitializer jpaVersionsDatabaseInitializer(DataSource dataSource,
                                                              ResourceLoader resourceLoader) {
         return new JpaVersionsDatabaseInitializer(dataSource, resourceLoader, this.properties);
     }
