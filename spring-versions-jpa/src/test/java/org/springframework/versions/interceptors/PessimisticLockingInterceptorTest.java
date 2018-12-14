@@ -115,8 +115,8 @@ public class PessimisticLockingInterceptorTest {
                             BeforeEach(() -> {
                                 when(mi.getArguments()).thenReturn(new Object[]{new Object(), new ByteArrayInputStream("".getBytes())});
                             });
-                            It("should throw an IllegalArgumentException", () -> {
-                                assertThat(e, is(instanceOf(IllegalArgumentException.class)));
+                            It("should proceed", () -> {
+                                verify(mi).proceed();
                             });
                         });
                     });

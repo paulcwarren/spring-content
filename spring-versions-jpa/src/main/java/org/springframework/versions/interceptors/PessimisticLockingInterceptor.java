@@ -47,7 +47,7 @@ public class PessimisticLockingInterceptor implements MethodInterceptor {
             idField = ReflectionUtils.findField(entity.getClass(), DATA_ID_FILTER);
         }
         if (idField == null) {
-            throw new IllegalArgumentException(format("ID field missing: %s", entity.getClass().getCanonicalName()));
+            return invocation.proceed();
         }
 
         org.springframework.util.ReflectionUtils.makeAccessible(idField);
