@@ -38,7 +38,7 @@ public class OptimisticLockingInterceptorTest {
     //mocks
     private EntityManager em;
     private ProxyMethodInvocation mi;
-    private TestEntity entity;
+    private Object entity;
 
     {
         Describe("OptimisticLockInterceptor", () -> {
@@ -82,7 +82,15 @@ public class OptimisticLockingInterceptorTest {
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity), anyObject());
                         verify(mi).proceed();
-                        assertThat(entity.getVersion(), is(1L));
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
                     });
                 });
                 Context("when the method invocation is unsetContent", () -> {
@@ -99,7 +107,15 @@ public class OptimisticLockingInterceptorTest {
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity));
                         verify(mi).proceed();
-                        assertThat(entity.getVersion(), is(1L));
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
                     });
                 });
             });
@@ -111,5 +127,10 @@ public class OptimisticLockingInterceptorTest {
     private class TestEntity {
         @Version
         private Long version = 0L;
+    }
+
+    @Getter
+    @Setter
+    private class TestEntityUnversionsed {
     }
 }
