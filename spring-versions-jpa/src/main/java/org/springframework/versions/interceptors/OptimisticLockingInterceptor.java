@@ -89,6 +89,8 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
 
     private void touch(Object domainObj, Class<? extends Annotation> annotation) {
         Field f = BeanUtils.findFieldWithAnnotation(domainObj, annotation);
+        if (f == null)
+            return;
         Object version = BeanUtils.getFieldWithAnnotation(domainObj, annotation);
         if (f.getType().isAssignableFrom(Integer.class)) {
             version = Math.incrementExact((Integer)version);
