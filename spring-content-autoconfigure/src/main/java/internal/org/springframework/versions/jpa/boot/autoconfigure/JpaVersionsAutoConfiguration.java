@@ -16,7 +16,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
-@ConditionalOnClass({ DataSource.class })
+@ConditionalOnClass({ DataSource.class, JpaLockingAndVersioningConfig.class })
 @Import({ JpaLockingAndVersioningConfig.class })
 @EnableConfigurationProperties(JpaVersionsProperties.class)
 public class JpaVersionsAutoConfiguration {
