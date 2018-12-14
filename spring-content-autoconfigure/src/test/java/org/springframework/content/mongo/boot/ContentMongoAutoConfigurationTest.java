@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.jmx.support.RegistrationPolicy;
 
-public class ContentMongoAutoConfigurationTests {
+public class ContentMongoAutoConfigurationTest {
 
 	@Test
 	public void contextLoads() {

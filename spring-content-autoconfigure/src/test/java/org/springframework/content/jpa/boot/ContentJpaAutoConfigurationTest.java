@@ -1,35 +1,26 @@
 package org.springframework.content.jpa.boot;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
-import internal.org.springframework.content.jpa.config.JpaStorePropertiesImpl;
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.annotations.Content;
-import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.Database;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.jmx.support.RegistrationPolicy;
+import org.springframework.support.TestEntity;
 
-import javax.sql.DataSource;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -37,7 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
-public class ContentJpaAutoConfigurationTests {
+public class ContentJpaAutoConfigurationTest {
 
 	private AnnotationConfigApplicationContext context;
 
@@ -80,39 +71,11 @@ public class ContentJpaAutoConfigurationTests {
 	}
 
 	@Configuration
-	@AutoConfigurationPackage
+	@PropertySource("classpath:/default.properties")
 	@EnableAutoConfiguration
+	@EntityScan(basePackages="org.springframework.support")
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
-
-		@Bean
-		public DataSource dataSource() {
-			EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-			return builder.setType(EmbeddedDatabaseType.HSQL).build();
-		}
-
-		@Bean
-		public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
-			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-			vendorAdapter.setDatabase(Database.HSQL);
-			vendorAdapter.setGenerateDdl(true);
-
-			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-			factory.setJpaVendorAdapter(vendorAdapter);
-			factory.setPackagesToScan("examples"); // Tell Hibernate where to find
-													// Entities
-			factory.setDataSource(dataSource());
-
-			return factory;
-		}
-
-		@Bean
-		public PlatformTransactionManager transactionManager() {
-
-			JpaTransactionManager txManager = new JpaTransactionManager();
-			txManager.setEntityManagerFactory(entityManagerFactory().getObject());
-			return txManager;
-		}
 	}
 
 	@Configuration
@@ -128,20 +91,7 @@ public class ContentJpaAutoConfigurationTests {
 	public static class CustomPropertiesConfig extends TestConfig {
 	}
 
-	@Entity
-	@Content
-	public class TestEntity {
-		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
-		private long id;
-		@ContentId
-		private String contentId;
-	}
+	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {}
 
-	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
-	}
-
-	public interface TestEntityContentRepository
-			extends ContentStore<TestEntity, String> {
-	}
+	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {}
 }

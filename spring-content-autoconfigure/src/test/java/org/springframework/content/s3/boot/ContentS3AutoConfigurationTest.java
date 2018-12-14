@@ -1,27 +1,20 @@
 package org.springframework.content.s3.boot;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.annotations.Content;
-import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.support.TestEntity;
 
 public class ContentS3AutoConfigurationTest {
 
@@ -73,15 +66,6 @@ public class ContentS3AutoConfigurationTest {
 		// will be supplied by auto-configuration
 	}
 
-	@Entity
-	@Content
-	public class TestEntity {
-		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
-		private String id;
-		@ContentId
-		private String contentId;
-	}
 
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}

@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-public class ContentRestAutoConfigurationTests {
+public class ContentRestAutoConfigurationTest {
 
 	@Test
 	public void contextLoads() {
