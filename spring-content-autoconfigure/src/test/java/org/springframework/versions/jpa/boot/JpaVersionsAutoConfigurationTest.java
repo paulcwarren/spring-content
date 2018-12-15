@@ -36,7 +36,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class JpaVersionsAutoConfigurationTests {
+public class JpaVersionsAutoConfigurationTest {
 
     private AnnotationConfigApplicationContext context;
 
