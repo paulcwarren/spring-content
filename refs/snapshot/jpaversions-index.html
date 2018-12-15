@@ -5,7 +5,8 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>Working with Spring Stores</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Versions JPA - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -430,513 +431,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body id="content-repositories" class="book">
+<body class="book">
 <div id="header">
-<h1>Working with Spring Stores</h1>
+<h1>Spring Versions JPA - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren</span><br>
+<span id="revnumber">version 0.5.0-SNAPSHOT,</span>
+<span id="revdate">2018-12-15</span>
+</div>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
-and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
-the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
-class-path dependencies, Spring Content is then able to inject storage-specific implementations.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Important</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="content-repositories.core-concepts">Core concepts</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code>.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a <code>@ContentId</code> field on that domain class.</p>
-</div>
-<div id="content-repositories.repository" class="exampleblock">
-<div class="title">Example 1. ContentStore interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
-
-	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
-
-	InputStream getContent(E entity);			<b class="conum">(2)</b>
-
-	void unsetContent(E entity);				<b class="conum">(3)</b>
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Stores content and associates it with <code>entity</code></p>
-</li>
-<li>
-<p>Returns the content associated with <code>entity</code></p>
-</li>
-<li>
-<p>Deletes content and unassociates it from <code>entity</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it
-is possible to associate and store a profile picture for each user.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. ContentStore interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class User {
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Long id;
-
-	private String username;
-
-	@ContentId
-	private String contentId;
-
-	@ContentLength
-	private Long contentLength
-}
-
-public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
-}
-
-public interface ProfilePictureStore extends ContentStore&lt;User, String&gt; {
-}
-
-@SpringBootApplication
-public class Application {
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-
-	@Bean
-	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
-		return (args) -&gt; {
-			// create a new user
-			User jbauer = new User("jbauer");
-
-			// store profile picture
-			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
-
-			// save the user
-			repository.save(jbauer);
-		};
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_experimental_api">Experimental API</h3>
-<div class="paragraph">
-<p>All Spring Content storage modules also now support an <strong>experimental</strong> Store API based on the
-Spring Resource API (i.e. <code>org.springframework.core.io.ResourceLoader</code> and <code>org.springframework.core.io.Resource</code>).</p>
-</div>
-<div class="paragraph">
-<p>The base interface in this API, <code>Store</code>, is a generic <code>org.springframework.core.io.ResourceLoader</code>.  Unlike
-the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
-of Identifer, not just string-based locators, and returns Spring Resource&#8217;s implementing
-<code>org.springframework.content.commons.io.DeletableResource</code> providing a set of methods to control the entire lifecycle
-from creation through to deletion.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 3. Store interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;SID extends Serializable&gt; {
-
-	Resource getResource(SID id);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This interface <strong>is</strong> supported by Spring Content REST.</p>
-</div>
-<div class="paragraph">
-<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> that allows Spring `Resource`s to also be associated
-with Spring Data Entities.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 4. AssociativeStore interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
-
-    Resource getResource(S entity);
-
-    void associate(S entity, SID id);
-
-    void unassociate(S entity);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="content-repositories.events">Events</h3>
-<div class="paragraph">
-<p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>BeforeGetResourceEvent</p>
-</li>
-<li>
-<p>AfterGetResourceEvent</p>
-</li>
-<li>
-<p>BeforeAssociateEvent</p>
-</li>
-<li>
-<p>AfterAssociateEvent</p>
-</li>
-<li>
-<p>BeforeUnassociateEvent</p>
-</li>
-<li>
-<p>AfterUnassociateEvent</p>
-</li>
-<li>
-<p>BeforeSetContent</p>
-</li>
-<li>
-<p>AfterSetContent</p>
-</li>
-<li>
-<p>BeforeGetContent</p>
-</li>
-<li>
-<p>AfterGetContent</p>
-</li>
-<li>
-<p>BeforeUnsetContent</p>
-</li>
-<li>
-<p>AfterUnsetContent</p>
-</li>
-</ul>
-</div>
-<div class="sect3">
-<h4 id="_writing_an_applicationlistener">Writing an ApplicationListener</h4>
-<div class="paragraph">
-<p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
-override the methods that you are interested in.  When these events occur your handlers will be called.</p>
-</div>
-<div class="paragraph">
-<p>There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
-source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
-methods that return results to the caller.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 5. Entity-based AbstractContentRepositoryEventListener</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
-
-	@Override
-	public void onAfterSetContent(Object entity) {
-		...logic to inspect and handle the entity and it's content after it is stored
-	}
-
-	@Override
-	public void onBeforeGetContent(BeforeGetContentEvent event) {
-		...logic to inspect and handle the entity and it's content before it is fetched
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>The down-side of this approach is that it does not filter events based on Entity.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h4>
-<div class="paragraph">
-<p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
-</div>
-<div class="paragraph">
-<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
-Spring Content that this class needs to be inspected for handler methods.  It
-iterates over the class&#8217;s methods and looks for annotations that correspond to the
-event.  There are twelve handler annotations:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>HandleBeforeGetResource</p>
-</li>
-<li>
-<p>HandleAfterGetResource</p>
-</li>
-<li>
-<p>HandleBeforeAssociate</p>
-</li>
-<li>
-<p>HandleAfterAssociate</p>
-</li>
-<li>
-<p>HandleBeforeUnassociate</p>
-</li>
-<li>
-<p>HandleAfterUnassociate</p>
-</li>
-<li>
-<p>HandleBeforeSetContent</p>
-</li>
-<li>
-<p>HandleAfterSetContent</p>
-</li>
-<li>
-<p>HandleBeforeGetContent</p>
-</li>
-<li>
-<p>HandleAfterGetContent</p>
-</li>
-<li>
-<p>HandleBeforeUnsetContent</p>
-</li>
-<li>
-<p>HandleAfterUnsetContent</p>
-</li>
-</ul>
-</div>
-<div class="exampleblock">
-<div class="title">Example 6. Entity-based annotated event handler</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
-public class ExampleAnnotatedEventListener {
-
-	@HandleAfterSetContent
-	public void handleAfterSetContent(SopDocument doc) {
-		...type-safe handling logic for SopDocument's and their content after it is stored
-	}
-
-	@HandleBeforeGetContent
-	public void onBeforeGetContent(Product product) {
-		...type-safe handling logic for Product's and their content before it is fetched
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>These handlers will be called only when the event originates from a matching entity.</p>
-</div>
-<div class="paragraph">
-<p>As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
-methods returns results to the caller.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 7. Event-based annotated event handler</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
-public class ExampleAnnotatedEventListener {
-
-	@HandleAfterSetContent
-	public void handleAfterGetResource(AfterGetResourceEvent event) {
-		SopDocument doc = event.getSource();
-		Resource resourceToBeReturned = event.getResult();
-		...code that manipulates the resource being returned...
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>To register your event handler, either mark the class with one of Spring’s @Component
-stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
-declare an instance of your annotated bean in your ApplicationContext.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 8. Handler registration</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class ContentStoreConfiguration {
-
-	@Bean
-	ExampeAnnotatedEventHandler exampleEventHandler() {
-		return new ExampeAnnotatedEventHandler();
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="content-repositories.search">Search</h3>
-<div class="paragraph">
-<p>Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.</p>
-</div>
-<div class="paragraph">
-<p>Content stores can therefore optionally be made searchable by extending the <code>Searchable&lt;CID&gt;</code> interface.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 9. Searchable interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Searchable&lt;CID&gt; {
-
-    Iterable&lt;T&gt; findKeyword(String term);
-
-    Iterable&lt;T&gt; findAllKeywords(String...terms);
-
-    Iterable&lt;T&gt; findAnyKeywords(String...terms);
-
-    Iterable&lt;T&gt; findKeywordsNear(int proximity, String...terms);
-
-    Iterable&lt;T&gt; findKeywordStartsWith(String term);
-
-    Iterable&lt;T&gt; findKeywordStartsWithAndEndsWith(String prefix, String suffix);
-
-    Iterable&lt;T&gt; findAllKeywordsWithWeights(String[] terms, double[] weights);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="content-repositories.renditions">Renditions</h3>
-<div class="paragraph">
-<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
-</div>
-<div class="paragraph">
-<p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 10. Renderable interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Renderable&lt;E&gt; {
-
-	InputStream getRendition(E entity, String mimeType);
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="content-repositories.creation">Creating Content Store Instances</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>To use these core concepts:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Define a Spring Data entity and give it&#8217;s instances the ability to be associated with content by adding <code>@ContentId</code> and <code>@ContentLength</code> annotations</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class SopDocument {
-	private @Id @GeneratedValue Long id;
-	private String title;
-	private String[] authors, keywords;
-
-	// Spring Content managed attribute
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Define an interface extending Spring Data&#8217;s <code>CrudRepository</code> and type it to the domain and ID classes.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentRepository extends CrudRepository&lt;SopDocument, Long&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Define another interface extending <code>ContentStore</code> and type it to the domain and <code>@ContentId</code> class.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Optionally, make it extend <code>Searchable</code></p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Searchable&lt;UUID&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Optionally, make it extend <code>Renderable</code></p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Renderable&lt;SopDocument&gt; {
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Set up Spring to create proxy instances for these two interfaces using JavaConfig:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
-@EnableS3Stores
-class Config {}</code></pre>
-</div>
+<p>&#169; 2008-2017 The original authors.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -945,197 +453,537 @@ class Config {}</code></pre>
 <div class="title">Note</div>
 </td>
 <td class="content">
-The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module.
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
 </td>
 </tr>
 </table>
 </div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#_introduction">1. Introduction</a></li>
+<li><a href="#_getting_started">2. Getting Started</a>
+<ul class="sectlevel2">
+<li><a href="#_introduction_2">2.1. Introduction</a></li>
+<li><a href="#_adding_spring_versions_jpa_to_a_spring_boot_project">2.2. Adding Spring Versions JPA to a Spring Boot project</a></li>
+<li><a href="#_adding_spring_versions_jpa_to_a_non_spring_boot_project">2.3. Adding Spring Versions JPA to a Non-Spring Boot Project</a></li>
+<li><a href="#_configuring_spring_versions_jpa">2.4. Configuring Spring Versions JPA</a></li>
+</ul>
+</li>
+<li><a href="#_locking_and_versioning">3. Locking And Versioning</a>
+<ul class="sectlevel2">
+<li><a href="#_fundamentals">3.1. Fundamentals</a></li>
+<li><a href="#_optimistic_locking">3.2. Optimistic Locking</a></li>
+<li><a href="#_pessimistic_locking_and_versioning">3.3. Pessimistic Locking and Versioning</a></li>
+</ul>
+</li>
+<li><a href="#_rest_api">4. REST API</a>
+<ul class="sectlevel2">
+<li><a href="#_the_lock_resource">4.1. The Lock Resource</a></li>
+<li><a href="#_the_version_resource">4.2. The Version Resource</a></li>
+<li><a href="#_the_findallversionslatest_resource">4.3. The FindAllVersionsLatest Resource</a></li>
+<li><a href="#_the_findallversions_resource">4.4. The FindAllVersions Resource</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="preface" class="sect0">Preface</h1>
+<div class="sect1">
+<h2 id="project">Project metadata</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
 </li>
 <li>
-<p>Inject the repositories and use them</p>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Traditional document management use cases often require content to be locked and versioned.</p>
+</div>
+<div class="paragraph">
+<p>Spring Versions JPA is supported by the following storage modules:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-fs">Spring Content Filesystem</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-s3">Spring Content S3</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started">2. Getting Started</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_introduction_2">2.1. Introduction</h3>
+<div class="paragraph">
+<p>Spring Versions for JPA are extensions to Spring Data (repositories) that implement the <code>LockingAndVersioningRepository</code>
+interface defined in (<a href="https://github.com/paulcwarren/spring-content/spring-versions-jpa)">Spring Version Commons</a>.</p>
+</div>
+<div class="paragraph">
+<p>The implementation builds on JPA&#8217;s optimistic locking semantics to offer optimistic or pessimistic locking as well as
+versioning to Spring Data Entities and to any associated Spring Content Resources using a JDBC-compliant database as
+a backing store for pessimistic lock information.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_spring_versions_jpa_to_a_spring_boot_project">2.2. Adding Spring Versions JPA to a Spring Boot project</h3>
+<div class="paragraph">
+<p>Spring Versions JPA has both a starter and auto-configuration so the simplest way to get to started is with a Spring
+Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the classpath:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 1. Classpath configuration with Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa-boot-starter:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Classpath configuration with Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_spring_versions_jpa_to_a_non_spring_boot_project">2.3. Adding Spring Versions JPA to a Non-Spring Boot Project</h3>
+<div class="paragraph">
+<p>To add Spring Versions JPA to a non-Spring Boot project add the <code>spring-versions-jpa</code> dependency to the classpath:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Classpath configuration for Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Classpath configuration for Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuring_spring_versions_jpa">2.4. Configuring Spring Versions JPA</h3>
+<div class="paragraph">
+<p>To configure Spring Versions JPA you need to import the <code>@Configuration</code> class
+<code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application:</p>
+</div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Component
-public class SomeClass {
-	@Autowired private SopDocumentRepository repo;
-  	@Autowired private SopDocumentContentStore contentStore;
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@Import(JpaLockingAndVersioningConfig.class)
+public class LockingAndVersioningConfig {
 
-	public void doSomething() {
+    @Value("/org/springframework/versions/jpa/schema-drop-hsqldb.sql") <b class="conum">(1)</b>
+    private Resource dropVersionSchema;
 
-		SopDocument doc = new SopDocument();
-		doc.setTitle("example");
-		contentStore.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); <b class="conum">(1)</b>
-		doc.save();
-		...
+    @Value("/org/springframework/versions/jpa/schema-hsqldb.sql")
+    private Resource createVersionSchema;
 
-		InputStream content = contentStore.getContent(sopDocument);
-		...
+    @Bean
+    DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+        ResourceDatabasePopulator databasePopulator =
+                new ResourceDatabasePopulator();
 
-		List&lt;SopDocument&gt; docs = doc.findAllByContentId(contentStore.findKeyword("interesting"));
-		...
+        databasePopulator.addScript(dropVersionSchema);
+        databasePopulator.addScript(createVersionSchema);
+        databasePopulator.setIgnoreFailedDrops(true);
 
-	}
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator);
+
+        return initializer;
+    }
+
+    @Bean
+    public DataSource dataSource() {
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+        return builder.setType(EmbeddedDatabaseType.HSQL).build();
+    }
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>Spring Content will update the <code>@ContentId</code> and <code>@ContentLength</code> fields</p>
+<p>Replace with schema resources for database</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
-</li>
-</ol>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically
+enable Spring Versions JPA when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s
+classpath and your app is annotated as a <code>@SpringBootApplication</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Make sure you also configure the Spring Content Storage module that you wish to use.  For details on that, please consult
+the reference documentation.</p>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_patterns_of_content_association">Patterns of Content Association</h2>
+<h2 id="_locking_and_versioning">3. Locking And Versioning</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_fundamentals">3.1. Fundamentals</h3>
 <div class="paragraph">
-<p>Content can be associated with a Spring Data Entity in several ways.</p>
+<p>Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
+Entities along with any associated Spring Content Resources.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_entity_association">Entity Association</h3>
+<h3 id="_optimistic_locking">3.2. Optimistic Locking</h3>
 <div class="paragraph">
-<p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
+<p>Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
+Content Resource&#8217;s associated with <a href="https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm">@Versioned</a>
+Spring Data Entities.</p>
 </div>
 <div class="paragraph">
-<p>The following example shows a Resource associated with an Entity <code>Dvd</code>.</p>
+<p>As a result any <code>ContentStore</code> operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
+value, will throw <code>javax.persistence.OptimisticLockException</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pessimistic_locking_and_versioning">3.3. Pessimistic Locking and Versioning</h3>
+<div class="paragraph">
+<p>To use a pessimistic locking strategy and versioning the repository should be made to extend
+<code>LockingAndVersioningRepository</code>:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-
-	...
-}
-
-public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
-
-public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">  public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository {}</code></pre>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_property_association">Property Association</h3>
-<div class="paragraph">
-<p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
 </div>
 <div class="paragraph">
-<p>The following example shows two Resources associated with a <code>Dvd</code> entity.  The first Resource is the Dvd&#8217;s cover Image and the second is the Dvd&#8217;s Stream.</p>
+<p>The <code>LockingAndVersioningRepository</code> interface adds (and overrides) the following methods to a <code>Repository</code>:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
+<pre class="highlight"><code class="language-java" data-lang="java">public interface LockingAndVersioningRepository&lt;T, ID extends Serializable&gt; {
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "image_id")
-	private Image image;
+    /**
+     * Locks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to be locked
+     * @return the locked entity
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S lock(S entity);
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "stream_id")
-	private Stream stream;
+    /**
+     * Unlocks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to unlock
+     * @return the unlocked entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S unlock(S entity);
 
-	...
-}
+    /**
+     * Overridden implementation of save that enforces locking semantics
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to save
+     * @return the saved entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S save(S entity);
 
-@Entity
-public class Image {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
+    /**
+     * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
+     * list.
+     *
+     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to base the new versionWithEntity on
+     * @param info the version info
+     * @return the new versionWithEntity
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S version(S entity, VersionInfo info);
 
-	@OneToOne
-	private Dvd dvd;
+    /**
+     * Returns the latest version of all entities.  When extending LockingAndVersioningRepository this
+     * method would usually be preferred over CrudRepository's findAll that would find all versions
+     * of all entities.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @return list of latest versionWithEntity entities
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllLatestVersion();
 
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
+    /**
+     * Returns a list of all versions for the given entity.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to find versions for
+     * @return list of entity versions
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllVersions(@Param("entity") S entity);
 
-@Entity
-public class Stream {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	@OneToOne
-	private Dvd dvd;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
-
-public interface ImageStore extends ContentStore&lt;Image, UUID&gt; {}
-
-public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code></pre>
+    /**
+     * Deletes a given entity version.  The entity must be the head of the version list.
+     *
+     * If the entity is locked the lock will be carried over to the previous version when
+     * it becomes the new head.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to delete
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; void delete(S entity);
+}</code></pre>
 </div>
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_rest_api">4. REST API</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_lock_resource">4.1. The Lock Resource</h3>
 <div class="paragraph">
-<p>Note how the Content attributes are placed on each property object of on the Entity itself.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
+will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 </div>
-<div class="paragraph">
-<p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_property_collection_associations">Property Collection Associations</h4>
+<h4 id="_supported_http_methods">4.1.1. Supported HTTP Methods</h4>
 <div class="paragraph">
-<p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
+<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
+<code>405 Method Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_put">PUT</h5>
+<div class="paragraph">
+<p>Acquires a pessimistic lock on the resource.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_delete">DELETE</h5>
+<div class="paragraph">
+<p>If held, releases the pessimistic lock on the resource.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_version_resource">4.2. The Version Resource</h3>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
+endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
-
-	@OneToMany
-	@JoinColumn(name = "chapter_id")
-	private List&lt;Chapter&gt; chapters;
-
-	...
-}
-
-@Entity
-public class Chapter {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
-
-public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'</code></pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_2">4.2.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_put_2">PUT</h5>
+<div class="paragraph">
+<p>Creates a new version of the entity.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_2">Supported media types</h6>
+<div class="paragraph">
+<p>application/json</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_findallversionslatest_resource">4.3. The FindAllVersionsLatest Resource</h3>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_3">4.3.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_get">GET</h5>
+<div class="paragraph">
+<p>Returns the latest version of all entities.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_3">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_findallversions_resource">4.4. The FindAllVersions Resource</h3>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_4">4.4.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_get_2">GET</h5>
+<div class="paragraph">
+<p>Returns all versions of the given entity.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_4">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
 </div>
 </div>
 </div>
@@ -1146,6 +994,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 0.5.0-SNAPSHOT<br>
 Last updated 2018-12-15 00:34:28 UTC
 </div>
 </div>
