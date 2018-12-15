@@ -29,7 +29,7 @@ import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConf
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class SolrAutoConfigurationTests {
+public class SolrAutoConfigurationTest {
 
 	private AnnotationConfigApplicationContext context;
 
