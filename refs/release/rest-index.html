@@ -436,8 +436,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content REST - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.4.0,</span>
-<span id="revdate">2018-10-31</span>
+<span id="revnumber">version 0.5.0,</span>
+<span id="revdate">2018-12-23</span>
 </div>
 </div>
 <div id="content">
@@ -476,15 +476,52 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_store_resources">3. Store Resources</a>
 <ul class="sectlevel2">
-<li><a href="#_fundamentals">3.1. Fundamentals</a></li>
-<li><a href="#_the_content_resource">3.2. The Content Resource</a></li>
-<li><a href="#_the_content_collection_resource">3.3. The Content Collection Resource</a></li>
-<li><a href="#_the_fulltext_query_resource">3.4. The Fulltext Query Resource</a></li>
+<li><a href="#_fundamentals">3.1. Fundamentals</a>
+<ul class="sectlevel3">
+<li><a href="#_entity_association">3.1.1. Entity Association</a></li>
+<li><a href="#_property_association">3.1.2. Property Association</a></li>
+<li><a href="#_property_collection_associations">3.1.3. Property Collection Associations</a></li>
+<li><a href="#_search">3.1.4. Search</a></li>
+<li><a href="#_default_status_codes">3.1.5. Default status codes</a></li>
+<li><a href="#_resource_discoverability">3.1.6. Resource Discoverability</a></li>
 </ul>
 </li>
-<li><a href="#_customizing_store_resources">4. Customizing Store Resources</a>
+<li><a href="#_the_content_resource">3.2. The Content Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods">3.2.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+<li><a href="#_the_content_collection_resource">3.3. The Content Collection Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods_2">3.3.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</a>
 <ul class="sectlevel2">
-<li><a href="#_configuring_cors">4.1. Configuring CORS</a></li>
+<li><a href="#search">4.1. Search</a>
+<ul class="sectlevel3">
+<li><a href="#_the_searchcontent_resource">4.1.1. The SearchContent Resource</a></li>
+</ul>
+</li>
+<li><a href="#_locking_and_versioning">4.2. Locking and Versioning</a>
+<ul class="sectlevel3">
+<li><a href="#_the_lock_resource">4.2.1. The Lock Resource</a></li>
+<li><a href="#_the_version_resource">4.2.2. The Version Resource</a></li>
+<li><a href="#_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</a></li>
+<li><a href="#_the_findallversions_resource">4.2.4. The FindAllVersions Resource</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_customizing_store_resources">5. Customizing Store Resources</a>
+<ul class="sectlevel2">
+<li><a href="#_configuring_cors">5.1. Configuring CORS</a>
+<ul class="sectlevel3">
+<li><a href="#_store_interface_cors_configuration">5.1.1. Store interface CORS configuration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -534,6 +571,12 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li>
 <p><a href="https://github.com/paulcwarren/spring-content/spring-content-s3">Spring Content S3</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-mongo">Spring Content Mongo</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-jpa">Spring Content JPA</a></p>
 </li>
 </ul>
 </div>
@@ -975,15 +1018,33 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_the_fulltext_query_resource">3.4. The Fulltext Query Resource</h3>
-<div class="paragraph">
-<p>Spring Content REST exposes a fulltext query resource for each <code>Searchable</code> method.</p>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="search">4.1. Search</h3>
 <div class="sect3">
-<h4 id="_supported_http_methods_3">3.4.1. Supported HTTP Methods</h4>
+<h4 id="_the_searchcontent_resource">4.1.1. The SearchContent Resource</h4>
 <div class="paragraph">
-<p>As the fulltext query resource is read-only it supports <code>GET</code> only.</p>
+<p>When a repository extending <code>Searchable</code> is exported a <code>findKeyword</code> endpoint will be
+available at the <code>/{repository}/searchContent/findKeyword</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent/findKeyword?keyword=foo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_3">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>As the SearchContent resource is read-only it supports <code>GET</code> only.  All other HTTP methods will
+cause a <code>405 Method Not Allowed</code>.</p>
 </div>
 <div class="sect5">
 <h6 id="_supported_media_types_5">Supported media types</h6>
@@ -997,9 +1058,156 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </li>
 </ul>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_locking_and_versioning">4.2. Locking and Versioning</h3>
+<div class="sect3">
+<h4 id="_the_lock_resource">4.2.1. The Lock Resource</h4>
 <div class="paragraph">
-<p>Responses are standard Spring Data entity lists.  Requests must specify that they accept <code>application/hal+json</code> or
-<code>application/json</code>.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
+will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_4">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
+<code>405 Method Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_put">PUT</h6>
+<div class="paragraph">
+<p>Acquires a pessimistic lock on the resource.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_delete_2">DELETE</h6>
+<div class="paragraph">
+<p>If held, releases the pessimistic lock on the resource.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_6">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_version_resource">4.2.2. The Version Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
+endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_5">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_put_2">PUT</h6>
+<div class="paragraph">
+<p>Creates a new version of the entity.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_7">Supported media types</h7>
+<div class="paragraph">
+<p>application/json</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
+endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_6">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_get_2">GET</h6>
+<div class="paragraph">
+<p>Returns the latest version of all entities.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_8">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_findallversions_resource">4.2.4. The FindAllVersions Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_7">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_get_3">GET</h6>
+<div class="paragraph">
+<p>Returns all versions of the given entity.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_9">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1007,10 +1215,10 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_customizing_store_resources">4. Customizing Store Resources</h2>
+<h2 id="_customizing_store_resources">5. Customizing Store Resources</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_configuring_cors">4.1. Configuring CORS</h3>
+<h3 id="_configuring_cors">5.1. Configuring CORS</h3>
 <div class="paragraph">
 <p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with
 client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
@@ -1019,7 +1227,7 @@ client-side HTTP requests issued by a browser you may want to enable specific HT
 <p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
 </div>
 <div class="sect3">
-<h4 id="_store_interface_cors_configuration">4.1.1. Store interface CORS configuration</h4>
+<h4 id="_store_interface_cors_configuration">5.1.1. Store interface CORS configuration</h4>
 <div class="paragraph">
 <p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default
 @CrossOrigin allows all origins and HTTP methods:</p>
@@ -1061,8 +1269,8 @@ methods with a max age of 3600 seconds.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.4.0<br>
-Last updated 2018-10-31 04:52:25 UTC
+Version 0.5.0<br>
+Last updated 2018-12-23 12:22:19 UTC
 </div>
 </div>
 </body>

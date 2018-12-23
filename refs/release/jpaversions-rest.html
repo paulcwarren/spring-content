@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>MongoDB Content Stores</title>
+<title>The Lock Resource</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -432,93 +432,159 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>MongoDB Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_the_lock_resource">The Lock Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
+will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content MongoDB Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration { <b class="conum">(1)</b>
-
-  	@Override
-  	protected String getDatabaseName() {
-  		return "database";
-  	}
-
-	@Override
-  	public Mongo mongo() throws Exception {
-  		return new Mongo();
-  	}
-
-	@Bean
-	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
-		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-	}
-
-}</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
-</li>
-<li>
-<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
-</li>
-</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_supported_http_methods">Supported HTTP Methods</h3>
+<div class="paragraph">
+<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
+<code>405 Method Not Allowed</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_put">PUT</h4>
+<div class="paragraph">
+<p>Acquires a pessimistic lock on the resource.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_delete">DELETE</h4>
+<div class="paragraph">
+<p>If held, releases the pessimistic lock on the resource.</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types">Supported media types</h5>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
+<h2 id="_the_version_resource">The Version Resource</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
+endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'</code></pre>
+</div>
+</div>
+</div>
+</div>
 <div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
+<h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
+<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
+<h4 id="_put_2">PUT</h4>
 <div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
+<p>Creates a new version of the entity.</p>
 </div>
+<div class="sect4">
+<h5 id="_supported_media_types_2">Supported media types</h5>
 <div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
+<p>application/json</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_findallversionslatest_resource">The FindAllVersionsLatest Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
+endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+</div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
+<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_get">GET</h4>
+<div class="paragraph">
+<p>Returns the latest version of all entities.</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_3">Supported media types</h5>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_findallversions_resource">The FindAllVersions Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
+<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
 </div>
+<div class="sect3">
+<h4 id="_get_2">GET</h4>
 <div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
+<p>Returns all versions of the given entity.</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_4">Supported media types</h5>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
 </div>
 </div>
 </div>

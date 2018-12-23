@@ -5,7 +5,8 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>MongoDB Content Stores</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Versions JPA - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -432,93 +433,669 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>MongoDB Content Stores</h1>
+<h1>Spring Versions JPA - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren</span><br>
+<span id="revnumber">version 0.5.0,</span>
+<span id="revdate">2018-12-23</span>
+</div>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
+<p>&#169; 2008-2017 The original authors.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#_introduction">1. Introduction</a></li>
+<li><a href="#_getting_started">2. Getting Started</a>
+<ul class="sectlevel2">
+<li><a href="#_introduction_2">2.1. Introduction</a></li>
+<li><a href="#_adding_spring_versions_jpa_to_a_spring_boot_project">2.2. Adding Spring Versions JPA to a Spring Boot project</a></li>
+<li><a href="#_adding_spring_versions_jpa_to_a_non_spring_boot_project">2.3. Adding Spring Versions JPA to a Non-Spring Boot Project</a></li>
+<li><a href="#_configuring_spring_versions_jpa">2.4. Configuring Spring Versions JPA</a></li>
+</ul>
+</li>
+<li><a href="#_locking_and_versioning">3. Locking And Versioning</a>
+<ul class="sectlevel2">
+<li><a href="#_fundamentals">3.1. Fundamentals</a></li>
+<li><a href="#_optimistic_locking">3.2. Optimistic Locking</a></li>
+<li><a href="#_pessimistic_locking_and_versioning">3.3. Pessimistic Locking and Versioning</a></li>
+</ul>
+</li>
+<li><a href="#_rest_api">4. REST API</a>
+<ul class="sectlevel2">
+<li><a href="#_the_lock_resource">4.1. The Lock Resource</a></li>
+<li><a href="#_the_version_resource">4.2. The Version Resource</a></li>
+<li><a href="#_the_findallversionslatest_resource">4.3. The FindAllVersionsLatest Resource</a></li>
+<li><a href="#_the_findallversions_resource">4.4. The FindAllVersions Resource</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="preface" class="sect0">Preface</h1>
+<div class="sect1">
+<h2 id="project">Project metadata</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Traditional document management use cases often require content to be locked and versioned.   The Spring Versions JPA
+module provides these capabilities.</p>
+</div>
+<div class="paragraph">
+<p>Spring Versions JPA can be used with the following storage modules:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-fs">Spring Content Filesystem</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-s3">Spring Content S3</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started">2. Getting Started</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_introduction_2">2.1. Introduction</h3>
+<div class="paragraph">
+<p>Spring Versions are enhancements to Spring Data that extend the existing optimistic locking semantics of Entities to
+any associated Spring Content Resources and also adds user-facing pessimistic locking and versioning semantics to
+Entities and their Content through a new <code>LockingAndVersioningRepository</code> interface defined in the base module
+<a href="https://github.com/paulcwarren/spring-content/spring-versions-jpa">Spring Version Commons</a>.</p>
+</div>
+<div class="paragraph">
+<p>Spring Versions JPA is the JPA-based implementation of these enhancements.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_spring_versions_jpa_to_a_spring_boot_project">2.2. Adding Spring Versions JPA to a Spring Boot project</h3>
+<div class="paragraph">
+<p>Spring Versions JPA has both a Spring Boot starter and auto-configuration so the simplest way to get to started is
+with a Spring Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the classpath:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content MongoDB Stores using Java Config</div>
+<div class="title">Example 1. Classpath configuration with Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa-boot-starter:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Classpath configuration with Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_spring_versions_jpa_to_a_non_spring_boot_project">2.3. Adding Spring Versions JPA to a Non-Spring Boot Project</h3>
+<div class="paragraph">
+<p>Whilst it is the easiest way to get started Spring Versions JPA does not require Spring Boot however.  To a add
+Spring Versions JPA to a non-Spring Boot project, add the <code>spring-versions-jpa</code> dependency to the classpath:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Classpath configuration for Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Classpath configuration for Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuring_spring_versions_jpa">2.4. Configuring Spring Versions JPA</h3>
+<div class="paragraph">
+<p>Before they can be used the locking and versioning capabilities must be configured.  This is done by importing the
+<code>@Configuration</code> class <code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application and
+initializing the database with the pre-defined sql scripts:</p>
+</div>
+<div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableMongoContentRepositories
-public static class ApplicationConfig extends AbstractMongoConfiguration { <b class="conum">(1)</b>
+@Import(JpaLockingAndVersioningConfig.class)
+public class LockingAndVersioningConfig {
 
-  	@Override
-  	protected String getDatabaseName() {
-  		return "database";
-  	}
+    @Value("/org/springframework/versions/jpa/schema-drop-hsqldb.sql") <b class="conum">(1)</b>
+    private Resource dropVersionSchema;
 
-	@Override
-  	public Mongo mongo() throws Exception {
-  		return new Mongo();
-  	}
+    @Value("/org/springframework/versions/jpa/schema-hsqldb.sql")
+    private Resource createVersionSchema;
 
-	@Bean
-	public GridFsTemplate gridFsTemplate() throws Exception {			<b class="conum">(2)</b>
-		return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-	}
+    @Bean
+    DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+        ResourceDatabasePopulator databasePopulator =
+                new ResourceDatabasePopulator();
 
+        databasePopulator.addScript(dropVersionSchema);
+        databasePopulator.addScript(createVersionSchema);
+        databasePopulator.setIgnoreFailedDrops(true);
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator);
+
+        return initializer;
+    }
+
+    @Bean
+    public DataSource dataSource() {
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+        return builder.setType(EmbeddedDatabaseType.HSQL).build();
+    }
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>For ease of use we extend Spring Data MongoDB&#8217;s <code>AbstractMongoConfiguration</code> to set the container up for all of the required foundational MongoDB beans</p>
-</li>
-<li>
-<p>In addition we add MongoDB&#8217;s <code>GridFsTemplate</code> bean</p>
+<p>Replace with schema resources for database.  Supported databases; H2, HSQL, MySQL, Postgres and SQL Server.</p>
 </li>
 </ol>
+</div>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+This step is unnecessary if you are using Spring Boot as it will automatically enable Spring Versions JPA
+when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s classpath and your app
+is annotated as a <code>@SpringBootApplication</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Make sure you also configure the Spring Content Storage module that you wish to use.  For details on that, please consult
+the reference documentation.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_locking_and_versioning">3. Locking And Versioning</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_fundamentals">3.1. Fundamentals</h3>
+<div class="paragraph">
+<p>Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
+Entities and associated Spring Content Resources.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_optimistic_locking">3.2. Optimistic Locking</h3>
+<div class="paragraph">
+<p>Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
+Content Resource&#8217;s associated with <a href="https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm">@Version</a>ed
+Spring Data Entities.</p>
+</div>
+<div class="paragraph">
+<p>As a result any <code>ContentStore</code> operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
+value, will throw <code>javax.persistence.OptimisticLockException</code>.</p>
+</div>
+<div class="paragraph">
+<p>In addition, any <code>ContentStore</code> operation on an up-to-date Entity&#8217;s content will cause the @Version value to be
+incremented rendering all other copies out-of-date and forcing those to be re-fetched.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pessimistic_locking_and_versioning">3.3. Pessimistic Locking and Versioning</h3>
+<div class="paragraph">
+<p>To use a pessimistic locking strategy and versioning, the repository should be made to extend
+<code>LockingAndVersioningRepository</code>.  For example:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>LockingAndVersioningRepository</code> interface adds (and overrides) the following methods to a <code>Repository</code>:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface LockingAndVersioningRepository&lt;T, ID extends Serializable&gt; {
+
+    /**
+     * Locks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to be locked
+     * @return the locked entity
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S lock(S entity);
+
+    /**
+     * Unlocks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to unlock
+     * @return the unlocked entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S unlock(S entity);
+
+    /**
+     * Overridden implementation of save that enforces locking semantics
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to save
+     * @return the saved entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S save(S entity);
+
+    /**
+     * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
+     * list.
+     *
+     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to base the new versionWithEntity on
+     * @param info the version info
+     * @return the new versionWithEntity
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S version(S entity, VersionInfo info);
+
+    /**
+     * Returns the latest version of all entities.  When extending LockingAndVersioningRepository this
+     * method would usually be preferred over CrudRepository's findAll that would find all versions
+     * of all entities.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @return list of latest versionWithEntity entities
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllLatestVersion();
+
+    /**
+     * Returns a list of all versions for the given entity.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to find versions for
+     * @return list of entity versions
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllVersions(@Param("entity") S entity);
+
+    /**
+     * Deletes a given entity version.  The entity must be the head of the version list.
+     *
+     * If the entity is locked the lock will be carried over to the previous version when
+     * it becomes the new head.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to delete
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; void delete(S entity);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Lock and version information is recorded on each Entity instance by adding the following attribute annotations to the
+Entity class that is the subject of <code>LockingAndVersioningRepository</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Annotation</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The previous version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorRootId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The first version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SuccessorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The next version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LockOwner</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the lock owner.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionNumber</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionLabel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version label.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class Document {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Version
+    private Long vstamp;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private int contentLen;
+
+    @MimeType
+    private String mimeType;
+
+    @LockOwner
+    private String lockOwner;
+
+    @AncestorId
+    private Long ancestorId;
+
+    @AncestorRootId
+    private Long ancestralRootId;
+
+    @SuccessorId
+    private Long successorId;
+
+    @VersionNumber
+    private String version;
+
+    @VersionLabel
+    private String label;
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
+<h2 id="_rest_api">4. REST API</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
+<h3 id="_the_lock_resource">4.1. The Lock Resource</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
+will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 </div>
-<div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
 </div>
-<div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
+<h4 id="_supported_http_methods">4.1.1. Supported HTTP Methods</h4>
 <div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
+<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
+<code>405 Method Not Allowed</code>.</p>
 </div>
+<div class="sect4">
+<h5 id="_put">PUT</h5>
 <div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
+<p>Acquires a pessimistic lock on the resource.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_delete">DELETE</h5>
+<div class="paragraph">
+<p>If held, releases the pessimistic lock on the resource.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
+<h3 id="_the_version_resource">4.2. The Version Resource</h3>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
+endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_2">4.2.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_put_2">PUT</h5>
+<div class="paragraph">
+<p>Creates a new version of the entity.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_2">Supported media types</h6>
+<div class="paragraph">
+<p>application/json</p>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
+<h3 id="_the_findallversionslatest_resource">4.3. The FindAllVersionsLatest Resource</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
+endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
 </div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_3">4.3.1. Supported HTTP Methods</h4>
 <div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_get">GET</h5>
+<div class="paragraph">
+<p>Returns the latest version of all entities.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_3">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_findallversions_resource">4.4. The FindAllVersions Resource</h3>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_supported_http_methods_4">4.4.1. Supported HTTP Methods</h4>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_get_2">GET</h5>
+<div class="paragraph">
+<p>Returns all versions of the given entity.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_4">Supported media types</h6>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -526,6 +1103,7 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 0.5.0<br>
 Last updated 2018-12-23 12:22:19 UTC
 </div>
 </div>

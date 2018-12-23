@@ -436,8 +436,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content Solr - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.4.0,</span>
-<span id="revdate">2018-10-31</span>
+<span id="revnumber">version 0.5.0,</span>
+<span id="revdate">2018-12-23</span>
 </div>
 </div>
 <div id="content">
@@ -622,13 +622,15 @@ public class Application {
 <div class="sect3">
 <h4 id="_experimental_api">1.1.1. Experimental API</h4>
 <div class="paragraph">
-<p>All Spring Content storage modules also now support for a newer <strong>experimental</strong> Store API based on
-<code>org.springframework.core.io.Resource</code>.</p>
+<p>All Spring Content storage modules also now support an <strong>experimental</strong> Store API based on the
+Spring Resource API (i.e. <code>org.springframework.core.io.ResourceLoader</code> and <code>org.springframework.core.io.Resource</code>).</p>
 </div>
 <div class="paragraph">
-<p>The base interface in this API is <code>Store</code>, a generic <code>org.springframework.core.io.ResourceLoader</code>.  When called stores
-return instances of <code>org.springframework.content.commons.io.DeletableResource</code> allowing the full lifecycle of resources
-to be managed through this API.</p>
+<p>The base interface in this API, <code>Store</code>, is a generic <code>org.springframework.core.io.ResourceLoader</code>.  Unlike
+the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
+of Identifer, not just string-based locators, and returns Spring Resource&#8217;s implementing
+<code>org.springframework.content.commons.io.DeletableResource</code> providing a set of methods to control the entire lifecycle
+from creation through to deletion.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 3. Store interface</div>
@@ -647,8 +649,8 @@ to be managed through this API.</p>
 <p>This interface <strong>is</strong> supported by Spring Content REST.</p>
 </div>
 <div class="paragraph">
-<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> allowing resources to be associated with and retrieved
-by JPA Entities.</p>
+<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> that allows Spring `Resource`s to also be associated
+with Spring Data Entities.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 4. AssociativeStore interface</div>
@@ -1320,8 +1322,8 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.4.0<br>
-Last updated 2018-10-31 04:52:25 UTC
+Version 0.5.0<br>
+Last updated 2018-12-23 12:22:19 UTC
 </div>
 </div>
 </body>
