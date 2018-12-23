@@ -55,7 +55,7 @@ application/json
 
 == The FindAllVersionsLatest Resource
 
-When a repository extending `LockingAndVersioningRepository` is exported a findAllLatestVersions
+When a repository extending `LockingAndVersioningRepository` is exported a findAllVersionsLatest
 endpoint will be available at the `/{repository}/findAllVersionsLatest` URI.
 
 ====
