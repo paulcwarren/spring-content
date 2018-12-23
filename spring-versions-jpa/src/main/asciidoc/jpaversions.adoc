@@ -1,8 +1,9 @@
 = Introduction
 
-Traditional document management use cases often require content to be locked and versioned.
+Traditional document management use cases often require content to be locked and versioned.   The Spring Versions JPA
+module provides these capabilities.
 
-Spring Versions JPA is supported by the following storage modules:
+Spring Versions JPA can be used with the following storage modules:
 
 - https://github.com/paulcwarren/spring-content/spring-content-fs[Spring Content Filesystem]
 - https://github.com/paulcwarren/spring-content/spring-content-s3[Spring Content S3]
@@ -11,17 +12,17 @@ Spring Versions JPA is supported by the following storage modules:
 
 == Introduction
 
-Spring Versions for JPA are extensions to Spring Data (repositories) that implement the `LockingAndVersioningRepository`
-interface defined in (https://github.com/paulcwarren/spring-content/spring-versions-jpa)[Spring Version Commons].
+Spring Versions are enhancements to Spring Data that extend the existing optimistic locking semantics of Entities to
+any associated Spring Content Resources and also adds user-facing pessimistic locking and versioning semantics to
+Entities and their Content through a new `LockingAndVersioningRepository` interface defined in the base module
+https://github.com/paulcwarren/spring-content/spring-versions-jpa[Spring Version Commons].
 
-The implementation builds on JPA's optimistic locking semantics to offer optimistic or pessimistic locking as well as
-versioning to Spring Data Entities and to any associated Spring Content Resources using a JDBC-compliant database as
-a backing store for pessimistic lock information.
+Spring Versions JPA is the JPA-based implementation of these enhancements.
 
 == Adding Spring Versions JPA to a Spring Boot project
 
-Spring Versions JPA has both a starter and auto-configuration so the simplest way to get to started is with a Spring
-Boot application.  Add the `spring-versions-jpa-boot-starter` to the classpath:
+Spring Versions JPA has both a Spring Boot starter and auto-configuration so the simplest way to get to started is
+with a Spring Boot application.  Add the `spring-versions-jpa-boot-starter` to the classpath:
 
 .Classpath configuration with Gradle
 ====
@@ -53,7 +54,8 @@ dependencies {
 
 == Adding Spring Versions JPA to a Non-Spring Boot Project
 
-To add Spring Versions JPA to a non-Spring Boot project add the `spring-versions-jpa` dependency to the classpath:
+Whilst it is the easiest way to get started Spring Versions JPA does not require Spring Boot however.  To a add
+Spring Versions JPA to a non-Spring Boot project, add the `spring-versions-jpa` dependency to the classpath:
 
 .Classpath configuration for Gradle
 ====
@@ -85,8 +87,9 @@ dependencies {
 
 == Configuring Spring Versions JPA
 
-To configure Spring Versions JPA you need to import the `@Configuration` class
-`org.springframework.versions.jpa.JpaLockingAndVersioningConfig` into your application:
+Before they can be used the locking and versioning capabilities must be configured.  This is done by importing the
+`@Configuration` class `org.springframework.versions.jpa.JpaLockingAndVersioningConfig` into your application and
+initializing the database with the pre-defined sql scripts:
 
 ====
 [source, java]
@@ -124,12 +127,12 @@ public class LockingAndVersioningConfig {
     }
 }
 ----
-<1> Replace with schema resources for database
+<1> Replace with schema resources for database.  Supported databases; H2, HSQL, MySQL, Postgres and SQL Server.
 ====
 
-IMPORTANT: This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically
-enable Spring Versions JPA when you place `com.github.paulcwarren:spring-versions-jpa-boot-starter` on your application's
-classpath and your app is annotated as a `@SpringBootApplication`.
+IMPORTANT: This step is unnecessary if you are using Spring Boot as it will automatically enable Spring Versions JPA
+when you place `com.github.paulcwarren:spring-versions-jpa-boot-starter` on your application's classpath and your app
+is annotated as a `@SpringBootApplication`.
 
 Make sure you also configure the Spring Content Storage module that you wish to use.  For details on that, please consult
 the reference documentation.
@@ -139,21 +142,24 @@ the reference documentation.
 == Fundamentals
 
 Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
-Entities along with any associated Spring Content Resources.
+Entities and associated Spring Content Resources.
 
 == Optimistic Locking
 
 Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
-Content Resource's associated with https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm[@Versioned]
+Content Resource's associated with https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm[@Version]ed
 Spring Data Entities.
 
 As a result any `ContentStore` operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
 value, will throw `javax.persistence.OptimisticLockException`.
 
+In addition, any `ContentStore` operation on an up-to-date Entity's content will cause the @Version value to be
+incremented rendering all other copies out-of-date and forcing those to be re-fetched.
+
 == Pessimistic Locking and Versioning
 
-To use a pessimistic locking strategy and versioning the repository should be made to extend
-`LockingAndVersioningRepository`:
+To use a pessimistic locking strategy and versioning, the repository should be made to extend
+`LockingAndVersioningRepository`.  For example:
 
 ====
 [source, java]
@@ -254,4 +260,62 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
 }
 ----
 ====
+
+Lock and version information is recorded on each Entity instance by adding the following attribute annotations to the
+Entity class that is the subject of `LockingAndVersioningRepository`:
+
+[options="header"]
+|===================
+| Annotation     | Type   | Required | Description
+| AncestorId     | @Id    | Yes      | The previous version in the set.  The type of this field will be dictated by the entity's @Id field.
+| AncestorRootId | @Id    | Yes      | The first version in the set.  The type of this field will be dictated by the entity's @Id field.
+| SuccessorId    | @Id    | Yes      | The next version in the set.  The type of this field will be dictated by the entity's @Id field.
+| LockOwner      | String | No       | The name of the lock owner.
+| VersionNumber  | String | No       | The entity's version number.
+| VersionLabel   | String | No       | The entity's version label.
+|===================
+
+====
+[source, java]
+----
+
+public class Document {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Version
+    private Long vstamp;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private int contentLen;
+
+    @MimeType
+    private String mimeType;
+
+    @LockOwner
+    private String lockOwner;
+
+    @AncestorId
+    private Long ancestorId;
+
+    @AncestorRootId
+    private Long ancestralRootId;
+
+    @SuccessorId
+    private Long successorId;
+
+    @VersionNumber
+    private String version;
+
+    @VersionLabel
+    private String label;
+}
+----
+====
+
 
