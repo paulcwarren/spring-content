@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 0.5.0-SNAPSHOT,</span>
-<span id="revdate">2018-12-15</span>
+<span id="revdate">2018-12-23</span>
 </div>
 </div>
 <div id="content">
@@ -520,10 +520,11 @@ Copies of this document may be made for your own use and for distribution to oth
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Traditional document management use cases often require content to be locked and versioned.</p>
+<p>Traditional document management use cases often require content to be locked and versioned.   The Spring Versions JPA
+module provides these capabilities.</p>
 </div>
 <div class="paragraph">
-<p>Spring Versions JPA is supported by the following storage modules:</p>
+<p>Spring Versions JPA can be used with the following storage modules:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -543,20 +544,20 @@ Copies of this document may be made for your own use and for distribution to oth
 <div class="sect2">
 <h3 id="_introduction_2">2.1. Introduction</h3>
 <div class="paragraph">
-<p>Spring Versions for JPA are extensions to Spring Data (repositories) that implement the <code>LockingAndVersioningRepository</code>
-interface defined in (<a href="https://github.com/paulcwarren/spring-content/spring-versions-jpa)">Spring Version Commons</a>.</p>
+<p>Spring Versions are enhancements to Spring Data that extend the existing optimistic locking semantics of Entities to
+any associated Spring Content Resources and also adds user-facing pessimistic locking and versioning semantics to
+Entities and their Content through a new <code>LockingAndVersioningRepository</code> interface defined in the base module
+<a href="https://github.com/paulcwarren/spring-content/spring-versions-jpa">Spring Version Commons</a>.</p>
 </div>
 <div class="paragraph">
-<p>The implementation builds on JPA&#8217;s optimistic locking semantics to offer optimistic or pessimistic locking as well as
-versioning to Spring Data Entities and to any associated Spring Content Resources using a JDBC-compliant database as
-a backing store for pessimistic lock information.</p>
+<p>Spring Versions JPA is the JPA-based implementation of these enhancements.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_adding_spring_versions_jpa_to_a_spring_boot_project">2.2. Adding Spring Versions JPA to a Spring Boot project</h3>
 <div class="paragraph">
-<p>Spring Versions JPA has both a starter and auto-configuration so the simplest way to get to started is with a Spring
-Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the classpath:</p>
+<p>Spring Versions JPA has both a Spring Boot starter and auto-configuration so the simplest way to get to started is
+with a Spring Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the classpath:</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 1. Classpath configuration with Gradle</div>
@@ -594,7 +595,8 @@ Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the 
 <div class="sect2">
 <h3 id="_adding_spring_versions_jpa_to_a_non_spring_boot_project">2.3. Adding Spring Versions JPA to a Non-Spring Boot Project</h3>
 <div class="paragraph">
-<p>To add Spring Versions JPA to a non-Spring Boot project add the <code>spring-versions-jpa</code> dependency to the classpath:</p>
+<p>Whilst it is the easiest way to get started Spring Versions JPA does not require Spring Boot however.  To a add
+Spring Versions JPA to a non-Spring Boot project, add the <code>spring-versions-jpa</code> dependency to the classpath:</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 3. Classpath configuration for Gradle</div>
@@ -632,8 +634,9 @@ Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the 
 <div class="sect2">
 <h3 id="_configuring_spring_versions_jpa">2.4. Configuring Spring Versions JPA</h3>
 <div class="paragraph">
-<p>To configure Spring Versions JPA you need to import the <code>@Configuration</code> class
-<code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application:</p>
+<p>Before they can be used the locking and versioning capabilities must be configured.  This is done by importing the
+<code>@Configuration</code> class <code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application and
+initializing the database with the pre-defined sql scripts:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -676,7 +679,7 @@ public class LockingAndVersioningConfig {
 <div class="colist arabic">
 <ol>
 <li>
-<p>Replace with schema resources for database</p>
+<p>Replace with schema resources for database.  Supported databases; H2, HSQL, MySQL, Postgres and SQL Server.</p>
 </li>
 </ol>
 </div>
@@ -689,9 +692,9 @@ public class LockingAndVersioningConfig {
 <div class="title">Important</div>
 </td>
 <td class="content">
-This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically
-enable Spring Versions JPA when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s
-classpath and your app is annotated as a <code>@SpringBootApplication</code>.
+This step is unnecessary if you are using Spring Boot as it will automatically enable Spring Versions JPA
+when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s classpath and your app
+is annotated as a <code>@SpringBootApplication</code>.
 </td>
 </tr>
 </table>
@@ -710,26 +713,30 @@ the reference documentation.</p>
 <h3 id="_fundamentals">3.1. Fundamentals</h3>
 <div class="paragraph">
 <p>Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
-Entities along with any associated Spring Content Resources.</p>
+Entities and associated Spring Content Resources.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_optimistic_locking">3.2. Optimistic Locking</h3>
 <div class="paragraph">
 <p>Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
-Content Resource&#8217;s associated with <a href="https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm">@Versioned</a>
+Content Resource&#8217;s associated with <a href="https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm">@Version</a>ed
 Spring Data Entities.</p>
 </div>
 <div class="paragraph">
 <p>As a result any <code>ContentStore</code> operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
 value, will throw <code>javax.persistence.OptimisticLockException</code>.</p>
 </div>
+<div class="paragraph">
+<p>In addition, any <code>ContentStore</code> operation on an up-to-date Entity&#8217;s content will cause the @Version value to be
+incremented rendering all other copies out-of-date and forcing those to be re-fetched.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_pessimistic_locking_and_versioning">3.3. Pessimistic Locking and Versioning</h3>
 <div class="paragraph">
-<p>To use a pessimistic locking strategy and versioning the repository should be made to extend
-<code>LockingAndVersioningRepository</code>:</p>
+<p>To use a pessimistic locking strategy and versioning, the repository should be made to extend
+<code>LockingAndVersioningRepository</code>.  For example:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -836,6 +843,108 @@ value, will throw <code>javax.persistence.OptimisticLockException</code>.</p>
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>Lock and version information is recorded on each Entity instance by adding the following attribute annotations to the
+Entity class that is the subject of <code>LockingAndVersioningRepository</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Annotation</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The previous version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorRootId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The first version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SuccessorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The next version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LockOwner</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the lock owner.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionNumber</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionLabel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version label.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class Document {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Version
+    private Long vstamp;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private int contentLen;
+
+    @MimeType
+    private String mimeType;
+
+    @LockOwner
+    private String lockOwner;
+
+    @AncestorId
+    private Long ancestorId;
+
+    @AncestorRootId
+    private Long ancestralRootId;
+
+    @SuccessorId
+    private Long successorId;
+
+    @VersionNumber
+    private String version;
+
+    @VersionLabel
+    private String label;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -922,7 +1031,7 @@ Not Allowed</code>.</p>
 <div class="sect2">
 <h3 id="_the_findallversionslatest_resource">4.3. The FindAllVersionsLatest Resource</h3>
 <div class="paragraph">
-<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
 endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
 </div>
 <div class="exampleblock">
@@ -995,7 +1104,7 @@ Not Allowed</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 0.5.0-SNAPSHOT<br>
-Last updated 2018-12-15 00:34:28 UTC
+Last updated 2018-12-23 12:11:44 UTC
 </div>
 </div>
 </body>
