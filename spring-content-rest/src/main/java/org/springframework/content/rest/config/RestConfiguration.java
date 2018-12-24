@@ -26,9 +26,4 @@ public class RestConfiguration {
 	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
 		return new StoreByteRangeHttpRequestHandler();
 	}
-
-	@Bean
-    ContentRestExceptionHandler contentRestExceptionHandler() {
-		return new ContentRestExceptionHandler();
-	}
 }
