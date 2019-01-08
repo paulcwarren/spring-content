@@ -125,8 +125,7 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 					return true;
 				}
 			}
-		}
-		else if ("PUT".equals(method) || "POST".equals(method)) {
+		} else if ("PUT".equals(method) || "POST".equals(method)) {
 			String contentType = request.getHeader("Content-Type");
 			if (contentType != null) {
 				try {
@@ -141,6 +140,8 @@ public class ContentHandlerMapping extends RequestMappingHandlerMapping {
 					return true;
 				}
 			}
+		} else if ("PATCH".equals(method) || "HEAD".equals(method)) {
+			return true;
 		}
 		return false;
 	}
