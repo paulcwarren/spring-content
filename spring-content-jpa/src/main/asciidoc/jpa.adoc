@@ -70,7 +70,8 @@ thrown, the likelihood of which increase as the size of the BLOBs being stored i
 However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
 that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.
 
-To turn this feature on you must add the property `emulateLocators=true` to your [JDBC connection string URL](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html).
+Spring Content JPA is designed to be used with this feature and therefore you must add the property
+`emulateLocators=true` to your [JDBC connection string URL](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html).
 
 === Postgresql
 
