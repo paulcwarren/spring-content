@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 0.6.0-SNAPSHOT,</span>
-<span id="revdate">2019-01-08</span>
+<span id="revdate">2019-01-12</span>
 </div>
 </div>
 <div id="content">
@@ -1290,8 +1290,16 @@ the entire BLOB into memory.  In order to do this the following database-specifi
 <div class="sect4">
 <h5 id="_mysql">MySQL</h5>
 <div class="paragraph">
-<p>The MySQL implementation requires MySQL&#8217;s locator emulation to be turned on.  Your JDBC connection string must
-include the <code>emulateLocators=true</code> parameter.</p>
+<p>Despite the JDBC API returning `InputStream&#8217;s for streaming BLOBs by default the MySQL JConnector JDBC Driver will load
+the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks `OutOfMemoryException`s being
+thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
+</div>
+<div class="paragraph">
+<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
+that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
+</div>
+<div class="paragraph">
+<p>To turn this feature on you must add the property <code>emulateLocators=true</code> to your [JDBC connection string URL](<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html" class="bare">https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html</a>).</p>
 </div>
 </div>
 </div>
@@ -1446,7 +1454,7 @@ content is initially set.</p>
 <div id="footer">
 <div id="footer-text">
 Version 0.6.0-SNAPSHOT<br>
-Last updated 2019-01-08 01:25:25 UTC
+Last updated 2019-01-12 01:40:27 UTC
 </div>
 </div>
 </body>
