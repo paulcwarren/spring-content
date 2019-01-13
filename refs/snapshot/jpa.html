@@ -507,9 +507,9 @@ the entire BLOB into memory.  In order to do this the following database-specifi
 <div class="sect3">
 <h4 id="_mysql">MySQL</h4>
 <div class="paragraph">
-<p>Despite the JDBC API returning `InputStream&#8217;s for streaming BLOBs by default the MySQL JConnector JDBC Driver will load
-the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks `OutOfMemoryException`s being
-thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
+<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
+will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
+being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
 </div>
 <div class="paragraph">
 <p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
@@ -517,7 +517,7 @@ that actually does stream the content properly (i.e. in reasonable size chunks) 
 </div>
 <div class="paragraph">
 <p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your [JDBC connection string URL](<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html" class="bare">https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html</a>).</p>
+<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
 </div>
 </div>
 </div>
@@ -531,7 +531,7 @@ streams it does comes with a significant performance disadvantage over bytea fie
 <div class="sect2">
 <h3 id="_sql_server">SQL Server</h3>
 <div class="paragraph">
-<p>The SQL Server implementation uses [adaptive buffering](<a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering" class="bare">https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering</a>)
+<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
 to serve BLOBs in a memory efficient way.</p>
 </div>
 </div>
@@ -577,7 +577,7 @@ content is initially set.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-13 02:32:45 UTC
+Last updated 2019-01-13 18:21:29 UTC
 </div>
 </div>
 </body>
