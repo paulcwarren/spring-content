@@ -21,8 +21,7 @@ public class StoreByteRangeHttpRequestHandler extends ResourceHttpRequestHandler
 	@Override
 	protected MediaType getMediaType(HttpServletRequest request, Resource resource) {
 		if (request.getAttribute("SPRING_CONTENT_CONTENTTYPE") != null) {
-			return MediaType
-					.valueOf((String) request.getAttribute("SPRING_CONTENT_CONTENTTYPE"));
+			return (MediaType) request.getAttribute("SPRING_CONTENT_CONTENTTYPE");
 		}
 		return super.getMediaType(request, resource);
 	}

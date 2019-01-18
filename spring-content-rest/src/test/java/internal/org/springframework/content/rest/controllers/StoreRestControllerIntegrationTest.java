@@ -8,9 +8,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
+import java.util.Date;
 import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import internal.org.springframework.content.rest.support.LastModifiedDateTests;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,6 +68,8 @@ public class StoreRestControllerIntegrationTest {
 	private String path;
 	private String request;
 
+	private LastModifiedDateTests lastModifiedDateTests;
+
 	{
 		Describe("StoreRestController", () -> {
 			BeforeEach(() -> {
@@ -82,6 +86,11 @@ public class StoreRestControllerIntegrationTest {
 								new ByteArrayInputStream("Existing content".getBytes()),
 								((WritableResource) r).getOutputStream());
 					}
+
+					lastModifiedDateTests.setMvc(mvc);
+					lastModifiedDateTests.setUrl("/teststore" + path);
+					lastModifiedDateTests.setLastModifiedDate(new Date(r.lastModified()));
+					lastModifiedDateTests.setContent("Existing content");
 				});
 				It("should return the resource's content", () -> {
 					MockHttpServletResponse response = mvc.perform(get(request))
@@ -126,11 +135,13 @@ public class StoreRestControllerIntegrationTest {
 					});
 				});
 				It("should delete the resource", () -> {
-					mvc.perform(delete(request)).andExpect(status().isOk());
+					mvc.perform(delete(request)).andExpect(status().isNoContent());
 
 					Resource r = store.getResource(path);
 					assertThat(r.exists(), is(false));
 				});
+
+				lastModifiedDateTests = new LastModifiedDateTests();
 			});
 
 			Context("given a nested resource", () -> {
@@ -199,7 +210,7 @@ public class StoreRestControllerIntegrationTest {
 					});
 				});
 				It("should delete the resource", () -> {
-					mvc.perform(delete(request)).andExpect(status().isOk());
+					mvc.perform(delete(request)).andExpect(status().isNoContent());
 
 					Resource r = store.getResource(path);
 					assertThat(r.exists(), is(false));

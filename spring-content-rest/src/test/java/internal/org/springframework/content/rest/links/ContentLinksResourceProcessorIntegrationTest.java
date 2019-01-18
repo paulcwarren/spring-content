@@ -226,13 +226,13 @@ public class ContentLinksResourceProcessorIntegrationTest {
 						contentRepository2.setContent(child, new ByteArrayInputStream(
 								"Hello Spring Content World!".getBytes()));
 
-						testEntity2.child = child;
+						testEntity2.setChild(child);
 						repository2.save(testEntity2);
 					});
 					Context("a GET to /repository/id", () -> {
 						It("should return the content link", () -> {
 							MockHttpServletResponse response = mvc
-									.perform(get("/files/" + testEntity2.id)
+									.perform(get("/files/" + testEntity2.getId())
 											.accept("application/hal+json"))
 									.andExpect(status().isOk()).andReturn().getResponse();
 							assertThat(response, is(not(nullValue())));
@@ -248,8 +248,8 @@ public class ContentLinksResourceProcessorIntegrationTest {
 							assertThat(halResponse.getLinksByRel("child").size(), is(1));
 							assertThat(
 									halResponse.getLinksByRel("child").get(0).getHref(),
-									is("http://localhost/files/" + testEntity2.id
-											+ "/child/" + testEntity2.child.contentId));
+									is("http://localhost/files/" + testEntity2.getId()
+											+ "/child/" + testEntity2.getChild().contentId));
 						});
 					});
 				});
@@ -271,13 +271,13 @@ public class ContentLinksResourceProcessorIntegrationTest {
 								children.add(child1);
 								children.add(child2);
 
-								testEntity2.children = children;
+								testEntity2.setChildren(children);
 								repository2.save(testEntity2);
 							});
 							Context("a GET to /repository/id", () -> {
 								It("should return the content collection link", () -> {
 									MockHttpServletResponse response = mvc
-											.perform(get("/files/" + testEntity2.id)
+											.perform(get("/files/" + testEntity2.getId())
 													.accept("application/hal+json"))
 											.andExpect(status().isOk()).andReturn()
 											.getResponse();
