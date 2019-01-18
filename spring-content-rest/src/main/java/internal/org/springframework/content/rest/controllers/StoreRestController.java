@@ -1,13 +1,10 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.HeaderUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.io.DeletableResource;
@@ -16,8 +13,10 @@ import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,10 +24,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UrlPathHelper;
 
-import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
 
 @ContentRestController
 public class StoreRestController extends AbstractContentPropertyController {
@@ -76,61 +78,46 @@ public class StoreRestController extends AbstractContentPropertyController {
 			"content-type!=multipart/form-data", "accept!=application/hal+json" })
 	@ResponseBody
 	public void putContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
-
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
-		if (info == null) {
-			throw new IllegalArgumentException("Not a Store");
-		}
+							@RequestHeader HttpHeaders headers,
+							@PathVariable String store)
+			throws IOException {
 
 		String path = new UrlPathHelper().getPathWithinApplication(request);
-		String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
-
-		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null) {
-			throw new ResourceNotFoundException();
-		}
-		if (r instanceof WritableResource == false) {
-			throw new UnsupportedOperationException();
-		}
-		InputStream in = request.getInputStream();
-		OutputStream out = ((WritableResource) r).getOutputStream();
-		IOUtils.copy(in, out);
-		IOUtils.closeQuietly(out);
-		IOUtils.closeQuietly(in);
+		handleUpdate(headers, store, path, request.getInputStream());
 	}
 
 	@StoreType("store")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void putMultipartContent(HttpServletRequest request,
-			HttpServletResponse response, @PathVariable String store,
+									@RequestHeader HttpHeaders headers,
+									@PathVariable String store,
 			@RequestParam("file") MultipartFile multiPart)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
+			throws IOException {
+
 		String path = new UrlPathHelper().getPathWithinApplication(request);
-		handleMultipart(store, path, multiPart);
+		handleUpdate(headers, store, path, multiPart.getInputStream());
 	}
 
 	@StoreType("store")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
 	public void postMultipartContent(HttpServletRequest request,
-			HttpServletResponse response, @PathVariable String store,
+									 @RequestHeader HttpHeaders headers,
+									 @PathVariable String store,
 			@RequestParam("file") MultipartFile multiPart)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
+			throws IOException {
 
 		String path = new UrlPathHelper().getPathWithinApplication(request);
-		handleMultipart(store, path, multiPart);
+		handleUpdate(headers, store, path, multiPart.getInputStream());
 	}
 
 	@StoreType("store")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
 	public void deleteContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store) throws HttpRequestMethodNotSupportedException, IOException {
+							  @RequestHeader HttpHeaders headers,
+							  @PathVariable String store)
+			throws IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
 		if (info == null) {
@@ -147,11 +134,16 @@ public class StoreRestController extends AbstractContentPropertyController {
 		if (r instanceof DeletableResource == false) {
 			throw new UnsupportedOperationException();
 		}
+
+		HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
+
 		((DeletableResource) r).delete();
+
+		response.setStatus(HttpStatus.NO_CONTENT.value());
 	}
 
-	protected void handleMultipart(String store, String path, MultipartFile multiPart)
-			throws HttpRequestMethodNotSupportedException, IOException {
+	protected void handleUpdate(HttpHeaders headers, String store, String path, InputStream content)
+			throws IOException {
 
 		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
 		if (info == null) {
@@ -166,7 +158,10 @@ public class StoreRestController extends AbstractContentPropertyController {
 		if (r instanceof WritableResource == false) {
 			throw new UnsupportedOperationException();
 		}
-		InputStream in = multiPart.getInputStream();
+
+		HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
+
+		InputStream in = content;
 		OutputStream out = ((WritableResource) r).getOutputStream();
 		IOUtils.copy(in, out);
 		IOUtils.closeQuietly(out);

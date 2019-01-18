@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.rest.StoreRestResource;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -56,6 +58,8 @@ public class ContentStoreUtilsTest {
 	private InputStream content;
 	private HttpHeaders headers;
 
+	private ContentStoreUtils.ResourcePlan plan;
+
 	{
 		Describe("ContentStoreUtilsTest", () -> {
 			Context("#findContentStore (by entity class)", () -> {
@@ -66,36 +70,34 @@ public class ContentStoreUtilsTest {
 				JustBeforeEach(() -> {
 					result = ContentStoreUtils.findContentStore(stores, entityClass);
 				});
-				Context("given a content store service with a store that has the deprecated ContentStoreRestResource annotation",
-						() -> {
-							BeforeEach(() -> {
-								ContentStore storeImpl = mock(
-										ContentStoreWithDeprecatedAnnotation.class);
-								info = new ContentStoreInfoImpl(
-										ContentStoreWithDeprecatedAnnotation.class,
-										TestEntity.class, storeImpl);
-								when(stores.getStores(eq(ContentStore.class)))
-										.thenReturn(new ContentStoreInfo[] { info });
-							});
-							It("should find the content store", () -> {
-								assertThat(result, is(info));
-							});
-						});
-				Context("given a content store service with a store that has the StoreRestResource annotation",
-						() -> {
-							BeforeEach(() -> {
-								ContentStore storeImpl = mock(
-										ContentStoreWithAnnotation.class);
-								info = new ContentStoreInfoImpl(
-										ContentStoreWithAnnotation.class,
-										TestEntity.class, storeImpl);
-								when(stores.getStores(eq(ContentStore.class)))
-										.thenReturn(new ContentStoreInfo[] { info });
-							});
-							It("should find the content store", () -> {
-								assertThat(result, is(info));
-							});
-						});
+				Context("given a content store service with a store that has the deprecated ContentStoreRestResource annotation", () -> {
+					BeforeEach(() -> {
+						ContentStore storeImpl = mock(
+								ContentStoreWithDeprecatedAnnotation.class);
+						info = new ContentStoreInfoImpl(
+								ContentStoreWithDeprecatedAnnotation.class,
+								TestEntity.class, storeImpl);
+						when(stores.getStores(eq(ContentStore.class)))
+								.thenReturn(new ContentStoreInfo[] { info });
+					});
+					It("should find the content store", () -> {
+						assertThat(result, is(info));
+					});
+				});
+				Context("given a content store service with a store that has the StoreRestResource annotation", () -> {
+					BeforeEach(() -> {
+						ContentStore storeImpl = mock(
+								ContentStoreWithAnnotation.class);
+						info = new ContentStoreInfoImpl(
+								ContentStoreWithAnnotation.class,
+								TestEntity.class, storeImpl);
+						when(stores.getStores(eq(ContentStore.class)))
+								.thenReturn(new ContentStoreInfo[] { info });
+					});
+					It("should find the content store", () -> {
+						assertThat(result, is(info));
+					});
+				});
 			});
 		});
 		Context("#findContentStore (by path name)", () -> {
@@ -174,11 +176,10 @@ public class ContentStoreUtilsTest {
 						});
 					});
 		});
-		Context("#getContent", () -> {
+		Context("#resolveResource", () -> {
 			JustBeforeEach(() -> {
 				headers = new HttpHeaders();
-				ContentStoreUtils.getContent((ContentStore) store, entity, mimeTypes,
-						headers);
+				plan = ContentStoreUtils.resolveResource((ContentStore) store, entity, null, mimeTypes);
 			});
 			BeforeEach(() -> {
 				store = mock(StoreWithRenderable.class);
@@ -190,10 +191,9 @@ public class ContentStoreUtilsTest {
 			});
 			It("should get the content from the store and set type and length headers",
 					() -> {
-						verify(store).getContent(anyObject());
-						assertThat(headers.getContentType().toString(),
-								is("application/word"));
-						assertThat(headers.getContentLength(), is(100L));
+						verify(store).getResource(anyObject());
+						assertThat(plan.getMimeType().toString(), is("application/word"));
+//						assertThat(headers.getContentLength(), is(100L));
 					});
 			Context("given an application/word entity and mime types text/html", () -> {
 				BeforeEach(() -> {
@@ -216,7 +216,7 @@ public class ContentStoreUtilsTest {
 							.asList(new MediaType[] { MediaType.valueOf("audio/*") });
 				});
 				It("should get the content from the store", () -> {
-					verify(store).getContent(anyObject());
+					verify(store).getResource(anyObject());
 					verify(store, never()).getRendition(anyObject(), anyObject());
 				});
 			});
@@ -230,9 +230,8 @@ public class ContentStoreUtilsTest {
 							.asList(new MediaType[] { MediaType.valueOf("*/*") });
 				});
 				It("should get the content from the store", () -> {
-					verify(store).getContent(anyObject());
-					assertThat(headers.getContentType().toString(), is("audio/basic"));
-					assertThat(headers.getContentLength(), is(1000L));
+					verify(store).getResource(anyObject());
+					assertThat(plan.getMimeType().toString(), is("audio/basic"));
 
 					verify(store, never()).getRendition(anyObject(), anyObject());
 				});
@@ -271,6 +270,7 @@ public class ContentStoreUtilsTest {
 											.getRendition(eq(entity), eq("text/xml"));
 									inOrder.verify(store, times(1))
 											.getRendition(eq(entity), eq("text/html"));
+									inOrder.verify(store).getResource(anyObject());
 									inOrder.verifyNoMoreInteractions();
 								});
 					});
@@ -294,6 +294,7 @@ public class ContentStoreUtilsTest {
 											.getRendition(eq(entity), eq("text/xml"));
 									inOrder.verify(store, times(1))
 											.getRendition(eq(entity), eq("text/*"));
+									inOrder.verify(store).getResource(anyObject());
 									inOrder.verifyNoMoreInteractions();
 								});
 					});
@@ -317,12 +318,10 @@ public class ContentStoreUtilsTest {
 									inOrder.verify(store, times(1))
 											.getRendition(eq(entity), eq("text/xml"));
 									inOrder.verify(store, times(1))
-											.getContent(eq(entity));
+											.getResource(anyObject());
 									inOrder.verifyNoMoreInteractions();
 
-									assertThat(headers.getContentType().toString(),
-											is("application/word"));
-									assertThat(headers.getContentLength(), is(100L));
+									assertThat(plan.getMimeType().toString(), is("application/word"));
 								});
 					});
 		});
@@ -352,7 +351,7 @@ public class ContentStoreUtilsTest {
 	}
 
 	public static interface StoreWithRenderable
-			extends ContentStore<TestEntity, UUID>, Renderable<TestEntity> {
+			extends ContentStore<TestEntity, UUID>, Store<UUID>, Renderable<TestEntity> {
 		//
 	}
 }

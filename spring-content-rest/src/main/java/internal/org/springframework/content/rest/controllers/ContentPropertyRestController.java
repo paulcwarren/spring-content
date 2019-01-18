@@ -5,24 +5,22 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import javax.persistence.Version;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.utils.HeaderUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
-import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
@@ -44,6 +43,9 @@ import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import org.springframework.web.server.ResponseStatusException;
+
+import static java.lang.String.format;
 
 @ContentRestController
 public class ContentPropertyRestController extends AbstractContentPropertyController {
@@ -69,69 +71,11 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	}
 
 	@StoreType("contentstore")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET, headers = {
-			"accept!=application/hal+json", "range" })
-	public void getContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String repository, @PathVariable String id,
-			@PathVariable String contentProperty, @PathVariable String contentId)
-			throws HttpRequestMethodNotSupportedException {
-
-		Object domainObj = findOne(repositories, repository, id);
-
-		Object contentPropertyValue = null;
-		Class<?> contentEntityClass = null;
-
-		if (domainObj.getClass().isAnnotationPresent(Content.class)) {
-			contentPropertyValue = domainObj;
-			contentEntityClass = domainObj.getClass();
-		}
-		else {
-			PersistentProperty<?> property = getContentPropertyDefinition(
-					repositories.getPersistentEntity(domainObj.getClass()),
-					contentProperty);
-			contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
-			contentPropertyValue = getContentProperty(domainObj, property, contentId);
-		}
-
-		Serializable cid = (Serializable) BeanUtils
-				.getFieldWithAnnotation(contentPropertyValue, ContentId.class);
-
-		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService,
-				contentEntityClass);
-		if (info == null) {
-			throw new IllegalArgumentException("Entity not a content repository");
-		}
-
-		Resource r = ((Store) info.getImpementation()).getResource(cid);
-		if (r == null) {
-			throw new ResourceNotFoundException();
-		}
-
-		request.setAttribute("SPRING_CONTENT_RESOURCE", r);
-
-		if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
-			request.setAttribute("SPRING_CONTENT_CONTENTTYPE",
-					BeanUtils.getFieldWithAnnotation(contentPropertyValue, MimeType.class)
-							.toString());
-		}
-
-		try {
-			handler.handleRequest(request, response);
-		}
-		catch (ServletException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		return;
-	}
-
-	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<InputStreamResource> getContent(@PathVariable String repository,
-			@PathVariable String id, @PathVariable String contentProperty,
-			@PathVariable String contentId, @RequestHeader("Accept") String mimeType)
+	public void getContent(HttpServletRequest request, HttpServletResponse response,
+											   @PathVariable String repository, @PathVariable String id,
+											   @PathVariable String contentProperty,
+											   @PathVariable String contentId, @RequestHeader("Accept") String mimeType)
 			throws HttpRequestMethodNotSupportedException {
 
 		Object domainObj = findOne(repositories, repository, id);
@@ -151,8 +95,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 			contentPropertyValue = getContentProperty(domainObj, property, contentId);
 		}
 
-		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService,
-				contentEntityClass);
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
 		if (info == null) {
 			throw new IllegalArgumentException(
 					String.format("Store for entity class %s not found",
@@ -166,29 +109,40 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 
 		final HttpHeaders headers = new HttpHeaders();
 		ContentStore<Object, Serializable> store = info.getImpementation();
-		InputStream content = ContentStoreUtils.getContent(store, contentPropertyValue,
-				mimeTypes, headers);
-		if (content != null) {
-			InputStreamResource inputStreamResource = new InputStreamResource(content);
-			return new ResponseEntity<InputStreamResource>(inputStreamResource, headers,
-					HttpStatus.OK);
+		ContentStoreUtils.ResourcePlan r = ContentStoreUtils.resolveResource(store, domainObj, contentPropertyValue, mimeTypes);
+
+		Object version = BeanUtils.getFieldWithAnnotation(domainObj, Version.class);
+		long lastModified = -1;
+		try {
+			lastModified = r.getResource().lastModified();
+		} catch (IOException e) {}
+		if(new ServletWebRequest(request, response).checkNotModified(version != null ? version.toString() : null, lastModified)) {
+			return;
 		}
-		else {
-			return new ResponseEntity<InputStreamResource>(null, headers,
-					HttpStatus.NOT_ACCEPTABLE);
+
+		request.setAttribute("SPRING_CONTENT_RESOURCE", r.getResource());
+		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", r.getMimeType());
+
+		try {
+			handler.handleRequest(request, response);
+		}
+		catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", id), e);
 		}
 	}
 
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT)
 	@ResponseBody
-	public void setContent(HttpServletRequest request, @PathVariable String repository,
-			@PathVariable String id, @PathVariable String contentProperty,
-			@PathVariable String contentId)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
+	public void setContent(HttpServletRequest request,
+						   @RequestHeader HttpHeaders headers,
+						   @PathVariable String repository,
+						   @PathVariable String id,
+						   @PathVariable String contentProperty,
+						   @PathVariable String contentId)
+			throws IOException, HttpRequestMethodNotSupportedException {
 
-		this.replaceContentInternal(repositories, storeService, repository, id,
+		this.replaceContentInternal(headers, repositories, storeService, repository, id,
 				contentProperty, contentId, request.getHeader("Content-Type"), null,
 				request.getInputStream());
 	}
@@ -196,13 +150,15 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type!=multipart/form-data")
 	@ResponseBody
-	public void postContent(HttpServletRequest request, @PathVariable String repository,
-			@PathVariable String id, @PathVariable String contentProperty,
-			@PathVariable String contentId)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
+	public void postContent(HttpServletRequest request,
+							@RequestHeader HttpHeaders headers,
+							@PathVariable String repository,
+							@PathVariable String id,
+							@PathVariable String contentProperty,
+							@PathVariable String contentId)
+			throws IOException, HttpRequestMethodNotSupportedException {
 
-		this.replaceContentInternal(repositories, storeService, repository, id,
+		this.replaceContentInternal(headers, repositories, storeService, repository, id,
 				contentProperty, contentId, request.getHeader("Content-Type"), null,
 				request.getInputStream());
 	}
@@ -210,13 +166,15 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(@PathVariable String repository,
-			@PathVariable String id, @PathVariable String contentProperty,
-			@PathVariable String contentId, @RequestParam("file") MultipartFile multiPart)
-			throws IOException, HttpRequestMethodNotSupportedException,
-			InstantiationException, IllegalAccessException {
+	public void postMultipartContent(@RequestHeader HttpHeaders headers,
+										@PathVariable String repository,
+										@PathVariable String id,
+									 	@PathVariable String contentProperty,
+										@PathVariable String contentId,
+									 	@RequestParam("file") MultipartFile multiPart)
+			throws IOException, HttpRequestMethodNotSupportedException {
 
-		this.replaceContentInternal(repositories, storeService, repository, id,
+		this.replaceContentInternal(headers, repositories, storeService, repository, id,
 				contentProperty, contentId, multiPart.getContentType(),
 				multiPart.getOriginalFilename(), multiPart.getInputStream());
 	}
@@ -224,23 +182,28 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	@StoreType("contentstore")
 	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE)
 	@ResponseBody
-	public ResponseEntity<?> deleteContent(@PathVariable String repository,
-			@PathVariable String id, @PathVariable String contentProperty,
-			@PathVariable String contentId)
-			throws IOException, HttpRequestMethodNotSupportedException {
+	public ResponseEntity<?> deleteContent(@RequestHeader HttpHeaders headers,
+										   @PathVariable String repository,
+										   @PathVariable String id,
+										   @PathVariable String contentProperty,
+										   @PathVariable String contentId)
+			throws HttpRequestMethodNotSupportedException {
 
 		Object domainObj = findOne(repositories, repository, id);
+
+		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
+		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
+		HeaderUtils.evaluateHeaderConditions(headers, etag, lastModifiedDate);
 
 		PersistentProperty<?> property = this.getContentPropertyDefinition(
 				repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
 
 		Object contentPropertyValue = getContentProperty(domainObj, property, contentId);
 
-		Class<?> contentEntityClass = ContentPropertyUtils
-				.getContentPropertyType(property);
+		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 
-		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService,
-				contentEntityClass);
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
+
 		info.getImpementation().unsetContent(contentPropertyValue);
 
 		// remove the content property reference from the data object
@@ -251,7 +214,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 		return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
 	}
 
-	private void replaceContentInternal(Repositories repositories,
+	private void replaceContentInternal(HttpHeaders headers, Repositories repositories,
 			ContentStoreService stores, String repository, String id,
 			String contentProperty, String contentId, String mimeType,
 			String originalFileName, InputStream stream)
@@ -259,11 +222,13 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 
 		Object domainObj = findOne(repositories, repository, id);
 
-		PersistentProperty<?> property = this.getContentPropertyDefinition(
-				repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
+		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
+		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
+		HeaderUtils.evaluateHeaderConditions(headers, etag, lastModifiedDate);
 
-		Object contentPropertyValue = this.getContentProperty(domainObj, property,
-				contentId);
+		PersistentProperty<?> property = this.getContentPropertyDefinition(repositories.getPersistentEntity(domainObj.getClass()), contentProperty);
+
+		Object contentPropertyValue = this.getContentProperty(domainObj, property, contentId);
 
 		if (BeanUtils.hasFieldWithAnnotation(contentPropertyValue, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(contentPropertyValue, MimeType.class,
@@ -278,11 +243,10 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 			}
 		}
 
-		Class<?> contentEntityClass = ContentPropertyUtils
-				.getContentPropertyType(property);
+		Class<?> contentEntityClass = ContentPropertyUtils.getContentPropertyType(property);
 
-		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService,
-				contentEntityClass);
+		ContentStoreInfo info = ContentStoreUtils.findContentStore(storeService, contentEntityClass);
+
 		info.getImpementation().setContent(contentPropertyValue, stream);
 
 		save(repositories, domainObj);

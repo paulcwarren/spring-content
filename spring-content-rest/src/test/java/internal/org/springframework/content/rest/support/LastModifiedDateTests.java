@@ -1,0 +1,178 @@
+package internal.org.springframework.content.rest.support;
+
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+public class LastModifiedDateTests {
+
+    private MockMvc mvc;
+    private String url;
+    private Date lastModifiedDate;
+    private String etag;
+    private String content;
+
+    public void setMvc(MockMvc mvc) {
+        this.mvc = mvc;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setLastModifiedDate(Date lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public void setEtag(String etag) {
+        this.etag = format("\"%s\"", etag);
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    {
+        Context("a GET request to /{store}/{id} with no headers", () -> {
+            It("should return the content with the last-modified header", () -> {
+                MockHttpServletResponse response = mvc
+                        .perform(get(url)
+                                .accept("text/plain"))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse();
+
+                assertThat(response, is(not(nullValue())));
+                assertThat(response.getContentAsString(), is(content));
+
+                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+                format.setTimeZone(TimeZone.getTimeZone("GMT"));
+                String expected = format.format(lastModifiedDate);
+                assertThat(response.getHeader("last-modified"), is(expected));
+            });
+        });
+        Context("a GET request to /{store}/{id} with an if-modified-since date before the entity's modified date", () -> {
+            It("should respond with 200 and the content", () -> {
+                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+                format.setTimeZone(TimeZone.getTimeZone("GMT"));
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(lastModifiedDate);
+                cal.add(Calendar.DATE, -1);
+                String ifModifiedSince = format.format(cal.getTime());
+
+                MockHttpServletResponse response = mvc
+                        .perform(get(url)
+                                .accept("text/plain")
+                                .header("if-modified-since", ifModifiedSince))
+                        .andExpect(status().isOk())
+                        .andReturn().getResponse();
+
+                assertThat(response, is(not(nullValue())));
+                assertThat(response.getContentAsString(), is(content));
+                assertThat(response.getHeader("last-modified"), is(format.format(lastModifiedDate)));
+            });
+        });
+        Context("a GET request to /{store}/{id} with an if-modified-since date the same as the entity's modified date", () -> {
+            It("should respond with 304 Not Modified", () -> {
+                mvc.perform(get(url)
+                        .accept("text/plain")
+                        .header("if-modified-since", toHeaderDateFormat(lastModifiedDate)))
+                        .andExpect(status().isNotModified())
+                        .andExpect(content().string(is("")));
+            });
+        });
+        Context("a GET request to /{store}/{id} with an if-unmodified-since date before the entity's modified date", () -> {
+            It("should respond with 412 Precondition Failed", () -> {
+                mvc.perform(get(url)
+                        .accept("text/plain")
+                        .header("if-unmodified-since", toHeaderDateFormat(addDays(lastModifiedDate, -1))))
+                        .andExpect(status().isPreconditionFailed())
+                        .andReturn();
+            });
+        });
+        Context("a GET request to /{store}/{id} with an if-unmodified-since date the same as the entity's modified date", () -> {
+            It("should respond with 200 and the content", () -> {
+                mvc.perform(get(url)
+                        .accept("text/plain")
+                        .header("if-unmodified-since", toHeaderDateFormat(lastModifiedDate)))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(is(content)));
+            });
+        });
+        Context("a PUT to /{store}/{id} with an if-unmodified-since date before the entity's modified date",  () -> {
+            It("should respond with 412 Precondition Failed", () -> {
+                mvc.perform(put(url)
+                        .content("Hello Modified Spring Content World!")
+                        .contentType("text/plain")
+                        .header("if-unmodified-since", toHeaderDateFormat(addDays(lastModifiedDate, -1))))
+                        .andExpect(status().isPreconditionFailed());
+            });
+        });
+        Context("a PUT to /{store}/{id} with an if-unmodified-since date the same as the entity's modified date",  () -> {
+            It("should update the content", () -> {
+                mvc.perform(put(url)
+                        .content("Hello Modified Spring Content World!")
+                        .contentType("text/plain")
+                        .header("if-unmodified-since", toHeaderDateFormat(lastModifiedDate)))
+                        .andExpect(status().isOk());
+            });
+        });
+        Context("a PUT to /{store}/{id} with a matching If-Unmodified-Since header and a matching if-none-match header", () -> {
+            It("should respond with a 412 Precondition Failed", () -> {
+                if (etag != null) {
+                    mvc.perform(put(url)
+                            .content("Hello Modified Spring Content World!")
+                            .contentType("text/plain")
+                            .header("if-unmodified-since", toHeaderDateFormat(lastModifiedDate))
+                            .header("if-none-match", etag))
+                            .andExpect(status().isPreconditionFailed());
+                }
+            });
+        });
+        Context("a DELETE to /{store}/{id} with an if-unmodified-since date before the entity's modified date",  () -> {
+            It("should respond with 412 Precondition Failed", () -> {
+                mvc.perform(delete(url)
+                        .header("if-unmodified-since", toHeaderDateFormat(addDays(lastModifiedDate, -1))))
+                        .andExpect(status().isPreconditionFailed());
+            });
+        });
+        Context("a DELETE to /{store}/{id} with an if-unmodified-since date the same as the entity's modified date",  () -> {
+            It("should update the content", () -> {
+                mvc.perform(delete(url)
+                        .header("if-unmodified-since", toHeaderDateFormat(lastModifiedDate)))
+                        .andExpect(status().isNoContent());
+            });
+        });
+    }
+
+    private static String toHeaderDateFormat(Date dt) {
+        SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return format.format(dt);
+    }
+
+    private static Date addDays(Date dt, int n) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dt);
+        cal.add(Calendar.DATE, n);
+        return cal.getTime();
+    }
+}

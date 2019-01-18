@@ -1,23 +1,39 @@
 package internal.org.springframework.content.rest.controllers;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static java.lang.String.format;
+import static java.lang.Thread.sleep;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.TimeZone;
 
+import internal.org.springframework.content.rest.support.LastModifiedDateTests;
+import internal.org.springframework.content.rest.support.VersionHeaderTests;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
 import internal.org.springframework.content.rest.support.TestEntity3Repository;
+import internal.org.springframework.content.rest.support.TestEntity4;
+import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
+import internal.org.springframework.content.rest.support.TestEntity4Repository;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,6 +88,12 @@ public class ContentEntityRestControllerIntegrationTest {
 	@Autowired
 	TestEntity3ContentRepository store3;
 
+	// same exported URI
+	@Autowired
+	TestEntity4Repository repo4;
+	@Autowired
+	TestEntity4ContentRepository store4;
+
 	@Autowired
 	TestStore store;
 
@@ -82,6 +104,10 @@ public class ContentEntityRestControllerIntegrationTest {
 
 	private TestEntity testEntity;
 	private TestEntity3 testEntity3;
+	private TestEntity4 testEntity4;
+
+	private VersionHeaderTests versionHeaderTests;
+	private LastModifiedDateTests lastModifiedDateTests;
 
 	{
 		Describe("ContentEntityRestController", () -> {
@@ -92,57 +118,59 @@ public class ContentEntityRestControllerIntegrationTest {
 				Context("given the repository and storage are exported to the same URI", () -> {
 					BeforeEach(() -> {
 						testEntity3 = repo3.save(new TestEntity3());
+						testEntity3.name = "test";
+						testEntity3 = repo3.save(testEntity3);
 					});
 					Context("a GET to /{store}/{id} accepting hal+json", () -> {
 						It("should return the entity", () -> {
 							MockHttpServletResponse response = mvc
 									.perform(get("/testEntity3s/" + testEntity3.id)
 											.accept("application/hal+json"))
-									.andExpect(status().isOk()).andReturn().getResponse();
+									.andExpect(status().isOk())
+									.andReturn().getResponse();
 
 							RepresentationFactory representationFactory = new StandardRepresentationFactory();
 							ReadableRepresentation halResponse = representationFactory
 									.readRepresentation("application/hal+json",
 											new StringReader(response.getContentAsString()));
 							assertThat(halResponse.getLinks().size(), is(2));
-							assertThat(halResponse.getLinksByRel("testEntity3"),
-									is(not(nullValue())));
+							assertThat(halResponse.getLinksByRel("testEntity3"), is(not(nullValue())));
 						});
-						Context("a PUT to /{store}/{id} with a json body", () -> {
-							It("should set Entities data and return 200", () -> {
-								mvc.perform(put("/testEntity3s/" + testEntity3.id.toString())
-										.content("{\"name\":\"Spring Content\"}")
-										.contentType("application/hal+json"))
-										.andExpect(status().is2xxSuccessful());
+					});
+					Context("a PUT to /{store}/{id} with a json body", () -> {
+						It("should set Entities data and return 200", () -> {
+							mvc.perform(put("/testEntity3s/" + testEntity3.id.toString())
+									.content("{\"name\":\"Spring Content\"}")
+									.contentType("application/hal+json"))
+									.andExpect(status().is2xxSuccessful());
 
-								Optional<TestEntity3> fetched = repo3.findById(testEntity3.id);
-								assertThat(fetched.isPresent(), is(true));
-								assertThat(fetched.get().name, is("Spring Content"));
-								assertThat(fetched.get().contentId, is(nullValue()));
-								assertThat(fetched.get().len, is(nullValue()));
-								assertThat(fetched.get().mimeType, is(nullValue()));
-							});
+							Optional<TestEntity3> fetched = repo3.findById(testEntity3.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().name, is("Spring Content"));
+							assertThat(fetched.get().contentId, is(nullValue()));
+							assertThat(fetched.get().len, is(nullValue()));
+							assertThat(fetched.get().mimeType, is(nullValue()));
 						});
-						Context("a PATCH to /{store}/{id} with a json body", () -> {
-							It("should patch the entity data and return 200", () -> {
-								mvc.perform(patch("/testEntity3s/" + testEntity3.id.toString())
-										.content("{\"name\":\"Spring Content Modified\"}")
-										.contentType("application/hal+json"))
-										.andExpect(status().is2xxSuccessful());
+					});
+					Context("a PATCH to /{store}/{id} with a json body", () -> {
+						It("should patch the entity data and return 200", () -> {
+							mvc.perform(patch("/testEntity3s/" + testEntity3.id.toString())
+									.content("{\"name\":\"Spring Content Modified\"}")
+									.contentType("application/hal+json"))
+									.andExpect(status().is2xxSuccessful());
 
-								Optional<TestEntity3> fetched = repo3.findById(testEntity3.id);
-								assertThat(fetched.isPresent(), is(true));
-								assertThat(fetched.get().name, is("Spring Content Modified"));
-								assertThat(fetched.get().contentId, is(nullValue()));
-								assertThat(fetched.get().len, is(nullValue()));
-								assertThat(fetched.get().mimeType, is(nullValue()));
-							});
+							Optional<TestEntity3> fetched = repo3.findById(testEntity3.id);
+							assertThat(fetched.isPresent(), is(true));
+							assertThat(fetched.get().name, is("Spring Content Modified"));
+							assertThat(fetched.get().contentId, is(nullValue()));
+							assertThat(fetched.get().len, is(nullValue()));
+							assertThat(fetched.get().mimeType, is(nullValue()));
 						});
-						Context("a HEAD to /{store}/{id} with a json body", () -> {
-							It("should patch the entity data and return 200", () -> {
-								mvc.perform(head("/testEntity3s/" + testEntity3.id.toString()))
-										.andExpect(status().is2xxSuccessful());
-							});
+					});
+					Context("a HEAD to /{store}/{id} with a json body", () -> {
+						It("should patch the entity data and return 200", () -> {
+							mvc.perform(head("/testEntity3s/" + testEntity3.id.toString()))
+									.andExpect(status().is2xxSuccessful());
 						});
 					});
 				});
@@ -203,22 +231,16 @@ public class ContentEntityRestControllerIntegrationTest {
 						It("should set the content and return 200", () -> {
 							String content = "This is Spring Content!";
 
-							mvc.perform(fileUpload("/testEntitiesContent/"
-									+ testEntity.id.toString())
-									.file(new MockMultipartFile("file",
-											"test-file.txt", "text/plain",
-											content.getBytes())))
-									.andExpect(status().isOk());
+							mvc.perform(multipart("/testEntitiesContent/" + testEntity.getId())
+									.file(new MockMultipartFile("file", "test-file.txt", "text/plain", content.getBytes())))
+									.andExpect(status().isCreated());
 
-							Optional<TestEntity> fetched = repository
-									.findById(testEntity.id);
+							Optional<TestEntity> fetched = repository.findById(testEntity.id);
 							assertThat(fetched.isPresent(), is(true));
 							assertThat(fetched.get().contentId, is(not(nullValue())));
-							assertThat(fetched.get().originalFileName,
-									is("test-file.txt"));
+							assertThat(fetched.get().originalFileName, is("test-file.txt"));
 							assertThat(fetched.get().mimeType, is("text/plain"));
-							assertThat(fetched.get().len,
-									is(new Long(content.length())));
+							assertThat(fetched.get().len, is(new Long(content.length())));
 						});
 					});
 
@@ -237,8 +259,7 @@ public class ContentEntityRestControllerIntegrationTest {
 										.andExpect(status().isOk()).andReturn().getResponse();
 
 								assertThat(response, is(not(nullValue())));
-								assertThat(response.getContentAsString(),
-										is("Hello Spring Content World!"));
+								assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 							});
 						});
 						Context("a GET to /{store}/{id} with no accept header", () -> {
@@ -253,35 +274,32 @@ public class ContentEntityRestControllerIntegrationTest {
 										is("Hello Spring Content World!"));
 							});
 						});
-						Context("a GET to /{store}/{id} with a mime type that matches a renderer",
-								() -> {
-									It("should return the rendition and 200", () -> {
-										MockHttpServletResponse response = mvc
-												.perform(get("/testEntitiesContent/"
-														+ testEntity.id).accept("text/html"))
-												.andExpect(status().isOk()).andReturn()
-												.getResponse();
+						Context("a GET to /{store}/{id} with a mime type that matches a renderer", () -> {
+							It("should return the rendition and 200", () -> {
+								MockHttpServletResponse response = mvc
+										.perform(get("/testEntitiesContent/" + testEntity.id)
+												.accept("text/html"))
+										.andExpect(status().isOk()).andReturn()
+										.getResponse();
 
-										assertThat(response, is(not(nullValue())));
-										assertThat(response.getContentAsString(), is(
-												"<html><body>Hello Spring Content World!</body></html>"));
-									});
-								});
-						Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content",
-								() -> {
-									It("should return the original content and 200", () -> {
-										MockHttpServletResponse response = mvc.perform(
-												get("/testEntitiesContent/" + testEntity.id)
-														.accept(new String[] { "text/xml",
-																"text/*" }))
-												.andExpect(status().isOk()).andReturn()
-												.getResponse();
+								assertThat(response, is(not(nullValue())));
+								assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+							});
+						});
+						Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content", () -> {
+							It("should return the original content and 200", () -> {
+								MockHttpServletResponse response = mvc.perform(
+										get("/testEntitiesContent/" + testEntity.id)
+												.accept(new String[] { "text/xml",
+														"text/*" }))
+										.andExpect(status().isOk()).andReturn()
+										.getResponse();
 
-										assertThat(response, is(not(nullValue())));
-										assertThat(response.getContentAsString(),
-												is("Hello Spring Content World!"));
-									});
-								});
+								assertThat(response, is(not(nullValue())));
+								assertThat(response.getContentAsString(),
+										is("Hello Spring Content World!"));
+							});
+						});
 						Context("a GET to /{store}/{id} with a range header", () -> {
 							It("should return the content range and 206", () -> {
 								MockHttpServletResponse response = mvc
@@ -314,7 +332,7 @@ public class ContentEntityRestControllerIntegrationTest {
 
 								String content = "This is Modified Spring Content!";
 
-								mvc.perform(fileUpload(
+								mvc.perform(multipart(
 										"/testEntitiesContent/" + testEntity.id.toString())
 										.file(new MockMultipartFile("file",
 												"test-file-modified.txt",
@@ -342,6 +360,41 @@ public class ContentEntityRestControllerIntegrationTest {
 							});
 						});
 					});
+				});
+				Context("given an entity with @Version", () -> {
+					BeforeEach(() -> {
+						testEntity4 = new TestEntity4();
+						store4.setContent(testEntity4, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						testEntity4.mimeType = "text/plain";
+						testEntity4 = repo4.save(testEntity4);
+						String url = "/testEntity4s/" + testEntity4.getId();
+
+						versionHeaderTests.setMvc(mvc);
+						versionHeaderTests.setUrl(url);
+						versionHeaderTests.setRepo(repo4);
+						versionHeaderTests.setStore(store4);
+						versionHeaderTests.setEtag(format("\"%s\"", testEntity4.getVersion()));
+					});
+					versionHeaderTests = new VersionHeaderTests();
+				});
+
+				Context("given an entity with @LastModifiedDate", () -> {
+					BeforeEach(() -> {
+						String content = "Hello Spring Content LastModifiedDate World!";
+
+						testEntity4 = new TestEntity4();
+						store4.setContent(testEntity4, new ByteArrayInputStream(content.getBytes()));
+						testEntity4.mimeType = "text/plain";
+						testEntity4 = repo4.save(testEntity4);
+						String url = "/testEntity4s/" + testEntity4.getId();
+
+						lastModifiedDateTests.setMvc(mvc);
+						lastModifiedDateTests.setUrl(url);
+						lastModifiedDateTests.setLastModifiedDate(testEntity4.getModifiedDate());
+						lastModifiedDateTests.setEtag(testEntity4.getVersion().toString());
+						lastModifiedDateTests.setContent(content);
+					});
+					lastModifiedDateTests = new LastModifiedDateTests();
 				});
 			});
 		});

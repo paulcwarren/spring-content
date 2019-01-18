@@ -4,9 +4,10 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
 
+import internal.org.springframework.content.rest.io.AssociatedResource;
+import internal.org.springframework.content.rest.io.RenderedResource;
 import org.atteo.evo.inflector.English;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -15,11 +16,14 @@ import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
+
+import static java.lang.String.format;
 
 public final class ContentStoreUtils {
 
@@ -28,25 +32,20 @@ public final class ContentStoreUtils {
 
 	/**
 	 * Given a store and a collection of mime types this method will iterate the
-	 * mime-types returning the first input stream that it can find from the store itself
-	 * or, if the store implements Renderable from a rendition.
+	 * mime-types to find a data source of mathcing content.  This might be the content itself
+	 * or, if the store implements Renderable, a rendition.
 	 * 
 	 * @param store store the store to fetch the content from
-	 * @param mimeTypes the mime types requested
 	 * @param entity the entity whose content is being fetched
-	 * @param headers headers that will be sent back to the client
-	 * 
-	 * @return input stream
+	 * @param property
+	 * @param mimeTypes the requested mime types
+	 * @return resource plan (a wrapper around the resource to serve and the resolved mimetype)
 	 */
 	@SuppressWarnings("unchecked")
-	public static InputStream getContent(ContentStore<Object, Serializable> store,
-			Object entity, List<MediaType> mimeTypes, HttpHeaders headers) {
-		InputStream content = null;
-
-		Object entityMimeType = BeanUtils.getFieldWithAnnotation(entity,
-				org.springframework.content.commons.annotations.MimeType.class);
+	public static ResourcePlan resolveResource(ContentStore<Object, Serializable> store, Object entity, Object property, List<MediaType> mimeTypes) {
+		Object entityMimeType = BeanUtils.getFieldWithAnnotation(property != null ? property : entity, org.springframework.content.commons.annotations.MimeType.class);
 		if (entityMimeType == null)
-			return content;
+			return null;
 
 		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
 
@@ -54,34 +53,32 @@ public final class ContentStoreUtils {
 
 		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
 
-		// Modified to show download
-		Object originalFileName = BeanUtils.getFieldWithAnnotation(entity,
-				OriginalFileName.class);
-		if (originalFileName != null) {
-			headers.setContentDispositionFormData("attachment",
-					(String) originalFileName);
-		}
+		Serializable contentId = (Serializable)BeanUtils.getFieldWithAnnotation(property != null ? property : entity, ContentId.class);
 
-		for (int i = 0; i < arrMimeTypes.length && content == null; i++) {
-			MediaType mimeType = arrMimeTypes[i];
+		Resource r = null;
+		MimeType mimeType = null;
+		for (int i = 0; i < arrMimeTypes.length /*&& content == null*/; i++) {
+			mimeType = arrMimeTypes[i];
 			if (mimeType.includes(targetMimeType)) {
-				headers.setContentType(targetMimeType);
-
-				long contentLength = 0L;
-				Object len = BeanUtils.getFieldWithAnnotation(entity,
-						ContentLength.class);
-				if (len != null)
-					headers.setContentLength(Long.parseLong(len.toString()));
-
-				content = store.getContent(entity);
+				r = ((Store)store).getResource(contentId);
+				mimeType = targetMimeType;
 				break;
 			}
 			else if (store instanceof Renderable) {
-				content = ((Renderable<Object>) store).getRendition(entity,
-						mimeType.toString());
+				InputStream content = ((Renderable<Object>) store).getRendition(property != null ? property : entity, mimeType.toString());
+				if (content != null) {
+ 					Resource original = ((Store)store).getResource(contentId);
+					r = new RenderedResource(content, entity, original);
+					break;
+				}
 			}
 		}
-		return content;
+
+		if (r != null) {
+			r = new AssociatedResource(entity, r);
+		}
+
+		return new ResourcePlan(r, mimeType);
 	}
 
 	public static ContentStoreInfo findContentStore(ContentStoreService stores,
@@ -141,5 +138,24 @@ public final class ContentStoreUtils {
 
 	public static String stripStoreName(Store implementation) {
 		return implementation.getClass().getSimpleName().replaceAll("Store", "");
+	}
+
+	public static class ResourcePlan {
+
+		private Resource resource;
+		private MimeType mimeType;
+
+		public ResourcePlan(Resource r, MimeType mimeType) {
+			this.resource = r;
+			this.mimeType = mimeType;
+		}
+
+		public Resource getResource() {
+			return resource;
+		}
+
+		public MimeType getMimeType() {
+			return mimeType;
+		}
 	}
 }
