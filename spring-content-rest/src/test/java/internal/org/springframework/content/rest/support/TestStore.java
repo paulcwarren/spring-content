@@ -1,9 +1,8 @@
 package internal.org.springframework.content.rest.support;
 
 import org.springframework.content.commons.repository.Store;
+import org.springframework.content.rest.StoreRestResource;
 
-import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-
-@ContentStoreRestResource(path = "teststore")
+@StoreRestResource(path = "teststore")
 public interface TestStore extends Store<String> {
 }

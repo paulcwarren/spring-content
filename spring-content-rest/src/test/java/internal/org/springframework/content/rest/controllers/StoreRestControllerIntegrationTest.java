@@ -1,18 +1,10 @@
 package internal.org.springframework.content.rest.controllers;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.io.ByteArrayInputStream;
-import java.util.Date;
-import java.util.UUID;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.LastModifiedDateTests;
+import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.TestStore;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,17 +24,23 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import java.io.ByteArrayInputStream;
+import java.util.Date;
+import java.util.UUID;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntityContentRepository;
-import internal.org.springframework.content.rest.support.TestEntityRepository;
-import internal.org.springframework.content.rest.support.TestStore;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -53,10 +51,6 @@ import internal.org.springframework.content.rest.support.TestStore;
 @ActiveProfiles("store")
 public class StoreRestControllerIntegrationTest {
 
-	@Autowired
-	TestEntityRepository repository;
-	@Autowired
-	TestEntityContentRepository contentRepository;
 	@Autowired
 	TestStore store;
 
