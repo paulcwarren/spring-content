@@ -1,9 +1,6 @@
 package internal.org.springframework.content.rest.utils;
 
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.List;
-
+import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
 import internal.org.springframework.content.rest.io.AssociatedResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import org.atteo.evo.inflector.English;
@@ -21,9 +18,9 @@ import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
-import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-
-import static java.lang.String.format;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
 
 public final class ContentStoreUtils {
 
@@ -133,11 +130,11 @@ public final class ContentStoreUtils {
 	public static String getSimpleName(ContentStoreInfo info) {
 		Class<?> clazz = info.getDomainObjectClass();
 		return clazz != null ? clazz.getSimpleName()
-				: stripStoreName(info.getImplementation(Store.class));
+				: stripStoreName(info.getInterface());
 	}
 
-	public static String stripStoreName(Store implementation) {
-		return implementation.getClass().getSimpleName().replaceAll("Store", "");
+	public static String stripStoreName(Class<?> iface) {
+		return iface.getSimpleName().replaceAll("Store", "");
 	}
 
 	public static class ResourcePlan {
