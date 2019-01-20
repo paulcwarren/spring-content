@@ -96,11 +96,39 @@ Make sure you also configure Spring Content stores for the store you wish to use
 
 == Fundamentals
 
-The core functionality of Spring Content REST, enabled through `@Import(RestConfiguration.class)`, is to export resources for Spring Content stores.  This is usually closely related to Spring Data repositories.  Thus, the core artifacts to look at and potentially tweak to customize the way the exporting works are the repository and store interfaces.  
+The core functionality of Spring Content REST, enabled through `@Import(RestConfiguration.class)`, is to export resources
+for Spring Content stores.  This is often closely related to Spring Data repositories.
 
-=== Entity Association
+The following describes typical store scenarios and how they are exported with Spring Content REST.
 
-With Entity Association, as the name suggest, one Entity has one Resource associated with it.  Assume the following repository and store interfaces and Entity model:
+=== Resources
+
+Spring Resources, managed by a Spring Content Store, are standard Spring Resources that, when exported using Spring
+Content REST, are accessible by REST endpoint.
+
+Consider the following Store interface:
+
+====
+[source, java]
+----
+  public interface DvdStore extends Store<String> {}
+----
+====
+
+In this example, the Store's Resources are exported to the URI `/dvds`.  The path is derived from the
+uncapitalized, pluralized, simple class name of the interface.  When interacting with this endpoint any additional path
+is deemed to be the Resource's location and will be used to fetch the Resource using the Store's `getResource` method.
+For example, a GET request to `/dvds/comedy/monty_pythons_flying_circus.mp4` assumes
+`/comedy/monty_pythons_flying_circus.mp4` is the location of the Resource.
+
+The HTTP methods are then mapped onto the relevant Resource methods; GET maps to `getInputStream`, PUT maps onto
+`getOutputStream` and so on.
+
+=== Entity Resources
+
+Entity Resources are associated with Spring Data Entities.
+
+Assume the following `Entity` class with associated `Repository` and `Store` interfaces:
   
 ====
 [source, java]
@@ -126,17 +154,25 @@ With Entity Association, as the name suggest, one Entity has one Resource associ
 ----
 ====
   
-In this example a single Resource (the actual Dvd video stream) can be associated with a Dvd Entity.  For this repository, Spring Data REST exposes a collection resource at `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being managed.  It also exposes an item resource for each of the items managed by the repository under the URI `/dvds/{id}`.  The HTTP methods to interact with Dvd resources map to the according methods of CrudRepository.
+In this example a single Resource (the DVD video stream) is associated with a Dvd Entity by annotating additional fields
+on the Entity using the `@ContentId` and `@MimeType` annotations.   In this example Spring Data REST exports a collection
+resource at `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being
+managed.  `Dvd` in this case.  Item resources are also exported to the URI `/dvds/{id}`.  The HTTP methods used to
+request this endpoint map into the methods of  `CrudRepository`.
 
-Similarly, for each Spring Data REST item resource, Spring Content REST exposes a content resource managed by the store also under the URI `/dvds/{id}`.  By default the HTTP methods to interact with the Dvd's content resource maps onto the methods on `ContentStore` as follows:-
+Similarly, Spring Content REST also exports Entity Resources to the URI `/dvds/{id}`.  In this case the HTTP methods
+map onto the methods on `ContentStore` as follows:-
 
 - GET -> getContent
 - POST/PUT -> setContent
 - DELETE -> unsetContent
 
-=== Property Association
+=== Property Resources
 
-The second type of association is Property Association.  With property association a property of an Entity is associated with one Resource.  Assume the following repository/store interfaces and Entity model.
+Property Resources are associated with the properties of Spring Data Entities.  This allows many Resources to be
+associated with a single Entity.
+
+Consider the following `Entity` model with `Repository` and `Store` interfaces:
 
 ====
 [source, java]
@@ -191,17 +227,24 @@ public interface StreamStore extends ContentStore<Stream, UUID> {}
 ----
 ====  
 
-In this example separate Resources can be associated with the image and stream properties of the `Dvd` Entity.   
+In this example separate Resources are associated with the `image` and `stream` properties of the `Dvd` Entity.
 
-When using JPA with a relational database these associations are typically (but not always) also Entity associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
+When using JPA and its relational characteristics these associations are typically (but not always) also Entity
+associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing
+hierarchical data they are true property associations.
 
-As before Spring Data REST will expose an item resource under the URI `/dvds/{id}`.  However, this time Spring Content REST will expose content resources under the URIs `/dvds/{id}/image/{contentId}` and `/dvds/{id}/stream/{contentId}` managed by their respective stores.  A new image (or a new stream) can be created by POSTing to `/dvds/{id}/image` (or `/dvds/{id}/stream`) resource.
+As before, Spring Data REST will export an item resource under the URI `/dvds/{id}`.  However, this time Spring Content
+REST will export Property Resources to the URI `/dvds/{id}/image/{contentId}` and `/dvds/{id}/stream/{contentId}`
+managed by the respective Store.  A property can be set by POSTing to `/dvds/{id}/image` (or `/dvds/{id}/stream`).
 
-NOTE: as these properties are both single values Spring Content REST content resources are also available under the simplified `/dvds/{id}/image` and `/dvds/{id}/stream` where the `{contentId}` can be omitted for convenience.
+NOTE: as these properties are both single values these Resources are also available under the simplified URI
+`/dvds/{id}/image` and `/dvds/{id}/stream` where the `{contentId}` is omitted for convenience.
 
-=== Property Collection Associations
+=== Property Collection Resources
 
-The final type association is the Property Collection Association.  Unsurprisingly, closely related to Property Association, it allows a property of an Entity to be associated with many Resources.  Consider the following example:-
+Property Resources can also target Collections.
+
+Consider the following example:-
 
 ====
 [source, java]
@@ -234,9 +277,11 @@ public interface ChapterStore extends ContentStore<Chapter, UUID> {}
 ----
 ====
 
-In this example many Resources can be associated with the chapters property of the `Dvd` Entity.
+In this example many Resources can be associated with the `chapters` property of the `Dvd` Entity.
 
-As with Property Association the content resources are exposed under the URI `/dvds/{id}/chapters/{contentId}`.  In this case POSTing to `/dvds/{id}/chapters` a new content resource to be *appended* to the 'Chapters' collection.  This resource supports both POST and PUT HTTP methods.
+As with Property Resources, Property Collection Resources are also exported to the URI `/dvds/{id}/chapters`.
+However, in this case, POSTing to `/dvds/{id}/chapters` always *appends* a new Resource to the 'Chapters' Collection.
+This Resource supports both POST and PUT HTTP methods.
 
 === Search
 
@@ -270,19 +315,60 @@ For the content resources exposed, we use a set of default status codes:
 
 === Resource Discoverability
 
-A core principle of HATEOAS is that resources should be discoverable through the publication of links that point to the available resources.  There are a few competing de-facto standards of how to represent links in JSON.  By default, Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.
+A core principle of HATEOAS is that Resources should be discoverable through the publication of links that point to the
+available resources.  There are a few competing de-facto standards specifying how to represent links in JSON.  By default,
+Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.
 
-Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that represent the next level of resources that are available to the client.
+Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the
+Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that
+represent the next level of resources that are available to the client.
 
-When enabled through `@Import(HypermediaConfiguration.class)` Spring Content REST will inject content resource and content collection resource links for both content and content collection associations into t	he HAL responses created by Spring Data REST. 
+When enabled through `@Import(HypermediaConfiguration.class)` Spring Content REST will inject Store, Entity and Property
+Resources links for both into the HAL responses created by Spring Data REST.
 
-== The Content Resource
+== The Store Resource
 
-Spring Content REST exposes a content resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the `@StoreRestResource` on the store interface.
+Spring Content REST exports Store Resources to `/{store}/**`.  The resource path can be customized using the
+`@StoreRestResource` annotation on the Store interface.
+
+=== Supported HTTP Methods
+
+Store Resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not
+Allowed`.
+
+==== GET
+
+Returns the Resource's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+==== PUT/POST
+
+Sets the Resources's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+==== DELETE
+
+Removes the Resource's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+== The Entity Resource
+
+Spring Content REST exports Entity Resources to `/{store}/{id}`.  The resource path can be customized using the
+`@StoreRestResource` annotation on the Store interface.
  
 === Supported HTTP Methods
 
-Content resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not Allowed`.
+Entity Resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not
+Allowed`.
 
 ==== GET
 
@@ -308,9 +394,40 @@ Removes the Resource's content
 
 All content types except `application/json`
 
-== The Content Collection Resource
+== The Property Resource
 
-Spring Content REST exposes a content collection resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the `@StoreRestResource` on the store interface.
+Spring Content REST exports Property Resources to `/{store}/{id}/{property}` and `/{store}/{id}/{property}/{contentId}`.
+The resource path can be customized using the `@StoreRestResource` annotation on the Store interface.
+
+=== Supported HTTP Methods
+
+Property Resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not
+Allowed`.
+
+==== GET
+
+Returns the Resource's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+==== PUT/POST
+
+Sets the Resources's content
+
+===== Supported media types
+
+All content types except `application/json`
+
+==== DELETE
+
+Removes the Resource's content
+
+== The Collection Property Resource
+
+Spring Content REST exports Property Collection Resources to `/{store}/{id}/{property}`.  The resource path can be
+customized using the `@StoreRestResource` annotation on the Store interface.
  
 === Supported HTTP Methods
 
