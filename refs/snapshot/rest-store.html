@@ -590,12 +590,49 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 <h2 id="_fundamentals">Fundamentals</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The core functionality of Spring Content REST, enabled through <code>@Import(RestConfiguration.class)</code>, is to export resources for Spring Content stores.  This is usually closely related to Spring Data repositories.  Thus, the core artifacts to look at and potentially tweak to customize the way the exporting works are the repository and store interfaces.</p>
+<p>The core functionality of Spring Content REST, enabled through <code>@Import(RestConfiguration.class)</code>, is to export resources
+for Spring Content stores.  This is often closely related to Spring Data repositories.</p>
+</div>
+<div class="paragraph">
+<p>The following describes typical store scenarios and how they are exported with Spring Content REST.</p>
 </div>
 <div class="sect2">
-<h3 id="_entity_association">Entity Association</h3>
+<h3 id="_resources">Resources</h3>
 <div class="paragraph">
-<p>With Entity Association, as the name suggest, one Entity has one Resource associated with it.  Assume the following repository and store interfaces and Entity model:</p>
+<p>Spring Resources, managed by a Spring Content Store, are standard Spring Resources that, when exported using Spring
+Content REST, are accessible by REST endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following Store interface:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  public interface DvdStore extends Store&lt;String&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, the Store&#8217;s Resources are exported to the URI <code>/dvds</code>.  The path is derived from the
+uncapitalized, pluralized, simple class name of the interface.  When interacting with this endpoint any additional path
+is deemed to be the Resource&#8217;s location and will be used to fetch the Resource using the Store&#8217;s <code>getResource</code> method.
+For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4</code> assumes
+<code>/comedy/monty_pythons_flying_circus.mp4</code> is the location of the Resource.</p>
+</div>
+<div class="paragraph">
+<p>The HTTP methods are then mapped onto the relevant Resource methods; GET maps to <code>getInputStream</code>, PUT maps onto
+<code>getOutputStream</code> and so on.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_entity_resources">Entity Resources</h3>
+<div class="paragraph">
+<p>Entity Resources are associated with Spring Data Entities.</p>
+</div>
+<div class="paragraph">
+<p>Assume the following <code>Entity</code> class with associated <code>Repository</code> and <code>Store</code> interfaces:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -624,10 +661,15 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 </div>
 </div>
 <div class="paragraph">
-<p>In this example a single Resource (the actual Dvd video stream) can be associated with a Dvd Entity.  For this repository, Spring Data REST exposes a collection resource at <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being managed.  It also exposes an item resource for each of the items managed by the repository under the URI <code>/dvds/{id}</code>.  The HTTP methods to interact with Dvd resources map to the according methods of CrudRepository.</p>
+<p>In this example a single Resource (the DVD video stream) is associated with a Dvd Entity by annotating additional fields
+on the Entity using the <code>@ContentId</code> and <code>@MimeType</code> annotations.   In this example Spring Data REST exports a collection
+resource at <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being
+managed.  <code>Dvd</code> in this case.  Item resources are also exported to the URI <code>/dvds/{id}</code>.  The HTTP methods used to
+request this endpoint map into the methods of  <code>CrudRepository</code>.</p>
 </div>
 <div class="paragraph">
-<p>Similarly, for each Spring Data REST item resource, Spring Content REST exposes a content resource managed by the store also under the URI <code>/dvds/{id}</code>.  By default the HTTP methods to interact with the Dvd&#8217;s content resource maps onto the methods on <code>ContentStore</code> as follows:-</p>
+<p>Similarly, Spring Content REST also exports Entity Resources to the URI <code>/dvds/{id}</code>.  In this case the HTTP methods
+map onto the methods on <code>ContentStore</code> as follows:-</p>
 </div>
 <div class="ulist">
 <ul>
@@ -644,9 +686,13 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 </div>
 </div>
 <div class="sect2">
-<h3 id="_property_association">Property Association</h3>
+<h3 id="_property_resources">Property Resources</h3>
 <div class="paragraph">
-<p>The second type of association is Property Association.  With property association a property of an Entity is associated with one Resource.  Assume the following repository/store interfaces and Entity model.</p>
+<p>Property Resources are associated with the properties of Spring Data Entities.  This allows many Resources to be
+associated with a single Entity.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following <code>Entity</code> model with <code>Repository</code> and <code>Store</code> interfaces:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -704,13 +750,17 @@ public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code><
 </div>
 </div>
 <div class="paragraph">
-<p>In this example separate Resources can be associated with the image and stream properties of the <code>Dvd</code> Entity.</p>
+<p>In this example separate Resources are associated with the <code>image</code> and <code>stream</code> properties of the <code>Dvd</code> Entity.</p>
 </div>
 <div class="paragraph">
-<p>When using JPA with a relational database these associations are typically (but not always) also Entity associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
+<p>When using JPA and its relational characteristics these associations are typically (but not always) also Entity
+associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing
+hierarchical data they are true property associations.</p>
 </div>
 <div class="paragraph">
-<p>As before Spring Data REST will expose an item resource under the URI <code>/dvds/{id}</code>.  However, this time Spring Content REST will expose content resources under the URIs <code>/dvds/{id}/image/{contentId}</code> and <code>/dvds/{id}/stream/{contentId}</code> managed by their respective stores.  A new image (or a new stream) can be created by POSTing to <code>/dvds/{id}/image</code> (or <code>/dvds/{id}/stream</code>) resource.</p>
+<p>As before, Spring Data REST will export an item resource under the URI <code>/dvds/{id}</code>.  However, this time Spring Content
+REST will export Property Resources to the URI <code>/dvds/{id}/image/{contentId}</code> and <code>/dvds/{id}/stream/{contentId}</code>
+managed by the respective Store.  A property can be set by POSTing to <code>/dvds/{id}/image</code> (or <code>/dvds/{id}/stream</code>).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -719,16 +769,20 @@ public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code><
 <div class="title">Note</div>
 </td>
 <td class="content">
-as these properties are both single values Spring Content REST content resources are also available under the simplified <code>/dvds/{id}/image</code> and <code>/dvds/{id}/stream</code> where the <code>{contentId}</code> can be omitted for convenience.
+as these properties are both single values these Resources are also available under the simplified URI
+<code>/dvds/{id}/image</code> and <code>/dvds/{id}/stream</code> where the <code>{contentId}</code> is omitted for convenience.
 </td>
 </tr>
 </table>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_property_collection_associations">Property Collection Associations</h3>
+<h3 id="_property_collection_resources">Property Collection Resources</h3>
 <div class="paragraph">
-<p>The final type association is the Property Collection Association.  Unsurprisingly, closely related to Property Association, it allows a property of an Entity to be associated with many Resources.  Consider the following example:-</p>
+<p>Property Resources can also target Collections.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following example:-</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -764,10 +818,12 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="paragraph">
-<p>In this example many Resources can be associated with the chapters property of the <code>Dvd</code> Entity.</p>
+<p>In this example many Resources can be associated with the <code>chapters</code> property of the <code>Dvd</code> Entity.</p>
 </div>
 <div class="paragraph">
-<p>As with Property Association the content resources are exposed under the URI <code>/dvds/{id}/chapters/{contentId}</code>.  In this case POSTing to <code>/dvds/{id}/chapters</code> a new content resource to be <strong>appended</strong> to the 'Chapters' collection.  This resource supports both POST and PUT HTTP methods.</p>
+<p>As with Property Resources, Property Collection Resources are also exported to the URI <code>/dvds/{id}/chapters</code>.
+However, in this case, POSTing to <code>/dvds/{id}/chapters</code> always <strong>appends</strong> a new Resource to the 'Chapters' Collection.
+This Resource supports both POST and PUT HTTP methods.</p>
 </div>
 </div>
 <div class="sect2">
@@ -823,27 +879,34 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="sect2">
 <h3 id="_resource_discoverability">Resource Discoverability</h3>
 <div class="paragraph">
-<p>A core principle of HATEOAS is that resources should be discoverable through the publication of links that point to the available resources.  There are a few competing de-facto standards of how to represent links in JSON.  By default, Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.</p>
+<p>A core principle of HATEOAS is that Resources should be discoverable through the publication of links that point to the
+available resources.  There are a few competing de-facto standards specifying how to represent links in JSON.  By default,
+Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.</p>
 </div>
 <div class="paragraph">
-<p>Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that represent the next level of resources that are available to the client.</p>
+<p>Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the
+Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that
+represent the next level of resources that are available to the client.</p>
 </div>
 <div class="paragraph">
-<p>When enabled through <code>@Import(HypermediaConfiguration.class)</code> Spring Content REST will inject content resource and content collection resource links for both content and content collection associations into t	he HAL responses created by Spring Data REST.</p>
+<p>When enabled through <code>@Import(HypermediaConfiguration.class)</code> Spring Content REST will inject Store, Entity and Property
+Resources links for both into the HAL responses created by Spring Data REST.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_content_resource">The Content Resource</h2>
+<h2 id="_the_store_resource">The Store Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content REST exposes a content resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the <code>@StoreRestResource</code> on the store interface.</p>
+<p>Spring Content REST exports Store Resources to <code>/{store}/**</code>.  The resource path can be customized using the
+<code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
 <div class="sect2">
 <h3 id="_supported_http_methods">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Content resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not Allowed</code>.</p>
+<p>Store Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
+Allowed</code>.</p>
 </div>
 <div class="sect3">
 <h4 id="_get">GET</h4>
@@ -885,23 +948,122 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_content_collection_resource">The Content Collection Resource</h2>
+<h2 id="_the_entity_resource">The Entity Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content REST exposes a content collection resource named after the uncapitalized, pluralized version of the domain class the exported store is handling.  The resource path can be customized using the <code>@StoreRestResource</code> on the store interface.</p>
+<p>Spring Content REST exports Entity Resources to <code>/{store}/{id}</code>.  The resource path can be customized using the
+<code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
 <div class="sect2">
 <h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
+<p>Entity Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
+Allowed</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_get_2">GET</h4>
+<div class="paragraph">
+<p>Returns the Resource&#8217;s content</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_4">Supported media types</h5>
+<div class="paragraph">
+<p>All content types except <code>application/json</code></p>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_putpost_2">PUT/POST</h4>
 <div class="paragraph">
+<p>Sets the Resources&#8217;s content</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_5">Supported media types</h5>
+<div class="paragraph">
+<p>All content types except <code>application/json</code></p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_delete_2">DELETE</h4>
+<div class="paragraph">
+<p>Removes the Resource&#8217;s content</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_6">Supported media types</h5>
+<div class="paragraph">
+<p>All content types except <code>application/json</code></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_property_resource">The Property Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
+The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
+</div>
+<div class="sect2">
+<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
+<div class="paragraph">
+<p>Property Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
+Allowed</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_get_3">GET</h4>
+<div class="paragraph">
+<p>Returns the Resource&#8217;s content</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_7">Supported media types</h5>
+<div class="paragraph">
+<p>All content types except <code>application/json</code></p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_putpost_3">PUT/POST</h4>
+<div class="paragraph">
+<p>Sets the Resources&#8217;s content</p>
+</div>
+<div class="sect4">
+<h5 id="_supported_media_types_8">Supported media types</h5>
+<div class="paragraph">
+<p>All content types except <code>application/json</code></p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_delete_3">DELETE</h4>
+<div class="paragraph">
+<p>Removes the Resource&#8217;s content</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_collection_property_resource">The Collection Property Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content REST exports Property Collection Resources to <code>/{store}/{id}/{property}</code>.  The resource path can be
+customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
+</div>
+<div class="sect2">
+<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
+<div class="paragraph">
+<p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_putpost_4">PUT/POST</h4>
+<div class="paragraph">
 <p>Appends new content to the collection of Resources</p>
 </div>
 <div class="sect4">
-<h5 id="_supported_media_types_4">Supported media types</h5>
+<h5 id="_supported_media_types_9">Supported media types</h5>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
@@ -913,7 +1075,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-19 06:43:12 UTC
+Last updated 2019-01-22 17:26:32 UTC
 </div>
 </div>
 </body>
