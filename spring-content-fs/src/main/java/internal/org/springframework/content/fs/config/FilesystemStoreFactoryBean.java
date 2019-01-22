@@ -6,8 +6,8 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
+import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.util.Assert;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
 
@@ -18,7 +18,7 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 	FileSystemResourceLoader loader;
 
 	@Autowired
-	ConversionService filesystemStoreConverter;
+	PlacementService filesystemStorePlacementService;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
@@ -35,11 +35,11 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 		super.afterPropertiesSet();
 
 		Assert.notNull(loader, "resource loader cannot be null");
-		Assert.notNull(loader, "filesystemStoreConverter cannot be null");
+		Assert.notNull(filesystemStorePlacementService, "filesystemStorePlacementService cannot be null");
 	}
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFilesystemStoreImpl(loader, filesystemStoreConverter, new FileServiceImpl());
+		return new DefaultFilesystemStoreImpl(loader, filesystemStorePlacementService, new FileServiceImpl());
 	}
 }
