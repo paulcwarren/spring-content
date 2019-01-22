@@ -10,8 +10,9 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.FileService;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
@@ -22,16 +23,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
@@ -47,7 +49,7 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 public class DefaultFilesystemStoresImplTest {
 	private DefaultFilesystemStoreImpl<ContentProperty, String> filesystemContentRepoImpl;
 	private FileSystemResourceLoader loader;
-	private ConversionService conversion;
+	private PlacementService placer;
 	private ContentProperty entity;
 
 	private Resource resource;
@@ -72,11 +74,11 @@ public class DefaultFilesystemStoresImplTest {
 
 			BeforeEach(() -> {
 				loader = mock(FileSystemResourceLoader.class);
-				conversion = mock(ConversionService.class);
+				placer = mock(PlacementService.class);
 				fileService = mock(FileService.class);
 
 				filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
-						loader, conversion, fileService);
+						loader, placer, fileService);
 			});
 
 			Describe("Store", () -> {
@@ -84,14 +86,14 @@ public class DefaultFilesystemStoresImplTest {
 					BeforeEach(() -> {
 						id = "12345-67890";
 
-						when(conversion.convert(eq("12345-67890"), eq(String.class)))
+						when(placer.convert(eq("12345-67890"), eq(String.class)))
 								.thenReturn("12345-67890");
 					});
 					JustBeforeEach(() -> {
 						resource = filesystemContentRepoImpl.getResource(id);
 					});
-					It("should use the conversion service to get a resource path", () -> {
-						verify(conversion).convert(eq("12345-67890"), eq(String.class));
+					It("should use the placer service to get a resource path", () -> {
+						verify(placer).convert(eq("12345-67890"), eq(String.class));
 						verify(loader).getResource(eq("12345-67890"));
 					});
 				});
@@ -115,11 +117,11 @@ public class DefaultFilesystemStoresImplTest {
 							entity = new TestEntity();
 							entity.setContentId("12345-67890");
 
-							when(conversion.convert(eq("12345-67890"),
+							when(placer.convert(eq("12345-67890"),
 									eq(String.class))).thenReturn("/12345/67890");
 						});
-						It("should use the conversion service to get a resource path", () -> {
-							verify(conversion).convert(eq("12345-67890"),
+						It("should use the placer service to get a resource path", () -> {
+							verify(placer).convert(eq("12345-67890"),
 									eq(String.class));
 							verify(loader)
 									.getResource(eq("/12345/67890"));
@@ -131,15 +133,28 @@ public class DefaultFilesystemStoresImplTest {
 
 							deletableResource = mock(DeletableResource.class);
 
-							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
-							when(conversion.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
+							when(placer.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(placer.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
 							when(loader.getResource("/abcd/efgh")).thenReturn(deletableResource);
 						});
 						It("should not need to convert the id", () -> {
-							verify(conversion, never()).convert(argThat(not(entity)), eq(String.class));
+							verify(placer, never()).convert(argThat(not(entity)), eq(String.class));
 						});
 						It("should return the resource", () -> {
 							assertThat(resource, is(deletableResource));
+						});
+					});
+					Context("when the entity has a String-arg constructor - Issue #57", () ->{
+						BeforeEach(() -> {
+							PlacementService placementService = new PlacementServiceImpl();
+							placementService.removeConvertible(Object.class, String.class);
+							filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
+									loader, placementService, fileService);
+
+							entity = new TestEntity();
+						});
+						It("should not call the placement service by default", () -> {
+							verify(loader, never()).getResource(anyString());
 						});
 					});
 				});
@@ -149,7 +164,7 @@ public class DefaultFilesystemStoresImplTest {
 
 						entity = new TestEntity();
 
-						when(conversion.convert(eq("12345-67890"), eq(String.class)))
+						when(placer.convert(eq("12345-67890"), eq(String.class)))
 								.thenReturn("/12345/67890");
 
 						deletableResource = mock(DeletableResource.class);
@@ -201,7 +216,7 @@ public class DefaultFilesystemStoresImplTest {
 					Context("given an entity converter", () -> {
 						Context("when the content doesn't yet exist", () -> {
 							BeforeEach(() -> {
-								when(conversion.convert(matches(
+								when(placer.convert(matches(
 										"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
 										eq(String.class)))
 										.thenReturn("12345-67890");
@@ -233,8 +248,8 @@ public class DefaultFilesystemStoresImplTest {
 						});
 						Context("when the content already exists", () -> {
 							BeforeEach(() -> {
-								when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
-								when(conversion.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
+								when(placer.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+								when(placer.convert(eq(entity), eq(String.class))).thenReturn("/abcd/efgh");
 								when(loader.getResource(eq("/abcd/efgh"))).thenReturn(writeableResource);
 
 								when(writeableResource.exists()).thenReturn(true);
@@ -259,10 +274,10 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given just the default ID converters", () -> {
 						BeforeEach(() -> {
-							when(conversion.convert(eq(entity), eq(String.class)))
+							when(placer.convert(eq(entity), eq(String.class)))
 									.thenReturn(null);
 
-							when(conversion.convert(matches(
+							when(placer.convert(matches(
 									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
 									eq(String.class)))
 									.thenReturn("12345-67890");
@@ -281,9 +296,9 @@ public class DefaultFilesystemStoresImplTest {
 								when(writeableResource.exists()).thenReturn(true);
 							});
 
-							It("should use the conversion service to get a resource path",
+							It("should use the placer service to get a resource path",
 									() -> {
-										verify(conversion, atLeastOnce()).convert(anyObject(), anyObject());
+										verify(placer, atLeastOnce()).convert(anyObject(), anyObject());
 										verify(loader).getResource(eq("12345-67890"));
 									});
 
@@ -350,10 +365,10 @@ public class DefaultFilesystemStoresImplTest {
 						content = mock(InputStream.class);
 						entity.setContentId("abcd-efgh");
 
-						when(conversion.convert(eq(entity), eq(String.class)))
+						when(placer.convert(eq(entity), eq(String.class)))
 								.thenReturn(null);
 
-						when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
+						when(placer.convert(eq("abcd-efgh"), eq(String.class)))
 								.thenReturn("abcd-efgh");
 
 						when(loader.getResource(eq("abcd-efgh")))
@@ -371,8 +386,8 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given an entity converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
-							when(conversion.convert(eq(entity), eq(String.class)))
+							when(placer.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(placer.convert(eq(entity), eq(String.class)))
 									.thenReturn("/abcd/efgh");
 						});
 						Context("when the resource does not exists", () -> {
@@ -407,7 +422,7 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given just the default ID converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.convert(eq(entity), eq(String.class))).thenReturn(null);
+							when(placer.convert(eq(entity), eq(String.class))).thenReturn(null);
 						});
 						Context("when the resource does not exists", () -> {
 							BeforeEach(() -> {
@@ -484,8 +499,8 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given an entity converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
-							when(conversion.convert(eq(entity), eq(String.class)))
+							when(placer.canConvert(eq(entity.getClass()), eq(String.class))).thenReturn(true);
+							when(placer.convert(eq(entity), eq(String.class)))
 									.thenReturn("/abcd/efgh");
 						});
 						Context("given the resource does not exist", () -> {
@@ -530,11 +545,11 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given just the default ID converter", () -> {
 						BeforeEach(() -> {
-							when(conversion.convert(eq(entity), eq(String.class))).thenReturn(null);
+							when(placer.convert(eq(entity), eq(String.class))).thenReturn(null);
 						});
 						Context("when the content exists in the new location", () -> {
 							BeforeEach(() -> {
-								when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
+								when(placer.convert(eq("abcd-efgh"), eq(String.class)))
 										.thenReturn("abcd-efgh");
 
 								when(loader.getResource(eq("abcd-efgh")))
@@ -590,7 +605,7 @@ public class DefaultFilesystemStoresImplTest {
 
 						Context("when the content doesnt exist", () -> {
 							BeforeEach(() -> {
-								when(conversion.convert(eq("abcd-efgh"), eq(String.class)))
+								when(placer.convert(eq("abcd-efgh"), eq(String.class)))
 										.thenReturn("abcd-efgh");
 
 								nonExistentResource = mock(DeletableResource.class);

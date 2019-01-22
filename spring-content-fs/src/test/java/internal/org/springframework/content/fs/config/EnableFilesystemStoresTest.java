@@ -1,9 +1,7 @@
 package internal.org.springframework.content.fs.config;
 
-import static org.junit.Assert.fail;
-
-import java.util.UUID;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -21,23 +19,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @SuppressWarnings("deprecation")
 @RunWith(Ginkgo4jRunner.class)
@@ -66,8 +62,8 @@ public class EnableFilesystemStoresTest {
 							assertThat(context.getBean(TestEntityContentRepository.class),
 									is(not(nullValue())));
 						});
-						It("should have a filesystem conversion service bean", () -> {
-							assertThat(context.getBean("filesystemStoreConverter"),
+						It("should have a filesystem placement service bean", () -> {
+							assertThat(context.getBean("filesystemStorePlacementService"),
 									is(not(nullValue())));
 						});
 						It("should have a FileSystemResourceLoader bean", () -> {

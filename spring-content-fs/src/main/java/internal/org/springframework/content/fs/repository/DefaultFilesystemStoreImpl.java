@@ -1,14 +1,5 @@
 package internal.org.springframework.content.fs.repository;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,19 +13,21 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
+import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Version;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
 
 import static java.lang.String.format;
 
@@ -45,18 +38,18 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
 	private FileSystemResourceLoader loader;
-	private ConversionService conversion;
+	private PlacementService placer;
 	private FileService fileService;
 
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, ConversionService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, PlacementService conversion, FileService fileService) {
 		this.loader = loader;
-		this.conversion = conversion;
+		this.placer = conversion;
 		this.fileService = fileService;
 	}
 
 	@Override
 	public Resource getResource(SID id) {
-		String location = conversion.convert(id, String.class);
+		String location = placer.convert(id, String.class);
 		Resource resource = loader.getResource(location);
 		return resource;
 	}
@@ -64,8 +57,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	public Resource getResource(S entity) {
 		Resource resource = null;
-		if (conversion.canConvert(entity.getClass(), String.class)) {
-			String location = conversion.convert(entity, String.class);
+		if (placer.canConvert(entity.getClass(), String.class)) {
+			String location = placer.convert(entity, String.class);
 			resource = loader.getResource(location);
 			if (resource != null) {
 				return resource;
@@ -201,10 +194,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {
-		if (conversion.canConvert(TypeDescriptor.forObject(contentId),
+		if (placer.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
 						ContentId.class)))) {
-			contentId = conversion.convert(contentId, TypeDescriptor.forObject(contentId),
+			contentId = placer.convert(contentId, TypeDescriptor.forObject(contentId),
 					TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
 							ContentId.class)));
 			return contentId;

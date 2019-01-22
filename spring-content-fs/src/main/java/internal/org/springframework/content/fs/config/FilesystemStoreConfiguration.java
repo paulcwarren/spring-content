@@ -1,14 +1,14 @@
 package internal.org.springframework.content.fs.config;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.fs.config.FilesystemStoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
-import org.springframework.core.convert.support.DefaultConversionService;
+
+import java.util.List;
 
 @Configuration
 public class FilesystemStoreConfiguration {
@@ -17,8 +17,9 @@ public class FilesystemStoreConfiguration {
 	private List<FilesystemStoreConfigurer> configurers;
 
 	@Bean
-	ConversionService filesystemStoreConverter() {
-		DefaultConversionService conversion = new DefaultConversionService();
+	public PlacementService filesystemStorePlacementService() {
+		PlacementService conversion = new PlacementServiceImpl();
+
 		addConverters(conversion);
 		return conversion;
 	}
