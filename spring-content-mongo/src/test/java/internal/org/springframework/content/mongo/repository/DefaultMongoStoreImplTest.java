@@ -1,6 +1,28 @@
 package internal.org.springframework.content.mongo.repository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.mongodb.gridfs.GridFSFile;
+import org.bson.types.ObjectId;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
+import org.springframework.core.io.Resource;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -11,30 +33,11 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.UUID;
-
-import org.bson.types.ObjectId;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.Resource;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.mongodb.gridfs.GridFSFile;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultMongoStoreImplTest {
@@ -45,7 +48,7 @@ public class DefaultMongoStoreImplTest {
 	private ContentProperty property;
 	private GridFsResource resource;
 	private Resource genericResource;
-	private ConversionService converter;
+	private PlacementService placer;
 
 	private InputStream content;
 	private InputStream result;
@@ -55,16 +58,16 @@ public class DefaultMongoStoreImplTest {
 		Describe("DefaultMongoStoreImpl", () -> {
 			Describe("Store", () -> {
 				BeforeEach(() -> {
-					converter = mock(ConversionService.class);
+					placer = mock(PlacementService.class);
 					gridFsTemplate = mock(GridFsTemplate.class);
 					resource = mock(GridFsResource.class);
 					mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(
-							gridFsTemplate, converter);
+							gridFsTemplate, placer);
 				});
 				Context("#getResource", () -> {
 					Context("with an id", () -> {
 						BeforeEach(() -> {
-							when(converter.convert(eq("abcd"), eq(String.class)))
+							when(placer.convert(eq("abcd"), eq(String.class)))
 									.thenReturn("abcd");
 							when(gridFsTemplate.getResource(eq("abcd")))
 									.thenReturn(resource);
@@ -72,9 +75,9 @@ public class DefaultMongoStoreImplTest {
 						JustBeforeEach(() -> {
 							genericResource = mongoContentRepoImpl.getResource("abcd");
 						});
-						It("should use the mongoStoreConverter to find the resource path",
+						It("should use the mongoStorePlacementService to find the resource path",
 								() -> {
-									verify(converter).convert(eq("abcd"),
+									verify(placer).convert(eq("abcd"),
 											eq(String.class));
 								});
 						It("should get Resource", () -> {
@@ -85,11 +88,11 @@ public class DefaultMongoStoreImplTest {
 			});
 			Describe("AssociativeStore", () -> {
 				BeforeEach(() -> {
-					converter = mock(ConversionService.class);
+					placer = mock(PlacementService.class);
 					gridFsTemplate = mock(GridFsTemplate.class);
 					resource = mock(GridFsResource.class);
 					mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(
-							gridFsTemplate, converter);
+							gridFsTemplate, placer);
 				});
 				Context("getResource", () -> {
 					BeforeEach(() -> {
@@ -100,7 +103,7 @@ public class DefaultMongoStoreImplTest {
 					});
 					Context("given no resource is associated", () -> {
 						BeforeEach(() -> {
-							when(converter.convert(matches(
+							when(placer.convert(matches(
 									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
 									eq(String.class))).thenReturn("abcd");
 							when(gridFsTemplate.getResource(eq("abcd")))
@@ -108,7 +111,7 @@ public class DefaultMongoStoreImplTest {
 						});
 						It("should return null",
 							() -> {
-								verify(converter, never()).convert(matches(
+								verify(placer, never()).convert(matches(
 										"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
 										eq(String.class));
 								assertThat(genericResource, is(nullValue()));
@@ -118,18 +121,29 @@ public class DefaultMongoStoreImplTest {
 						BeforeEach(() -> {
 							property.setContentId("abcd");
 
-							when(converter.convert(eq("abcd"), eq(String.class)))
+							when(placer.convert(eq("abcd"), eq(String.class)))
 									.thenReturn("abcd");
 							when(gridFsTemplate.getResource(eq("abcd")))
 									.thenReturn(resource);
 						});
-						It("should use the mongoStoreConverter to find the resource path",
+						It("should use the mongoStorePlacementService to find the resource path",
 								() -> {
-									verify(converter).convert(eq("abcd"),
+									verify(placer).convert(eq("abcd"),
 											eq(String.class));
 								});
 						It("should get Resource", () -> {
 							assertThat(genericResource, is(not(nullValue())));
+						});
+					});
+					Context("when the entity has a String-arg constructor - Issue #57", () ->{
+						BeforeEach(() -> {
+							PlacementService placementService = new PlacementServiceImpl();
+							mongoContentRepoImpl = new DefaultMongoStoreImpl<>(gridFsTemplate, placer);
+
+							property = new TestEntity();
+						});
+						It("should not call the placement service by default", () -> {
+							verify(placer, never()).convert(property, String.class);
 						});
 					});
 				});
@@ -138,15 +152,15 @@ public class DefaultMongoStoreImplTest {
 					BeforeEach(() -> {
 						property = new TestEntity();
 
-						when(converter.convert(eq("12345"), eq(String.class)))
+						when(placer.convert(eq("12345"), eq(String.class)))
 								.thenReturn("12345");
 					});
 					JustBeforeEach(() -> {
 						mongoContentRepoImpl.associate(property, "12345");
 					});
-					It("should use the mongoStoreConverter to find the resource path",
+					It("should use the mongoStorePlacementService to find the resource path",
 							() -> {
-								verify(converter).convert(eq("12345"), eq(String.class));
+								verify(placer).convert(eq("12345"), eq(String.class));
 							});
 					It("should set the entity's content ID attribute", () -> {
 						assertThat(property.getContentId(), is("12345"));
@@ -178,12 +192,12 @@ public class DefaultMongoStoreImplTest {
 			});
 			Describe("ContentStore", () -> {
 				BeforeEach(() -> {
-					converter = mock(ConversionService.class);
+					placer = mock(PlacementService.class);
 					gridFsTemplate = mock(GridFsTemplate.class);
 					gridFSFile = mock(GridFSFile.class);
 					resource = mock(GridFsResource.class);
 					mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(
-							gridFsTemplate, converter);
+							gridFsTemplate, placer);
 				});
 
 				Context("#setContent", () -> {
@@ -203,7 +217,7 @@ public class DefaultMongoStoreImplTest {
 
 					Context("when content is new", () -> {
 						BeforeEach(() -> {
-							when(converter.convert(isA(UUID.class), eq(String.class)))
+							when(placer.convert(isA(UUID.class), eq(String.class)))
 									.thenReturn("12345-67890");
 							when(gridFsTemplate.getResource(anyString())).thenReturn(null)
 									.thenReturn(resource);
@@ -212,9 +226,9 @@ public class DefaultMongoStoreImplTest {
 							when(resource.contentLength()).thenReturn(1L);
 						});
 
-						It("should use the mongoStoreConverter to find the resource path",
+						It("should use the mongoStorePlacementService to find the resource path",
 								() -> {
-									verify(converter).convert(isA(UUID.class),
+									verify(placer).convert(isA(UUID.class),
 											eq(String.class));
 								});
 
@@ -231,7 +245,7 @@ public class DefaultMongoStoreImplTest {
 						BeforeEach(() -> {
 							property.setContentId("abcd-efghi");
 
-							when(converter.convert(eq("abcd-efghi"), eq(String.class)))
+							when(placer.convert(eq("abcd-efghi"), eq(String.class)))
 									.thenReturn("abcd-efghi");
 							when(gridFsTemplate.getResource("abcd-efghi")).thenReturn(resource);
 							// when(gridFsTemplate.store(anyObject(),
@@ -240,9 +254,9 @@ public class DefaultMongoStoreImplTest {
 							when(resource.contentLength()).thenReturn(1L);
 						});
 
-						It("should use the mongoStoreConverter to find the resource path",
+						It("should use the mongoStorePlacementService to find the resource path",
 								() -> {
-									verify(converter).convert(eq("abcd-efghi"),
+									verify(placer).convert(eq("abcd-efghi"),
 											eq(String.class));
 								});
 
@@ -277,7 +291,7 @@ public class DefaultMongoStoreImplTest {
 
 						content = mock(InputStream.class);
 
-						when(converter.convert(eq("abcd"), eq(String.class)))
+						when(placer.convert(eq("abcd"), eq(String.class)))
 								.thenReturn("abcd");
 						when(gridFsTemplate.getResource("abcd")).thenReturn(resource);
 						when(resource.getInputStream()).thenReturn(content);
@@ -296,8 +310,8 @@ public class DefaultMongoStoreImplTest {
 							when(resource.exists()).thenReturn(true);
 						});
 
-						It("should use the converter to get the resource path", () -> {
-							verify(converter).convert(eq("abcd"), eq(String.class));
+						It("should use the placer to get the resource path", () -> {
+							verify(placer).convert(eq("abcd"), eq(String.class));
 						});
 
 						It("should fetch the resource from that path", () -> {
@@ -335,7 +349,7 @@ public class DefaultMongoStoreImplTest {
 						property = new TestEntity();
 						property.setContentId("abcd");
 
-						when(converter.convert(eq("abcd"), eq(String.class)))
+						when(placer.convert(eq("abcd"), eq(String.class)))
 								.thenReturn("abcd");
 						when(gridFsTemplate.getResource("abcd")).thenReturn(resource);
 						when(resource.exists()).thenReturn(true);
@@ -349,8 +363,8 @@ public class DefaultMongoStoreImplTest {
 						}
 					});
 
-					It("should use the converter to get the resource path", () -> {
-						verify(converter).convert(eq("abcd"), eq(String.class));
+					It("should use the placer to get the resource path", () -> {
+						verify(placer).convert(eq("abcd"), eq(String.class));
 					});
 
 					It("should fetch the resource from that path", () -> {
