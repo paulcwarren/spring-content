@@ -1,16 +1,5 @@
 package internal.org.springframework.content.mongo.repository;
 
-import static java.lang.String.format;
-import static org.springframework.data.mongodb.core.query.Query.query;
-import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
 import internal.org.springframework.content.mongo.io.GridFsStoreResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,11 +11,22 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
+import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
 
 public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -34,19 +34,19 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
 
 	private GridFsTemplate gridFs;
-	private ConversionService converter;
+	private PlacementService placer;
 
-	public DefaultMongoStoreImpl(GridFsTemplate gridFs, ConversionService converter) {
+	public DefaultMongoStoreImpl(GridFsTemplate gridFs, PlacementService placer) {
 		Assert.notNull(gridFs, "gridFs cannot be null");
-		Assert.notNull(converter, "converter cannot be null");
+		Assert.notNull(placer, "placer cannot be null");
 
 		this.gridFs = gridFs;
-		this.converter = converter;
+		this.placer = placer;
 	}
 
 	@Override
 	public Resource getResource(SID id) {
-		String location = converter.convert(id, String.class);
+		String location = placer.convert(id, String.class);
 		return new GridFsStoreResource(location, gridFs);
 	}
 
@@ -60,7 +60,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			return null;
 		}
 
-		String location = converter.convert(contentId, String.class);
+		String location = placer.convert(contentId, String.class);
 		return new GridFsStoreResource(location, gridFs);
 	}
 
@@ -101,7 +101,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 					contentId.toString());
 		}
 
-		String location = converter.convert(contentId, String.class);
+		String location = placer.convert(contentId, String.class);
 		Resource resource = gridFs.getResource(location);
 		if (resource != null && resource.exists()) {
 			gridFs.delete(query(whereFilename().is(resource.getFilename())));
@@ -133,7 +133,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		if (contentId == null)
 			return null;
 
-		String location = converter.convert(contentId, String.class);
+		String location = placer.convert(contentId, String.class);
 		Resource resource = gridFs.getResource(location);
 		try {
 			if (resource != null && resource.exists()) {
@@ -156,7 +156,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			return;
 
 		try {
-			String location = converter.convert(contentId, String.class);
+			String location = placer.convert(contentId, String.class);
 			Resource resource = gridFs.getResource(location);
 			if (resource != null && resource.exists()) {
 				gridFs.delete(query(whereFilename().is(resource.getFilename())));
@@ -189,10 +189,10 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	protected Object convertToExternalContentIdType(S property, Object contentId) {
-		if (converter.canConvert(TypeDescriptor.forObject(contentId),
+		if (placer.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
 						ContentId.class)))) {
-			contentId = converter.convert(contentId, TypeDescriptor.forObject(contentId),
+			contentId = placer.convert(contentId, TypeDescriptor.forObject(contentId),
 					TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
 							ContentId.class)));
 			return contentId;

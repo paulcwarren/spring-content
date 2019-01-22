@@ -57,7 +57,7 @@ public class EnableMongoStoresTest {
 									is(not(nullValue())));
 						});
 						It("should have a mongo store converter", () -> {
-							assertThat(context.getBean("mongoStoreConverter"),
+							assertThat(context.getBean("mongoStorePlacementService"),
 									is(not(nullValue())));
 						});
 					});
@@ -73,7 +73,7 @@ public class EnableMongoStoresTest {
 				});
 				It("should use that converter", () -> {
 					ConversionService converters = (ConversionService) context
-							.getBean("mongoStoreConverter");
+							.getBean("mongoStorePlacementService");
 					assertThat(
 							converters.convert(
 									UUID.fromString(
@@ -123,7 +123,7 @@ public class EnableMongoStoresTest {
 									is(not(nullValue())));
 						});
 						It("should have a mongo store converter", () -> {
-							assertThat(context.getBean("mongoStoreConverter"),
+							assertThat(context.getBean("mongoStorePlacementService"),
 									is(not(nullValue())));
 						});
 					});
