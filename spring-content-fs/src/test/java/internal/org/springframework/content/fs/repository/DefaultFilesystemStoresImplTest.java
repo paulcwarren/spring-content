@@ -147,7 +147,6 @@ public class DefaultFilesystemStoresImplTest {
 					Context("when the entity has a String-arg constructor - Issue #57", () ->{
 						BeforeEach(() -> {
 							PlacementService placementService = new PlacementServiceImpl();
-							placementService.removeConvertible(Object.class, String.class);
 							filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
 									loader, placementService, fileService);
 
