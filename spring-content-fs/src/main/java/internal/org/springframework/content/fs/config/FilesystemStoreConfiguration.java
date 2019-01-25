@@ -21,7 +21,12 @@ public class FilesystemStoreConfiguration {
 	@Bean
 	public PlacementService filesystemStorePlacementService() {
 		PlacementService conversion = new PlacementServiceImpl();
-		conversion.addConverter((Converter<URI, String>) source -> source.toString());
+		conversion.addConverter(new Converter<URI, String>() {
+			@Override
+			public String convert(URI source) {
+				return source.toString();
+			}
+		});
 
 		addConverters(conversion);
 		return conversion;
