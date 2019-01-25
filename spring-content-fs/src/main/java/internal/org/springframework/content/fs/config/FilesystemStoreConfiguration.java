@@ -6,8 +6,10 @@ import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.fs.config.FilesystemStoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
+import java.net.URI;
 import java.util.List;
 
 @Configuration
@@ -19,6 +21,7 @@ public class FilesystemStoreConfiguration {
 	@Bean
 	public PlacementService filesystemStorePlacementService() {
 		PlacementService conversion = new PlacementServiceImpl();
+		conversion.addConverter((Converter<URI, String>) source -> source.toString());
 
 		addConverters(conversion);
 		return conversion;
