@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 
+import java.net.URI;
 import java.util.List;
 
 @Configuration
@@ -25,6 +26,14 @@ public class MongoStoreConfiguration {
 				conversion.addConverter(converter);
 			}
 		}
+
+		conversion.addConverter(new Converter<URI, String>() {
+			@Override
+			public String convert(URI source) {
+				return source.toString();
+			}
+		});
+
 		return conversion;
 	}
 }
