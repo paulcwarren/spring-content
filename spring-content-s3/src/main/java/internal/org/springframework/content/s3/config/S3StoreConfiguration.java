@@ -1,20 +1,26 @@
 package internal.org.springframework.content.s3.config;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
+import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.S3ObjectIdResolvers;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.converter.ConverterRegistry;
+
+import java.util.List;
 
 @Configuration
 public class S3StoreConfiguration {
 
 	@Autowired(required = false)
 	private List<S3StoreConfigurer> configurers;
+
+	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
+	private String bucket;
 
 	@Bean
 	public S3ObjectIdResolvers contentIdResolvers() {
@@ -28,18 +34,31 @@ public class S3StoreConfiguration {
 	}
 
 	@Bean
-	public ConversionService s3StoreConverter() {
-		DefaultConversionService conversion = new DefaultConversionService();
+	public PlacementService s3StorePlacementService() {
+		PlacementService conversion = new PlacementServiceImpl();
+
+		for (S3ObjectIdResolver resolver : contentIdResolvers()) {
+			conversion.addConverter(new S3ObjectIdResolverConverter(resolver, bucket));
+		}
+
+		addDefaultS3ObjectIdConverters(conversion, bucket);
+
 		addConverters(conversion);
 		return conversion;
 	}
 
-	private void addConverters(DefaultConversionService conversion) {
+	public static void addDefaultS3ObjectIdConverters(PlacementService conversion, String bucket) {
+		// Serializable -> S3ObjectId
+		conversion.addConverter(new S3ObjectIdResolverConverter(S3StoreFactoryBean.DEFAULT_S3OBJECTID_RESOLVER_STORE, bucket));
+		// Object -> S3ObjectId
+		conversion.addConverter(new S3ObjectIdResolverConverter(new DefaultAssociativeStoreS3ObjectIdResolver(), bucket));
+	}
+
+	private void addConverters(ConverterRegistry registry) {
 		if (configurers == null)
 			return;
 		for (S3StoreConfigurer configurer : configurers) {
-			configurer.configureS3StoreConverters(conversion);
+			configurer.configureS3StoreConverters(registry);
 		}
 	}
-
 }
