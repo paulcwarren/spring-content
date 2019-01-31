@@ -1,14 +1,6 @@
 package internal.org.springframework.content.s3.store;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
@@ -16,14 +8,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
-import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -31,8 +23,13 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
 
 import static java.lang.String.format;
 
@@ -43,26 +40,17 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
 	private ResourceLoader loader;
-	private ConversionService converter;
+	private PlacementService placementService;
 	private AmazonS3 client;
-	private S3ObjectIdResolver idResolver = null;
-	private String defaultBucket;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, ConversionService converter,
-			AmazonS3 client, S3ObjectIdResolver idResolver, String defaultBucket) {
+	public DefaultS3StoreImpl(ResourceLoader loader, PlacementService placementService,
+			AmazonS3 client/*, S3ObjectIdResolver idResolver, String defaultBucket*/) {
 		Assert.notNull(loader, "loader must be specified");
-		Assert.notNull(converter, "converter must be specified");
+		Assert.notNull(placementService, "placementService must be specified");
 		Assert.notNull(client, "client must be specified");
-		Assert.notNull(idResolver, "idResolver must be specified");
 		this.loader = loader;
-		this.converter = converter;
+		this.placementService = placementService;
 		this.client = client;
-		this.idResolver = idResolver;
-		this.defaultBucket = defaultBucket;
-	}
-
-	public S3ObjectIdResolver getS3ObjectIdResolver() {
-		return idResolver;
 	}
 
 	@Override
@@ -71,17 +59,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			return null;
 
 		if (id instanceof S3ObjectId == false) {
-			this.getS3ObjectIdResolver().validate(id);
-			String bucket = this.getS3ObjectIdResolver().getBucket(id,
-					this.defaultBucket);
-			String objectId = this.getS3ObjectIdResolver().getKey(id);
-
-			if (bucket == null) {
-				throw new StoreAccessException("Bucket not set");
+			S3ObjectId s3ObjectId = null;
+			if (placementService.canConvert(id.getClass(), S3ObjectId.class)) {
+				s3ObjectId = placementService.convert(id, S3ObjectId.class);
+				return this.getResourceInternal(s3ObjectId);
 			}
 
-			S3ObjectId s3ObjectId = new S3ObjectId(bucket, objectId);
-			return this.getResourceInternal(s3ObjectId);
+			throw new StoreAccessException(format("Unable to convert from %s to S3ObjectId", id));
 		}
 		else {
 			return this.getResourceInternal((S3ObjectId) id);
@@ -93,27 +77,34 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		if (entity == null)
 			return null;
 
-		String bucket = this.getS3ObjectIdResolver().getBucket(entity,
-				this.defaultBucket);
-		if (bucket == null) {
-			throw new StoreAccessException("Bucket not set");
+		S3ObjectId s3ObjectId = null;
+		if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
+			s3ObjectId = placementService.convert(entity, S3ObjectId.class);
+			if (s3ObjectId != null) {
+				return this.getResourceInternal(s3ObjectId);
+			}
+		} else {
+			Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+			if (id != null) {
+				return this.getResource((SID) id);
+			}
 		}
 
-		String key = this.getS3ObjectIdResolver().getKey(entity);
-		if (key == null) {
-			return null;
-		}
-
-		S3ObjectId s3ObjectId = new S3ObjectId(bucket.toString(), key.toString());
-		return this.getResourceInternal(s3ObjectId);
+		return null;
 	}
 
 	protected Resource getResourceInternal(S3ObjectId id) {
 		String bucket = id.getBucket();
-		Object objectId = id.getKey();
 
-		String location = converter.convert(objectId, String.class);
-		location = absolutify(bucket, location);
+        String location = null;
+        if (placementService.canConvert(S3ObjectId.class, String.class)) {
+            location = placementService.convert(id, String.class);
+            location = absolutify(bucket, location);
+        } else {
+            Object objectId = id.getKey();
+            location = placementService.convert(objectId, String.class);
+            location = absolutify(bucket, location);
+        }
 		Resource resource = loader.getResource(location);
 		return new S3StoreResource(client, bucket, resource);
 	}
@@ -149,7 +140,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		Resource resource = this.getResource(entity);
 		if (resource == null) {
 			UUID newId = UUID.randomUUID();
-			Object convertedId = converter.convert(newId, TypeDescriptor.forObject(newId),
+			Object convertedId = placementService.convert(newId, TypeDescriptor.forObject(newId),
 					TypeDescriptor.valueOf(BeanUtils
 							.getFieldWithAnnotationType(entity, ContentId.class)));
 			resource = this.getResource((SID)convertedId);
@@ -252,16 +243,15 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	}
 
 	private void deleteIfExists(S entity) {
-		String bucketName = this.getS3ObjectIdResolver().getBucket(entity,
-				this.defaultBucket);
 
 		Resource resource = this.getResource(entity);
-		if (resource != null && resource.exists()) {
+		if (resource != null && resource.exists() && resource instanceof DeletableResource) {
+
 			try {
-				client.deleteObject(new DeleteObjectRequest(bucketName, resource.getFilename()));
-			} catch (AmazonClientException ace) {
+				((DeletableResource)resource).delete();
+			} catch (Exception e) {
 				logger.error(format("Unexpected error unsetting content for entity %s", entity));
-				throw new StoreAccessException(format("Unsetting content for entity %s", entity), ace);
+				throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
 			}
 		}
 	}

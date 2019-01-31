@@ -1,12 +1,17 @@
 package org.springframework.content.s3;
 
+import internal.org.springframework.content.s3.config.S3StoreConfiguration;
+import org.springframework.util.Assert;
+
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.springframework.util.Assert;
-
 /**
+ * S3ObjectIdResolvers have been deprecated in favor of Converters.
+ * <br>
+ * <br>
  * This interface helps resolve the elements of an S3ObjectId object, namely bucket and
  * key. <br>
  * <br>
@@ -20,9 +25,11 @@ import org.springframework.util.Assert;
  * <p>
  * Example:
  * <p>
- * {@code S3ObjectIdResolver.createS3ContentIdHeper(S3ObjectId::getBucket, S3ObjectId::getKey,
-		id -> Assert.notNull(id.getKey, "ObjectId must not be null"))}
+ * {@code S3ObjectIdResolver.createS3ContentIdHeper(S3ObjectId::getBucket, S3ObjectId::getKey, id -> Assert.notNull(id.getKey, "ObjectId must not be null"))}
+ *
+ * @see org.springframework.core.convert.converter.Converter
  */
+@Deprecated
 public interface S3ObjectIdResolver<I> {
 
 	default String getBucket(I idOrEntity, String defaultBucketName) {
@@ -38,14 +45,70 @@ public interface S3ObjectIdResolver<I> {
 		Assert.notNull(idOrEntity, "ContentId must not be null");
 	}
 
-	static <I> S3ObjectIdResolver<I> createDefaultS3ObjectIdHelper() {
-		return new S3ObjectIdResolver<I>() {
+	default Class<? extends I> getTarget() {
+		return null;
+	}
+
+	static S3ObjectIdResolver<Serializable> createDefaultS3ObjectIdHelper() {
+		return new S3ObjectIdResolver<Serializable>() {
 		};
 	}
 
+	/**
+	 * Creates a new S3ObjectIdResolver.
+	 *
+	 * @param getBucketFunction the function that provides the bucket name, or default bucket
+	 * @param getObjectIdFunction the function that provides the object's key
+	 * @param validateConsumer the function that validates the source to ensure a bucket and key can resolved
+	 * @param <J>
+	 * @return the resolver
+	 */
+	@Deprecated
+	static <J> S3ObjectIdResolver<J> createS3ObjectIdResolver(
+			Function<J, String> getBucketFunction,
+			Function<J, String> getObjectIdFunction,
+			Consumer<J> validateConsumer) {
+		return new S3ObjectIdResolver<J>() {
+			@Override
+			public String getBucket(J idOrEntity, String defaultBucketName) {
+				String bucketName = getBucketFunction.apply(idOrEntity);
+				return null != bucketName ? bucketName : defaultBucketName;
+			}
+
+			@Override
+			public String getKey(J idOrEntity) {
+				return getObjectIdFunction.apply(idOrEntity);
+			}
+
+			@Override
+			public void validate(J idOrEntity) {
+				if (validateConsumer != null) {
+					validateConsumer.accept(idOrEntity);
+				}
+			}
+		};
+	}
+
+	/**
+	 * Creates a new S3ObjectIdResolver.
+	 *
+	 * This variant of the factory method is used by {@link S3StoreConfiguration#s3StorePlacementService()}
+	 * to convert <code>S3ObjectIdResolver</code>s into <code>Converter</code>s.  The <code>target</code>
+	 * argument aids identification of the source type for the <code>Converter</code>.
+	 *
+	 * @param getBucketFunction the function that provides the bucket name, or default bucket
+	 * @param getObjectIdFunction the function that provides the object's key
+	 * @param validateConsumer the function that validates the source to ensure a bucket and key can resolved
+	 * @param target the type of the source object that this resolver resolves from
+	 * @param <J>
+	 * @return the resolver
+	 */
+	@Deprecated
 	static <I> S3ObjectIdResolver<I> createS3ObjectIdResolver(
 			Function<I, String> getBucketFunction,
-			Function<I, String> getObjectIdFunction, Consumer<I> validateConsumer) {
+			Function<I, String> getObjectIdFunction,
+			Consumer<I> validateConsumer,
+			Class<? extends I> target) {
 		return new S3ObjectIdResolver<I>() {
 			@Override
 			public String getBucket(I idOrEntity, String defaultBucketName) {
@@ -63,6 +126,11 @@ public interface S3ObjectIdResolver<I> {
 				if (validateConsumer != null) {
 					validateConsumer.accept(idOrEntity);
 				}
+			}
+
+			@Override
+			public Class<? extends I> getTarget() {
+				return target;
 			}
 		};
 	}

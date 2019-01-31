@@ -5,10 +5,6 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
-
-import java.util.UUID;
 
 /**
  * The default associative store S3ObjectId resolver.
@@ -19,12 +15,6 @@ import java.util.UUID;
  */
 public class DefaultAssociativeStoreS3ObjectIdResolver
 		implements S3ObjectIdResolver<Object> {
-
-	private ConversionService converter;
-
-	public DefaultAssociativeStoreS3ObjectIdResolver(ConversionService converter) {
-		this.converter = converter;
-	}
 
 	@Override
 	public String getBucket(Object idOrEntity, String defaultBucketName) {
