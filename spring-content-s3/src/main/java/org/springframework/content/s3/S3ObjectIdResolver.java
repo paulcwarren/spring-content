@@ -60,7 +60,7 @@ public interface S3ObjectIdResolver<I> {
 	 * @param getBucketFunction the function that provides the bucket name, or default bucket
 	 * @param getObjectIdFunction the function that provides the object's key
 	 * @param validateConsumer the function that validates the source to ensure a bucket and key can resolved
-	 * @param <J>
+	 * @param <J> the source type for the resolver
 	 * @return the resolver
 	 */
 	@Deprecated
@@ -100,7 +100,7 @@ public interface S3ObjectIdResolver<I> {
 	 * @param getObjectIdFunction the function that provides the object's key
 	 * @param validateConsumer the function that validates the source to ensure a bucket and key can resolved
 	 * @param target the type of the source object that this resolver resolves from
-	 * @param <J>
+	 * @param <I> the source type for the resolver
 	 * @return the resolver
 	 */
 	@Deprecated
