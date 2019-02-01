@@ -1,9 +1,10 @@
 package org.springframework.content.rest.config;
 
-import java.util.Arrays;
-
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
@@ -23,17 +24,18 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
+import java.util.Arrays;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -41,8 +43,14 @@ public class RestConfigurationTest {
 
 	private AnnotationConfigWebApplicationContext context;
 
+	// mocks
+	private static ContentRestConfigurer configurer;
+
 	{
 		Describe("RestConfiguration", () -> {
+			BeforeEach(() -> {
+				configurer = mock(ContentRestConfigurer.class);
+			});
 			Context("given a context with a ContentRestConfiguration", () -> {
 				BeforeEach(() -> {
 					context = new AnnotationConfigWebApplicationContext();
@@ -55,22 +63,29 @@ public class RestConfigurationTest {
 				});
 
 				It("should have a content handler mapping bean", () -> {
-					MatcherAssert.assertThat(context.getBean("contentHandlerMapping"),
-							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+					assertThat(context.getBean("contentHandlerMapping"),
+							is(not(nullValue())));
 				});
 
 				It("should have the content rest controllers", () -> {
-					MatcherAssert.assertThat(
+					assertThat(
 							context.getBean("contentEntityRestController"),
-							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(
+							is(not(nullValue())));
+					assertThat(
 							context.getBean("contentPropertyCollectionRestController"),
-							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(
+							is(not(nullValue())));
+					assertThat(
 							context.getBean("contentPropertyRestController"),
-							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
-					MatcherAssert.assertThat(context.getBean("storeRestController"),
-							CoreMatchers.is(CoreMatchers.not(CoreMatchers.nullValue())));
+							is(not(nullValue())));
+					assertThat(context.getBean("storeRestController"),
+							is(not(nullValue())));
+				});
+
+				It("should be configurable", () -> {
+					RestConfiguration config = context.getBean(RestConfiguration.class);
+					assertThat(config, is(not(nullValue())));
+
+					verify(configurer).configure(config);
 				});
 			});
 		});
@@ -117,6 +132,11 @@ public class RestConfigurationTest {
 		@Override
 		public MongoClient mongoClient() {
 			return new MongoClient();
+		}
+
+		@Bean
+		public ContentRestConfigurer configurer() {
+			return configurer;
 		}
 	}
 

@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.support;
+package internal.org.springframework.content.rest.controllers;
 
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
@@ -7,7 +7,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -20,13 +19,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class VersionHeaderTests {
+public class Version {
 
     private MockMvc mvc;
     private String url;
     private CrudRepository repo;
     private ContentStore store;
     private String etag;
+
+    public static Version tests() {
+        return new Version();
+    }
 
     {
         Context("a GET request to /{store}/{id}", () -> {
@@ -114,7 +117,7 @@ public class VersionHeaderTests {
             It("should respond with 412 Precondition Failed", () -> {
                 mvc.perform(multipart(url)
                         .file(new MockMultipartFile("file",
-                                "test-file-modified.txt",
+                                "tests-file-modified.txt",
                                 "text/plain", "Hello Spring Content World!".getBytes()))
                         .header("if-match", "\"999\""))
                         .andExpect(status().isPreconditionFailed());

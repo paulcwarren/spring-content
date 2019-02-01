@@ -2,7 +2,6 @@ package internal.org.springframework.content.rest.controllers;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.LastModifiedDateTests;
 import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestStore;
 import org.apache.commons.io.IOUtils;
@@ -62,7 +61,7 @@ public class StoreRestControllerIntegrationTest {
 	private String path;
 	private String request;
 
-	private LastModifiedDateTests lastModifiedDateTests;
+	private LastModifiedDate lastModifiedDate;
 
 	{
 		Describe("StoreRestController", () -> {
@@ -81,10 +80,10 @@ public class StoreRestControllerIntegrationTest {
 								((WritableResource) r).getOutputStream());
 					}
 
-					lastModifiedDateTests.setMvc(mvc);
-					lastModifiedDateTests.setUrl("/teststore" + path);
-					lastModifiedDateTests.setLastModifiedDate(new Date(r.lastModified()));
-					lastModifiedDateTests.setContent("Existing content");
+					lastModifiedDate.setMvc(mvc);
+					lastModifiedDate.setUrl("/teststore" + path);
+					lastModifiedDate.setLastModifiedDate(new Date(r.lastModified()));
+					lastModifiedDate.setContent("Existing content");
 				});
 				It("should return the resource's content", () -> {
 					MockHttpServletResponse response = mvc.perform(get(request))
@@ -118,7 +117,7 @@ public class StoreRestControllerIntegrationTest {
 						String content = "New multi-part content";
 
 						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
-								"test-file.txt", "text/plain", content.getBytes())))
+								"tests-file.txt", "text/plain", content.getBytes())))
 								.andExpect(status().isOk());
 
 						Resource r = store.getResource(path);
@@ -135,7 +134,7 @@ public class StoreRestControllerIntegrationTest {
 					assertThat(r.exists(), is(false));
 				});
 
-				lastModifiedDateTests = new LastModifiedDateTests();
+				lastModifiedDate = new LastModifiedDate();
 			});
 
 			Context("given a nested resource", () -> {
@@ -193,7 +192,7 @@ public class StoreRestControllerIntegrationTest {
 						String content = "New multi-part content";
 
 						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
-								"test-file.txt", "text/plain", content.getBytes())))
+								"tests-file.txt", "text/plain", content.getBytes())))
 								.andExpect(status().isOk());
 
 						Resource r = store.getResource(path);

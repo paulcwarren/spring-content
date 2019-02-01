@@ -1,7 +1,7 @@
 package internal.org.springframework.content.rest.controllers;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.BaseUriConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
@@ -37,34 +37,34 @@ import static java.lang.String.format;
 // @Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		StoreConfig.class,
+		BaseUriConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentEntityRestControllerIntegrationTest {
+public class BaseUriIntegrationTest {
 
 	// different exported URI
 	@Autowired
-	TestEntityRepository repository;
+	private TestEntityRepository repository;
 	@Autowired
-	TestEntityContentRepository contentRepository;
+	private TestEntityContentRepository contentRepository;
 
 	// same exported URI
 	@Autowired
-	TestEntity3Repository repo3;
+	private TestEntity3Repository repo3;
 	@Autowired
-	TestEntity3ContentRepository store3;
+	private TestEntity3ContentRepository store3;
 
 	// same exported URI
 	@Autowired
-	TestEntity4Repository repo4;
+	private TestEntity4Repository repo4;
 	@Autowired
-	TestEntity4ContentRepository store4;
+	private TestEntity4ContentRepository store4;
 
 	@Autowired
-	TestStore store;
+	private TestStore store;
 
 	@Autowired
 	private WebApplicationContext context;
@@ -83,7 +83,7 @@ public class ContentEntityRestControllerIntegrationTest {
 	private Cors corsTests;
 
 	{
-		Describe("ContentEntityRestController", () -> {
+		Describe("BaseUri Content Tests", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -95,13 +95,13 @@ public class ContentEntityRestControllerIntegrationTest {
 						testEntity3 = repo3.save(testEntity3);
 
 						entityTests.setMvc(mvc);
-						entityTests.setUrl("/testEntity3s/" + testEntity3.id);
+						entityTests.setUrl("/api/testEntity3s/" + testEntity3.id);
 						entityTests.setEntity(testEntity3);
 						entityTests.setRepository(repo3);
 						entityTests.setLinkRel("testEntity");
 
 						contentTests.setMvc(mvc);
-						contentTests.setUrl("/testEntity3s/" + testEntity3.getId());
+						contentTests.setUrl("/contentApi/testEntity3s/" + testEntity3.getId());
 						contentTests.setEntity(testEntity3);
 						contentTests.setRepository(repo3);
 						contentTests.setStore(store3);
@@ -115,24 +115,25 @@ public class ContentEntityRestControllerIntegrationTest {
 						testEntity = repository.save(new TestEntity());
 
 						contentTests.setMvc(mvc);
-						contentTests.setUrl("/testEntitiesContent/" + testEntity.getId());
+						contentTests.setUrl("/contentApi/testEntitiesContent/" + testEntity.getId());
 						contentTests.setEntity(testEntity);
 						contentTests.setRepository(repository);
 						contentTests.setStore(contentRepository);
 
 						corsTests.setMvc(mvc);
-						corsTests.setUrl("/testEntitiesContent/" + testEntity.getId());
+						corsTests.setUrl("/contentApi/testEntitiesContent/" + testEntity.getId());
 					});
 					contentTests = Content.tests();
 					corsTests = Cors.tests();
 				});
+
 				Context("given an entity with @Version", () -> {
 					BeforeEach(() -> {
 						testEntity4 = new TestEntity4();
 						store4.setContent(testEntity4, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
-						String url = "/testEntity4s/" + testEntity4.getId();
+						String url = "/contentApi/testEntity4s/" + testEntity4.getId();
 
 						version.setMvc(mvc);
 						version.setUrl(url);
@@ -151,7 +152,7 @@ public class ContentEntityRestControllerIntegrationTest {
 						store4.setContent(testEntity4, new ByteArrayInputStream(content.getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
-						String url = "/testEntity4s/" + testEntity4.getId();
+						String url = "/contentApi/testEntity4s/" + testEntity4.getId();
 
 						lastModifiedDate.setMvc(mvc);
 						lastModifiedDate.setUrl(url);

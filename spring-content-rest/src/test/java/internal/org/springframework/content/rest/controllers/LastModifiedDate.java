@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.support;
+package internal.org.springframework.content.rest.controllers;
 
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
@@ -23,13 +22,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class LastModifiedDateTests {
+public class LastModifiedDate {
 
     private MockMvc mvc;
     private String url;
     private Date lastModifiedDate;
     private String etag;
     private String content;
+
+    public static LastModifiedDate tests() {
+        return new LastModifiedDate();
+    }
 
     public void setMvc(MockMvc mvc) {
         this.mvc = mvc;

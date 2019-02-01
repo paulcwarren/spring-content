@@ -1,33 +1,16 @@
 package internal.org.springframework.content.rest.controllers;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static java.lang.String.format;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.io.ByteArrayInputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.TimeZone;
-
-import internal.org.springframework.content.rest.support.LastModifiedDateTests;
-import internal.org.springframework.content.rest.support.VersionHeaderTests;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntity2Repository;
+import internal.org.springframework.content.rest.support.TestEntityChild;
+import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
-import org.springframework.data.rest.core.mapping.ResourceMappings;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -37,65 +20,59 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.TimeZone;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntity;
-import internal.org.springframework.content.rest.support.TestEntity2;
-import internal.org.springframework.content.rest.support.TestEntity2Repository;
-import internal.org.springframework.content.rest.support.TestEntityChild;
-import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
-import internal.org.springframework.content.rest.support.TestEntityContentRepository;
-import internal.org.springframework.content.rest.support.TestEntityRepository;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
-@ContextConfiguration(classes = { StoreConfig.class, DelegatingWebMvcConfiguration.class,
-		RepositoryRestMvcConfiguration.class, RestConfiguration.class })
+@ContextConfiguration(classes = {
+		StoreConfig.class,
+		DelegatingWebMvcConfiguration.class,
+		RepositoryRestMvcConfiguration.class,
+		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
 public class ContentPropertyRestControllerIntegrationTest {
 
 	@Autowired
-	Repositories repositories;
-	@Autowired
-	RepositoryInvokerFactory invokerFactory;
-	@Autowired
-	ResourceMappings mappings;
+	private TestEntity2Repository repository2;
 
 	@Autowired
-	TestEntityRepository repository;
-	@Autowired
-	TestEntityContentRepository contentRepository;
-	@Autowired
-	TestEntity2Repository repository2;
-	@Autowired
-	TestEntityChildContentRepository contentRepository2;
-
-	@Autowired
-	ContentPropertyCollectionRestController collectionCtrlr;
-	@Autowired
-	ContentPropertyRestController propCtrlr;
+	private TestEntityChildContentRepository contentRepository2;
 
 	@Autowired
 	private WebApplicationContext context;
 
-	private VersionHeaderTests versionTests;
-	private LastModifiedDateTests lastModifiedDateTests;
+	private Version versionTests;
+	private LastModifiedDate lastModifiedDateTests;
 
 	private MockMvc mvc;
-
-	private TestEntity testEntity;
 
 	private TestEntity2 testEntity2;
 	private TestEntityChild child1;
@@ -104,9 +81,6 @@ public class ContentPropertyRestControllerIntegrationTest {
 	{
 		Describe("ContentPropertyRestController", () -> {
 			BeforeEach(() -> {
-				assertThat(collectionCtrlr, is(not(nullValue())));
-				assertThat(propCtrlr, is(not(nullValue())));
-
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
 			Context("given an Entity with a simple content property", () -> {
@@ -242,8 +216,8 @@ public class ContentPropertyRestControllerIntegrationTest {
 							});
 						});
 
-						versionTests = new VersionHeaderTests();
-						lastModifiedDateTests = new LastModifiedDateTests();
+						versionTests = Version.tests();
+						lastModifiedDateTests = LastModifiedDate.tests();
 					});
 
 					Context("given the content property is accessed via the /{repository}/{id}/{contentProperty}/{contentId} endpoint", () -> {
@@ -261,79 +235,6 @@ public class ContentPropertyRestControllerIntegrationTest {
 										.andExpect(content().string(is("Hello Spring Content World!")));
 							});
 						});
-//					Context("a GET to /{repository}/{id}/{contentProperty} with a matching if-none-match header", () -> {
-//						It("should return the content", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-none-match", "\"1\""))
-//									.andExpect(status().isNotModified())
-//									.andExpect(header().string("last-modified", toHeaderDateFormat(testEntity2.getModifiedDate())));
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty} with an unmatching if-none-match header", () -> {
-//						It("should return the content", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-none-match", "\"0\""))
-//									.andExpect(status().isOk())
-//									.andExpect(header().string("last-modified", toHeaderDateFormat(testEntity2.getModifiedDate())))
-//									.andExpect(content().string(is("Hello Spring Content World!")));
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with an if-unmodified-since date before the entity's modified date", () -> {
-//						It("should respond with 412", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-unmodified-since", toHeaderDateFormat(addDays(testEntity2.getModifiedDate(), -1))))
-//									.andExpect(status().isPreconditionFailed());
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with an if-unmodified-since date the same as the entity's modified date", () -> {
-//						It("should respond with 200 and the content", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-unmodified-since", toHeaderDateFormat(testEntity2.getModifiedDate())))
-//									.andExpect(status().isOk())
-//									.andExpect(content().string(is("Hello Spring Content World!")));
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with an if-modified-since date before the entity's modified date", () -> {
-//						It("should respond with 200 and the content", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-modified-since", toHeaderDateFormat(addDays(testEntity2.getModifiedDate(), -1))))
-//									.andExpect(status().isOk())
-//									.andExpect(header().string("last-modified", toHeaderDateFormat(testEntity2.getModifiedDate())))
-//									.andExpect(content().string(is("Hello Spring Content World!")));
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with an if-modified-since date the same as the entity's modified date", () -> {
-//						It("should respond with 200 and the content", () -> {
-//							mvc.perform(get("/files/" + testEntity2.getId() + "/child/" + testEntity2.getChild().contentId)
-//									.accept("text/plain")
-//									.header("if-modified-since", toHeaderDateFormat(testEntity2.getModifiedDate())))
-//									.andExpect(status().isNotModified())
-//									.andExpect(header().string("last-modified", toHeaderDateFormat(testEntity2.getModifiedDate())));
-//						});
-//					});
-//					Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with a range", () -> {
-//						It("should return the content", () -> {
-//							MockHttpServletResponse response = mvc
-//									.perform(get(
-//											"/files/" + testEntity2.getId()
-//													+ "/child/"
-//													+ testEntity2.getChild().contentId)
-//															.accept("text/plain")
-//															.header("range",
-//																	"bytes=6-19"))
-//									.andExpect(status().isPartialContent())
-//									.andReturn().getResponse();
-//							assertThat(response, is(not(nullValue())));
-//
-//							assertThat(response.getContentAsString(),
-//									is("Spring Content"));
-//						});
-//					});
 						Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with a mime type that matches a renderer", () -> {
 							It("should return the rendition and 200", () -> {
 								MockHttpServletResponse response = mvc
@@ -395,8 +296,8 @@ public class ContentPropertyRestControllerIntegrationTest {
 							});
 						});
 
-						versionTests = new VersionHeaderTests();
-						lastModifiedDateTests = new LastModifiedDateTests();
+						versionTests = Version.tests();
+						lastModifiedDateTests = LastModifiedDate.tests();
 					});
 				});
 			});
@@ -441,7 +342,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 									mvc.perform(fileUpload("/files/"
 											+ testEntity2.getId() + "/children/")
 													.file(new MockMultipartFile("file",
-															"test-file.txt", "text/plain",
+															"tests-file.txt", "text/plain",
 															content.getBytes())))
 											.andExpect(status().is2xxSuccessful());
 
@@ -452,7 +353,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 									assertThat(fetched.get().getChildren().get(0).contentLen,
 											is(31L));
 									assertThat(fetched.get().getChildren().get(0).fileName,
-											is("test-file.txt"));
+											is("tests-file.txt"));
 									assertThat(fetched.get().getChildren().get(0).mimeType,
 											is("text/plain"));
 								});
@@ -530,7 +431,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 									+ testEntity2.getId() + "/children/"
 									+ child2.contentId)
 											.file(new MockMultipartFile("file",
-													"test-file.txt", "text/plain",
+													"tests-file.txt", "text/plain",
 													content.getBytes())))
 									.andExpect(status().isOk());
 
@@ -542,7 +443,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 									assertThat(child.contentId,
 											is(not(nullValue())));
 									assertThat(child.fileName,
-											is("test-file.txt"));
+											is("tests-file.txt"));
 									assertThat(child.mimeType, is("text/plain"));
 									assertThat(child.contentLen,
 											is(new Long(content.length())));
@@ -590,27 +491,5 @@ public class ContentPropertyRestControllerIntegrationTest {
 		SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 		format.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return format.format(dt);
-	}
-
-	private static String toHeaderDateFormat(String dt) {
-		SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
-		format.setTimeZone(TimeZone.getTimeZone("GMT"));
-		return format.format(new Date(dt));
-	}
-
-	private static Date addDays(Date dt, int n) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(dt);
-		cal.add(Calendar.DATE, n);
-		return cal.getTime();
-
-	}
-
-	private static Date addDays(String dt, int n) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date(dt));
-		cal.add(Calendar.DATE, n);
-		return cal.getTime();
-
 	}
 }
