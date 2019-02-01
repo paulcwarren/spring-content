@@ -46,29 +46,28 @@ public class ContentFilesystemAutoConfigurationTest {
 				});
 			});
 
-			Context("given an environment specifying a filesystem root using spring prefix",
-					() -> {
-						BeforeEach(() -> {
-							System.setProperty("spring.content.fs.filesystem-root",
-									"${java.io.tmpdir}/UPPERCASE/NOTATION/");
-						});
-						AfterEach(() -> {
-							System.clearProperty("spring.content.fs.filesystem-root");
-						});
-						It("should have a filesystem properties bean with the correct root set",
-								() -> {
-									AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-									context.register(TestConfig.class);
-									context.refresh();
+			Context("given an environment specifying a filesystem root using spring prefix", () -> {
+				BeforeEach(() -> {
+					System.setProperty("spring.content.fs.filesystem-root",
+							"${java.io.tmpdir}/UPPERCASE/NOTATION/");
+				});
+				AfterEach(() -> {
+					System.clearProperty("spring.content.fs.filesystem-root");
+				});
+				It("should have a filesystem properties bean with the correct root set",
+						() -> {
+							AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+							context.register(TestConfig.class);
+							context.refresh();
 
-									assertThat(context.getBean(
-											FilesystemContentAutoConfiguration.FilesystemProperties.class)
-											.getFilesystemRoot(),
-											endsWith("/UPPERCASE/NOTATION/"));
+							assertThat(context.getBean(
+									FilesystemContentAutoConfiguration.FilesystemProperties.class)
+									.getFilesystemRoot(),
+									endsWith("/UPPERCASE/NOTATION/"));
 
-									context.close();
-								});
-					});
+							context.close();
+						});
+			});
 
 			Context("given a configuration that contributes a loader bean", () -> {
 				It("should have that loader bean in the context", () -> {
@@ -110,7 +109,6 @@ public class ContentFilesystemAutoConfigurationTest {
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}
 
-	public interface TestEntityContentRepository
-			extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
 	}
 }
