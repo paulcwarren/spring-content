@@ -12,7 +12,5 @@ import java.lang.annotation.Target;
 @Component
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.ANNOTATION_TYPE })
-@StoreAwareController
-public @interface ContentRestController {
-
+public @interface StoreAwareController {
 }

@@ -1,14 +1,6 @@
 package internal.org.springframework.content.rest.links;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
+import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanWrapper;
@@ -18,15 +10,29 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
+import org.springframework.data.rest.core.mapping.ResourceMetadata;
+import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
+import org.springframework.data.rest.webmvc.support.RepositoryLinkBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.ResourceProcessor;
 import org.springframework.hateoas.mvc.BasicLinkBuilder;
-import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import javax.persistence.Id;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Adds content and content collection links to Spring Data REST Entity Resources.
@@ -40,9 +46,13 @@ public class ContentLinksResourceProcessor
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
 	private ContentStoreService stores;
+	private RestConfiguration config;
+	private RepositoryResourceMappings mappings;
 
-	public ContentLinksResourceProcessor(ContentStoreService stores) {
+	public ContentLinksResourceProcessor(Repositories repos, ContentStoreService stores, RestConfiguration config, RepositoryResourceMappings mappings) {
 		this.stores = stores;
+		this.config = config;
+		this.mappings = mappings;
 	}
 
 	public PersistentEntityResource process(final PersistentEntityResource resource) {
@@ -52,23 +62,25 @@ public class ContentLinksResourceProcessor
 			return resource;
 
 		// entity
-		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
-				object.getClass());
-		if (store != null) {
-			Object id = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
-			if (id != null) {
-				resource.add(BasicLinkBuilder.linkToCurrentMapping()
-						.slash(ContentStoreUtils.storePath(store)).slash(id)
-						.withRel(ContentStoreUtils.storePath(store)));
-			}
+		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
+		Object contentId = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
+		if (store != null && contentId != null) {
+			resource.add(getLink(config.getBaseUri(), store, contentId));
 		}
 
 		List<Field> processed = new ArrayList<>();
 
+		ResourceMetadata md = mappings.getMetadataFor(object.getClass());
+
+		Object entityId = BeanUtils.getFieldWithAnnotation(object, Id.class);
+		if (entityId == null) {
+			entityId = BeanUtils.getFieldWithAnnotation(object, org.springframework.data.annotation.Id.class);
+		}
+
 		// public fields
 		for (Field field : object.getClass().getFields()) {
 			processed.add(field);
-			handleField(field, resource);
+			handleField(field, resource, md, config.getBaseUri(), entityId);
 		}
 
 		// handle properties
@@ -78,7 +90,7 @@ public class ContentLinksResourceProcessor
 			try {
 				field = object.getClass().getDeclaredField(descriptor.getName());
 				if (processed.contains(field) == false) {
-					handleField(field, resource);
+					handleField(field, resource, md, config.getBaseUri(), entityId);
 				}
 			}
 			catch (NoSuchFieldException nsfe) {
@@ -95,18 +107,15 @@ public class ContentLinksResourceProcessor
 		return resource;
 	}
 
-	private void handleField(Field field, final PersistentEntityResource resource) {
+	private void handleField(Field field, final PersistentEntityResource resource, ResourceMetadata metadata, URI baseUri, Object entityId) {
 
 		Class<?> fieldType = field.getType();
 		if (fieldType.isArray()) {
 			fieldType = fieldType.getComponentType();
 
-			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
-					fieldType);
+			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
 			if (store != null) {
-				resource.add(new Link(
-						resource.getLink("self").getHref() + "/" + field.getName(),
-						field.getName()));
+				resource.add(getLink(metadata, baseUri, entityId, field.getName(), null));
 			}
 		}
 		else if (Collection.class.isAssignableFrom(fieldType)) {
@@ -135,28 +144,19 @@ public class ContentLinksResourceProcessor
 							value = ReflectionUtils.getField(field, object);
 						}
 						catch (IllegalStateException ise) {
-							log.trace(String.format("Didn't get value for property %s",
-									field.getName()));
+							log.trace(String.format("Didn't get value for property %s", field.getName()));
 						}
 					}
 					if (value != null) {
-						int i = 0;
 						Iterator iter = ((Collection) value).iterator();
 						while (iter.hasNext()) {
 							Object o = iter.next();
 							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
-								String cid = BeanUtils
-										.getFieldWithAnnotation(o, ContentId.class)
-										.toString();
-								resource.add(new Link(
-										resource.getLink("self").getHref() + "/"
-												+ field.getName() + "/" + cid,
-										field.getName() /* + "#" + i */));
-
-								LinkBuilder lb = BasicLinkBuilder.linkToCurrentMapping();
-								int j = 0;
+								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
+								if (cid != null) {
+									resource.add(getLink(metadata, baseUri, entityId, field.getName(), cid));
+								}
 							}
-							i++;
 						}
 					}
 				}
@@ -177,18 +177,40 @@ public class ContentLinksResourceProcessor
 						value = ReflectionUtils.getField(field, object);
 					}
 					catch (IllegalStateException ise) {
-						log.trace(String.format("Didn't get value for property %s",
-								field.getName()));
+						log.trace(String.format("Didn't get value for property %s", field.getName()));
 					}
 				}
 				if (value != null) {
-					String id = BeanUtils.getFieldWithAnnotation(value, ContentId.class)
-							.toString();
-					Assert.notNull(id);
-					resource.add(new Link(resource.getLink("self").getHref() + "/"
-							+ field.getName() + "/" + id, field.getName()));
+					String cid = BeanUtils.getFieldWithAnnotation(value, ContentId.class).toString();
+					if (cid != null) {
+						resource.add(getLink(metadata, baseUri, entityId, field.getName(), cid));
+					}
 				}
 			}
 		}
+	}
+
+	private Link getLink(URI baseUri, ContentStoreInfo store, Object id) {
+		LinkBuilder builder = BasicLinkBuilder.linkToCurrentMapping();
+
+		if (baseUri != null) {
+			builder = builder.slash(baseUri);
+		}
+
+		return builder.slash(ContentStoreUtils.storePath(store))
+				.slash(id)
+				.withRel(ContentStoreUtils.storePath(store));
+	}
+
+	private Link getLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {
+		LinkBuilder builder = new RepositoryLinkBuilder(md, new BaseUri(baseUri));
+
+		builder = builder.slash(id).slash(property);
+
+		if (contentId != null) {
+			builder = builder.slash(contentId);
+		}
+
+		return builder.withRel(property);
 	}
 }

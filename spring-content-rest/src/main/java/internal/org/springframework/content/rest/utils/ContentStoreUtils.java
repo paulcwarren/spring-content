@@ -15,12 +15,16 @@ import org.springframework.content.rest.StoreRestResource;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.List;
+
+import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
 public final class ContentStoreUtils {
 
@@ -135,6 +139,30 @@ public final class ContentStoreUtils {
 
 	public static String stripStoreName(Class<?> iface) {
 		return iface.getSimpleName().replaceAll("Store", "");
+	}
+
+
+	public static String storeLookupPath(String lookupPath, URI baseUri) {
+
+		Assert.notNull(lookupPath, "Lookup path must not be null!");
+
+		// Temporary fix for SPR-13455
+		lookupPath = lookupPath.replaceAll("//", "/");
+
+		lookupPath = trimTrailingCharacter(lookupPath, '/');
+
+		if (baseUri.isAbsolute()) {
+			throw new UnsupportedOperationException("Absolute BaseUri is not supported");
+		}
+
+		String uri = baseUri.toString();
+
+		if (!StringUtils.hasText(uri)) {
+			return lookupPath;
+		}
+
+		uri = uri.startsWith("/") ? uri : "/".concat(uri);
+		return lookupPath.startsWith(uri) ? lookupPath.substring(uri.length(), lookupPath.length()) : null;
 	}
 
 	public static class ResourcePlan {

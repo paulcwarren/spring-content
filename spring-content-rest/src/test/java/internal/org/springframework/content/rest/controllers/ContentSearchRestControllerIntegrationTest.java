@@ -64,7 +64,7 @@ import internal.org.springframework.content.rest.support.config.JpaInfrastructur
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // because the controller bean is shared and we need to instruct the reflection service
-// to behave differently in each test
+// to behave differently in each tests
 @Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
