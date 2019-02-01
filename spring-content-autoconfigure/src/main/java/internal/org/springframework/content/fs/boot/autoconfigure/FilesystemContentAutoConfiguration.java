@@ -1,8 +1,7 @@
 package internal.org.springframework.content.fs.boot.autoconfigure;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
+import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
+import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +15,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
-import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
+import java.io.IOException;
+import java.nio.file.Files;
 
 @Configuration
 @ConditionalOnClass(FilesystemStoreRegistrar.class)
-@Import({ FilesystemContentAutoConfigureRegistrar.class,
-		FilesystemStoreConfiguration.class })
+@Import({ FilesystemContentAutoConfigureRegistrar.class, FilesystemStoreConfiguration.class })
 public class FilesystemContentAutoConfiguration {
 
 	@Autowired
@@ -38,8 +36,7 @@ public class FilesystemContentAutoConfiguration {
 	@ConfigurationProperties(prefix = "spring.content.fs")
 	public static class FilesystemProperties {
 
-		private static final Logger logger = LoggerFactory
-				.getLogger(FilesystemProperties.class);
+		private static final Logger logger = LoggerFactory.getLogger(FilesystemProperties.class);
 
 		/**
 		 * The root location where file system stores place their content

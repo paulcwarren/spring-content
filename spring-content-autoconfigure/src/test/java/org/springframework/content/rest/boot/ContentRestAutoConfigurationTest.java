@@ -89,7 +89,6 @@ public class ContentRestAutoConfigurationTest {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository
-			extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
 	}
 }
