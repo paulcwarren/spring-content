@@ -6,13 +6,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.poi.POIXMLProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.commons.repository.StoreExtensionException;
 import org.springframework.content.renditions.RenditionException;
 import org.springframework.renditions.poi.POIService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 @Service
