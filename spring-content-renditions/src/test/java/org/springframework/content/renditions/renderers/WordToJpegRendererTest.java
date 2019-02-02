@@ -6,11 +6,8 @@ import org.apache.poi.POIXMLProperties;
 import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.commons.repository.StoreExtensionException;
 import org.springframework.content.renditions.RenditionException;
-import org.springframework.content.renditions.renderers.WordToJpegRenderer;
 import org.springframework.renditions.poi.POIService;
 
 import java.io.ByteArrayInputStream;
