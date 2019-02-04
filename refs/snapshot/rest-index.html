@@ -436,8 +436,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content REST - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.6.0-SNAPSHOT,</span>
-<span id="revdate">2019-02-02</span>
+<span id="revnumber">version 0.7.0-SNAPSHOT,</span>
+<span id="revdate">2019-02-04</span>
 </div>
 </div>
 <div id="content">
@@ -533,6 +533,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_store_interface_cors_configuration">5.1.1. Store interface CORS configuration</a></li>
 </ul>
 </li>
+<li><a href="#_changing_the_base_uri">5.2. Changing the Base URI</a></li>
 </ul>
 </li>
 </ul>
@@ -1433,13 +1434,57 @@ methods with a max age of 3600 seconds.</p>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_changing_the_base_uri">5.2. Changing the Base URI</h3>
+<div class="paragraph">
+<p>By default, Spring Content REST serves up REST resources at the root URI, '/'.</p>
+</div>
+<div class="paragraph">
+<p>With Spring Boot 1.2 and later versions, you can change the base URI by setting a single property in application.properties, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.baseUri=/api</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Or if you are not using Spring Boot, you can do the following:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.setBaseUri(URI.create("/contentApi"));
+      }
+    };
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.6.0-SNAPSHOT<br>
-Last updated 2019-02-02 04:44:39 UTC
+Version 0.7.0-SNAPSHOT<br>
+Last updated 2019-02-04 17:14:04 UTC
 </div>
 </div>
 </body>
