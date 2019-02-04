@@ -1,0 +1,34 @@
+== Changing the Base URI
+By default, Spring Content REST serves up REST resources at the root URI, '/'.
+
+With Spring Boot 1.2 and later versions, you can change the base URI by setting a single property in application.properties, as follows:
+
+====
+[source, java]
+----
+spring.content.rest.baseUri=/api
+----
+====
+
+Or if you are not using Spring Boot, you can do the following:
+
+====
+[source, java]
+----
+@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.setBaseUri(URI.create("/contentApi"));
+      }
+    };
+  }
+}
+----
+====
