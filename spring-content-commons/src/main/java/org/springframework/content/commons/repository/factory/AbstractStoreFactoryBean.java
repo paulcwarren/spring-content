@@ -1,13 +1,6 @@
 package org.springframework.content.commons.repository.factory;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -23,11 +16,16 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
-import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class AbstractStoreFactoryBean
 		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
@@ -42,7 +40,7 @@ public abstract class AbstractStoreFactoryBean
 	private Store<? extends Serializable> store;
 
 	@Autowired(required = false)
-	private Set<StoreExtension> extensions;
+	private Set<StoreExtension> extensions = Collections.emptySet();
 
 	private BeanFactory beanFactory;
 
