@@ -2,13 +2,11 @@ package internal.org.springframework.content.s3.config;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.AssociativeStore;
+import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.content.s3.config.S3ObjectIdResolvers;
 
 import java.io.Serializable;
 
@@ -16,6 +14,11 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -25,80 +28,48 @@ public class S3StoreFactoryBeanTest {
 
 	private AmazonS3 client;
 	private PlacementService placer;
-	private S3ObjectIdResolvers resolvers;
 
-	private S3ObjectIdResolver resolver;
+	private Store store;
 
 	{
 		Describe("S3StoreFactoryBean", () -> {
 			BeforeEach(() -> {
 				client = mock(AmazonS3.class);
 				placer = mock(PlacementService.class);
-				resolvers = new S3ObjectIdResolvers();
 
-				factory = new S3StoreFactoryBean(client, placer, resolvers);
+				factory = new S3StoreFactoryBean(client, placer);
 			});
-			Context("given a Store", () -> {
+			Context("#getStore", () -> {
 				BeforeEach(() -> {
-					factory.setStoreInterface(S3StoreFactoryBeanTest.TestStore.class);
+					factory.setBeanClassLoader(Thread.currentThread().getContextClassLoader());
 				});
-				Context("given no resolvers", () -> {
-					It("should use the DEFAULT_S3OBJECTID_RESOLVER_STORE", () -> {
-						DefaultS3StoreImpl store = (DefaultS3StoreImpl) factory
-								.getContentStoreImpl();
-//						assertThat(store.getS3ObjectIdResolver(),
-//								is(S3StoreFactoryBean.DEFAULT_S3OBJECTID_RESOLVER_STORE));
-					});
+				JustBeforeEach(() -> {
+					store = factory.getStore();
 				});
-				Context("given a resolver", () -> {
+				Context("given a Store", () -> {
 					BeforeEach(() -> {
-						resolver = new SerializableResolver();
-						resolvers.add(resolver);
+						factory.setStoreInterface(S3StoreFactoryBeanTest.TestStore.class);
 					});
-					It("should instantiate a store that uses resolver", () -> {
-						DefaultS3StoreImpl store = (DefaultS3StoreImpl) factory
-								.getContentStoreImpl();
-//						assertThat(store.getS3ObjectIdResolver(), is(resolver));
+					It("should return a store implementation", () -> {
+						assertThat(store, is(not(nullValue())));
 					});
 				});
-			});
-			Context("given an AssociativeStore", () -> {
-				BeforeEach(() -> {
-					factory.setStoreInterface(
-							S3StoreFactoryBeanTest.TestAssociativeStore.class);
-				});
-				Context("given no resolvers", () -> {
-					It("should use an instance of DefaultAssociativeStoreS3ObjectIdResolver",
-							() -> {
-								DefaultS3StoreImpl store = (DefaultS3StoreImpl) factory
-										.getContentStoreImpl();
-//								assertThat(store.getS3ObjectIdResolver(), is(instanceOf(
-//										DefaultAssociativeStoreS3ObjectIdResolver.class)));
-							});
-				});
-				Context("given an id resolver", () -> {
+				Context("given an AssociativeStore", () -> {
 					BeforeEach(() -> {
-						resolver = new SerializableResolver();
-						resolvers.add(resolver);
+						factory.setStoreInterface(S3StoreFactoryBeanTest.TestAssociativeStore.class);
 					});
-					It("should instantiate a store that uses the id resolver", () -> {
-						DefaultS3StoreImpl store = (DefaultS3StoreImpl) factory
-								.getContentStoreImpl();
-//						assertThat(store.getS3ObjectIdResolver(), is(resolver));
+					It("should return a store implementation", () -> {
+						assertThat(store, is(not(nullValue())));
 					});
 				});
-				Context("given an id and an entity resolver", () -> {
-					BeforeEach(() -> {
-						resolvers.add(new SerializableResolver());
-						resolver = new ObjectResolver();
-						resolvers.add(resolver);
-					});
-					It("should instantiate a store that uses the entity resolver", () -> {
-						DefaultS3StoreImpl store = (DefaultS3StoreImpl) factory
-								.getContentStoreImpl();
-//						assertThat(store.getS3ObjectIdResolver(), is(resolver));
-					});
-				});
+//				Context("given a ContentStore", () -> {
+//					BeforeEach(() -> {
+//						factory.setStoreInterface(S3StoreFactoryBeanTest.TestContentStore.class);
+//					});
+//					It("should return a store implementation", () -> {
+//						assertThat(store, is(not(nullValue())));
+//					});
+//				});
 			});
 		});
 	}
@@ -106,13 +77,9 @@ public class S3StoreFactoryBeanTest {
 	public interface TestStore extends Store<Serializable> {
 	}
 
-	private interface TestAssociativeStore
-			extends AssociativeStore<Object, Serializable> {
+	private interface TestAssociativeStore extends AssociativeStore<Object, Serializable> {
 	}
 
-	public class SerializableResolver implements S3ObjectIdResolver<Serializable> {
-	}
-
-	public class ObjectResolver implements S3ObjectIdResolver<Object> {
+	private interface TestContentStore extends ContentStore<Object, Serializable> {
 	}
 }
