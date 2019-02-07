@@ -89,7 +89,7 @@ public class DefaultS3StoreImplTest {
 				defaultBucket = null;
 			});
 			Describe("Store", () -> {
-				Context("#getResourceInternal", () -> {
+				Context("#getResource", () -> {
 					Context("given the store's ID is an S3ObjectId type", () -> {
 						BeforeEach(() -> {
 							s3ObjectIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ObjectId>(

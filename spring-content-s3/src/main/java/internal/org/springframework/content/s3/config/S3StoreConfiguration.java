@@ -42,8 +42,8 @@ public class S3StoreConfiguration {
 		}
 
 		addDefaultS3ObjectIdConverters(conversion, bucket);
-
 		addConverters(conversion);
+
 		return conversion;
 	}
 
@@ -57,6 +57,7 @@ public class S3StoreConfiguration {
 	private void addConverters(ConverterRegistry registry) {
 		if (configurers == null)
 			return;
+
 		for (S3StoreConfigurer configurer : configurers) {
 			configurer.configureS3StoreConverters(registry);
 		}

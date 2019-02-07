@@ -5,8 +5,7 @@ import org.springframework.versions.LockParticipant;
 import java.io.InputStream;
 import java.io.Serializable;
 
-public interface ContentStore<S, SID extends Serializable>
-		extends ContentRepository<S, SID> {
+public interface ContentStore<S, SID extends Serializable> extends ContentRepository<S, SID> {
 
 	@LockParticipant
 	void setContent(S property, InputStream content);
