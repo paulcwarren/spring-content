@@ -37,8 +37,7 @@ public interface S3ObjectIdResolver<I> {
 	}
 
 	default String getKey(I idOrEntity) {
-		return Objects.requireNonNull(idOrEntity, "ContentId must not be null")
-				.toString();
+		return Objects.requireNonNull(idOrEntity, "ContentId must not be null").toString();
 	}
 
 	default void validate(I idOrEntity) {
