@@ -32,6 +32,11 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 
+
+	public S3StoreFactoryBean() {
+		// required for bean instantiation
+	}
+
 	@Autowired
 	public S3StoreFactoryBean(AmazonS3 client, PlacementService s3StorePlacementService) {
 		this.client = client;
