@@ -66,8 +66,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 
 			throw new StoreAccessException(format("Unable to convert from %s to S3ObjectId", id));
-		}
-		else {
+		} else {
 			return this.getResourceInternal((S3ObjectId) id);
 		}
 	}
@@ -80,17 +79,14 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		S3ObjectId s3ObjectId = null;
 		if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
 			s3ObjectId = placementService.convert(entity, S3ObjectId.class);
+
 			if (s3ObjectId != null) {
 				return this.getResourceInternal(s3ObjectId);
 			}
-		} else {
-			Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-			if (id != null) {
-				return this.getResource((SID) id);
-			}
 		}
 
-		return null;
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		return this.getResource(contentId);
 	}
 
 	protected Resource getResourceInternal(S3ObjectId id) {
@@ -137,14 +133,21 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public void setContent(S entity, InputStream content) {
+		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		if (contentId == null) {
+			UUID newId = UUID.randomUUID();
+
+			Object convertedId = placementService.convert(
+						newId,
+						TypeDescriptor.forObject(newId),
+						TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(entity, ContentId.class)));
+
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+		}
+
 		Resource resource = this.getResource(entity);
 		if (resource == null) {
-			UUID newId = UUID.randomUUID();
-			Object convertedId = placementService.convert(newId, TypeDescriptor.forObject(newId),
-					TypeDescriptor.valueOf(BeanUtils
-							.getFieldWithAnnotationType(entity, ContentId.class)));
-			resource = this.getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+			return;
 		}
 
 		OutputStream os = null;
