@@ -54,7 +54,7 @@ public class AssociatedResource implements HttpResource {
     @Override
     public long contentLength() throws IOException {
         Long contentLength = (Long) BeanUtils.getFieldWithAnnotation(entity, ContentLength.class);
-        if (contentLength == null) {
+        if (contentLength == null || original instanceof RenderedResource) {
             contentLength = original.contentLength();
         }
         return contentLength;
