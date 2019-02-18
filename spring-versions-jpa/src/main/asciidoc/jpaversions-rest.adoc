@@ -36,7 +36,7 @@ endpoint will be available at the `/{repository}/{id}/version` URI.
 ====
 [source, sh]
 ----
-  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'
+  curl -X PUT http://localhost:8080/docs/1234/version -d '{"number": "1.1", "label": "a minor change"}'
 ----
 ====
 
