@@ -142,7 +142,11 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>4.3.0</version>
+				<configuration>
+					<serviceName>travis-ci</serviceName>
+					<serviceJobId>${env.TRAVIS_JOB_ID} </serviceJobId>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
