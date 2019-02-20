@@ -62,6 +62,7 @@ public final class ContentStoreUtils {
 			mimeType = arrMimeTypes[i];
 			if (mimeType.includes(targetMimeType)) {
 				r = ((Store)store).getResource(contentId);
+				r = new AssociatedResource(entity, r);
 				mimeType = targetMimeType;
 				break;
 			}
@@ -69,14 +70,14 @@ public final class ContentStoreUtils {
 				InputStream content = ((Renderable<Object>) store).getRendition(property != null ? property : entity, mimeType.toString());
 				if (content != null) {
  					Resource original = ((Store)store).getResource(contentId);
-					r = new RenderedResource(content, entity, original);
+					r = new AssociatedResource(entity, original);
+					r = new RenderedResource(content, r);
 					break;
 				}
 			}
 		}
 
 		if (r != null) {
-			r = new AssociatedResource(entity, r);
 		}
 
 		return new ResourcePlan(r, mimeType);

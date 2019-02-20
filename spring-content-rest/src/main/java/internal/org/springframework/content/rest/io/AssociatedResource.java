@@ -12,7 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.resource.HttpResource;
 
-import javax.persistence.Version;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +20,6 @@ import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
