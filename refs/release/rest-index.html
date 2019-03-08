@@ -436,8 +436,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content REST - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 0.6.0,</span>
-<span id="revdate">2019-02-04</span>
+<span id="revnumber">version 0.7.0,</span>
+<span id="revdate">2019-03-08</span>
 </div>
 </div>
 <div id="content">
@@ -1286,7 +1286,7 @@ endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"version_number": "1.1", "version_label": "a minor change"}'</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"number": "1.1", "label": "a minor change"}'</code></pre>
 </div>
 </div>
 </div>
@@ -1483,8 +1483,8 @@ class CustomContentRestMvcConfiguration {
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.6.0<br>
-Last updated 2019-02-04 16:22:47 UTC
+Version 0.7.0<br>
+Last updated 2019-03-08 17:17:03 UTC
 </div>
 </div>
 </body>
