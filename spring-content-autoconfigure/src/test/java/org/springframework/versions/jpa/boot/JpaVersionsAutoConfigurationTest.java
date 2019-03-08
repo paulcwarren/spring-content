@@ -5,26 +5,16 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.Database;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.support.TestEntityVersioned;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.versions.LockingAndVersioningRepository;
-
-import javax.sql.DataSource;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -64,7 +54,9 @@ public class JpaVersionsAutoConfigurationTest {
     @Configuration
     @PropertySource("classpath:default.properties")
     @EnableAutoConfiguration
-    @EnableJpaRepositories(considerNestedRepositories = true)
+    @EnableJpaRepositories( considerNestedRepositories = true,
+                            basePackages = {"org.springframework.versions.jpa.boot",
+                                            "org.springframework.versions"})
     @EntityScan(basePackages="org.springframework.support")
     public static class StarterTestConfig {
     }
