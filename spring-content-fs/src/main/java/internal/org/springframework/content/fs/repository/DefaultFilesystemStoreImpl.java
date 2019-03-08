@@ -142,6 +142,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	@Transactional
 	public InputStream getContent(S entity) {
 		if (entity == null)
 			return null;
