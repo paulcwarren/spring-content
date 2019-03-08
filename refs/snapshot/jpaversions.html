@@ -557,7 +557,7 @@ Spring Versions JPA to a non-Spring Boot project, add the <code>spring-versions-
 <h2 id="_configuring_spring_versions_jpa">Configuring Spring Versions JPA</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Before they can be used the locking and versioning capabilities must be configured.  This is done by importing the
+<p>Before they can be used, the locking and versioning capabilities must be configured.  This is done by importing the
 <code>@Configuration</code> class <code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application and
 initializing the database with the pre-defined sql scripts:</p>
 </div>
@@ -616,15 +616,43 @@ public class LockingAndVersioningConfig {
 </td>
 <td class="content">
 This step is unnecessary if you are using Spring Boot as it will automatically enable Spring Versions JPA
-when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s classpath and your app
+when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s classpath and your application
 is annotated as a <code>@SpringBootApplication</code>.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Make sure you also configure the Spring Content Storage module that you wish to use.  For details on that, please consult
-the reference documentation.</p>
+<p>Configure the Spring Content Storage module by adding the package <code>org.springframework.versions</code> to your
+@Enable&#8230;&#8203;Repositories package context.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Configuration
+    @EnableJpaRepositories(basePackages={"tests.versioning", "org.springframework.versions"})	<b class="conum">(1)</b>
+    @EnableFilesystemStores(basePackages = "tests.versioning")
+    public static class ApplicationConfiguration {
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>This is required whether you are using Spring Boot, or not.</p>
+</li>
+</ol>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -875,7 +903,7 @@ Entity class that is the subject of <code>LockingAndVersioningRepository</code>:
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-02-20 02:16:31 UTC
+Last updated 2019-03-08 20:38:13 UTC
 </div>
 </div>
 </body>
