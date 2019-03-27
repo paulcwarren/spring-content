@@ -1,16 +1,16 @@
 package org.springframework.content.commons.utils;
 
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.BeansException;
-import org.springframework.util.ReflectionUtils;
-
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
+import org.springframework.util.ReflectionUtils;
 
 public final class BeanUtils {
 
@@ -77,6 +77,28 @@ public final class BeanUtils {
 			}
 		}
 		return null;
+	}
+
+	public static Field[] findFieldsWithAnnotation(Class<?> domainObjClass,
+			Class<? extends Annotation> annotationClass, BeanWrapper wrapper) {
+		List<Field> fields = new ArrayList<>();
+
+		PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
+		for (PropertyDescriptor descriptor : descriptors) {
+			Field candidate = getField(domainObjClass, descriptor.getName());
+			if (candidate != null) {
+				if (candidate.getAnnotation(annotationClass) != null) {
+					fields.add(candidate);
+				}
+			}
+		}
+
+		for (Field field : getAllFields(domainObjClass)) {
+			if (field.getAnnotation(annotationClass) != null) {
+				fields.add(field);
+			}
+		}
+		return fields.toArray(new Field[] {});
 	}
 
 	protected static List<Field> getAllFields(Class<?> type) {
