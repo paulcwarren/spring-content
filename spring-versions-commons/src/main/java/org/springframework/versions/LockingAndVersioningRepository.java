@@ -1,10 +1,10 @@
 package org.springframework.versions;
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.io.Serializable;
 import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface LockingAndVersioningRepository<T, ID extends Serializable> {
 
@@ -41,6 +41,21 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @throws SecurityException if no authentication exists
      */
     <S extends T> S save(S entity);
+
+    /**
+     * Creates and returns a new version of the entity as a private working copy.  The given entity remains the latest
+     * version.
+     *
+     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to base the new versionWithEntity on
+     * @return the private working copy
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> S createPrivateWorkingCopy(S entity);
 
     /**
      * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
