@@ -1,10 +1,18 @@
 package org.springframework.versions.impl;
 
+import java.io.Serializable;
+import java.security.Principal;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Id;
+
 import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
 import internal.org.springframework.versions.jpa.CloningService;
 import internal.org.springframework.versions.jpa.EntityInformationFacade;
 import internal.org.springframework.versions.jpa.VersioningService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.data.repository.core.EntityInformation;
@@ -18,13 +26,8 @@ import org.springframework.versions.LockingAndVersioningException;
 import org.springframework.versions.LockingAndVersioningRepository;
 import org.springframework.versions.SuccessorId;
 import org.springframework.versions.VersionInfo;
+import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import java.io.Serializable;
-import java.security.Principal;
-import java.util.List;
 
 import static java.lang.String.format;
 
@@ -130,7 +133,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Transactional
-    public <S extends T> S version(S currentVersion, VersionInfo info) {
+    public <S extends T> S createPrivateWorkingCopy(S currentVersion) {
+
         Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("no principal");
@@ -151,6 +155,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         S ancestorRoot;
         if (isAnestralRoot(currentVersion)) {
             currentVersion = (S)versioner.establishAncestralRoot(currentVersion);
+            em.merge(currentVersion);
             ancestorRoot = currentVersion;
         } else {
             Object ancestorRootId = getAncestralRootId(currentVersion);
@@ -162,17 +167,86 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
         S newVersion = (S)cloner.clone(currentVersion);
 
-        this.unlock(currentVersion);
+//        this.unlock(currentVersion);
+//
+        Object versionNumber = BeanUtils.getFieldWithAnnotation(currentVersion, VersionNumber.class);
+        if (versionNumber == null) {
+            versionNumber = "";
+        }
+        newVersion = (S)versioner.establishSuccessor(newVersion, versionNumber.toString(), "~~PWC~~", ancestorRoot, currentVersion);
 
-        newVersion = (S)versioner.establishSuccessor(newVersion, info.getNumber(), info.getLabel(), ancestorRoot, currentVersion);
         em.persist(newVersion);
         Object newId = getId(newVersion);
 
-        currentVersion = (S)versioner.establishAncestor(currentVersion, newVersion);
-        em.merge(currentVersion);
+//        currentVersion = (S)versioner.establishAncestor(currentVersion, newVersion);
 
         newVersion = this.lock(newVersion);
-        em.merge(newVersion);
+		newVersion = em.merge(newVersion);
+
+        return newVersion;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public <S extends T> S version(S currentVersion, VersionInfo info) {
+
+    	Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+
+        Object id = getId(currentVersion);
+        if (id == null) return null;
+
+        if (!isHead(currentVersion)) {
+            throw new LockingAndVersioningException("not head");
+        }
+
+        Principal lockOwner = lockingService.lockOwner(id);
+        if (lockOwner  == null || !authentication.isAuthenticated() || authentication.getName().equals(lockOwner.getName()) == false) {
+            throw new LockOwnerException("not lock owner");
+        }
+
+        S newVersion = null;
+        if (!isPrivateWorkingCopy(currentVersion)) {
+
+            S ancestorRoot;
+            if (isAnestralRoot(currentVersion)) {
+                currentVersion = (S) versioner.establishAncestralRoot(currentVersion);
+                ancestorRoot = currentVersion;
+            }
+            else {
+                Object ancestorRootId = getAncestralRootId(currentVersion);
+                ancestorRoot = em.find((Class<S>) currentVersion.getClass(), ancestorRootId);
+                if (ancestorRoot == null) {
+                    throw new LockingAndVersioningException(format("ancestor root not found: %s", ancestorRootId));
+                }
+            }
+
+            newVersion = (S) cloner.clone(currentVersion);
+
+            this.unlock(currentVersion);
+
+            newVersion = (S) versioner
+                    .establishSuccessor(newVersion, info.getNumber(), info.getLabel(), ancestorRoot, currentVersion);
+            em.persist(newVersion);
+            Object newId = getId(newVersion);
+
+            newVersion = this.lock(newVersion);
+			newVersion = em.merge(newVersion);
+        } else {
+
+            newVersion = currentVersion;
+            BeanUtils.setFieldWithAnnotation(newVersion, VersionNumber.class, info.getNumber());
+            BeanUtils.setFieldWithAnnotation(newVersion, VersionLabel.class, info.getLabel());
+            newVersion = em.merge(newVersion);
+
+            currentVersion = (S) em.find(newVersion.getClass(), BeanUtils.getFieldWithAnnotation(newVersion, AncestorId.class));
+            this.unlock(currentVersion);
+        }
+
+        currentVersion = (S) versioner.establishAncestor(currentVersion, newVersion);
+        em.merge(currentVersion);
 
         return newVersion;
     }
@@ -189,7 +263,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
     @Override
     public <S extends T> void delete(S entity) {
-        Authentication authentication = auth.getAuthentication();
+
+    	Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("no principal");
         }
@@ -219,11 +294,17 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
         if (ancestorId != null) {
             ancestor = (S) em.find(entity.getClass(), ancestorId);
+
             BeanUtils.setFieldWithAnnotation(ancestor, SuccessorId.class, null);
+
+            if (ancestorRootId.equals(ancestorId)) {
+				BeanUtils.setFieldWithAnnotation(ancestor, AncestorRootId.class, null);
+			}
+
             lockingService.lock(ancestorId, authentication);
         }
 
-        em.remove(entity);
+		em.remove(em.contains(entity) ? entity : em.merge(entity));
     }
 
     protected <S extends T> boolean isHead(S entity) {
@@ -240,6 +321,21 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             return BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class) == null;
         }
         return isAncestralRoot;
+    }
+
+    protected <S extends T> boolean isPrivateWorkingCopy(S currentVersion) {
+
+        Object ancestorId = BeanUtils.getFieldWithAnnotation(currentVersion, AncestorId.class);
+        if (ancestorId == null) {
+            return false;
+        }
+
+        Object ancestor = em.find((Class<S>) currentVersion.getClass(), ancestorId);
+        if (ancestor == null) {
+            return false;
+        }
+
+        return BeanUtils.getFieldWithAnnotation(ancestor, SuccessorId.class) == null;
     }
 
     protected <S extends T> Object getAncestralRootId(S entity) {

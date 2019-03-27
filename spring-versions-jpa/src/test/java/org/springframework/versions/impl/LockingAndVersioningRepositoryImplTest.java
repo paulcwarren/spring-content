@@ -1,5 +1,10 @@
 package org.springframework.versions.impl;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Id;
+import javax.persistence.TypedQuery;
+import javax.persistence.Version;
+
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
@@ -12,6 +17,7 @@ import lombok.Setter;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.security.core.Authentication;
 import org.springframework.versions.AncestorId;
@@ -24,14 +30,9 @@ import org.springframework.versions.VersionInfo;
 import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.Version;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -39,6 +40,9 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -312,6 +316,74 @@ public class LockingAndVersioningRepositoryImplTest {
                     });
                 });
             });
+            Context("#privateWorkingCopy", () -> {
+                BeforeEach(() -> {
+                    currentEntity = new TestEntity();
+                });
+                JustBeforeEach(() -> {
+                    try {
+                        result = repo.createPrivateWorkingCopy(currentEntity);
+                    } catch (Exception e) {
+                        this.e = e;
+                    }
+                });
+                Context("given a principal that is the lock owner", () -> {
+                    BeforeEach(() -> {
+                        principal = mock(Authentication.class);
+                        when(principal.getName()).thenReturn("some-principal");
+                        when(principal.isAuthenticated()).thenReturn(true);
+                        when(auth.getAuthentication()).thenReturn(principal);
+
+                        when(locker.lockOwner(currentEntity.getId())).thenReturn(principal);
+                        when(locker.isLockOwner(currentEntity.getId(), principal)).thenReturn(true);
+                    });
+                    Context("when the entity is not yet part of a version tree", () -> {
+                        BeforeEach(() -> {
+                            when(entityInfo.getEntityInformation(TestEntity.class, em)).thenReturn(mock(EntityInformation.class));
+                            when(em.find(TestEntity.class, 0L)).thenReturn(currentEntity);
+                        });
+                        Context("given a lock on the current version", () -> {
+                            Context("given the cloner clones the entity making a new version", () -> {
+                                BeforeEach(() -> {
+                                    nextVersion = new TestEntity();
+                                    when(cloner.clone(currentEntity)).thenReturn(nextVersion);
+                                });
+                                Context("given persisting the new version assigns a new ID", () -> {
+                                    BeforeEach(() -> {
+                                        doAnswer(new Answer() {
+                                            public Object answer(InvocationOnMock invocation) {
+                                                nextVersion.setId(1L);
+                                                return null;
+                                            }
+                                        }).when(em).persist(nextVersion);
+                                        when(em.merge(nextVersion)).thenReturn(nextVersion);
+                                    });
+                                    Context("given the locker works", () -> {
+                                        BeforeEach(() -> {
+                                            when(locker.unlock(0L, principal)).thenReturn(true);
+                                            when(locker.lock(1L, principal)).thenReturn(true);
+                                        });
+                                        It("should create the pwc with a new id", () -> {
+                                            assertThat(((TestEntity)result).getId(), is(1L));
+                                            assertThat(((TestEntity)result).getVersionLabel(), is("~~PWC~~"));
+                                        });
+                                        It("should establish the current version as the pwc's ancestor", () -> {
+                                            assertThat(((TestEntity)result).getAncestorId(), is(0L));
+                                            assertThat(((TestEntity)result).getAncestorRootId(), is(0L));
+                                        });
+                                        It("should not establish the pwc as the successor of current version", () -> {
+                                            assertThat(currentEntity.getSuccessorId(), is(nullValue()));
+                                        });
+                                        It("should lock pwc", () -> {
+                                            verify(locker).lock(eq(1L), anyObject());
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
             Context("#version", () ->   {
                 BeforeEach(() -> {
                     currentEntity = new TestEntity();
@@ -335,23 +407,26 @@ public class LockingAndVersioningRepositoryImplTest {
                         when(principal.getName()).thenReturn("some-principal");
                         when(principal.isAuthenticated()).thenReturn(true);
                         when(auth.getAuthentication()).thenReturn(principal);
+
+                        when(locker.lockOwner(currentEntity.getId())).thenReturn(principal);
+                        when(locker.isLockOwner(currentEntity.getId(), principal)).thenReturn(true);
                     });
                     Context("when the entity is not yet part of a version tree", () -> {
                         BeforeEach(() -> {
                             when(entityInfo.getEntityInformation(TestEntity.class, em)).thenReturn(mock(EntityInformation.class));
                             when(locker.lockOwner(1L)).thenReturn(principal);
                             when(locker.isLockOwner(1L, principal)).thenReturn(true);
+
+                            when(em.find(TestEntity.class, 0L)).thenReturn(currentEntity);
                         });
-                        Context("given the principal is the lock owner", () -> {
+                        Context("given the entity is not a private working copy", () -> {
                             BeforeEach(() -> {
-                                when(locker.lockOwner(currentEntity.getId())).thenReturn(principal);
-                                when(locker.isLockOwner(currentEntity.getId(), principal)).thenReturn(true);
+                                TypedQuery tq = mock(TypedQuery.class);
+                                when(em.createQuery(anyString(), anyObject())).thenReturn(tq);
+                                when(tq.getSingleResult()).thenReturn(0L);
                             });
-                            Context("given the entity manager finds the ancestor root", () -> {
-                                BeforeEach(() -> {
-                                    when(em.find(TestEntity.class, 0L)).thenReturn(currentEntity);
-                                });
-                                Context("given the cloner can clone the entity to make a new version", () -> {
+                            Context("given the supplied version is the head", () -> {
+                                Context("given the cloner clones the entity making a new version", () -> {
                                     BeforeEach(() -> {
                                         nextVersion = new TestEntity();
                                         when(cloner.clone(currentEntity)).thenReturn(nextVersion);
@@ -393,6 +468,65 @@ public class LockingAndVersioningRepositoryImplTest {
                                 });
                             });
                         });
+                        Context("given the entity is a private working copy", () -> {
+                            BeforeEach(() -> {
+                                currentEntity.setId(1L);
+                                currentEntity.setAncestorId(0L);
+                                currentEntity.setAncestorRootId(0L);
+                                currentEntity.setSuccessorId(null);
+                                currentEntity.setVersionNumber("1.0");
+                                currentEntity.setVersionLabel("~~PWC~~");
+
+                                TypedQuery tq = mock(TypedQuery.class);
+                                when(em.createQuery(anyString(), anyObject())).thenReturn(tq);
+                                when(tq.getSingleResult()).thenReturn(1L);
+                            });
+                            Context("given the ancestor exists", () -> {
+                                BeforeEach(() -> {
+                                    ancestor = new TestEntity();
+                                    ancestor.setId(0L);
+                                    ancestor.setAncestorRootId(0L);
+                                    ancestor.setVersionNumber("1.0");
+                                    ancestor.setLockOwner("some-principal");
+
+                                    when(em.find(TestEntity.class, 0L)).thenReturn(ancestor);
+                                });
+                                Context("given the locker works", () -> {
+                                    BeforeEach(() -> {
+                                        when(locker.unlock(0L, principal)).thenReturn(true);
+                                        when(locker.lock(1L, principal)).thenReturn(true);
+                                        when(em.merge(anyObject())).thenAnswer(arg0);
+                                    });
+                                    It("should update the version attributes on the ancestor and unlock the entity", () -> {
+                                        assertThat(ancestor.getId(), is(0L));
+                                        assertThat(ancestor.getAncestorId(), is(nullValue()));
+                                        assertThat(ancestor.getAncestorRootId(), is(0L));
+                                        assertThat(ancestor.getSuccessorId(), is(1L));
+
+                                        verify(locker).unlock(0L, principal);
+                                    });
+                                    It("should establish the new version, persist and lock it", () -> {
+                                        assertThat(((TestEntity) result).getId(), is(1L));
+                                        assertThat(((TestEntity) result).getAncestorRootId(), is(0L));
+                                        assertThat(((TestEntity) result).getAncestorId(), is(0L));
+                                        assertThat(((TestEntity) result).getSuccessorId(), is(nullValue()));
+                                        assertThat(((TestEntity) result).getVersionNumber(), is("1.1"));
+                                        assertThat(((TestEntity) result).getVersionLabel(), is("a version label"));
+                                        verify(em, atLeastOnce()).merge(result);
+                                    });
+                                });
+                            });
+                        });
+                        Context("given the entity is not the head or a private working copy", () -> {
+                            BeforeEach(() -> {
+                                currentEntity.setSuccessorId(999L);
+                            });
+                            It("should fail", () -> {
+                                assertThat(result, is(nullValue()));
+                                assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
+                                assertThat(e.getMessage(), containsString("not head"));
+                            });
+                        });
                     });
                     Context("when the entity is part of a version tree", () -> {
                         BeforeEach(() -> {
@@ -406,77 +540,74 @@ public class LockingAndVersioningRepositoryImplTest {
                             currentEntity.setAncestorId(0L);
                             vi = new VersionInfo("1.2", "another version label");
                         });
-                        Context("given the principal is the lock owner", () -> {
+                        Context("given the entity is not a working copy", () -> {
                             BeforeEach(() -> {
-                                when(principal.getName()).thenReturn("some-principal");
-                                when(locker.lockOwner(currentEntity.getId())).thenReturn(principal);
-                                when(locker.isLockOwner(currentEntity.getId(), principal)).thenReturn(true);
+                                TypedQuery tq = mock(TypedQuery.class);
+                                when(em.createQuery(anyString(), anyObject())).thenReturn(tq);
+                                when(tq.getSingleResult()).thenReturn(0L);
                             });
-                            Context("given the entity manager finds the entity", () -> {
+                            Context("given the principal is the lock owner", () -> {
                                 BeforeEach(() -> {
-                                    when(entityInfo.getEntityInformation(TestEntity.class, em)).thenReturn(mock(EntityInformation.class));
-                                    when(em.find(TestEntity.class, 0L)).thenReturn(ancestorRoot);
-                                    when(em.find(TestEntity.class, 1L)).thenReturn(currentEntity);
+                                    when(principal.getName()).thenReturn("some-principal");
+                                    when(locker.lockOwner(currentEntity.getId())).thenReturn(principal);
+                                    when(locker.isLockOwner(currentEntity.getId(), principal)).thenReturn(true);
                                 });
-                                Context("given the cloner can clone the entity to make a new version", () -> {
+                                Context("given the entity manager finds the entity", () -> {
                                     BeforeEach(() -> {
-                                        nextVersion = new TestEntity();
-                                        when(cloner.clone(currentEntity)).thenReturn(nextVersion);
+                                        when(entityInfo.getEntityInformation(TestEntity.class, em)).thenReturn(mock(EntityInformation.class));
+                                        when(em.find(TestEntity.class, 0L)).thenReturn(ancestorRoot);
+                                        when(em.find(TestEntity.class, 1L)).thenReturn(currentEntity);
                                     });
-                                    Context("given persisting the new version assigns a new ID", () -> {
+                                    Context("given the cloner can clone the entity to make a new version", () -> {
                                         BeforeEach(() -> {
-                                            doAnswer(new Answer() {
-                                                public Object answer(InvocationOnMock invocation) {
-                                                    nextVersion.setId(2L);
-                                                    return null;
-                                                }
-                                            }).when(em).persist(nextVersion);
-                                            when(em.merge(nextVersion)).thenReturn(nextVersion);
+                                            nextVersion = new TestEntity();
+                                            when(cloner.clone(currentEntity)).thenReturn(nextVersion);
                                         });
-                                        Context("given the locker works", () -> {
+                                        Context("given persisting the new version assigns a new ID", () -> {
                                             BeforeEach(() -> {
-                                                when(locker.unlock(1L, principal)).thenReturn(true);
-                                                when(locker.lock(2L, principal)).thenReturn(true);
-                                                when(locker.lockOwner(2L)).thenReturn(principal);
+                                                doAnswer(new Answer() {
+                                                    public Object answer(InvocationOnMock invocation) {
+                                                        nextVersion.setId(2L);
+                                                        return null;
+                                                    }
+                                                }).when(em).persist(nextVersion);
+                                                when(em.merge(nextVersion)).thenReturn(nextVersion);
                                             });
-                                            It("should update the version attributes on the current entity, unlock and flush the entity to the db", () -> {
-                                                assertThat(currentEntity.getAncestorId(), is(0L));
-                                                assertThat(currentEntity.getAncestorRootId(), is(0L));
-                                                assertThat(currentEntity.getSuccessorId(), is(2L));
-                                                assertThat(currentEntity.getLockOwner(), is(nullValue()));
-                                                verify(locker).unlock(1L, principal);
-                                                verify(em, atLeastOnce()).merge(currentEntity);
-                                            });
-                                            It("should establish the new version, persist and lock it", () -> {
-                                                assertThat(((TestEntity)result).getId(), is(2L));
-                                                assertThat(((TestEntity)result).getAncestorRootId(), is(0L));
-                                                assertThat(((TestEntity)result).getAncestorId(), is(1L));
-                                                assertThat(((TestEntity)result).getSuccessorId(), is(nullValue()));
-                                                assertThat(((TestEntity)result).getVersionNumber(), is("1.2"));
-                                                assertThat(((TestEntity)result).getVersionLabel(), is("another version label"));
-                                                verify(locker).lock(2L, principal);
-                                                verify(em, atLeastOnce()).merge(result);
+                                            Context("given the locker works", () -> {
+                                                BeforeEach(() -> {
+                                                    when(locker.unlock(1L, principal)).thenReturn(true);
+                                                    when(locker.lock(2L, principal)).thenReturn(true);
+                                                    when(locker.lockOwner(2L)).thenReturn(principal);
+                                                });
+                                                It("should update the version attributes on the current entity, unlock and flush the entity to the db", () -> {
+                                                    assertThat(currentEntity.getAncestorId(), is(0L));
+                                                    assertThat(currentEntity.getAncestorRootId(), is(0L));
+                                                    assertThat(currentEntity.getSuccessorId(), is(2L));
+                                                    assertThat(currentEntity.getLockOwner(), is(nullValue()));
+                                                    verify(locker).unlock(1L, principal);
+                                                    verify(em, atLeastOnce()).merge(currentEntity);
+                                                });
+                                                It("should establish the new version, persist and lock it", () -> {
+                                                    assertThat(((TestEntity)result).getId(), is(2L));
+                                                    assertThat(((TestEntity)result).getAncestorRootId(), is(0L));
+                                                    assertThat(((TestEntity)result).getAncestorId(), is(1L));
+                                                    assertThat(((TestEntity)result).getSuccessorId(), is(nullValue()));
+                                                    assertThat(((TestEntity)result).getVersionNumber(), is("1.2"));
+                                                    assertThat(((TestEntity)result).getVersionLabel(), is("another version label"));
+                                                    verify(locker).lock(2L, principal);
+                                                    verify(em, atLeastOnce()).merge(result);
+                                                });
                                             });
                                         });
                                     });
                                 });
-                            });
-                            Context("given the entity manager cant find the ancestor", () -> {
-                                It("should throw an IllegalStateException", () -> {
-                                    assertThat(result, is(nullValue()));
-                                    assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
-                                    assertThat(e.getMessage(), containsString("ancestor root not found"));
+                                Context("given the entity manager cant find the ancestor", () -> {
+                                    It("should throw an IllegalStateException", () -> {
+                                        assertThat(result, is(nullValue()));
+                                        assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
+                                        assertThat(e.getMessage(), containsString("ancestor root not found"));
+                                    });
                                 });
-                            });
-                        });
-                        Context("given the entity is not the head", () -> {
-                            BeforeEach(() -> {
-                                currentEntity.setSuccessorId(999L);
-                            });
-                            It("should fail", () -> {
-                                assertThat(result, is(nullValue()));
-                                assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
-                                assertThat(e.getMessage(), containsString("not head"));
                             });
                         });
                     });
@@ -539,8 +670,13 @@ public class LockingAndVersioningRepositoryImplTest {
                                 when(locker.lockOwner(entity.getId())).thenReturn(principal);
                                 when(locker.isLockOwner(entity.getId(), principal)).thenReturn(true);
                             });
-                            It("should be deleted", () -> {
-                                verify(em).remove(entity);
+                            Context("given the entity is in the persistence context", () -> {
+                                BeforeEach(() -> {
+                                    when(em.contains(entity)).thenReturn(true);
+                                });
+                                It("should be deleted", () -> {
+                                    verify(em).remove(entity);
+                                });
                             });
                         });
                         Context("given a lock is held by another principal", () -> {
@@ -558,8 +694,13 @@ public class LockingAndVersioningRepositoryImplTest {
                             BeforeEach(() -> {
                                 when(locker.lockOwner(entity.getId())).thenReturn(null);
                             });
-                            It("should be deleted", () -> {
-                                verify(em).remove(entity);
+                            Context("given the entity is in the persistence context", () -> {
+                                BeforeEach(() -> {
+                                    when(em.contains(entity)).thenReturn(true);
+                                });
+                                It("should be deleted", () -> {
+                                    verify(em).remove(entity);
+                                });
                             });
                         });
                     });
@@ -568,13 +709,18 @@ public class LockingAndVersioningRepositoryImplTest {
                             entity = new TestEntity();
                             entity.setSuccessorId(999L);
                         });
-                        It("should fail", () -> {
-                            assertThat(result, is(nullValue()));
-                            assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
-                            assertThat(e.getMessage(), containsString("not head"));
+                        Context("given the entity is in the persistence context", () -> {
+                            BeforeEach(() -> {
+                                when(em.contains(entity)).thenReturn(true);
+                            });
+                            It("should fail", () -> {
+                                assertThat(result, is(nullValue()));
+                                assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
+                                assertThat(e.getMessage(), containsString("not head"));
+                            });
                         });
                     });
-                    Context("given the entity is the head of a version tree of 3 versions (ancestor is not ancestral root)", () -> {
+                    Context("given the entity is the head of a version tree of 3 versions and the ancestor is not ancestral root", () -> {
                         BeforeEach(() -> {
                             ancestorRoot = new TestEntity();
                             ancestorRoot.setId(0L);
@@ -592,26 +738,31 @@ public class LockingAndVersioningRepositoryImplTest {
 
                             when(em.find(TestEntity.class, 1L)).thenReturn(ancestor);
                         });
-                        It("should delete the entity", () -> {
-                            verify(em).remove(entity);
-                        });
-                        It("should re-instate the ancestor as the head", () -> {
-                            assertThat(ancestor.getSuccessorId(), is(nullValue()));
-                        });
-                        Context("given a lock is held by the principal", () -> {
+                        Context("given the entity is in the persistence context", () -> {
                             BeforeEach(() -> {
-                                principal = mock(Authentication.class);
-                                when(principal.isAuthenticated()).thenReturn(true);
-                                when(auth.getAuthentication()).thenReturn(principal);
-                                when(principal.getName()).thenReturn("some-principal");
-                                when(locker.lockOwner(entity.getId())).thenReturn(principal);
-                                when(locker.isLockOwner(entity.getId(), principal)).thenReturn(true);
+                                when(em.contains(entity)).thenReturn(true);
                             });
-                            It("should remove the lock", () -> {
-                                verify(locker).unlock(2L, principal);
+                            It("should delete the entity", () -> {
+                                verify(em).remove(entity);
                             });
-                            It("should re-instate the lock on the new head", () -> {
-                                verify(locker).lock(1L, principal);
+                            It("should re-instate the ancestor as the head", () -> {
+                                assertThat(ancestor.getSuccessorId(), is(nullValue()));
+                            });
+                            Context("given a lock is held by the principal", () -> {
+                                BeforeEach(() -> {
+                                    principal = mock(Authentication.class);
+                                    when(principal.isAuthenticated()).thenReturn(true);
+                                    when(auth.getAuthentication()).thenReturn(principal);
+                                    when(principal.getName()).thenReturn("some-principal");
+                                    when(locker.lockOwner(entity.getId())).thenReturn(principal);
+                                    when(locker.isLockOwner(entity.getId(), principal)).thenReturn(true);
+                                });
+                                It("should remove the lock", () -> {
+                                    verify(locker).unlock(2L, principal);
+                                });
+                                It("should re-instate the lock on the new head", () -> {
+                                    verify(locker).lock(1L, principal);
+                                });
                             });
                         });
                     });
@@ -628,11 +779,16 @@ public class LockingAndVersioningRepositoryImplTest {
 
                             when(em.find(TestEntity.class, 0L)).thenReturn(ancestorRoot);
                         });
-                        It("should delete the entity", () -> {
-                            verify(em).remove(entity);
-                        });
-                        It("should re-instate the ancestor as the head", () -> {
-                            assertThat(ancestorRoot.getSuccessorId(), is(nullValue()));
+                        Context("given the entity is in the persistence context", () -> {
+                            BeforeEach(() -> {
+                                when(em.contains(entity)).thenReturn(true);
+                            });
+                            It("should delete the entity", () -> {
+                                verify(em).remove(entity);
+                            });
+                            It("should re-instate the ancestor as the head", () -> {
+                                assertThat(ancestorRoot.getSuccessorId(), is(nullValue()));
+                            });
                         });
                     });
                 });
@@ -652,4 +808,10 @@ public class LockingAndVersioningRepositoryImplTest {
         @VersionNumber private String versionNumber;
         @VersionLabel private String versionLabel;
     }
+
+    private static final Answer<Object> arg0 = invocation -> {
+        Object[] args = invocation.getArguments();
+        return args[0];
+    };
+
 }
