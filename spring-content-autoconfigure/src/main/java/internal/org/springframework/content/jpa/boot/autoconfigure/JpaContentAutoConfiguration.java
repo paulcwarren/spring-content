@@ -1,7 +1,11 @@
 package internal.org.springframework.content.jpa.boot.autoconfigure;
 
+import javax.sql.DataSource;
+
 import internal.org.springframework.content.jpa.config.JpaStoreConfiguration;
+import internal.org.springframework.content.jpa.config.JpaStoreFactoryBean;
 import internal.org.springframework.content.jpa.config.JpaStoresRegistrar;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -13,11 +17,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ResourceLoader;
 
-import javax.sql.DataSource;
-
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @ConditionalOnClass({ DataSource.class, JpaStoresRegistrar.class })
+@ConditionalOnMissingBean(JpaStoreFactoryBean.class)
 @Import({ JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class })
 @EnableConfigurationProperties(ContentJpaProperties.class)
 public class JpaContentAutoConfiguration {

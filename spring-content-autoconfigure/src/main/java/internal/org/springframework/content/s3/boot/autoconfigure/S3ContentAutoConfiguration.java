@@ -2,8 +2,8 @@ package internal.org.springframework.content.s3.boot.autoconfigure;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
+import internal.org.springframework.content.s3.config.S3StoreFactoryBean;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnClass(AmazonS3Client.class)
+@ConditionalOnMissingBean(S3StoreFactoryBean.class)
 @Import({ S3StoreConfiguration.class, S3ContentAutoConfigureRegistrar.class })
 public class S3ContentAutoConfiguration {
 
