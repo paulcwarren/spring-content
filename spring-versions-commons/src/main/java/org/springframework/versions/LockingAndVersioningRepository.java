@@ -107,4 +107,22 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @throws SecurityException if no authentication exists
      */
     <S extends T> void delete(S entity);
+
+    /**
+     * Returns whether the given entity is a private working copy, or not
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to delete
+     * @return true if entity is a private working copy, otherwise false
+     */
+    <S extends T> boolean isPrivateWorkingCopy(S entity);
+
+    /**
+     * Returns the working copy for the given entity if it exists.
+     *
+     * @param <S> the type of entity
+     * @param entity the entity whose working copy is required
+     * @return the working copy if it exists, or null
+     */
+    <S extends T> S findWorkingCopy(S entity);
 }
