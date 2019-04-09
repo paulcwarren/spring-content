@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
@@ -304,7 +306,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             lockingService.lock(ancestorId, authentication);
         }
 
-		em.remove(em.contains(entity) ? entity : em.merge(entity));
+		em.remove(entity);
     }
 
     protected <S extends T> boolean isHead(S entity) {
@@ -323,19 +325,30 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return isAncestralRoot;
     }
 
-    protected <S extends T> boolean isPrivateWorkingCopy(S currentVersion) {
+    public <S extends T> boolean isPrivateWorkingCopy(S currentVersion) {
 
-        Object ancestorId = BeanUtils.getFieldWithAnnotation(currentVersion, AncestorId.class);
-        if (ancestorId == null) {
-            return false;
+        TypedQuery<Long> q = em.createQuery(format("select count(f1.id) FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId = null where f1.id = %s",
+                currentVersion.getClass().getName(),
+                currentVersion.getClass().getName(),
+                BeanUtils.getFieldWithAnnotation(currentVersion, Id.class)),
+                Long.class);
+
+        return (q.getSingleResult() == 1L);
+
+    }
+
+    public <S extends T> S findWorkingCopy(S entity) {
+        TypedQuery<S> q = em.createQuery(format("select f1 FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.ancestralRootId = %s",
+                entity.getClass().getName(),
+                entity.getClass().getName(),
+                BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class)),
+                (Class<S>)entity.getClass());
+
+        try {
+            return q.getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
         }
-
-        Object ancestor = em.find((Class<S>) currentVersion.getClass(), ancestorId);
-        if (ancestor == null) {
-            return false;
-        }
-
-        return BeanUtils.getFieldWithAnnotation(ancestor, SuccessorId.class) == null;
     }
 
     protected <S extends T> Object getAncestralRootId(S entity) {
