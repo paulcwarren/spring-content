@@ -46,7 +46,8 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * Creates and returns a new version of the entity as a private working copy.  The given entity remains the latest
      * version.
      *
-     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     * This method requires the entity class to have a copy constructor that will be used to clone the entity in order
+     * to create the new working copy.
      *
      * @param <S> the type of entity
      * @param entity the entity to base the new versionWithEntity on
@@ -55,13 +56,16 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @throws LockOwnerException if the current principal is not the lock owner
      * @throws SecurityException if no authentication exists
      */
-    <S extends T> S createPrivateWorkingCopy(S entity);
+    <S extends T> S workingCopy(S entity);
 
     /**
      * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
      * list.
      *
-     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     * If the supplied entity is a private working copy, it will be promoted from a working copy to the new version.
+     *
+     * If the supplied entity is not a private working copy, the entity will be cloned in order to create the new
+     * version.  This requires the entity class to have a copy constructor that is used for the cloning process.
      *
      * @param <S> the type of entity
      * @param entity the entity to base the new versionWithEntity on
