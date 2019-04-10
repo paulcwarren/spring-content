@@ -85,7 +85,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @param <S> the type of entity
      * @return list of latest versionWithEntity entities
      */
-    @Query("select t from #{#entityName} t where t.successorId = null")
+    @Query("select t from #{#entityName} t where t.successorId = null and t.id NOT IN (select f1.id FROM #{#entityName} f1 inner join #{#entityName} f2 on f1.ancestorId = f2.id and f2.successorId = null)")
     <S extends T> List<S> findAllVersionsLatest();
 
     /**
