@@ -20,8 +20,6 @@ import org.springframework.core.io.ResourceLoader;
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @ConditionalOnClass({ DataSource.class, JpaStoresRegistrar.class })
-@ConditionalOnMissingBean(JpaStoreFactoryBean.class)
-@Import({ JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class })
 @EnableConfigurationProperties(ContentJpaProperties.class)
 public class JpaContentAutoConfiguration {
 
@@ -37,4 +35,10 @@ public class JpaContentAutoConfiguration {
 	public ContentJpaDatabaseInitializer jpaStorageDatabaseInitializer(DataSource dataSource, ResourceLoader resourceLoader) {
 		return new ContentJpaDatabaseInitializer(dataSource, resourceLoader, this.properties);
 	}
+
+	@Configuration
+	@ConditionalOnMissingBean(JpaStoreFactoryBean.class)
+	@Import({ JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class })
+	public static class EnableJpaStoresConfig {}
+
 }

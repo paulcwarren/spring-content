@@ -13,9 +13,12 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ConditionalOnClass(AmazonS3Client.class)
-@ConditionalOnMissingBean(S3StoreFactoryBean.class)
-@Import({ S3StoreConfiguration.class, S3ContentAutoConfigureRegistrar.class })
 public class S3ContentAutoConfiguration {
+
+	@Configuration
+	@ConditionalOnMissingBean(S3StoreFactoryBean.class)
+	@Import({ S3StoreConfiguration.class, S3ContentAutoConfigureRegistrar.class })
+	public static class EnableS3StoresConfig {}
 
 	@Bean
 	@ConditionalOnMissingBean

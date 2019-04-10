@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -83,6 +84,19 @@ public class ContentFilesystemAutoConfigurationTest {
 				});
 			});
 
+			Context("given a configuration with explicit @EnableFilesystemStores annotation", () -> {
+				It("should load the context", () -> {
+					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+					context.register(ConfigWithExplicitEnableFilesystemStores.class);
+					context.refresh();
+
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+					assertThat(context.getBean(FileSystemResourceLoader.class), is(not(nullValue())));
+
+					context.close();
+				});
+			});
+
 		});
 	}
 
@@ -104,6 +118,14 @@ public class ContentFilesystemAutoConfigurationTest {
 			return new FileSystemResourceLoader("/some/random/path/");
 		}
 
+	}
+
+	@Configuration
+	@AutoConfigurationPackage
+	@EnableAutoConfiguration
+	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+	@EnableFilesystemStores
+	public static class ConfigWithExplicitEnableFilesystemStores {
 	}
 
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
