@@ -456,7 +456,7 @@ public class CmisServiceBridge {
 		Optional<Object> object = config.cmisDocumentRepository().findById(id);
 		if (object.isPresent()) {
 			Object lockedObject = ((LockingAndVersioningRepository) config.cmisDocumentRepository()).lock(object.get());
-			((LockingAndVersioningRepository) config.cmisDocumentRepository()).createPrivateWorkingCopy(lockedObject);
+			((LockingAndVersioningRepository) config.cmisDocumentRepository()).workingCopy(lockedObject);
 		}
 	}
 

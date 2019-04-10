@@ -135,7 +135,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Transactional
-    public <S extends T> S createPrivateWorkingCopy(S currentVersion) {
+    public <S extends T> S workingCopy(S currentVersion) {
 
         Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

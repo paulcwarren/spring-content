@@ -322,7 +322,7 @@ public class LockingAndVersioningRepositoryImplTest {
                 });
                 JustBeforeEach(() -> {
                     try {
-                        result = repo.createPrivateWorkingCopy(currentEntity);
+                        result = repo.workingCopy(currentEntity);
                     } catch (Exception e) {
                         this.e = e;
                     }
