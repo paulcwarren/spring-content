@@ -2,10 +2,13 @@ package org.springframework.content.jpa.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
+import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
 import org.junit.runner.RunWith;
+
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,8 +69,17 @@ public class ContentJpaAutoConfigurationTest {
 							is(initializer));
 				});
 			});
+			Context("when an explicit @EnableFilesystemStores is used", () -> {
+				BeforeEach(() -> {
+					context.register(ConfigWithExplicitEnableJpaStores.class);
+				});
+				It("should load the context", () -> {
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
+					assertThat(context.getBean(ContentJpaProperties.class), is(not(nullValue())));
+					assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(not(nullValue())));
+				});
+			});
 		});
-
 	}
 
 	@Configuration
@@ -85,6 +97,10 @@ public class ContentJpaAutoConfigurationTest {
 			return initializer;
 		}
 	}
+
+	@Configuration
+	@EnableJpaStores
+	public static class ConfigWithExplicitEnableJpaStores {}
 
 	@Configuration
 	@PropertySource("classpath:/custom-jpa.properties")

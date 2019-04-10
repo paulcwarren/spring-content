@@ -31,7 +31,7 @@ public class JpaVersionsAutoConfigurationTest {
     private AnnotationConfigApplicationContext context;
 
     {
-        Describe("JpaVersionsAutoConfigration", () -> {
+        Describe("JpaVersionsAutoConfiguration", () -> {
             Context("given an application context with a LockingAndVersioningRepository", () -> {
                 BeforeEach(() -> {
                     context = new AnnotationConfigApplicationContext();
@@ -39,7 +39,7 @@ public class JpaVersionsAutoConfigurationTest {
                     context.refresh();
                 });
 
-                It("should include the autoconfigured annotated event handler bean", () -> {
+                It("should include the repository bean", () -> {
                     MatcherAssert.assertThat(context, is(not(nullValue())));
                     MatcherAssert.assertThat(context.getBean(TestEntityRepository.class), is(not(nullValue())));
                 });
