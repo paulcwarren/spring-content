@@ -306,7 +306,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             lockingService.lock(ancestorId, authentication);
         }
 
-		em.remove(entity);
+        em.remove(em.contains(entity) ? entity : em.merge(entity));
     }
 
     protected <S extends T> boolean isHead(S entity) {
