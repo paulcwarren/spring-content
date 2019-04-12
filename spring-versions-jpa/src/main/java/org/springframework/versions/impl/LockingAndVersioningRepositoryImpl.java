@@ -3,6 +3,7 @@ package org.springframework.versions.impl;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -283,7 +284,6 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new LockOwnerException("not lock owner");
         } else if (lockingService.lockOwner(id) != null && lockingService.isLockOwner(id, authentication)) {
             relock = true;
-            lockingService.unlock(id, authentication);
         }
 
         Object ancestorRootId = getAncestralRootId(entity);
@@ -295,16 +295,24 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         if (ancestorId != null) {
+
             ancestor = (S) em.find(entity.getClass(), ancestorId);
+
+            Principal lockOwner = null;
+            if ((lockOwner = lockingService.lockOwner(ancestorId)) != null && !Objects.equals(authentication.getName(),lockOwner.getName())) {
+                throw new LockOwnerException(format("Not lock owner %s", ancestorId));
+            } else if (lockOwner == null && relock) {
+                lockingService.lock(ancestorId, authentication);
+            }
 
             BeanUtils.setFieldWithAnnotation(ancestor, SuccessorId.class, null);
 
             if (ancestorRootId.equals(ancestorId)) {
-				BeanUtils.setFieldWithAnnotation(ancestor, AncestorRootId.class, null);
-			}
-
-            lockingService.lock(ancestorId, authentication);
+                BeanUtils.setFieldWithAnnotation(ancestor, AncestorRootId.class, null);
+            }
         }
+
+        lockingService.unlock(id, authentication);
 
         em.remove(em.contains(entity) ? entity : em.merge(entity));
     }

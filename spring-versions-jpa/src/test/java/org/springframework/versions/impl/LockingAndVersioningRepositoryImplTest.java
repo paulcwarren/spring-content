@@ -644,7 +644,7 @@ public class LockingAndVersioningRepositoryImplTest {
                         assertThat(e, is(instanceOf(SecurityException.class)));
                     });
                 });
-                Context("given an unauthenticatd principal", () -> {
+                Context("given an unauthenticated principal", () -> {
                     BeforeEach(() -> {
                         principal = mock(Authentication.class);
                         when(principal.isAuthenticated()).thenReturn(false);
