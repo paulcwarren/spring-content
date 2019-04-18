@@ -90,7 +90,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.versions.AncestorId;
 import org.springframework.versions.LockOwner;
 import org.springframework.versions.LockingAndVersioningRepository;
@@ -732,6 +731,26 @@ public class CmisServiceBridge {
 		throw new IllegalStateException(format("invalid type %s", object.getClass()));
 	}
 
+	ObjectInFolderList toObjectInFolderList(CmisRepositoryConfiguration config, CallContext callContext, Collection children, Set<String> filter, boolean root, ObjectInfoHandler objectInfos) {
+		List<ObjectInFolderData> objectInFolderList = new ArrayList<>();
+		ObjectInFolderListImpl list = new ObjectInFolderListImpl();
+		list.setObjects(objectInFolderList);
+
+		if (children == null) {
+			return list;
+		}
+
+		for (Object child : children) {
+			ObjectInFolderDataImpl folderData = new ObjectInFolderDataImpl();
+
+			ObjectData object = toObjectData(config, callContext, getType(child), child, root, filter, objectInfos);
+			folderData.setObject(object);
+
+			objectInFolderList.add(folderData);
+		}
+
+		return list;
+	}
 
 	String getRootId() {
 		return cmisRepositoryConfiguration.getCmisRepositoryInfo().getRootFolderId();
@@ -759,20 +778,20 @@ public class CmisServiceBridge {
 		return object.isPresent() ? object.get() : null;
 	}
 
-	public static String findParentProperty(Object object) {
+	static String findParentProperty(Object object) {
 		return findFirstProperty(object, CmisPropertyType.Parent_Relationship);
 	}
 
-	public static String findChildProperty(Object object) {
+	static String findChildProperty(Object object) {
 		return findFirstProperty(object, CmisPropertyType.Child_Relationship);
 	}
 
-	public static String findFirstProperty(Object object, CmisPropertyType type) {
+	static String findFirstProperty(Object object, CmisPropertyType type) {
 		String[] properties = findProperties(object, type);
 		return (properties.length >= 1 ? properties[0] : null);
 	}
 
-	public static String[] findProperties(Object object, CmisPropertyType type) {
+	static String[] findProperties(Object object, CmisPropertyType type) {
 		List<String> properties = new ArrayList<>();
 		if (BeanUtils.hasFieldWithAnnotation(object, CmisProperty.class)) {
 			Field[] cmisPropertyFields = BeanUtils.findFieldsWithAnnotation(object.getClass(), CmisProperty.class, new BeanWrapperImpl(object));
@@ -798,32 +817,11 @@ public class CmisServiceBridge {
 		return id;
 	}
 
-	String getName(Object object) {
+	static String getName(Object object) {
 		return BeanUtils.getFieldWithAnnotation(object, CmisName.class).toString();
 	}
 
-	ObjectInFolderList toObjectInFolderList(CmisRepositoryConfiguration config, CallContext callContext, Collection children, Set<String> filter, boolean root, ObjectInfoHandler objectInfos) {
-		List<ObjectInFolderData> objectInFolderList = new ArrayList<>();
-		ObjectInFolderListImpl list = new ObjectInFolderListImpl();
-		list.setObjects(objectInFolderList);
-
-		if (children == null) {
-			return list;
-		}
-
-		for (Object child : children) {
-			ObjectInFolderDataImpl folderData = new ObjectInFolderDataImpl();
-
-			ObjectData object = toObjectData(config, callContext, getType(child), child, root, filter, objectInfos);
-			folderData.setObject(object);
-
-			objectInFolderList.add(folderData);
-		}
-
-		return list;
-	}
-
-	public static ObjectDataImpl toObjectData(CmisRepositoryConfiguration config,
+	static ObjectDataImpl toObjectData(CmisRepositoryConfiguration config,
 			CallContext context,
 			TypeDefinition type,
 			Object object,
@@ -994,7 +992,7 @@ public class CmisServiceBridge {
 		objectInfo.setWorkingCopyOriginalId(null);
 	}
 
-	public static AllowableActions compileAllowableActions(TypeDefinition type, Object object, boolean isRoot, boolean isPrincipalReadOnly) {
+	static AllowableActions compileAllowableActions(TypeDefinition type, Object object, boolean isRoot, boolean isPrincipalReadOnly) {
 		AllowableActionsImpl result = new AllowableActionsImpl();
 
 		Set<Action> aas = EnumSet.noneOf(Action.class);
@@ -1036,72 +1034,65 @@ public class CmisServiceBridge {
 		return result;
 	}
 
-	private static void addAction(Set<Action> aas, Action action, boolean condition) {
+	static void addAction(Set<Action> aas, Action action, boolean condition) {
 		if (condition) {
 			aas.add(action);
 		}
 	}
 
-	private static String toString(Object o) {
+	static String toString(Object o) {
 		if (o == null) {
 			return "";
 		}
 		return o.toString();
 	}
 
-	private static void addPropertyId(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, String value) {
-		if (!checkAddProperty(props, typeId, filter, id)) {
+	static void addPropertyId(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, String value) {
+		if (!checkAddProperty(props, type, filter, id)) {
 			return;
 		}
 
 		props.addProperty(new PropertyIdImpl(id, value));
 	}
 
-	private static void addPropertyString(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, String value) {
-		if (!checkAddProperty(props, typeId, filter, id)) {
+	static void addPropertyString(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, String value) {
+		if (!checkAddProperty(props, type, filter, id)) {
 			return;
 		}
 
 		props.addProperty(new PropertyStringImpl(id, value));
 	}
 
-	private static void addPropertyInteger(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, long value) {
-		addPropertyBigInteger(props, typeId, filter, id,
+	static void addPropertyInteger(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, long value) {
+		addPropertyBigInteger(props, type, filter, id,
 				BigInteger.valueOf(value));
 	}
 
-	private static void addPropertyBigInteger(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, BigInteger value) {
-		if (!checkAddProperty(props, typeId, filter, id)) {
+	static void addPropertyBigInteger(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, BigInteger value) {
+		if (!checkAddProperty(props, type, filter, id)) {
 			return;
 		}
 
 		props.addProperty(new PropertyIntegerImpl(id, value));
 	}
 
-	private static void addPropertyBoolean(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, boolean value) {
-		if (!checkAddProperty(props, typeId, filter, id)) {
+	static void addPropertyBoolean(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, boolean value) {
+		if (!checkAddProperty(props, type, filter, id)) {
 			return;
 		}
 
 		props.addProperty(new PropertyBooleanImpl(id, value));
 	}
 
-	private static void addPropertyDateTime(PropertiesImpl props, String typeId,
-			Set<String> filter, String id, GregorianCalendar value) {
-		if (!checkAddProperty(props, typeId, filter, id)) {
+	static void addPropertyDateTime(PropertiesImpl props, TypeDefinition type, Set<String> filter, String id, GregorianCalendar value) {
+		if (!checkAddProperty(props, type, filter, id)) {
 			return;
 		}
 
 		props.addProperty(new PropertyDateTimeImpl(id, value));
 	}
 
-	private static boolean checkAddProperty(Properties properties, String typeId,
-			Set<String> filter, String id) {
+	static boolean checkAddProperty(Properties properties, TypeDefinition type, Set<String> filter, String id) {
 		if ((properties == null) || (properties.getProperties() == null)) {
 			throw new IllegalArgumentException("Properties must not be null!");
 		}
@@ -1125,7 +1116,7 @@ public class CmisServiceBridge {
 		return len;
 	}
 
-	public static Set<String> splitFilter(String filter) {
+	static Set<String> splitFilter(String filter) {
 		if (filter == null) {
 			return null;
 		}
@@ -1154,8 +1145,12 @@ public class CmisServiceBridge {
 	}
 
 	static String getAsString(Object object, Class<? extends Annotation> annotation) {
+		return getAsString(object, annotation, "");
+	}
+
+	static String getAsString(Object object, Class<? extends Annotation> annotation, String defaultValue) {
 		if (object == null) {
-			return "";
+			return defaultValue;
 		}
 		Object value = BeanUtils.getFieldWithAnnotation(object, annotation);
 		return (value != null) ? value.toString() : "";
