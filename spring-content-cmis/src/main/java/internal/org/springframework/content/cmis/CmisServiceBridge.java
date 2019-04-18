@@ -78,6 +78,7 @@ import org.springframework.content.cmis.CmisName;
 import org.springframework.content.cmis.CmisProperty;
 import org.springframework.content.cmis.CmisPropertySetter;
 import org.springframework.content.cmis.CmisPropertyType;
+import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -832,7 +833,7 @@ public class CmisServiceBridge {
 		ObjectDataImpl result = new ObjectDataImpl();
 		ObjectInfoImpl objectInfo = new ObjectInfoImpl();
 
-		compileObjectMetadata(objectInfo);
+		compileObjectMetadata(objectInfo, type);
 
 		result.setProperties(compileProperties(config, type, object, root, filter, objectInfo));
 
@@ -846,21 +847,24 @@ public class CmisServiceBridge {
 		return result;
 	}
 
-	public static PropertiesImpl compileProperties(CmisRepositoryConfiguration config,
+	static PropertiesImpl compileProperties(CmisRepositoryConfiguration config,
 			TypeDefinition type,
 			Object object,
 			boolean root,
-			Set<String> filter,
+			Set<String> orgfilter,
 			ObjectInfoImpl objectInfo) {
+
+		// copy filter
+		Set<String> filter = (orgfilter == null ? null : new HashSet<>(orgfilter));
 
 		Object id = BeanUtils.getFieldWithAnnotation(object, Id.class);
 		Object name = BeanUtils.getFieldWithAnnotation(object, CmisName.class);
 		PropertiesImpl props = new PropertiesImpl();
-		props.addProperty(new PropertyIdImpl(PropertyIds.OBJECT_ID, id != null ? id.toString() : ""));
-		props.addProperty(new PropertyStringImpl(PropertyIds.NAME, name != null ? name.toString() : ""));
+		addPropertyId(props, type, filter, PropertyIds.OBJECT_ID, id != null ? id.toString() : "");
+		addPropertyString(props, type, filter, PropertyIds.NAME, name != null ? name.toString() : "");
 
 		Object createdBy = BeanUtils.getFieldWithAnnotation(object, CreatedBy.class);
-		props.addProperty(new PropertyStringImpl(PropertyIds.CREATED_BY, createdBy != null ? createdBy.toString() : UNKNOWN));
+		addPropertyString(props, type, filter, PropertyIds.CREATED_BY, createdBy != null ? createdBy.toString() : UNKNOWN);
 		objectInfo.setCreatedBy(createdBy != null ? createdBy.toString() : UNKNOWN);
 
 		Object createdDate = BeanUtils.getFieldWithAnnotation(object, CreatedDate.class);
@@ -871,13 +875,13 @@ public class CmisServiceBridge {
 
 			Instant instant = conversionService.convert(createdDate, Instant.class);
 
-			props.addProperty(new PropertyStringImpl(PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class)));
+			addPropertyString(props, type, filter, PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class));
 
 			objectInfo.setCreationDate(conversionService.convert(instant, GregorianCalendar.class));
 		}
 
 		Object modifiedBy = BeanUtils.getFieldWithAnnotation(object, LastModifiedBy.class);
-		props.addProperty(new PropertyStringImpl(PropertyIds.LAST_MODIFIED_BY, modifiedBy != null ? modifiedBy.toString() : UNKNOWN));
+		addPropertyString(props, type, filter, PropertyIds.LAST_MODIFIED_BY, modifiedBy != null ? modifiedBy.toString() : UNKNOWN);
 
 		Object modifiedDate = BeanUtils.getFieldWithAnnotation(object, LastModifiedDate.class);
 		if (modifiedDate != null) {
@@ -887,9 +891,9 @@ public class CmisServiceBridge {
 
 			Instant instant = conversionService.convert(modifiedDate, Instant.class);
 
-			props.addProperty(new PropertyStringImpl(PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class)));
+			addPropertyString(props, type, filter, PropertyIds.LAST_MODIFICATION_DATE, conversionService.convert(instant, String.class));
 
-			objectInfo.setCreationDate(conversionService.convert(instant, GregorianCalendar.class));
+			objectInfo.setLastModificationDate(conversionService.convert(instant, GregorianCalendar.class));
 		}
 
 		String typeId = null;
@@ -898,38 +902,38 @@ public class CmisServiceBridge {
 		if (folder) {
 			typeId = BaseTypeId.CMIS_FOLDER.value();
 
-			props.addProperty(new PropertyIdImpl(PropertyIds.BASE_TYPE_ID, typeId));
-			props.addProperty(new PropertyIdImpl(PropertyIds.OBJECT_TYPE_ID, typeId));
-			props.addProperty(new PropertyStringImpl(PropertyIds.PATH, (root) ? "/" : getPath(object)));
+			addPropertyId(props, type, filter, PropertyIds.BASE_TYPE_ID, typeId);
+			addPropertyId(props, type, filter, PropertyIds.OBJECT_TYPE_ID, typeId);
+			addPropertyString(props, type, filter, PropertyIds.PATH, (root) ? "/" : getPath(object));
 
 			if (root) {
-				props.addProperty(new PropertyIdImpl(PropertyIds.PARENT_ID, (String)null));
+				addPropertyId(props, type, filter, PropertyIds.PARENT_ID, (String)null);
 				objectInfo.setHasParent(false);
 			} else {
-				props.addProperty(new PropertyIdImpl(PropertyIds.PARENT_ID, (getParentId(object) != null ? getParentId(object) : config.getCmisRepositoryInfo().getRootFolderId())));
+				addPropertyId(props, type, filter, PropertyIds.PARENT_ID, (getParentId(object) != null ? getParentId(object) : config.getCmisRepositoryInfo().getRootFolderId()));
 				objectInfo.setHasParent(true);
 			}
 		} else {
 			typeId = BaseTypeId.CMIS_DOCUMENT.value();
 
-			props.addProperty(new PropertyIdImpl(PropertyIds.BASE_TYPE_ID, typeId));
-			props.addProperty(new PropertyIdImpl(PropertyIds.OBJECT_TYPE_ID, typeId));
+			addPropertyId(props, type, filter, PropertyIds.BASE_TYPE_ID, typeId);
+			addPropertyId(props, type, filter, PropertyIds.OBJECT_TYPE_ID, typeId);
 
-			props.addProperty(new PropertyStringImpl(PropertyIds.DESCRIPTION, getAsString(object, CmisDescription.class)));
+			addPropertyString(props, type, filter, PropertyIds.DESCRIPTION, getAsString(object, CmisDescription.class));
 
 			if (((DocumentTypeDefinition)type).isVersionable()) {
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_IMMUTABLE, false));
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_LATEST_VERSION, isLatestVersion(object, config.cmisDocumentRepository())));
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_MAJOR_VERSION, isMajorVersion(object)));
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_LATEST_MAJOR_VERSION, isLatestVersion(object, config.cmisDocumentRepository()) && isMajorVersion(object)));
-				props.addProperty(new PropertyStringImpl(PropertyIds.VERSION_LABEL, getAsString(object, VersionLabel.class)));
- 				props.addProperty(new PropertyIdImpl(PropertyIds.VERSION_SERIES_ID, getAsString(object, Version.class)));
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_IMMUTABLE, false);
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_LATEST_VERSION, isLatestVersion(object, config.cmisDocumentRepository()));
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_MAJOR_VERSION, isMajorVersion(object));
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_LATEST_MAJOR_VERSION, isLatestVersion(object, config.cmisDocumentRepository()) && isMajorVersion(object));
+				addPropertyString(props, type, filter, PropertyIds.VERSION_LABEL, getAsString(object, VersionLabel.class));
+ 				addPropertyId(props, type, filter, PropertyIds.VERSION_SERIES_ID, getAsString(object, Version.class));
  				Object pwc = getWorkingCopy(object, config.cmisDocumentRepository());
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_PRIVATE_WORKING_COPY, pwc != null && id.equals(getId(pwc))));
-				props.addProperty(new PropertyBooleanImpl(PropertyIds.IS_VERSION_SERIES_CHECKED_OUT, pwc != null));
-				props.addProperty(new PropertyStringImpl(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, getAsString(pwc, LockOwner.class)));
-				props.addProperty(new PropertyStringImpl(PropertyIds.VERSION_SERIES_CHECKED_OUT_ID, getAsString(pwc, Id.class)));
-				props.addProperty(new PropertyStringImpl(PropertyIds.CHECKIN_COMMENT, getAsString(object, VersionLabel.class)));
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_PRIVATE_WORKING_COPY, pwc != null && id.equals(getId(pwc)));
+				addPropertyBoolean(props, type, filter, PropertyIds.IS_VERSION_SERIES_CHECKED_OUT, pwc != null);
+				addPropertyId(props, type, filter, PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, getAsString(pwc, LockOwner.class));
+				addPropertyString(props, type, filter, PropertyIds.VERSION_SERIES_CHECKED_OUT_ID, getAsString(pwc, Id.class));
+				addPropertyString(props, type, filter, PropertyIds.CHECKIN_COMMENT, getAsString(object, VersionLabel.class));
 
 //				if (context.getCmisVersion() != CmisVersion.CMIS_1_0) {
 //					addPropertyBoolean(result, typeId, filter,
@@ -941,26 +945,26 @@ public class CmisServiceBridge {
 			if (allowed == ContentStreamAllowed.ALLOWED || allowed == ContentStreamAllowed.REQUIRED) {
 				Long len = contentLength(object);
 				if (len == 0L) {
-					addPropertyBigInteger(props, typeId, filter, PropertyIds.CONTENT_STREAM_LENGTH, null);
-					addPropertyString(props, typeId, filter, PropertyIds.CONTENT_STREAM_MIME_TYPE, null);
-					addPropertyString(props, typeId, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, null);
+					addPropertyBigInteger(props, type, filter, PropertyIds.CONTENT_STREAM_LENGTH, null);
+					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_MIME_TYPE, null);
+					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, null);
 
 					objectInfo.setHasContent(false);
 					objectInfo.setContentType(null);
 					objectInfo.setFileName(null);
 				}
 				else {
-					addPropertyInteger(props, typeId, filter, PropertyIds.CONTENT_STREAM_LENGTH, len);
-					addPropertyString(props, typeId, filter, PropertyIds.CONTENT_STREAM_MIME_TYPE,
+					addPropertyInteger(props, type, filter, PropertyIds.CONTENT_STREAM_LENGTH, len);
+					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_MIME_TYPE,
 							MimeTypes.getMIMEType(toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));
-					addPropertyString(props, typeId, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, toString(name));
+					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, toString(name));
 
 					objectInfo.setHasContent(true);
 					objectInfo.setContentType(MimeTypes.getMIMEType(toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));
 					objectInfo.setFileName(toString(name));
 				}
 
-				addPropertyId(props, typeId, filter, PropertyIds.CONTENT_STREAM_ID, null);
+				addPropertyId(props, type, filter, PropertyIds.CONTENT_STREAM_ID, getAsString(object, ContentId.class, null));
 			}
 		}
 		return props;
@@ -970,26 +974,44 @@ public class CmisServiceBridge {
 		return ((LockingAndVersioningRepository)repo).findWorkingCopy(object);
 	}
 
-	public static void compileObjectMetadata(ObjectInfoImpl objectInfo) {
-		// get object data
-		String typeId = BaseTypeId.CMIS_FOLDER.value();
-		objectInfo.setBaseType(BaseTypeId.CMIS_FOLDER);
-		objectInfo.setTypeId(typeId);
-		objectInfo.setContentType(null);
-		objectInfo.setFileName(null);
-		objectInfo.setHasAcl(true);
-		objectInfo.setHasContent(false);
-		objectInfo.setVersionSeriesId(null);
-		objectInfo.setIsCurrentVersion(true);
-		objectInfo.setRelationshipSourceIds(null);
-		objectInfo.setRelationshipTargetIds(null);
-		objectInfo.setRenditionInfos(null);
-		objectInfo.setSupportsDescendants(true);
-		objectInfo.setSupportsFolderTree(true);
-		objectInfo.setSupportsPolicies(false);
-		objectInfo.setSupportsRelationships(false);
-		objectInfo.setWorkingCopyId(null);
-		objectInfo.setWorkingCopyOriginalId(null);
+	static void compileObjectMetadata(ObjectInfoImpl objectInfo, TypeDefinition type) {
+
+		if (type.getId().equals(BaseTypeId.CMIS_FOLDER.value())) {
+			objectInfo.setBaseType(BaseTypeId.CMIS_FOLDER);
+			objectInfo.setTypeId(BaseTypeId.CMIS_FOLDER.value());
+			objectInfo.setContentType(null);
+			objectInfo.setFileName(null);
+			objectInfo.setHasAcl(true);
+			objectInfo.setHasContent(false);
+			objectInfo.setVersionSeriesId(null);
+			objectInfo.setIsCurrentVersion(true);
+			objectInfo.setRelationshipSourceIds(null);
+			objectInfo.setRelationshipTargetIds(null);
+			objectInfo.setRenditionInfos(null);
+			objectInfo.setSupportsDescendants(true);
+			objectInfo.setSupportsFolderTree(true);
+			objectInfo.setSupportsPolicies(false);
+			objectInfo.setSupportsRelationships(false);
+			objectInfo.setWorkingCopyId(null);
+			objectInfo.setWorkingCopyOriginalId(null);
+		} else {
+			objectInfo.setBaseType(BaseTypeId.CMIS_DOCUMENT);
+			objectInfo.setTypeId(BaseTypeId.CMIS_DOCUMENT.value());
+			objectInfo.setHasAcl(true);
+			objectInfo.setHasContent(true);
+			objectInfo.setHasParent(true);
+			objectInfo.setVersionSeriesId(null);
+			objectInfo.setIsCurrentVersion(true);
+			objectInfo.setRelationshipSourceIds(null);
+			objectInfo.setRelationshipTargetIds(null);
+			objectInfo.setRenditionInfos(null);
+			objectInfo.setSupportsDescendants(false);
+			objectInfo.setSupportsFolderTree(false);
+			objectInfo.setSupportsPolicies(false);
+			objectInfo.setSupportsRelationships(false);
+			objectInfo.setWorkingCopyId(null);
+			objectInfo.setWorkingCopyOriginalId(null);
+		}
 	}
 
 	static AllowableActions compileAllowableActions(TypeDefinition type, Object object, boolean isRoot, boolean isPrincipalReadOnly) {
@@ -1099,6 +1121,20 @@ public class CmisServiceBridge {
 
 		if (id == null) {
 			throw new IllegalArgumentException("Id must not be null!");
+		}
+
+		if (!type.getPropertyDefinitions().containsKey(id)) {
+			throw new IllegalArgumentException("Unknown property: " + id);
+		}
+
+		String queryName = type.getPropertyDefinitions().get(id).getQueryName();
+
+		if ((queryName != null) && (filter != null)) {
+			if (!filter.contains(queryName)) {
+				return false;
+			} else {
+				filter.remove(queryName);
+			}
 		}
 
 		return true;
