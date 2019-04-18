@@ -38,7 +38,6 @@ public class BaseObject {
 	private Long Id;
 
 	@CmisName
-	@CmisProperty(name="name", type= CmisPropertyType.String)
 	private String name;
 
 	@CmisDescription

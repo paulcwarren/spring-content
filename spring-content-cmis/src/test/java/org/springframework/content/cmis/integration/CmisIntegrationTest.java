@@ -128,6 +128,7 @@ public class CmisIntegrationTest {
 						BeforeEach(() -> {
 							Map<String, Object> properties = new HashMap<String, Object>();
 							properties.put(PropertyIds.NAME, "doc1");
+							properties.put(PropertyIds.DESCRIPTION, "a description");
 							properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
 
 							doc = subfolder.createDocument(properties, new ContentStreamImpl("test", "text/plain", ""), VersioningState.NONE);
@@ -136,6 +137,11 @@ public class CmisIntegrationTest {
 						It("should be present in the subfolder", () -> {
 							ItemIterable<CmisObject> children = subfolder.getChildren();
 							assertThat(children, hasItem(hasProperty("name", is("doc1"))));
+						});
+
+						It("should have the appropriate properties", () -> {
+							assertThat(doc.getName(), is("doc1"));
+							assertThat(doc.getDescription(), is("a description"));
 						});
 
 						It("should be delete-able", () -> {
@@ -148,16 +154,14 @@ public class CmisIntegrationTest {
 						Context("given the document's properties are updated", () -> {
 
 							BeforeEach(() -> {
-								assertThat(doc.getDescription(), is(""));
-
 								Map<String, Object> properties = new HashMap<String, Object>();
-								properties.put(PropertyIds.DESCRIPTION, "a description");
+								properties.put(PropertyIds.DESCRIPTION, "an updated description");
 
 								doc = (Document) doc.updateProperties(properties);
 							});
 
 							It("should set the properties", () -> {
-								assertThat(doc.getDescription(), is("a description"));
+								assertThat(doc.getDescription(), is("an updated description"));
 							});
 						});
 
