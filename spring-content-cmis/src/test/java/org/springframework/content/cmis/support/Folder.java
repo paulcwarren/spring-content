@@ -18,7 +18,6 @@ import org.springframework.content.cmis.CmisPropertyType;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @Getter
 @Setter
