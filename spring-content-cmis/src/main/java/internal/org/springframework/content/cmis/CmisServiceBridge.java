@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.persistence.Id;
-import javax.persistence.Version;
 import javax.transaction.Transactional;
 
 import lombok.Getter;
@@ -92,6 +91,7 @@ import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.Assert;
 import org.springframework.versions.AncestorId;
+import org.springframework.versions.AncestorRootId;
 import org.springframework.versions.LockOwner;
 import org.springframework.versions.LockingAndVersioningRepository;
 import org.springframework.versions.SuccessorId;
@@ -926,8 +926,8 @@ public class CmisServiceBridge {
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_LATEST_VERSION, isLatestVersion(object, config.cmisDocumentRepository()));
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_MAJOR_VERSION, isMajorVersion(object));
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_LATEST_MAJOR_VERSION, isLatestVersion(object, config.cmisDocumentRepository()) && isMajorVersion(object));
-				addPropertyString(props, type, filter, PropertyIds.VERSION_LABEL, getAsString(object, VersionLabel.class));
- 				addPropertyId(props, type, filter, PropertyIds.VERSION_SERIES_ID, getAsString(object, Version.class));
+				addPropertyString(props, type, filter, PropertyIds.VERSION_LABEL, getAsString(object, VersionNumber.class));
+ 				addPropertyId(props, type, filter, PropertyIds.VERSION_SERIES_ID, getAsString(object, AncestorRootId.class));
  				Object pwc = getWorkingCopy(object, config.cmisDocumentRepository());
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_PRIVATE_WORKING_COPY, pwc != null && id.equals(getId(pwc)));
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_VERSION_SERIES_CHECKED_OUT, pwc != null);
