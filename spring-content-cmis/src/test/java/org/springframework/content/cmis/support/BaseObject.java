@@ -1,7 +1,5 @@
 package org.springframework.content.cmis.support;
 
-import java.util.Date;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -47,13 +45,13 @@ public class BaseObject {
 	private String createdBy;
 
 	@CreatedDate
-	private Date createdDate;
+	private Long createdDate;
 
 	@LastModifiedBy
 	private String lastModifiedBy;
 
 	@LastModifiedDate
-	private Date lastModifiedDate;
+	private Long lastModifiedDate;
 
 	@Version
 	private Long vstamp;

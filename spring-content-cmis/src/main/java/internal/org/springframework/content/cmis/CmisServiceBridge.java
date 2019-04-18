@@ -6,6 +6,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,10 +81,16 @@ import org.springframework.content.cmis.CmisPropertyType;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.versions.AncestorId;
 import org.springframework.versions.LockOwner;
 import org.springframework.versions.LockingAndVersioningRepository;
@@ -93,7 +103,8 @@ import static java.lang.String.format;
 
 public class CmisServiceBridge {
 
-	private static final ConversionService conversionService = new DefaultConversionService();
+	private static final DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService(false);
+	private static final String UNKNOWN = "<unknown>";
 
 	private final CmisRepositoryConfiguration cmisRepositoryConfiguration;
 
@@ -106,6 +117,17 @@ public class CmisServiceBridge {
 			typeMap.put(typeDef.getId(), typeDef);
 		}
 
+		DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
+		registrar.setDateTimeFormatter(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+		registrar.registerFormatters(conversionService);
+
+		conversionService.addConverter(new Converter<Instant, GregorianCalendar>() {
+			@Override
+			public GregorianCalendar convert(Instant source) {
+				ZonedDateTime zdt = ZonedDateTime.ofInstant(source, ZoneId.systemDefault());
+				return GregorianCalendar.from(zdt);
+			}
+		});
 	}
 
 	public TypeDefinitionList getTypeChildren(CmisRepositoryConfiguration config,
@@ -838,6 +860,39 @@ public class CmisServiceBridge {
 		PropertiesImpl props = new PropertiesImpl();
 		props.addProperty(new PropertyIdImpl(PropertyIds.OBJECT_ID, id != null ? id.toString() : ""));
 		props.addProperty(new PropertyStringImpl(PropertyIds.NAME, name != null ? name.toString() : ""));
+
+		Object createdBy = BeanUtils.getFieldWithAnnotation(object, CreatedBy.class);
+		props.addProperty(new PropertyStringImpl(PropertyIds.CREATED_BY, createdBy != null ? createdBy.toString() : UNKNOWN));
+		objectInfo.setCreatedBy(createdBy != null ? createdBy.toString() : UNKNOWN);
+
+		Object createdDate = BeanUtils.getFieldWithAnnotation(object, CreatedDate.class);
+		if (createdDate != null) {
+			if (conversionService.canConvert(createdDate.getClass(), Instant.class) == false) {
+				throw new IllegalArgumentException(format("Unable to convert created date %s to java.time.Instant", createdDate));
+			}
+
+			Instant instant = conversionService.convert(createdDate, Instant.class);
+
+			props.addProperty(new PropertyStringImpl(PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class)));
+
+			objectInfo.setCreationDate(conversionService.convert(instant, GregorianCalendar.class));
+		}
+
+		Object modifiedBy = BeanUtils.getFieldWithAnnotation(object, LastModifiedBy.class);
+		props.addProperty(new PropertyStringImpl(PropertyIds.LAST_MODIFIED_BY, modifiedBy != null ? modifiedBy.toString() : UNKNOWN));
+
+		Object modifiedDate = BeanUtils.getFieldWithAnnotation(object, LastModifiedDate.class);
+		if (modifiedDate != null) {
+			if (conversionService.canConvert(modifiedDate.getClass(), Instant.class) == false) {
+				throw new IllegalArgumentException(format("Unable to convert last modified date %s to java.time.Instant", modifiedDate));
+			}
+
+			Instant instant = conversionService.convert(modifiedDate, Instant.class);
+
+			props.addProperty(new PropertyStringImpl(PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class)));
+
+			objectInfo.setCreationDate(conversionService.convert(instant, GregorianCalendar.class));
+		}
 
 		String typeId = null;
 
