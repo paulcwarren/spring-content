@@ -61,7 +61,7 @@ public class CmisIntegrationTest {
 	private String filename = "some-file.txt";
 
 	{
-		Describe("CMIS Integration Tests", () -> {
+		Describe("CMIS:", () -> {
 			BeforeEach(() -> {
 				SessionFactory f = SessionFactoryImpl.newInstance();
 				Map<String, String> parameter = new HashMap<String, String>();

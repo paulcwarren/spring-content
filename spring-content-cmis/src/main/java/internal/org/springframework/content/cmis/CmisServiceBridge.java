@@ -783,7 +783,7 @@ public class CmisServiceBridge {
 		return findFirstProperty(object, CmisReferenceType.Parent);
 	}
 
-	static String findChildProperty(Object object) {
+	public static String findChildProperty(Object object) {
 		return findFirstProperty(object, CmisReferenceType.Child);
 	}
 
