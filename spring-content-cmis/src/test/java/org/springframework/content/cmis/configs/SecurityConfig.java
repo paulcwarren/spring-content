@@ -1,4 +1,4 @@
-package org.springframework.content.cmis.support;
+package org.springframework.content.cmis.configs;
 
 import java.util.Optional;
 
