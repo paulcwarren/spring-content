@@ -12,6 +12,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.ManagedList;
@@ -220,6 +221,7 @@ public class CmisRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoa
 			AnnotationMetadata annotationMetadata) {
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CmisRepositoryConfigurationImpl.class);
+		builder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 		builder.getRawBeanDefinition().setSource(annotationMetadata);
 
 		String beanName = new SpringDataAnnotationBeanNameGenerator().generateBeanName(cmisFolderRepoBeanDef);
@@ -234,8 +236,6 @@ public class CmisRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoa
 		builder.addPropertyReference("cmisRepositoryInfo", CMIS_REPOSITORY_INFO);
 
 		builder.addPropertyReference("cmisTypeDefinitionList", CMIS_TYPE_DEFINITION_LIST);
-
-		builder.addPropertyReference("cmisNavigationService", "cmisNavigationService");
 
 		return builder.getBeanDefinition();
 	}
