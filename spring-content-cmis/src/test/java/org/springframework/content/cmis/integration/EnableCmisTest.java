@@ -1,4 +1,4 @@
-package org.springframework.content.cmis.config;
+package org.springframework.content.cmis.integration;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -72,7 +72,7 @@ public class EnableCmisTest {
 		});
 	}
 
-	@EnableCmis(basePackages = "org.springframework.content.cmis.config",
+	@EnableCmis(basePackages = "org.springframework.content.cmis.integration",
 			id = "1",
 			name = "Example",
 			description = "Spring Content Example",
@@ -97,7 +97,7 @@ public class EnableCmisTest {
 
 			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 			factory.setJpaVendorAdapter(vendorAdapter);
-			factory.setPackagesToScan("org.springframework.content.cmis.config");
+			factory.setPackagesToScan("org.springframework.content.cmis.integration");
 			factory.setDataSource(dataSource());
 
 			return factory;

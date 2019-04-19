@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import lombok.Setter;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -22,12 +22,6 @@ import org.apache.chemistry.opencmis.commons.enums.BindingType;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.content.cmis.support.Application;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -40,16 +34,9 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
-@RunWith(Ginkgo4jSpringRunner.class)
-//@Ginkgo4jConfiguration(threads=1)
-@SpringBootTest(classes = Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class CmisIntegrationTest {
+public class CmisTests {
 
-	static {
-		ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(false);
-	}
-
-	@LocalServerPort
+	@Setter
 	private int port;
 
 	private Session s;
@@ -61,7 +48,7 @@ public class CmisIntegrationTest {
 	private String filename = "some-file.txt";
 
 	{
-		Describe("CMIS:", () -> {
+		Describe("given a repository", () -> {
 			BeforeEach(() -> {
 				SessionFactory f = SessionFactoryImpl.newInstance();
 				Map<String, String> parameter = new HashMap<String, String>();
@@ -80,7 +67,7 @@ public class CmisIntegrationTest {
 				assertThat(s, is(not(nullValue())));
 			});
 
-			It("should have correct repository info configuration", () -> {
+			It("should have correct repository info", () -> {
 				RepositoryInfo info = s.getRepositoryInfo();
 				assertThat(info.getId(), is("1"));
 				assertThat(info.getName(), is("Example"));
@@ -230,9 +217,9 @@ public class CmisIntegrationTest {
 										properties.put(PropertyIds.DESCRIPTION, "a description");
 
 										ObjectId id = pwc.checkIn(true,
-											properties,
-											s.getObjectFactory().createContentStream(filename, 0, mimetype, new ByteArrayInputStream("".getBytes())),
-											"a check-in comment");
+												properties,
+												s.getObjectFactory().createContentStream(filename, 0, mimetype, new ByteArrayInputStream("".getBytes())),
+												"a check-in comment");
 
 										doc = (Document) s.getObject(id);
 									});
@@ -267,7 +254,4 @@ public class CmisIntegrationTest {
 			});
 		});
 	}
-
-	@Test
-	public void noop(){}
 }
