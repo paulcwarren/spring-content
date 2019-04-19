@@ -9,10 +9,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-public @interface CmisProperty {
+public @interface CmisReference {
 
-	String name();
-
-	CmisPropertyType type();
+	CmisReferenceType type();
 
 }

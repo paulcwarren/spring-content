@@ -74,9 +74,9 @@ import org.springframework.content.cmis.CmisDescription;
 import org.springframework.content.cmis.CmisDocument;
 import org.springframework.content.cmis.CmisFolder;
 import org.springframework.content.cmis.CmisName;
-import org.springframework.content.cmis.CmisProperty;
+import org.springframework.content.cmis.CmisReference;
 import org.springframework.content.cmis.CmisPropertySetter;
-import org.springframework.content.cmis.CmisPropertyType;
+import org.springframework.content.cmis.CmisReferenceType;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -631,7 +631,7 @@ public class CmisServiceBridge {
 			propSetter.populate(object);
 
 			if (folderId != null) {
-				// find CmisProperty(type==Parent_Relationship)
+				// find CmisReference(type==Parent)
 				String parentProperty = findParentProperty(object);
 				if (parentProperty != null) {
 					Object parent = getObjectInternal(config, folderId, Collections.EMPTY_SET, false, null,
@@ -701,7 +701,7 @@ public class CmisServiceBridge {
 
 			// TODO: set folder (if applicable)
 			if (folderId != null) {
-				// find CmisProperty(type==Parent_Relationship)
+				// find CmisReference(type==Parent)
 				String parentProperty = findParentProperty(object);
 				if (parentProperty != null) {
 					Object parent = getObjectInternal(config, folderId, Collections.EMPTY_SET, false, null,
@@ -780,24 +780,24 @@ public class CmisServiceBridge {
 	}
 
 	static String findParentProperty(Object object) {
-		return findFirstProperty(object, CmisPropertyType.Parent_Relationship);
+		return findFirstProperty(object, CmisReferenceType.Parent);
 	}
 
 	static String findChildProperty(Object object) {
-		return findFirstProperty(object, CmisPropertyType.Child_Relationship);
+		return findFirstProperty(object, CmisReferenceType.Child);
 	}
 
-	static String findFirstProperty(Object object, CmisPropertyType type) {
+	static String findFirstProperty(Object object, CmisReferenceType type) {
 		String[] properties = findProperties(object, type);
 		return (properties.length >= 1 ? properties[0] : null);
 	}
 
-	static String[] findProperties(Object object, CmisPropertyType type) {
+	static String[] findProperties(Object object, CmisReferenceType type) {
 		List<String> properties = new ArrayList<>();
-		if (BeanUtils.hasFieldWithAnnotation(object, CmisProperty.class)) {
-			Field[] cmisPropertyFields = BeanUtils.findFieldsWithAnnotation(object.getClass(), CmisProperty.class, new BeanWrapperImpl(object));
+		if (BeanUtils.hasFieldWithAnnotation(object, CmisReference.class)) {
+			Field[] cmisPropertyFields = BeanUtils.findFieldsWithAnnotation(object.getClass(), CmisReference.class, new BeanWrapperImpl(object));
 			for (Field cmisPropertyField : cmisPropertyFields) {
-				CmisProperty cmisProperty = cmisPropertyField.getAnnotation(CmisProperty.class);
+				CmisReference cmisProperty = cmisPropertyField.getAnnotation(CmisReference.class);
 				if (cmisProperty.type() == type) {
 					properties.add(cmisPropertyField.getName());
 				}
