@@ -1,0 +1,322 @@
+= CMIS Integration
+
+Spring Content CMIS supports the CMIS browser (JSON) bindings.
+
+These bindings can be used as an alternative to the endpoints exported by Spring Content REST.  This may be desirable
+for document management use cases or for migration away from traditional document management systems.
+
+Spring Content CMIS provides a set of annotations that can be placed on an existing Spring Content domain model to map
+its classes onto the CMIS domain model in order to export its entities via the CMIS browser bindings.
+
+== CMIS Domain Model Mapping
+
+=== CmisRepository
+
+At the root of the CMIS model and services is a repository, which is an instance of the content management system
+and its store of metadata, content, and indexes.
+
+The repository is the end point to which all requests are directed and is the root path of the resources being
+addressed in CMIS.  With Spring Content CMIS, the repository is defined using the `@EnableCmis` annotation.  Each Spring
+Content CMIS application therefore exports, at most, one CMIS Repository.
+
+=== CmisObject
+
+The Spring Data/Content domain model can be mapped to the CMIS domain model using two annotations; `@CmisDocument` and
+`@CmisFolder`.  These annotations should be placed on Spring Data entity types with each being placed on a single entity
+type.
+
+Both `@CmisDocument` and `@CmisFolder` inherit a common set of automatically mapped properties from a logical
+`CmisObject`, as follows:
+
+[width="100%",options="header"]
+|=======
+|Field |CMIS field
+|`@Id`   |`cmis:objectId`
+|`@CreationDate` |`cmis:creationDate`
+|`@CreationBy` |`cmis:createdBy`
+|`@ModifiedDate` |`cmis:lastModificationDate`
+|`@ModifiedBy` |`cmis:lastModifiedBy`
+|=======
+
+In addition, the `@CmisName` annotation must be present to identify the `cmis:name` field and the `@CmisDescription`
+annotation may be present to identify a `cmis:description` field.
+
+=== CmisDocument
+
+Entity types mapped to `@CmisDocument` that also have a `ContentStore` will also have additional content stream
+properties and service for accessing the binary information that is the document.
+
+[width="100%",options="header"]
+|=======
+|Field |CMIS field
+|`@ContentId` |`cmis:contentStreamId`
+|`@ContentLength` |`cmis:contentStreamLength`
+|`@MimeType` |`cmis:contentStreamMimeType`
+|=======
+
+Entity types mapped to `@CmisDocument` that are managed with a `Repository` that extends `LockingAndVersioningRepository`
+have additional versioning properties and service.
+
+[width="100%",options="header"]
+|=======
+|Field |CMIS field
+|`@VersionNumber` |`cmis:versionLabel`
+|`@AncestorRootId` |`cmis:versionSeriesId`
+|`@LockOwner` |`cmis:versionSeriesCheckedOutBy`
+|`@VersionLabel` |`cmis:checkinComment`
+|=======
+
+Other version-related cmis properties, like `cmis:isLatestVersion` for example, are computed at runtime.  Private working
+copies (CMIS 1.1) are supported by default.
+
+Currently, renditions and fulltext indexing/query are not supported.
+
+=== CmisFolder
+
+With a CMIS repository, Document objects can live in one, or more, folders.  A folder can also exist in other folders
+creating a hierarchy.
+
+Spring Content CMIS supports folder hierarchy by mapping an entity type to `@CmisFolder` and by mapping the parent/child
+relationship using the `@CmisReference` annotation.  However, Spring Content CMIS support single-filing of documents and
+folders only.  In JPA terms, it supports a bi-directional `@OneToMany` relationship between the folder and the document
+entity.
+
+=== CmisNavigationService
+
+These two annotations are sufficient to achieve a working folder hierarchy.  However, it is also possible to provide a
+`CmisNavigationService` bean through configuration in order to provide a more efficient implementation for
+navigation.  This is recommended.
+
+== CMIS Workbench
+
+A good option for testing is to use the https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html[CMIS Workbench].
+If you wish to use this client application in your Spring application ensure you disable Spring's hidden method filter
+otherwise it attempts to parse POSTed requests from the CMIS Workbench client causing the request to fail.
+
+Put this line in your `application.properties`:
+
+```
+spring.mvc.hiddenmethod.filter.enabled=false
+```
+
+== Using Spring Content CMIS
+
+=== Enabling the CMIS Integration
+
+To enable CMIS, place a `@EnableCmis` annotation on a suitable `@Configuration` class.
+
+.Spring Content CMIS using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableCmis(basePackages = "examples.acme",							<1>
+		id = "1",													<2>
+		name = "Example CMIS Integration",
+		description = "Spring Content CMIS Integration Example",
+		vendorName = "Spring Content",
+		productName = "Spring Content Integration CMIS",
+		productVersion = "1.0.0")
+public static class ApplicationConfig {
+
+	...beans...
+
+}
+----
+<1> The packages to search for Spring Data Repositories and Spring Content Stores with entities that carry
+`@CmisDocument` and `@CmisFolder` annotations
+<2> The id and other attribute of the Cmis Repository to export
+====
+
+=== Domain Model Mapping
+
+==== CmisObject
+
+In this example we have a superclass entity for the common properties shared between the `@CmisDocument` and
+`@CmisFolder`.
+
+====
+[source, java]
+----
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Inheritance(strategy = InheritanceType.JOINED)
+@NoArgsConstructor
+@Getter
+@Setter
+public class BaseObject {
+
+	@javax.persistence.Id									<1>
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long Id;
+
+	@CmisName												<2>
+	private String name;
+
+	@CmisDescription										<3>
+	private String description;
+
+	@CreatedBy												<4>
+	private String createdBy;
+
+	@CreatedDate
+	private Long createdDate;
+
+	@LastModifiedBy
+	private String lastModifiedBy;
+
+	@LastModifiedDate
+	private Long lastModifiedDate;
+
+	@Version
+	private Long vstamp;
+
+	@CmisReference(type = CmisReferenceType.Parent)			<5>
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private Folder parent;
+
+	public BaseObject(String name) {
+		this.name = name;
+	}
+}
+----
+<1> Mapped to `cmis:objectId`
+<2> Mapped to `cmis:name`
+<3> Mapped to `cmis:description`
+<4> Mapped to `cmis:createdBy`, `cmis:creationDate`, `cmis:lastModifiedBy` and `cmis:lastModificationDate`
+<5> Maps the child end of a bi-directional one to many parent/child relationship
+====
+
+==== CmisFolder
+
+`Folder` extends `BaseObject` and maps the only remaining folder-related attribute, the child end of the parent/child
+relationship.
+
+====
+[source, java]
+----
+@Entity
+@NoArgsConstructor
+@Getter
+@Setter
+@CmisFolder																				<1>
+public class Folder extends BaseObject {
+
+	@CmisReference(type= CmisReferenceType.Child)										<2>
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", cascade = CascadeType.ALL)
+	private Collection<BaseObject> children;
+
+	public Folder(String name) {
+		super(name);
+	}
+}
+
+public interface FolderRepository extends JpaRepository<Folder, Long> {
+	List<Folder> findAllByParent(Folder parent);
+}
+
+----
+<1> `@CmisFolder` indicating this should be exported as a cmis:folder type
+<2> Maps the parent end of a bi-directional one to many parent/child relationship
+====
+
+==== CmisDocument
+
+`Document` also extends `BaseObject` and also maps the content stream and version attributes.
+
+====
+[source, java]
+----
+@Entity
+@NoArgsConstructor
+@Getter
+@Setter
+@CmisDocument									<1>
+public class Document extends BaseObject {
+
+	@ContentId									<2>
+	private UUID contentId;
+
+	@ContentLength								<3>
+	private Long contentLen;
+
+	@MimeType									<4>
+	private String mimeType;
+
+	@LockOwner									<5>
+	private String lockOwner;
+
+	@AncestorId
+	private Long ancestorId;
+
+	@AncestorRootId								<6>
+	private Long ancestralRootId;
+
+	@SuccessorId
+	private Long successorId;
+
+	@VersionNumber
+	private String versionNumber = "0.0";		<7>
+
+	@VersionLabel
+	private String versionLabel;				<8>
+
+	public Document(String name) {
+		super(name);
+	}
+
+	public Document(Document doc) {
+		this.setName(doc.getName());
+		this.setDescription(doc.getDescription());
+		this.setParent(doc.getParent());
+	}
+}
+
+public interface DocumentRepository extends JpaRepository<Document, Long>, LockingAndVersioningRepository<Document, Long> {
+	List<Document> findAllByParent(Folder parent);
+}
+
+
+public interface DocumentStorage extends ContentStore<Document, UUID> {
+	//
+}
+
+----
+<1> `@CmisDocument` indicating this should be exported as a cmis:document type
+<2> Mapped to `cmis:contentStreamId`
+<3> Mapped to `cmis:contentStreamLength`
+<4> Mapped to `cmis:contentStreamMimeType`
+<5> Mapped to `cmis:versionSeriesCheckedOutBy`
+<6> Mapped to `cmis:versionSeriesId`
+<7> Mapped to `cmis:versionLabel`
+<8> Mapped to `cmis:checkinComment`
+====
+
+==== CmisNavigationService
+
+Optionally, you may also configure a `CmisNavigationService` bean in order to provide a more efficient implementation
+for navigation.
+
+====
+[source, java]
+----
+	@Bean
+	public CmisNavigationService cmisNavigationService(FolderRepository folders, DocumentRepository docs) {
+
+		return new CmisNavigationService<Folder>() {
+			@Override
+			public List getChildren(Folder parent) {
+				List<Object> children = new ArrayList<>();
+				List<Folder> folderChildern = folders.findAllByParent(parent);
+				List<Document> documentChildren = docs.findAllByParent(parent);
+				children.addAll(folderChildern);
+				children.addAll(documentChildren);
+				return children;
+			}
+		};
+	}
+
+----
+====
+
+For more information you can refer to our github example project https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-cmis[here].
