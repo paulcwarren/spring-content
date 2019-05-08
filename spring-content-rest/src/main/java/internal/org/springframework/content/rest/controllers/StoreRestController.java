@@ -1,11 +1,21 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
 import org.apache.commons.io.IOUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.Store;
@@ -23,14 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UrlPathHelper;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Date;
 
 @ContentRestController
 public class StoreRestController extends AbstractContentPropertyController {
@@ -62,7 +64,7 @@ public class StoreRestController extends AbstractContentPropertyController {
 		String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
 
 		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null) {
+		if (r == null || r.exists() == false) {
 			throw new ResourceNotFoundException();
 		}
 
@@ -128,7 +130,7 @@ public class StoreRestController extends AbstractContentPropertyController {
 		String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
 
 		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null) {
+		if (r == null || r.exists() == false) {
 			throw new ResourceNotFoundException();
 		}
 		if (r instanceof DeletableResource == false) {
@@ -159,7 +161,9 @@ public class StoreRestController extends AbstractContentPropertyController {
 			throw new UnsupportedOperationException();
 		}
 
-		HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
+		if (r.exists()) {
+			HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
+		}
 
 		InputStream in = content;
 		OutputStream out = ((WritableResource) r).getOutputStream();
