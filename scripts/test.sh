@@ -15,7 +15,7 @@ function test() {
   elif [[ "${1}" == "all" ]]; then
 		BUILD_TYPE=dev mvn clean test     
   else
-		BUILD_TYPE=dev mvn -pl "spring-content-${1}" clean test     
+		BUILD_TYPE=dev mvn -pl "spring-content-${1}" -am clean test
   fi
 
 }
