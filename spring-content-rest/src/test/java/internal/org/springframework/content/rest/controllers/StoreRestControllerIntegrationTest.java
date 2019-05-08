@@ -1,5 +1,9 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.ByteArrayInputStream;
+import java.util.Date;
+import java.util.UUID;
+
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.StoreConfig;
@@ -7,6 +11,7 @@ import internal.org.springframework.content.rest.support.TestStore;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.Resource;
@@ -22,10 +27,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
-
-import java.io.ByteArrayInputStream;
-import java.util.Date;
-import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -67,6 +68,38 @@ public class StoreRestControllerIntegrationTest {
 		Describe("StoreRestController", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
+			});
+
+			Context("given a root resource path", () -> {
+				BeforeEach(() -> {
+					path = "/" + UUID.randomUUID() + ".txt";
+					request = "/teststore" + path;
+				});
+				Context("given a GET request to that path", () -> {
+					It("should return 404", () -> {
+						mvc.perform(get(request)).andExpect(status().isNotFound());
+					});
+				});
+				Context("given a POST to that path with content", () -> {
+					It("should set the content and return 200", () -> {
+
+						String content = "New multi-part content";
+
+						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
+								"test-file.txt", "text/plain", content.getBytes())))
+								.andExpect(status().isOk());
+
+						Resource r = store.getResource(path);
+						assertThat(IOUtils.contentEquals(
+								new ByteArrayInputStream("New multi-part content".getBytes()),
+								r.getInputStream()), is(true));
+					});
+				});
+				Context("given a DELETE request to that path", () -> {
+					It("should return a 404", () -> {
+						mvc.perform(delete(request)).andExpect(status().isNotFound());
+					});
+				});
 			});
 
 			Context("given a root resource", () -> {
