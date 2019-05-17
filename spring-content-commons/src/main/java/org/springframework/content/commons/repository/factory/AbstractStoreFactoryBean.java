@@ -1,8 +1,18 @@
 package org.springframework.content.commons.repository.factory;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -17,15 +27,6 @@ import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractStoreFactoryBean
 		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
@@ -148,8 +149,7 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(
-				new Class[] { storeInterface, Store.class, ContentStore.class });
+		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class });
 
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
