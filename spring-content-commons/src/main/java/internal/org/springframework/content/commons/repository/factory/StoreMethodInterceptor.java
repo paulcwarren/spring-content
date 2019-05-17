@@ -6,8 +6,10 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
+import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+
 import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -30,8 +32,6 @@ import org.springframework.content.commons.repository.events.BeforeUnsetContentE
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
-
-import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 
 public class StoreMethodInterceptor implements MethodInterceptor {
 
@@ -99,8 +99,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 		else {
 			if (!isStoreMethod(invocation)) {
-				throw new StoreAccessException(String
-						.format("No implementation found for %s", method.getName()));
+				throw new StoreAccessException(String.format("No implementation found for %s", method.getName()));
 			}
 		}
 
