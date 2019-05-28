@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import internal.org.springframework.content.elasticsearch.ElasticsearchSearcher;
+import internal.org.springframework.content.fragments.SearchableImpl;
 import org.aopalliance.intercept.MethodInvocation;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -46,7 +46,7 @@ public class ElasticsearchStoreExtension implements StoreExtension {
 		Class<? extends Serializable> clazz = invoker.getContentIdClass();
 		Class<?> domainClass = invoker.getDomainClass();
 
-		Object tgt = new ElasticsearchSearcher(client, domainClass);
+		Object tgt = new SearchableImpl(client, domainClass);
 		List<String> list = (List) reflectionService.invokeMethod(invocation.getMethod(), tgt, invocation.getArguments());
 		for (String item : list) {
 			if (conversionService.canConvert(item.getClass(), clazz) == false) {
