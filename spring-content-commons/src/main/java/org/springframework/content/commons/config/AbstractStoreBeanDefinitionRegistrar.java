@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragmentDefinition;
 import internal.org.springframework.content.commons.config.StoreFragmentDetector;
 import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
 import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
@@ -40,12 +41,10 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.data.config.ConfigurationUtils;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 public abstract class AbstractStoreBeanDefinitionRegistrar
 		implements ImportBeanDefinitionRegistrar, EnvironmentAware, ResourceLoaderAware, BeanFactoryAware {
@@ -115,11 +114,6 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			registry.registerBeanDefinition("annotatedStoreEventHandler", annotatedStoreEventHandlerDef);
 		}
 
-//		BeanDefinition renditionServiceBeanDef = createBeanDefinition(RenditionServiceImpl.class);
-//		if (registry.containsBeanDefinition("renditionService") == false) {
-//			registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
-//		}
-
 		createOperationsBean(registry);
 
 		registerContentStoreBeanDefinitions(importingClassMetadata, registry);
@@ -144,22 +138,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			builder.getRawBeanDefinition().setSource(importingClassMetadata);
 			builder.addPropertyValue(STORE_INTERFACE_PROPERTY, definition.getBeanClassName());
 
-			/*
-			 * Refactored store extension implementation
-			 *
-			 * - Import registrar StoreBeanDefinitionBuilder finds impls and match against store each interface  	Done
-			 * - For each creates a StoreFragment (bean?)															Done
-			 * - StoreFragments is an additional wired prop into the StoreFactoryBean								Done
-			 * - Store is instantiated with StoreFragments															Done
-			 * - Store passes StoreFragments into the StoreMethodInteceptor											Done
-			 * - Figure out how to get into like domainClass into the StoreFragment implementation
-			 * - Wire StoreFragments in instead of StoreExtension
-			 */
 			MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourceLoader);
 
 			String storeInterface = definition.getBeanClassName();
 
-			// TODO: detectCustomImplementation needs to return a fragment specification
 			StoreFragmentDetector detector = new StoreFragmentDetector(environment, resourceLoader,"Impl", basePackages, metadataReaderFactory);
 			try {
 				final Class<?> domainClass = AbstractStoreFactoryBean.getDomainClass(ClassUtils
@@ -190,10 +172,6 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 				e.printStackTrace();
 			}
 
-			/*
-			 *
-			 */
-
 			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition), builder.getBeanDefinition());
 		}
 	}
@@ -219,7 +197,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		return;
 	}
 
-	private void registerStoreFragmentImplementation(BeanDefinitionRegistry registry, AnnotationMetadata source, FragmentDefinition fragmentDefinition, Class<?> domainClass, Class<?> idClass) {
+	private void registerStoreFragmentImplementation(BeanDefinitionRegistry registry, AnnotationMetadata source, StoreFragmentDefinition fragmentDefinition, Class<?> domainClass, Class<?> idClass) {
 
 		String beanName = fragmentDefinition.getImplementationBeanName();
 
@@ -254,7 +232,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		registry.registerBeanDefinition(beanName, fragmentDefinition.getBeanDefinition());
 	}
 
-	private void registerStoreFragment(BeanDefinitionRegistry registry, AnnotationMetadata source, FragmentDefinition fragmentDefinition) {
+	private void registerStoreFragment(BeanDefinitionRegistry registry, AnnotationMetadata source, StoreFragmentDefinition fragmentDefinition) {
 
 		String implementationBeanName = fragmentDefinition.getImplementationBeanName();
 		String fragmentBeanName = fragmentDefinition.getFragmentBeanName();
@@ -269,51 +247,6 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		fragmentBuilder.addConstructorArgReference(implementationBeanName);
 
 		registry.registerBeanDefinition(fragmentBeanName, ParsingUtils.getSourceBeanDefinition(fragmentBuilder, source));
-	}
-
-	private String getImplementationBeanName(BeanDefinition beanDef) {
-		String beanClassName = ConfigurationUtils.getRequiredBeanClassName(beanDef);
-		return StringUtils.uncapitalize(ClassUtils.getShortName(beanClassName));
-	}
-
-	public static class FragmentDefinition {
-
-		private final String interfaceName;
-		private final String implementationClassName;
-		private final BeanDefinition beanDefinition;
-
-		private String storeInterfaceName;
-
-		public FragmentDefinition(String interfaceName, BeanDefinition beanDef) {
-			this.interfaceName = interfaceName;
-			this.implementationClassName = ConfigurationUtils.getRequiredBeanClassName(beanDef);
-			this.beanDefinition = beanDef;
-		}
-
-		public void setStoreInterfaceName(String storeInterface) {
-			this.storeInterfaceName = storeInterface;
-		}
-
-		public String getStoreInterfaceName() {
-			return this.storeInterfaceName;
-		}
-
-		String getInterfaceName() {
-			return interfaceName;
-		}
-
-		public String getImplementationBeanName() {
-			return this.storeInterfaceName + "#" + StringUtils.uncapitalize(ClassUtils.getShortName(implementationClassName));
-		}
-
-		BeanDefinition getBeanDefinition() {
-			return beanDefinition;
-		}
-
-		public String getFragmentBeanName() {
-			return getImplementationBeanName() + "Fragment";
-		}
-
 	}
 
 	private class IsCandidatePredicate implements Predicate<String> {
