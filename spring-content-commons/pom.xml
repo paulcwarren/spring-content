@@ -23,7 +23,25 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test dependencies -->
+		<!-- Locking and Versioning -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>5.0.7.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-versions-commons</artifactId>
+			<version>0.9.0-SNAPSHOT</version>
+		</dependency>
+		<!-- Locking and Versioning -->
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<!-- Test dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -46,19 +64,6 @@
 		    <artifactId>hamcrest-library</artifactId>
 		    <scope>test</scope>
 		</dependency>
-
-		<!-- Locking and Versioning Spike -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>5.0.7.RELEASE</version>
-        </dependency>
-		<dependency>
-			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-versions-commons</artifactId>
-			<version>0.9.0-SNAPSHOT</version>
-		</dependency>
-		<!-- Locking and Versioning Spike -->
 
 	</dependencies>
 </project>

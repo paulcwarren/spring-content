@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import internal.org.springframework.content.commons.config.StoreFragments;
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +43,7 @@ public abstract class AbstractStoreFactoryBean
 
 	@Autowired(required = false)
 	private Set<StoreExtension> extensions = Collections.emptySet();
+	private StoreFragments storeFragments;
 
 	private BeanFactory beanFactory;
 
@@ -49,6 +51,11 @@ public abstract class AbstractStoreFactoryBean
 	public void setStoreInterface(Class<? extends Store<Serializable>> storeInterface) {
 		Assert.notNull(storeInterface);
 		this.storeInterface = storeInterface;
+	}
+
+	@Autowired
+	public void setStoreFragments(StoreFragments storeFragments) {
+		this.storeFragments = storeFragments;
 	}
 
 	/*
@@ -169,20 +176,23 @@ public abstract class AbstractStoreFactoryBean
 				(ContentStore<Object, Serializable>) target,
 				getDomainClass(storeInterface), getContentIdClass(storeInterface),
 				extensionsMap, publisher);
+
+		intercepter.setStoreFragments(storeFragments);
+
 		result.addAdvice(intercepter);
 
 		return (Store<? extends Serializable>) result.getProxy(classLoader);
 	}
 
-	protected Class<?> getDomainClass(Class<?> repositoryClass) {
+	public static Class<?> getDomainClass(Class<?> repositoryClass) {
 		return getStoreParameter(repositoryClass, 0);
 	}
 
-	protected Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
+	public static Class<? extends Serializable> getContentIdClass(Class<?> repositoryClass) {
 		return (Class<? extends Serializable>) getStoreParameter(repositoryClass, 1);
 	}
 
-	private Class<?> getStoreParameter(Class<?> repositoryClass, int index) {
+	private static Class<?> getStoreParameter(Class<?> repositoryClass, int index) {
 		Class<?> clazz = null;
 		Type[] types = repositoryClass.getGenericInterfaces();
 

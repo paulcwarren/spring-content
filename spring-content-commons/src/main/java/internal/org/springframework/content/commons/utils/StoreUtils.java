@@ -50,10 +50,9 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader,
-			String[] basePackages) {
-		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(
-				false);
+	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages) {
+
+		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
 		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
 		scanner.setResourceLoader(loader);
 		// scanner.setEnvironment(environment);
