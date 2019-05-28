@@ -5,11 +5,15 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragments;
 import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
+import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -33,12 +37,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
+import static java.lang.String.format;
+
 public class StoreMethodInterceptor implements MethodInterceptor {
 
 	private Map<Method, StoreExtension> extensions;
 	private ContentStore<Object, Serializable> store = null;
 	private ApplicationEventPublisher publisher;
+	private StoreFragments storeFragments;
 
+	// Store methods
 	private static Method getContentMethod;
 	private static Method setContentMethod;
 	private static Method unsetContentMethod;
@@ -47,6 +55,10 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	private static Method associateResourceMethod;
 	private static Method unassociateResourceMethod;
 	private static Method toStringMethod;
+
+	// ContentStoreAware methods
+	private static Method setContentStoreMethod;
+
 	private Class<?> domainClass = null;
 	private Class<? extends Serializable> contentIdClass = null;
 
@@ -74,6 +86,9 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		Assert.notNull(getResourceMethod);
 		toStringMethod = ReflectionUtils.findMethod(Object.class, "toString");
 		Assert.notNull(toStringMethod);
+
+		setContentStoreMethod = ReflectionUtils.findMethod(ContentStoreAware.class, "setContentStore", ContentStore.class);
+		Assert.notNull(setContentStoreMethod);
 	}
 
 	public StoreMethodInterceptor(ContentStore<Object, Serializable> store,
@@ -89,17 +104,37 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		this.publisher = publisher;
 	}
 
+	public void setStoreFragments(StoreFragments storeFragments) {
+		this.storeFragments = storeFragments;
+	}
+
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
-		Method method = invocation.getMethod();
-		StoreExtension extension = extensions.get(method);
-		if (extension != null) {
-			return extension.invoke(invocation,
-					new StoreInvokerImpl(domainClass, contentIdClass, invocation));
-		}
-		else {
-			if (!isStoreMethod(invocation)) {
-				throw new StoreAccessException(String.format("No implementation found for %s", method.getName()));
+
+		if (!isStoreMethod(invocation) && storeFragments != null) {
+			Optional<StoreFragment> fragment = storeFragments.stream()
+					.filter(it -> it.hasMethod(invocation.getMethod()))
+					.findFirst();
+
+			fragment.orElseThrow(() -> new IllegalStateException(format("No fragment found for method %s", invocation.getMethod())));
+
+			StoreFragment f = fragment.get();
+			if (f.hasImplementationMethod(setContentStoreMethod)) {
+				ReflectionUtils.invokeMethod(setContentStoreMethod, f.getImplementation(), invocation.getThis());
+			}
+
+			return invocation.getMethod().invoke(fragment.get().getImplementation(), invocation.getArguments());
+		} else {
+			Method method = invocation.getMethod();
+			StoreExtension extension = extensions.get(method);
+			if (extension != null) {
+				return extension.invoke(invocation,
+						new StoreInvokerImpl(domainClass, contentIdClass, invocation));
+			}
+			else {
+				if (!isStoreMethod(invocation)) {
+					throw new StoreAccessException(format("No implementation found for %s", method.getName()));
+				}
 			}
 		}
 
