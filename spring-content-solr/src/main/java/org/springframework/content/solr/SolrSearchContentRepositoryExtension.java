@@ -1,17 +1,22 @@
 package org.springframework.content.solr;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import internal.org.springframework.content.solr.SolrSearchService;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.solr.client.solrj.SolrClient;
+
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.core.convert.ConversionService;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.*;
 
 public class SolrSearchContentRepositoryExtension implements StoreExtension {
 
@@ -43,8 +48,7 @@ public class SolrSearchContentRepositoryExtension implements StoreExtension {
 		Class<?> domainClass = invoker.getDomainClass();
 
 		Object tgt = new SolrSearchService(solr, solrProperties, domainClass);
-		List<String> list = (List) reflectionService.invokeMethod(invocation.getMethod(),
-				tgt, invocation.getArguments());
+		List<String> list = (List) reflectionService.invokeMethod(invocation.getMethod(), tgt, invocation.getArguments());
 		for (String item : list) {
 			if (conversionService.canConvert(item.getClass(), clazz) == false) {
 				throw new IllegalStateException(
