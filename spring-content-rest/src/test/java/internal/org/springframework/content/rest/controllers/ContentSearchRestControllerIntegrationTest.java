@@ -1,11 +1,8 @@
 package internal.org.springframework.content.rest.controllers;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.io.File;
 import java.io.StringReader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,8 +12,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import com.theoryinpractise.halbuilder.api.RepresentationFactory;
+import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -40,27 +44,27 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
-import com.theoryinpractise.halbuilder.api.RepresentationFactory;
-import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
-
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
-
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // because the controller bean is shared and we need to instruct the reflection service
@@ -99,69 +103,69 @@ public class ContentSearchRestControllerIntegrationTest {
 
 	{
 		Describe("ContentSearchRestController", () -> {
+
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
-			// JustBeforeEach(() -> {
-			// try {
-			// result = controller.searchContent(resourceInfo, entityAssembler,
-			// repository, searchMethod, keywords);
-			// } catch (Exception e) {
-			// resultException = e;
-			// }
-			// });
+
 			Context("given an entity has no content associations", () -> {
+
 				It("should throw an exception", () -> {
 					MvcResult result = mvc.perform(get(
 							"/testEntityNoContents/searchContent/findKeyword?keyword=one")
 									.accept("application/hal+json"))
 							.andExpect(status().isNotFound()).andReturn();
 
-					assertThat(result.getResolvedException().getMessage(),
-							containsString("no content"));
+					assertThat(result.getResolvedException().getMessage(), containsString("no content"));
 				});
 			});
+
 			Context("given a store that is not Searchable", () -> {
+
 				It("should throw a ResourceNotFoundException", () -> {
 					MvcResult result = mvc.perform(get(
 							"/testEntityNotSearchables/searchContent/findKeyword?keyword=one")
 									.accept("application/hal+json"))
 							.andExpect(status().isNotFound()).andReturn();
 
-					assertThat(result.getResolvedException().getMessage(),
-							containsString("not searchable"));
+					assertThat(result.getResolvedException().getMessage(), containsString("not searchable"));
 				});
 			});
+
 			Context("given the search method is invalid", () -> {
+
 				It("should return a ResourceNotFoundException", () -> {
 					MvcResult result = mvc.perform(get(
 							"/testEntityWithSharedIds/searchContent/invalidSearchMethod?keyword=one")
 									.accept("application/hal+json"))
 							.andExpect(status().isNotFound()).andReturn();
-
-					assertThat(result.getResolvedException().getMessage(),
-							containsString("Invalid search: invalidSearchMethod"));
 				});
 			});
+
 			Context("given no keywords are specified", () -> {
+
 				It("should return a BadRequestException", () -> {
 					mvc.perform(get("/testEntityWithSharedIds/searchContent/findKeyword")
 							.accept("application/hal+json"))
 							.andExpect(status().isBadRequest());
 				});
 			});
+
 			Context("given an entity with a shared Id/ContentId field", () -> {
+
 				BeforeEach(() -> {
 					reflectionService = mock(ReflectionService.class);
-					ContentSearchRestController controller = context
-							.getBean(ContentSearchRestController.class);
+					ContentSearchRestController controller = context.getBean(ContentSearchRestController.class);
 					controller.setReflectionService(reflectionService);
 				});
+
 				Context("given no results are found", () -> {
+
 					BeforeEach(() -> {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("one"))).thenReturn(Collections.EMPTY_LIST);
 					});
+
 					It("should return an empty response entity", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSharedIds/searchContent/findKeyword?keyword=one")
@@ -175,7 +179,9 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(halResponse.getResources().size(), is(0));
 					});
 				});
+
 				Context("given results are found", () -> {
+
 					BeforeEach(() -> {
 						entity = new TestEntityWithSharedId();
 						repository.save((TestEntityWithSharedId) entity);
@@ -190,6 +196,7 @@ public class ContentSearchRestControllerIntegrationTest {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("two"))).thenReturn(sharedIds);
 					});
+
 					It("should return a response entity with the entity", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSharedIds/searchContent/findKeyword?keyword=two")
@@ -214,7 +221,9 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(id1, is(not(id2)));
 					});
 				});
+
 				Context("given results contain invalid IDs", () -> {
+
 					BeforeEach(() -> {
 						entity2 = new TestEntityWithSharedId();
 						repository.save((TestEntityWithSharedId) entity2);
@@ -226,6 +235,7 @@ public class ContentSearchRestControllerIntegrationTest {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("else"))).thenReturn(contentIds);
 					});
+
 					It("should filter out invalid IDs", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSharedIds/searchContent/findKeyword?keyword=else")
@@ -245,19 +255,39 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(contentIds, hasItem(UUID.fromString(id1)));
 					});
 				});
+
+				Context("given a request to /searchContent endpoint", () -> {
+
+					It("should invoke the Searchable.search", () -> {
+						mvc.perform(get(
+								"/testEntityWithSharedIds/searchContent?queryString=something")
+								.accept("application/hal+json"))
+								.andExpect(status().isOk());
+
+						Method method = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class });
+						assertThat(method, is(not(nullValue())));
+
+						verify(reflectionService).invokeMethod(eq(method), anyObject(), eq("something"));
+					});
+				});
 			});
+
 			Context("given an entity with separate Id/ContentId fields", () -> {
+
 				BeforeEach(() -> {
 					reflectionService = mock(ReflectionService.class);
 					ContentSearchRestController controller = context
 							.getBean(ContentSearchRestController.class);
 					controller.setReflectionService(reflectionService);
 				});
+
 				Context("given no results are found", () -> {
+
 					BeforeEach(() -> {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("something"))).thenReturn(Collections.EMPTY_LIST);
 					});
+
 					It("should return an empty response entity", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSeparateIds/searchContent/findKeyword?keyword=something")
@@ -271,7 +301,9 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(halResponse.getResources().size(), is(0));
 					});
 				});
+
 				Context("given results are found", () -> {
+
 					BeforeEach(() -> {
 						entity3 = new TestEntityWithSeparateId();
 						entityWithSeparateRepository.save(entity3);
@@ -286,6 +318,7 @@ public class ContentSearchRestControllerIntegrationTest {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("else"))).thenReturn(contentIds);
 					});
+
 					It("should return a response entity with the entity", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSeparateIds/searchContent/findKeyword?keyword=else")
@@ -310,7 +343,9 @@ public class ContentSearchRestControllerIntegrationTest {
 						assertThat(id1, is(not(id2)));
 					});
 				});
+
 				Context("given results contain invalid IDs", () -> {
+
 					BeforeEach(() -> {
 						entity3 = new TestEntityWithSeparateId();
 						entityWithSeparateRepository.save(entity3);
@@ -322,6 +357,7 @@ public class ContentSearchRestControllerIntegrationTest {
 						when(reflectionService.invokeMethod(anyObject(), anyObject(),
 								eq("else"))).thenReturn(contentIds);
 					});
+
 					It("should filter out invalid IDs", () -> {
 						MvcResult result = mvc.perform(get(
 								"/testEntityWithSeparateIds/searchContent/findKeyword?keyword=else")
@@ -429,6 +465,52 @@ public class ContentSearchRestControllerIntegrationTest {
 
 	public interface TestEntityWithSharedIdsSearchableStore
 			extends ContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
+	}
+
+	// stub out a Searchable implementation so that the content store can be intantiated
+	// this wont actually get called because the test intercepts calls to the Searchable by mocking the reflection
+	// service
+	public static class SearchableImpl implements Searchable<UUID> {
+
+		@Override
+		public Iterable<UUID> search(String queryString) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findKeyword(String query) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findAllKeywords(String... terms) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findAnyKeywords(String... terms) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findKeywordsNear(int proximity, String... terms) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findKeywordStartsWith(String term) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findKeywordStartsWithAndEndsWith(String a, String b) {
+			return null;
+		}
+
+		@Override
+		public Iterable<UUID> findAllKeywordsWithWeights(String[] terms, double[] weights) {
+			return null;
+		}
 	}
 
 	@Entity(name = "testentityseparateid")
