@@ -1,19 +1,20 @@
 package internal.org.springframework.content.solr;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
+
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.util.Assert;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SolrSearchService implements Searchable<Object> {
 
@@ -28,6 +29,11 @@ public class SolrSearchService implements Searchable<Object> {
 		this.solr = solr;
 		this.solrProperties = solrProperties;
 		this.domainClass = domainClass;
+	}
+
+	@Override
+	public List<Object> search(String queryStr) {
+		return getIds(executeQuery(this.getDomainClass(), queryStr));
 	}
 
 	@Override
