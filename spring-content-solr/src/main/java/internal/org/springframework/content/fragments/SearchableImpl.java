@@ -36,6 +36,11 @@ public class SearchableImpl implements Searchable<Object> {
 	}
 
 	@Override
+	public List<Object> search(String queryStr) {
+		return getIds(executeQuery(this.getDomainClass(), queryStr));
+	}
+
+	@Override
 	public List<Object> findKeyword(String queryStr) {
 		return getIds(executeQuery(this.getDomainClass(), queryStr));
 	}
