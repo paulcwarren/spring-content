@@ -1,7 +1,18 @@
 package org.springframework.data.rest.extensions.contentsearch;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -37,24 +48,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
 
 @RepositoryRestController
 public class ContentSearchRestController /* extends AbstractRepositoryRestController */ {
 
 	private static final EmbeddedWrappers WRAPPERS = new EmbeddedWrappers(false);
-	private static final String ENTITY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent/{searchMethod}";
-	private static final String PROPERTY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent/{contentProperty}/{searchMethod}";
+	private static final String ENTITY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent";
+	private static final String ENTITY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/findKeyword";
+	private static final String PROPERTY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/{contentProperty}/{searchMethod}";
 
 	private static Map<String, Method> searchMethods = new HashMap<>();
 
@@ -65,8 +67,8 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	private ReflectionService reflectionService;
 
 	static {
-		searchMethods.put("findKeyword", ReflectionUtils.findMethod(Searchable.class,
-				"findKeyword", new Class<?>[] { String.class }));
+		searchMethods.put("search", ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class }));
+		searchMethods.put("findKeyword", ReflectionUtils.findMethod(Searchable.class,"findKeyword", new Class<?>[] { String.class }));
 	}
 
 	@Autowired
@@ -89,13 +91,36 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	@StoreType("contentstore")
 	@RequestMapping(value = ENTITY_CONTENTSEARCH_MAPPING, method = RequestMethod.GET)
 	public ResponseEntity<?> searchContent(RootResourceInformation repoInfo,
+			DefaultedPageable pageable,
+			Sort sort,
+			PersistentEntityResourceAssembler assembler,
+			@PathVariable String repository,
+			@RequestParam(name = "queryString") String queryString)
+			throws HttpRequestMethodNotSupportedException {
+
+		return searchContentInternal(repoInfo, pageable, sort, assembler, "search", new String[]{queryString});
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@StoreType("contentstore")
+	@RequestMapping(value = ENTITY_SEARCHMETHOD_MAPPING, method = RequestMethod.GET)
+	public ResponseEntity<?> searchContent(RootResourceInformation repoInfo,
 										   DefaultedPageable pageable,
 										   Sort sort,
 										   PersistentEntityResourceAssembler assembler,
 										   @PathVariable String repository,
-										   @PathVariable String searchMethod,
 										   @RequestParam(name = "keyword") List<String> keywords)
 			throws HttpRequestMethodNotSupportedException {
+
+		return searchContentInternal(repoInfo, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[]{}));
+	}
+
+	ResponseEntity<?> searchContentInternal(RootResourceInformation repoInfo,
+			DefaultedPageable pageable,
+			Sort sort,
+			PersistentEntityResourceAssembler assembler,
+			String searchMethod,
+			String[] keywords) {
 
 		ContentStoreInfo[] infos = stores.getStores(ContentStore.class,
 				new StoreFilter() {
@@ -129,14 +154,14 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 					String.format("Invalid search: %s", searchMethod));
 		}
 
-		if (keywords == null || keywords.size() == 0) {
+		if (keywords == null || keywords.length == 0) {
 			throw new BadRequestException();
 		}
 
-			List contentIds = (List) reflectionService.invokeMethod(method, store,
-					keywords.get(0));
+		List contentIds = (List) reflectionService.invokeMethod(method, store, keywords[0]);
 
 		if (contentIds != null && contentIds.size() > 0) {
+
 			Class<?> entityType = repoInfo.getDomainType();
 
 			Field idField = BeanUtils.findFieldWithAnnotation(entityType, Id.class);
