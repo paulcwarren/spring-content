@@ -1,44 +1,28 @@
 package internal.org.springframework.content.commons.repository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.hamcrest.MockitoHamcrest;
+
 import org.springframework.content.commons.annotations.HandleAfterAssociate;
-import org.springframework.content.commons.annotations.HandleAfterGetResource;
-import org.springframework.content.commons.annotations.HandleAfterUnassociate;
-import org.springframework.content.commons.annotations.HandleBeforeAssociate;
-import org.springframework.content.commons.annotations.HandleBeforeGetResource;
-import org.springframework.content.commons.annotations.HandleBeforeUnassociate;
-import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.annotations.HandleAfterGetContent;
+import org.springframework.content.commons.annotations.HandleAfterGetResource;
 import org.springframework.content.commons.annotations.HandleAfterSetContent;
+import org.springframework.content.commons.annotations.HandleAfterUnassociate;
 import org.springframework.content.commons.annotations.HandleAfterUnsetContent;
+import org.springframework.content.commons.annotations.HandleBeforeAssociate;
 import org.springframework.content.commons.annotations.HandleBeforeGetContent;
+import org.springframework.content.commons.annotations.HandleBeforeGetResource;
 import org.springframework.content.commons.annotations.HandleBeforeSetContent;
+import org.springframework.content.commons.annotations.HandleBeforeUnassociate;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
-import org.springframework.content.commons.repository.StoreEvent;
+import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
@@ -56,8 +40,22 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.ReflectionUtils;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
@@ -131,7 +129,7 @@ public class AnnotatedStoreEventInvokerTest {
 						invoker.postProcessAfterInitialization(priorityHandler,
 								"high-priority-custom-bean");
 					});
-					FIt("should order the handlers by priority", () -> {
+					It("should order the handlers by priority", () -> {
 						assertThat(
 								invoker.getHandlers().get(BeforeGetResourceEvent.class).size(),
 								is(3));

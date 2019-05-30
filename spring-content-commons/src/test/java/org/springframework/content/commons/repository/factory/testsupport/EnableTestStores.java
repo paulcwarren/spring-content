@@ -48,7 +48,7 @@ public @interface EnableTestStores {
 
 	/**
 	 * Returns the {@link FactoryBean} class to be used for each repository instance.
-	 * Defaults to {@link FilesystemContentRepositoryFactoryBean}.
+	 * Defaults to {@link TestContentStoreFactory}.
 	 *
 	 * @return content repository factory bean class
 	 */

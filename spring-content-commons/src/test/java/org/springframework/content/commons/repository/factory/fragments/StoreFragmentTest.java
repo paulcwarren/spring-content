@@ -1,4 +1,4 @@
-package org.springframework.content.commons.repository.factory;
+package org.springframework.content.commons.repository.factory.fragments;
 
 import java.io.Serializable;
 
