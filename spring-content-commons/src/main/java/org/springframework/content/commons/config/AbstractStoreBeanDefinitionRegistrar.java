@@ -16,6 +16,8 @@ import internal.org.springframework.content.commons.config.StoreFragmentsFactory
 import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
 import internal.org.springframework.content.commons.utils.StoreUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
@@ -46,8 +48,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
+import static java.lang.String.format;
+
 public abstract class AbstractStoreBeanDefinitionRegistrar
 		implements ImportBeanDefinitionRegistrar, EnvironmentAware, ResourceLoaderAware, BeanFactoryAware {
+
+	private static final Log LOGGER = LogFactory.getLog(AbstractStoreBeanDefinitionRegistrar.class);
 
 	public static final String STORE_INTERFACE_PROPERTY = "storeInterface";
 	public static final String DOMAIN_CLASS_PROPERTY = "domainClass";
@@ -141,14 +147,19 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourceLoader);
 
 			String storeInterface = definition.getBeanClassName();
+			String[] interfaces = new String[0];
+			try {
+				interfaces = metadataReaderFactory.getMetadataReader(storeInterface).getClassMetadata().getInterfaceNames();
+			}
+			catch (IOException e) {
+				LOGGER.error(format("Reading store interface %s", storeInterface), e);
+			}
 
 			StoreFragmentDetector detector = new StoreFragmentDetector(environment, resourceLoader,"Impl", basePackages, metadataReaderFactory);
 			try {
-				final Class<?> domainClass = AbstractStoreFactoryBean.getDomainClass(ClassUtils
-						.forName(definition.getBeanClassName(), ((ConfigurableListableBeanFactory)registry).getBeanClassLoader()));
-				final Class<?> idClass = AbstractStoreFactoryBean.getContentIdClass(ClassUtils.forName(definition.getBeanClassName(), ((ConfigurableListableBeanFactory)registry).getBeanClassLoader()));
-
-				String[] interfaces = metadataReaderFactory.getMetadataReader(storeInterface).getClassMetadata().getInterfaceNames();
+				final Class<?> storeClass = loadStoreClass((ConfigurableListableBeanFactory)registry, definition);
+				final Class<?> domainClass = AbstractStoreFactoryBean.getDomainClass(storeClass);
+				final Class<?> idClass = AbstractStoreFactoryBean.getContentIdClass(storeClass);
 
 				Predicate isCandidate = new IsCandidatePredicate();
 
@@ -161,15 +172,13 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 						.collect(Collectors.toList());
 
 				BeanDefinitionBuilder fragmentsBuilder = BeanDefinitionBuilder.rootBeanDefinition(StoreFragmentsFactoryBean.class);
-
 				fragmentsBuilder.addConstructorArgValue(fragmentBeanNames);
+				registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition) + "#StoreFragments", fragmentsBuilder.getBeanDefinition());
 
 				builder.addPropertyValue("storeFragments", ParsingUtils.getSourceBeanDefinition(fragmentsBuilder, importingClassMetadata));
-
-				int i=0;
 			}
-			catch (IOException | ClassNotFoundException e) {
-				e.printStackTrace();
+			catch (ClassNotFoundException e) {
+				LOGGER.error(format("Instantiating store class %s", storeInterface), e);
 			}
 
 			registry.registerBeanDefinition(StoreUtils.getStoreBeanName(definition), builder.getBeanDefinition());
@@ -191,6 +200,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		beanDef.setPropertyValues(values);
 
 		return beanDef;
+	}
+
+	protected Class<?> loadStoreClass(ConfigurableListableBeanFactory registry, BeanDefinition definition) throws ClassNotFoundException {
+		return ClassUtils.forName(definition.getBeanClassName(), registry.getBeanClassLoader());
 	}
 
 	protected void createOperationsBean(BeanDefinitionRegistry registry) {
