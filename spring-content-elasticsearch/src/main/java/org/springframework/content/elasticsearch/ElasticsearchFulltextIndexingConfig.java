@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan(basePackages = { "org.springframework.content.elasticsearch" })
-public class FullTextIndexingElasticConfig {
+public class ElasticsearchFulltextIndexingConfig {
 
 	@Autowired
 	private RestHighLevelClient client;

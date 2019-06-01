@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -26,33 +25,10 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-
-// TODO: Implement @EnableFulltextIndexingElastic
-//@EnableFullTextSolrIndexing
-@Import(FullTextIndexingElasticConfig.class)
-//
-
+@EnableElasticsearchFulltextIndexing
 @EnableJpaRepositories(considerNestedRepositories = true)
 @EnableJpaStores
 public class ElasticsearchConfig {
-
-//    @Bean
-//    public EmbeddedElastic embeddedElastic() throws IOException, InterruptedException {
-//        return EmbeddedElastic.builder()
-//                .withElasticVersion("6.4.3")
-//                .withSetting(CLUSTER_NAME, "testCluster")
-//                .withSetting("discovery.zen.ping_timeout", 0)
-//                .withPlugin("ingest-attachment")
-//                .withEsJavaOpts("-Xms128m -Xmx512m")
-//                .withStartTimeout(1, MINUTES)
-//                .build()
-//                .start();
-//    }
-//
-//    @PreDestroy
-//    public void tearDown() throws IOException, InterruptedException {
-//        embeddedElastic().stop();
-//    }
 
     @Bean
     public ConversionService conversionService() {

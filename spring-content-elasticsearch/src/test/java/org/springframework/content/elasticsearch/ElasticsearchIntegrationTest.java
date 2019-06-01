@@ -41,7 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)
 @ContextConfiguration(classes = {EmbeddedElasticConfig.class, ElasticsearchConfig.class})
-public class ElasticsearchTest {
+public class ElasticsearchIntegrationTest {
 
 	@Autowired
 	private DocumentRepository repo;
