@@ -1,21 +1,20 @@
 package internal.org.springframework.content.docx4j;
 
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.io.InputStream;
 import java.util.Arrays;
 
 import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.content.commons.renditions.RenditionProvider;
 
-import internal.org.springframework.content.docx4j.WordToPdfRenditionProvider;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class WordToPdfRenditionProviderTest {
 
@@ -50,22 +49,17 @@ public class WordToPdfRenditionProviderTest {
 		COSDocument cosDoc = null;
 		PDFTextStripper pdfStripper;
 
+		PDDocument doc = null;
 		try {
-			parser = new PDFParser(in);
-			parser.parse();
-			cosDoc = parser.getDocument();
+			doc = PDDocument.load(in);
 			pdfStripper = new PDFTextStripper();
-			pdDoc = new PDDocument(cosDoc);
-			return pdfStripper.getText(pdDoc);
-			// System.out.println(parsedText.replaceAll("[^A-Za-z0-9. ]+", ""));
+			return pdfStripper.getText(doc);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 			try {
-				if (cosDoc != null)
-					cosDoc.close();
-				if (pdDoc != null)
-					pdDoc.close();
+				if (doc != null)
+					doc.close();
 			}
 			catch (Exception e1) {
 				e.printStackTrace();
