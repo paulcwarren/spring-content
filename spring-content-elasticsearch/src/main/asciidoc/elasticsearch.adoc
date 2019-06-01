@@ -1,0 +1,39 @@
+[[fulltext-search]]
+= Fulltext Indexing and Searching with Elasticsearch
+
+== Overview
+
+When enabled, the Elasticsearch integration will forward all content to an Elasticsearch cluster for fulltext indexing.
+
+== Annotation-based Configuration
+
+Spring Content Elasticsearch requires a `RestHighLevelClient` bean that is used as the connection to the Elasticsearch
+cluster that you wish to use for indexing.
+
+Elasticsearch is enabled with the following Java Config.
+
+.Enabling Spring Content Elasticsearch with Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableElasticsearchFulltextIndexing        <1>
+@EnableFilesystemStores                     <2>
+public static class ApplicationConfig {
+
+                                            <3>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+}
+----
+1. Specify the `@EnableElasticsearchFulltextIndexing` annotation in an `@Configuration` class
+2. Spring Content Elasticsearch works with any Spring Content Store module
+3. Ensure a `RestHighLevelClient` bean is instantiated somewhere within your `@Configuration`
+====
+
+== Making Stores Searchable
+
+With fulltext-indexing enabled, Store interfaces can be made `Searchable`.  See
+<<content-repositories.search,Searchable Stores>> for more information on how to do this.

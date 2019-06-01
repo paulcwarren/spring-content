@@ -1,0 +1,27 @@
+= Spring Content Elasticsearch - Reference Documentation
+Paul Warren
+:revnumber: {version}
+:revdate: {localdate}
+:toc:
+:toc-placement!:
+:spring-content-commons-docs: ../../../../spring-content-commons/src/main/asciidoc
+:spring-content-es-docs: ../../../../spring-content-elasticsearch/src/main/asciidoc
+
+(C) 2019-present The original authors.
+
+NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+
+toc::[]
+
+:numbered:
+
+include::elasticsearch-preface.adoc[]
+
+:leveloffset: +1
+// include::new-features.adoc[]
+include::{spring-content-commons-docs}/content-repositories.adoc[]
+:leveloffset: -1
+
+:leveloffset: +1
+include::elasticsearch.adoc[]
+:leveloffset: -1
