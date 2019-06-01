@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>Preface</title>
+<title>Fulltext Indexing and Searching with Elasticsearch</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -430,29 +430,70 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body id="preface" class="book">
+<body id="fulltext-search" class="book">
 <div id="header">
-<h1>Preface</h1>
+<h1>Fulltext Indexing and Searching with Elasticsearch</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="project">Project metadata</h2>
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
-<div class="ulist">
-<ul>
+<div class="paragraph">
+<p>When enabled, the Elasticsearch integration will forward all content to an Elasticsearch cluster for fulltext indexing.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to the Elasticsearch
+cluster that you wish to use for indexing.</p>
+</div>
+<div class="paragraph">
+<p>Elasticsearch is enabled with the following Java Config.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 1. Enabling Spring Content Elasticsearch with Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
+public static class ApplicationConfig {
+
+                                            <b class="conum">(3)</b>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
 </li>
 <li>
-<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
 </li>
 <li>
-<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
 </li>
-<li>
-<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
-</li>
-</ul>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_making_stores_searchable">Making Stores Searchable</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 </div>
