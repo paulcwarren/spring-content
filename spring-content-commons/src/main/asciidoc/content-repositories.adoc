@@ -284,10 +284,11 @@ public class ContentStoreConfiguration {
 ====
 
 [[content-repositories.search]]
-=== Search
-Applications that handle files and other media usually have search capabilities allowing content to be found by looking inside of it.
+=== Searchable Stores
+Applications that handle documents and other media usually have search capabilities allowing relevant content to be
+found by looking inside of it for keywords or phrases, so called full-text search.
 
-Content stores can therefore optionally be made searchable by extending the `Searchable<CID>` interface.
+Spring Content is able to support this capability with it's `Searchable<CID>` interface.
 
 .Searchable interface
 ====
@@ -295,22 +296,29 @@ Content stores can therefore optionally be made searchable by extending the `Sea
 ----
 public interface Searchable<CID> {
 
-    Iterable<T> findKeyword(String term);
-
-    Iterable<T> findAllKeywords(String...terms);
-
-    Iterable<T> findAnyKeywords(String...terms);
-
-    Iterable<T> findKeywordsNear(int proximity, String...terms);
-
-    Iterable<T> findKeywordStartsWith(String term);
-
-    Iterable<T> findKeywordStartsWithAndEndsWith(String prefix, String suffix);
-
-    Iterable<T> findAllKeywordsWithWeights(String[] terms, double[] weights);
+    Iterable<T> search(String queryString);
 }
 ----
 ====
+
+Any Store interface can be made to extend `Searchable<CID>` in order to extend its capabilities to include the
+`search(String queryString)` method.  For example:
+
+[source, java]
+----
+public interface DocumentContentStore extends ContentStore<Document, UUID>, Searchable<UUID> {
+}
+
+...
+
+@Autowired
+private DocumentContentStore store;
+
+Iterable<UUID> = store.search("to be or not to be");
+----
+
+For `search` to return actual results full-text indexing must be enabled.  See <<fulltext-search,Fulltext Indexing and Searching>>
+for more information on how to do this.
 
 [[content-repositories.renditions]]
 === Renditions
