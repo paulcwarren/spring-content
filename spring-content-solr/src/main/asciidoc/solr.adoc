@@ -1,23 +1,24 @@
-[[solr-search]]
+[[fulltext-search]]
 = Fulltext Indexing & Searching with Solr
 
 == Overview
 
-When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by
-adding the optional `Searchable<CID>` interface to the Content Repositories.
+When enabled, the Solr integration will forward all content to an Solr cluster for fulltext indexing.
 
 == Dependencies
 
-Spring Content Solr requires a solrj-based SolrClient bean.  We do not add this dependency so that
-you can add a version compatible with your Server.  It also requires two exclusions, as follows:
+Spring Content Solr requires a `SolrClient` bean that is used as the connection to the Solr
+cluster that you wish to use for indexing.
+
+Solr is therefore enabled with following depedencies:
 
 ====
-[source, java]
+[source, xml]
 ----
 	<dependency>
 		<groupId>org.apache.solr</groupId>
 		<artifactId>solr-solrj</artifactId>
-		<version>7.2.1</version>
+		<version>7.2.1</version>                <1>
 		<exclusions>
 			<exclusion>
 				<groupId>org.codehaus.woodstox</groupId>
@@ -30,11 +31,11 @@ you can add a version compatible with your Server.  It also requires two exclusi
 		</exclusions>
 	</dependency>
 ----
+1. Specify the version that matches your Solr server.  NB: as Spring Content certifies against the latest version, the
+version must be compatible with this.
 ====
 
-== Annotation-based Configuration
-
-Fulltext indexing is enabled with the following Java Config.
+And the following Java Config:
 
 .Enabling Spring Content Solr with Java Config
 ====
@@ -67,3 +68,8 @@ If required, credentials can be specified using the following configuration prop
 | solr.username | Solr user
 | solr.password | Solr user's password
 |=========
+
+== Making Stores Searchable
+
+With fulltext-indexing enabled, Store interfaces can be made `Searchable`.  See
+<<content-repositories.search,Searchable Stores>> for more information on how to do this.
