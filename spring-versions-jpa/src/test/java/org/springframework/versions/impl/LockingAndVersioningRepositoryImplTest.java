@@ -64,12 +64,14 @@ public class LockingAndVersioningRepositoryImplTest {
     private CloningService cloner;
     private Authentication principal, lockOwner;
     private EntityInformation ei;
+    private TypedQuery tq;
 
     private TestEntity entity, currentEntity, ancestorRoot, ancestor, nextVersion;
     private VersionInfo vi;
 
     private Object result;
     private Exception e;
+
 
     {
         Describe("LockingAndVersioningRepositoryImpl", () -> {
@@ -316,7 +318,7 @@ public class LockingAndVersioningRepositoryImplTest {
                     });
                 });
             });
-            Context("#privateWorkingCopy", () -> {
+            Context("#workingCopy", () -> {
                 BeforeEach(() -> {
                     currentEntity = new TestEntity();
                 });
@@ -791,6 +793,54 @@ public class LockingAndVersioningRepositoryImplTest {
                             });
                         });
                     });
+                });
+            });
+            Context("#isPrivateWorkingCopy", () -> {
+                BeforeEach(() -> {
+                    tq = mock(TypedQuery.class);
+                    when(em.createQuery(anyString(), anyObject())).thenReturn(tq);
+
+                    entity = new TestEntity();
+                    entity.setId(999L);
+                });
+                JustBeforeEach(() -> {
+                    try {
+                        result = repo.isPrivateWorkingCopy(entity);
+                    } catch (Exception e) {
+                        this.e = e;
+                    }
+                });
+                It("should execute inner join query", () -> {
+                    verify(em)
+                            .createQuery(
+                                    eq("select count(f1.id) FROM org.springframework.versions.impl.LockingAndVersioningRepositoryImplTest$TestEntity f1 inner join org.springframework.versions.impl.LockingAndVersioningRepositoryImplTest$TestEntity f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.id = :id"),
+                                    eq(Long.class));
+                    verify(tq).setParameter(eq("id"), eq(999L));
+                    verify(tq).getSingleResult();
+                });
+            });
+            Context("#findWorkingCopy", () -> {
+                BeforeEach(() -> {
+                    tq = mock(TypedQuery.class);
+                    when(em.createQuery(anyString(), anyObject())).thenReturn(tq);
+
+                    entity = new TestEntity();
+                    entity.setAncestorRootId(999L);
+                });
+                JustBeforeEach(() -> {
+                    try {
+                        result = repo.findWorkingCopy(entity);
+                    } catch (Exception e) {
+                        this.e = e;
+                    }
+                });
+                It("should execute inner join query", () -> {
+                    verify(em)
+                            .createQuery(
+                                    eq("select f1 FROM org.springframework.versions.impl.LockingAndVersioningRepositoryImplTest$TestEntity f1 inner join org.springframework.versions.impl.LockingAndVersioningRepositoryImplTest$TestEntity f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.ancestralRootId = :id"),
+                                    eq(TestEntity.class));
+                    verify(tq).setParameter(eq("id"), eq(999L));
+                    verify(tq).getSingleResult();
                 });
             });
         });
