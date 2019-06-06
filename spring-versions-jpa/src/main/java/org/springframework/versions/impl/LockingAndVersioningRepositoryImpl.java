@@ -333,24 +333,25 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return isAncestralRoot;
     }
 
-    public <S extends T> boolean isPrivateWorkingCopy(S currentVersion) {
-
-        TypedQuery<Long> q = em.createQuery(format("select count(f1.id) FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId = null where f1.id = %s",
-                currentVersion.getClass().getName(),
-                currentVersion.getClass().getName(),
-                BeanUtils.getFieldWithAnnotation(currentVersion, Id.class)),
+    public <S extends T> boolean isPrivateWorkingCopy(S entity) {
+        TypedQuery<Long> q = em.createQuery(format("select count(f1.id) FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.id = :id",
+                entity.getClass().getName(),
+                entity.getClass().getName()),
                 Long.class);
+
+        q.setParameter("id", BeanUtils.getFieldWithAnnotation(entity, Id.class));
 
         return (q.getSingleResult() == 1L);
 
     }
 
     public <S extends T> S findWorkingCopy(S entity) {
-        TypedQuery<S> q = em.createQuery(format("select f1 FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.ancestralRootId = %s",
+        TypedQuery<S> q = em.createQuery(format("select f1 FROM %s f1 inner join %s f2 on f1.ancestorId = f2.id and f2.successorId IS NULL where f1.ancestralRootId = :id",
                 entity.getClass().getName(),
-                entity.getClass().getName(),
-                BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class)),
+                entity.getClass().getName()),
                 (Class<S>)entity.getClass());
+
+        q.setParameter("id", BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class));
 
         try {
             return q.getSingleResult();
