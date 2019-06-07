@@ -430,7 +430,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body id="solr-search" class="book">
+<body id="fulltext-search" class="book">
 <div id="header">
 <h1>Fulltext Indexing &amp; Searching with Solr</h1>
 </div>
@@ -439,8 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by
-adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
+<p>When enabled, the Solr integration will forward all content to an Solr cluster for fulltext indexing.</p>
 </div>
 </div>
 </div>
@@ -448,17 +447,20 @@ adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content 
 <h2 id="_dependencies">Dependencies</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content Solr requires a solrj-based SolrClient bean.  We do not add this dependency so that
-you can add a version compatible with your Server.  It also requires two exclusions, as follows:</p>
+<p>Spring Content Solr requires a <code>SolrClient</code> bean that is used as the connection to the Solr
+cluster that you wish to use for indexing.</p>
+</div>
+<div class="paragraph">
+<p>Solr is therefore enabled with following depedencies:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
+<pre class="highlight"><code class="language-xml" data-lang="xml">	&lt;dependency&gt;
 		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
 		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;7.2.1&lt;/version&gt;
+		&lt;version&gt;7.2.1&lt;/version&gt;                <b class="conum">(1)</b>
 		&lt;exclusions&gt;
 			&lt;exclusion&gt;
 				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
@@ -472,15 +474,18 @@ you can add a version compatible with your Server.  It also requires two exclusi
 	&lt;/dependency&gt;</code></pre>
 </div>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Specify the version that matches your Solr server.  NB: as Spring Content certifies against the latest version, the
+version must be compatible with this.</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Fulltext indexing is enabled with the following Java Config.</p>
+<p>And the following Java Config:</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 1. Enabling Spring Content Solr with Java Config</div>
@@ -547,10 +552,19 @@ public static class ApplicationConfig {
 </table>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_making_stores_searchable">Making Stores Searchable</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-04-23 04:13:00 UTC
+Last updated 2019-06-07 00:20:45 UTC
 </div>
 </div>
 </body>

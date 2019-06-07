@@ -5,7 +5,8 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>CMIS Integration</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Content Elasticsearch - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -432,240 +433,838 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>CMIS Integration</h1>
+<h1>Spring Content Elasticsearch - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren</span><br>
+<span id="revnumber">version 0.9.0,</span>
+<span id="revdate">2019-06-07</span>
+</div>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content CMIS supports the CMIS browser (JSON) bindings.</p>
+<p>&#169; 2019-present The original authors.</p>
 </div>
-<div class="paragraph">
-<p>These bindings can be used as an alternative to the endpoints exported by Spring Content REST.  This may be desirable
-for document management use cases or for migration away from traditional document management systems.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
 </div>
-<div class="paragraph">
-<p>Spring Content CMIS provides a set of annotations that can be placed on an existing Spring Content domain model to map
-its classes onto the CMIS domain model in order to export its entities via the CMIS browser bindings.</p>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#content-repositories">1. Working with Spring Stores</a>
+<ul class="sectlevel2">
+<li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
+<li><a href="#content-repositories.creation">1.2. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
+</ul>
+</li>
+<li><a href="#fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</a>
+<ul class="sectlevel2">
+<li><a href="#_overview">2.1. Overview</a></li>
+<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
+<li><a href="#_making_stores_searchable">2.3. Making Stores Searchable</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="preface" class="sect0">Preface</h1>
+<div class="sect1">
+<h2 id="project">Project metadata</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cmis_domain_model_mapping">CMIS Domain Model Mapping</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_cmisrepository">CmisRepository</h3>
-<div class="paragraph">
-<p>At the root of the CMIS model and services is a repository, which is an instance of the content management system
-and its store of metadata, content, and indexes.</p>
-</div>
-<div class="paragraph">
-<p>The repository is the end point to which all requests are directed and is the root path of the resources being
-addressed in CMIS.  With Spring Content CMIS, the repository is defined using the <code>@EnableCmis</code> annotation.  Each Spring
-Content CMIS application therefore exports, at most, one CMIS Repository.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisobject">CmisObject</h3>
-<div class="paragraph">
-<p>The Spring Data/Content domain model can be mapped to the CMIS domain model using two annotations; <code>@CmisDocument</code> and
-<code>@CmisFolder</code>.  These annotations should be placed on Spring Data entity types with each being placed on a single entity
-type.</p>
-</div>
-<div class="paragraph">
-<p>Both <code>@CmisDocument</code> and <code>@CmisFolder</code> inherit a common set of automatically mapped properties from a logical
-<code>CmisObject</code>, as follows:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@Id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:objectId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@CreationDate</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:creationDate</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@CreationBy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:createdBy</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ModifiedDate</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:lastModificationDate</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ModifiedBy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:lastModifiedBy</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>In addition, the <code>@CmisName</code> annotation must be present to identify the <code>cmis:name</code> field and the <code>@CmisDescription</code>
-annotation may be present to identify a <code>cmis:description</code> field.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisdocument">CmisDocument</h3>
-<div class="paragraph">
-<p>Entity types mapped to <code>@CmisDocument</code> that also have a <code>ContentStore</code> will also have additional content stream
-properties and service for accessing the binary information that is the document.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ContentId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ContentLength</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamLength</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@MimeType</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamMimeType</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Entity types mapped to <code>@CmisDocument</code> that are managed with a <code>Repository</code> that extends <code>LockingAndVersioningRepository</code>
-have additional versioning properties and service.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@VersionNumber</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionLabel</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@AncestorRootId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionSeriesId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@LockOwner</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionSeriesCheckedOutBy</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@VersionLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:checkinComment</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Other version-related cmis properties, like <code>cmis:isLatestVersion</code> for example, are computed at runtime.  Private working
-copies (CMIS 1.1) are supported by default.</p>
-</div>
-<div class="paragraph">
-<p>Currently, renditions and fulltext indexing/query are not supported.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisfolder">CmisFolder</h3>
-<div class="paragraph">
-<p>With a CMIS repository, Document objects can live in one, or more, folders.  A folder can also exist in other folders
-creating a hierarchy.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content CMIS supports folder hierarchy by mapping an entity type to <code>@CmisFolder</code> and by mapping the parent/child
-relationship using the <code>@CmisReference</code> annotation.  However, Spring Content CMIS support single-filing of documents and
-folders only.  In JPA terms, it supports a bi-directional <code>@OneToMany</code> relationship between the folder and the document
-entity.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisnavigationservice">CmisNavigationService</h3>
-<div class="paragraph">
-<p>These two annotations are sufficient to achieve a working folder hierarchy.  However, it is also possible to provide a
-<code>CmisNavigationService</code> bean through configuration in order to provide a more efficient implementation for
-navigation.  This is recommended.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_cmis_workbench">CMIS Workbench</h2>
+<h2 id="content-repositories">1. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A good option for testing is to use the <a href="https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html">CMIS Workbench</a>.
-If you wish to use this client application in your Spring application ensure you disable Spring&#8217;s hidden method filter
-otherwise it attempts to parse POSTed requests from the CMIS Workbench client causing the request to fail.</p>
+<p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
+and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
+the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
+class-path dependencies, Spring Content is then able to inject storage-specific implementations.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>Put this line in your <code>application.properties</code>:</p>
+<p>This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
+<div class="paragraph">
+<p>The central interface in the Spring Content is the <code>ContentStore</code>.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a <code>@ContentId</code> field on that domain class.</p>
+</div>
+<div id="content-repositories.repository" class="exampleblock">
+<div class="title">Example 1. ContentStore interface</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>spring.mvc.hiddenmethod.filter.enabled=false</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
+
+	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
+
+	InputStream getContent(E entity);			<b class="conum">(2)</b>
+
+	void unsetContent(E entity);				<b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Stores content and associates it with <code>entity</code></p>
+</li>
+<li>
+<p>Returns the content associated with <code>entity</code></p>
+</li>
+<li>
+<p>Deletes content and unassociates it from <code>entity</code></p>
+</li>
+</ol>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_using_spring_content_cmis">Using Spring Content CMIS</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_enabling_the_cmis_integration">Enabling the CMIS Integration</h3>
 <div class="paragraph">
-<p>To enable CMIS, place a <code>@EnableCmis</code> annotation on a suitable <code>@Configuration</code> class.</p>
+<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it
+is possible to associate and store a profile picture for each user.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content CMIS using Java Config</div>
+<div class="title">Example 2. ContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private String username;
+
+	@ContentId
+	private String contentId;
+
+	@ContentLength
+	private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
+
+public interface ProfilePictureStore extends ContentStore&lt;User, String&gt; {
+}
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+		return (args) -&gt; {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store profile picture
+			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_experimental_api">1.1.1. Experimental API</h4>
+<div class="paragraph">
+<p>All Spring Content storage modules also now support an <strong>experimental</strong> Store API based on the
+Spring Resource API (i.e. <code>org.springframework.core.io.ResourceLoader</code> and <code>org.springframework.core.io.Resource</code>).</p>
+</div>
+<div class="paragraph">
+<p>The base interface in this API, <code>Store</code>, is a generic <code>org.springframework.core.io.ResourceLoader</code>.  Unlike
+the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
+of Identifer, not just string-based locators, and returns Spring Resource&#8217;s implementing
+<code>org.springframework.content.commons.io.DeletableResource</code> providing a set of methods to control the entire lifecycle
+from creation through to deletion.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Store interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;SID extends Serializable&gt; {
+
+	Resource getResource(SID id);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This interface <strong>is</strong> supported by Spring Content REST.</p>
+</div>
+<div class="paragraph">
+<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> that allows Spring `Resource`s to also be associated
+with Spring Data Entities.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. AssociativeStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
+
+    Resource getResource(S entity);
+
+    void associate(S entity, SID id);
+
+    void unassociate(S entity);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.events">1.1.2. Events</h4>
+<div class="paragraph">
+<p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>BeforeGetResourceEvent</p>
+</li>
+<li>
+<p>AfterGetResourceEvent</p>
+</li>
+<li>
+<p>BeforeAssociateEvent</p>
+</li>
+<li>
+<p>AfterAssociateEvent</p>
+</li>
+<li>
+<p>BeforeUnassociateEvent</p>
+</li>
+<li>
+<p>AfterUnassociateEvent</p>
+</li>
+<li>
+<p>BeforeSetContent</p>
+</li>
+<li>
+<p>AfterSetContent</p>
+</li>
+<li>
+<p>BeforeGetContent</p>
+</li>
+<li>
+<p>AfterGetContent</p>
+</li>
+<li>
+<p>BeforeUnsetContent</p>
+</li>
+<li>
+<p>AfterUnsetContent</p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
+<div class="paragraph">
+<p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
+override the methods that you are interested in.  When these events occur your handlers will be called.</p>
+</div>
+<div class="paragraph">
+<p>There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
+source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
+methods that return results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+
+	@Override
+	public void onAfterSetContent(Object entity) {
+		...logic to inspect and handle the entity and it's content after it is stored
+	}
+
+	@Override
+	public void onBeforeGetContent(BeforeGetContentEvent event) {
+		...logic to inspect and handle the entity and it's content before it is fetched
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The down-side of this approach is that it does not filter events based on Entity.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h5>
+<div class="paragraph">
+<p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
+</div>
+<div class="paragraph">
+<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
+Spring Content that this class needs to be inspected for handler methods.  It
+iterates over the class&#8217;s methods and looks for annotations that correspond to the
+event.  There are twelve handler annotations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HandleBeforeGetResource</p>
+</li>
+<li>
+<p>HandleAfterGetResource</p>
+</li>
+<li>
+<p>HandleBeforeAssociate</p>
+</li>
+<li>
+<p>HandleAfterAssociate</p>
+</li>
+<li>
+<p>HandleBeforeUnassociate</p>
+</li>
+<li>
+<p>HandleAfterUnassociate</p>
+</li>
+<li>
+<p>HandleBeforeSetContent</p>
+</li>
+<li>
+<p>HandleAfterSetContent</p>
+</li>
+<li>
+<p>HandleBeforeGetContent</p>
+</li>
+<li>
+<p>HandleAfterGetContent</p>
+</li>
+<li>
+<p>HandleBeforeUnsetContent</p>
+</li>
+<li>
+<p>HandleAfterUnsetContent</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock">
+<div class="title">Example 6. Entity-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterSetContent(SopDocument doc) {
+		...type-safe handling logic for SopDocument's and their content after it is stored
+	}
+
+	@HandleBeforeGetContent
+	public void onBeforeGetContent(Product product) {
+		...type-safe handling logic for Product's and their content before it is fetched
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>These handlers will be called only when the event originates from a matching entity.</p>
+</div>
+<div class="paragraph">
+<p>As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
+methods returns results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. Event-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterGetResource(AfterGetResourceEvent event) {
+		SopDocument doc = event.getSource();
+		Resource resourceToBeReturned = event.getResult();
+		...code that manipulates the resource being returned...
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To register your event handler, either mark the class with one of Spring’s @Component
+stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
+declare an instance of your annotated bean in your ApplicationContext.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 8. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableCmis(basePackages = "examples.acme",							<b class="conum">(1)</b>
-		id = "1",													<b class="conum">(2)</b>
-		name = "Example CMIS Integration",
-		description = "Spring Content CMIS Integration Example",
-		vendorName = "Spring Content",
-		productName = "Spring Content Integration CMIS",
-		productVersion = "1.0.0")
-public static class ApplicationConfig {
+public class ContentStoreConfiguration {
 
-	...beans...
+	@Bean
+	ExampeAnnotatedEventHandler exampleEventHandler() {
+		return new ExampeAnnotatedEventHandler();
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.search">1.1.3. Searchable Stores</h4>
+<div class="paragraph">
+<p>Applications that handle documents and other media usually have search capabilities allowing relevant content to be
+found by looking inside of it for keywords or phrases, so called full-text search.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 9. Searchable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Searchable&lt;CID&gt; {
 
+    Iterable&lt;T&gt; search(String queryString);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Any Store interface can be made to extend <code>Searchable&lt;CID&gt;</code> in order to extend its capabilities to include the
+<code>search(String queryString)</code> method.  For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentContentStore extends ContentStore&lt;Document, UUID&gt;, Searchable&lt;UUID&gt; {
+}
+
+...
+
+@Autowired
+private DocumentContentStore store;
+
+Iterable&lt;UUID&gt; = store.search("to be or not to be");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For <code>search</code> to return actual results full-text indexing must be enabled.  See <a href="#fulltext-search">Fulltext Indexing and Searching</a>
+for more information on how to do this.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.renditions">1.1.4. Renditions</h4>
+<div class="paragraph">
+<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
+</div>
+<div class="paragraph">
+<p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 10. Renderable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Renderable&lt;E&gt; {
+
+	InputStream getRendition(E entity, String mimeType);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="content-repositories.creation">1.2. Creating Content Store Instances</h3>
+<div class="paragraph">
+<p>To use these core concepts:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Define a Spring Data entity and give it&#8217;s instances the ability to be associated with content by adding <code>@ContentId</code> and <code>@ContentLength</code> annotations</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class SopDocument {
+	private @Id @GeneratedValue Long id;
+	private String title;
+	private String[] authors, keywords;
+
+	// Spring Content managed attribute
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define an interface extending Spring Data&#8217;s <code>CrudRepository</code> and type it to the domain and ID classes.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentRepository extends CrudRepository&lt;SopDocument, Long&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define another interface extending <code>ContentStore</code> and type it to the domain and <code>@ContentId</code> class.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Searchable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Searchable&lt;UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Renderable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Renderable&lt;SopDocument&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Set up Spring to create proxy instances for these two interfaces using JavaConfig:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
+@EnableS3Stores
+class Config {}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Inject the repositories and use them</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Component
+public class SomeClass {
+	@Autowired private SopDocumentRepository repo;
+  	@Autowired private SopDocumentContentStore contentStore;
+
+	public void doSomething() {
+
+		SopDocument doc = new SopDocument();
+		doc.setTitle("example");
+		contentStore.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); <b class="conum">(1)</b>
+		doc.save();
+		...
+
+		InputStream content = contentStore.getContent(sopDocument);
+		...
+
+		List&lt;SopDocument&gt; docs = doc.findAllByContentId(contentStore.findKeyword("interesting"));
+		...
+
+	}
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>The packages to search for Spring Data Repositories and Spring Content Stores with entities that carry
-<code>@CmisDocument</code> and <code>@CmisFolder</code> annotations</p>
+<p>Spring Content will update the <code>@ContentId</code> and <code>@ContentLength</code> fields</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_patterns_of_content_association">1.3. Patterns of Content Association</h3>
+<div class="paragraph">
+<p>Content can be associated with a Spring Data Entity in several ways.</p>
+</div>
+<div class="sect3">
+<h4 id="_entity_association">1.3.1. Entity Association</h4>
+<div class="paragraph">
+<p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a Resource associated with an Entity <code>Dvd</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+
+	...
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_property_association">1.3.2. Property Association</h4>
+<div class="paragraph">
+<p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows two Resources associated with a <code>Dvd</code> entity.  The first Resource is the Dvd&#8217;s cover Image and the second is the Dvd&#8217;s Stream.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "image_id")
+	private Image image;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "stream_id")
+	private Stream stream;
+
+	...
+}
+
+@Entity
+public class Image {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+@Entity
+public class Stream {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ImageStore extends ContentStore&lt;Image, UUID&gt; {}
+
+public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Note how the Content attributes are placed on each property object of on the Entity itself.</p>
+</div>
+<div class="paragraph">
+<p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
+</div>
+<div class="sect4">
+<h5 id="_property_collection_associations">Property Collection Associations</h5>
+<div class="paragraph">
+<p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToMany
+	@JoinColumn(name = "chapter_id")
+	private List&lt;Chapter&gt; chapters;
+
+	...
+}
+
+@Entity
+public class Chapter {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview">2.1. Overview</h3>
+<div class="paragraph">
+<p>When enabled, the Elasticsearch integration will forward all content to an Elasticsearch cluster for fulltext indexing.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
+<div class="paragraph">
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to the Elasticsearch
+cluster that you wish to use for indexing.</p>
+</div>
+<div class="paragraph">
+<p>Elasticsearch is enabled with the following Java Config.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 11. Enabling Spring Content Elasticsearch with Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
+public static class ApplicationConfig {
+
+                                            <b class="conum">(3)</b>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
 </li>
 <li>
-<p>The id and other attribute of the Cmis Repository to export</p>
+<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
+</li>
+<li>
+<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
 </li>
 </ol>
 </div>
@@ -673,253 +1272,11 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_domain_model_mapping">Domain Model Mapping</h3>
-<div class="sect3">
-<h4 id="_cmisobject_2">CmisObject</h4>
+<h3 id="_making_stores_searchable">2.3. Making Stores Searchable</h3>
 <div class="paragraph">
-<p>In this example we have a superclass entity for the common properties shared between the <code>@CmisDocument</code> and
-<code>@CmisFolder</code>.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@EntityListeners(AuditingEntityListener.class)
-@Inheritance(strategy = InheritanceType.JOINED)
-@NoArgsConstructor
-@Getter
-@Setter
-public class BaseObject {
-
-	@javax.persistence.Id									<b class="conum">(1)</b>
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long Id;
-
-	@CmisName												<b class="conum">(2)</b>
-	private String name;
-
-	@CmisDescription										<b class="conum">(3)</b>
-	private String description;
-
-	@CreatedBy												<b class="conum">(4)</b>
-	private String createdBy;
-
-	@CreatedDate
-	private Long createdDate;
-
-	@LastModifiedBy
-	private String lastModifiedBy;
-
-	@LastModifiedDate
-	private Long lastModifiedDate;
-
-	@Version
-	private Long vstamp;
-
-	@CmisReference(type = CmisReferenceType.Parent)			<b class="conum">(5)</b>
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private Folder parent;
-
-	public BaseObject(String name) {
-		this.name = name;
-	}
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Mapped to <code>cmis:objectId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:name</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:description</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:createdBy</code>, <code>cmis:creationDate</code>, <code>cmis:lastModifiedBy</code> and <code>cmis:lastModificationDate</code></p>
-</li>
-<li>
-<p>Maps the child end of a bi-directional one to many parent/child relationship</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisfolder_2">CmisFolder</h4>
-<div class="paragraph">
-<p><code>Folder</code> extends <code>BaseObject</code> and maps the only remaining folder-related attribute, the child end of the parent/child
-relationship.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@NoArgsConstructor
-@Getter
-@Setter
-@CmisFolder																				<b class="conum">(1)</b>
-public class Folder extends BaseObject {
-
-	@CmisReference(type= CmisReferenceType.Child)										<b class="conum">(2)</b>
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", cascade = CascadeType.ALL)
-	private Collection&lt;BaseObject&gt; children;
-
-	public Folder(String name) {
-		super(name);
-	}
-}
-
-public interface FolderRepository extends JpaRepository&lt;Folder, Long&gt; {
-	List&lt;Folder&gt; findAllByParent(Folder parent);
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p><code>@CmisFolder</code> indicating this should be exported as a cmis:folder type</p>
-</li>
-<li>
-<p>Maps the parent end of a bi-directional one to many parent/child relationship</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisdocument_2">CmisDocument</h4>
-<div class="paragraph">
-<p><code>Document</code> also extends <code>BaseObject</code> and also maps the content stream and version attributes.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@NoArgsConstructor
-@Getter
-@Setter
-@CmisDocument									<b class="conum">(1)</b>
-public class Document extends BaseObject {
-
-	@ContentId									<b class="conum">(2)</b>
-	private UUID contentId;
-
-	@ContentLength								<b class="conum">(3)</b>
-	private Long contentLen;
-
-	@MimeType									<b class="conum">(4)</b>
-	private String mimeType;
-
-	@LockOwner									<b class="conum">(5)</b>
-	private String lockOwner;
-
-	@AncestorId
-	private Long ancestorId;
-
-	@AncestorRootId								<b class="conum">(6)</b>
-	private Long ancestralRootId;
-
-	@SuccessorId
-	private Long successorId;
-
-	@VersionNumber
-	private String versionNumber = "0.0";		<b class="conum">(7)</b>
-
-	@VersionLabel
-	private String versionLabel;				<b class="conum">(8)</b>
-
-	public Document(String name) {
-		super(name);
-	}
-
-	public Document(Document doc) {
-		this.setName(doc.getName());
-		this.setDescription(doc.getDescription());
-		this.setParent(doc.getParent());
-	}
-}
-
-public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository&lt;Document, Long&gt; {
-	List&lt;Document&gt; findAllByParent(Folder parent);
-}
-
-
-public interface DocumentStorage extends ContentStore&lt;Document, UUID&gt; {
-	//
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p><code>@CmisDocument</code> indicating this should be exported as a cmis:document type</p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamLength</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamMimeType</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionSeriesCheckedOutBy</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionSeriesId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionLabel</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:checkinComment</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisnavigationservice_2">CmisNavigationService</h4>
-<div class="paragraph">
-<p>Optionally, you may also configure a <code>CmisNavigationService</code> bean in order to provide a more efficient implementation
-for navigation.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	@Bean
-	public CmisNavigationService cmisNavigationService(FolderRepository folders, DocumentRepository docs) {
-
-		return new CmisNavigationService&lt;Folder&gt;() {
-			@Override
-			public List getChildren(Folder parent) {
-				List&lt;Object&gt; children = new ArrayList&lt;&gt;();
-				List&lt;Folder&gt; folderChildern = folders.findAllByParent(parent);
-				List&lt;Document&gt; documentChildren = docs.findAllByParent(parent);
-				children.addAll(folderChildern);
-				children.addAll(documentChildren);
-				return children;
-			}
-		};
-	}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>For more information you can refer to our github example project <a href="https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-cmis">here</a>.</p>
-</div>
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.
+:leveloffset: -1</p>
 </div>
 </div>
 </div>
@@ -927,6 +1284,7 @@ for navigation.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 0.9.0<br>
 Last updated 2019-06-07 00:20:45 UTC
 </div>
 </div>

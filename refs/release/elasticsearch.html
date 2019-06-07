@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.7.1">
-<title>CMIS Integration</title>
+<title>Fulltext Indexing and Searching with Elasticsearch</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -430,497 +430,70 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body class="book">
+<body id="fulltext-search" class="book">
 <div id="header">
-<h1>CMIS Integration</h1>
+<h1>Fulltext Indexing and Searching with Elasticsearch</h1>
 </div>
 <div id="content">
-<div id="preamble">
+<div class="sect1">
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content CMIS supports the CMIS browser (JSON) bindings.</p>
-</div>
-<div class="paragraph">
-<p>These bindings can be used as an alternative to the endpoints exported by Spring Content REST.  This may be desirable
-for document management use cases or for migration away from traditional document management systems.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content CMIS provides a set of annotations that can be placed on an existing Spring Content domain model to map
-its classes onto the CMIS domain model in order to export its entities via the CMIS browser bindings.</p>
+<p>When enabled, the Elasticsearch integration will forward all content to an Elasticsearch cluster for fulltext indexing.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cmis_domain_model_mapping">CMIS Domain Model Mapping</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_cmisrepository">CmisRepository</h3>
-<div class="paragraph">
-<p>At the root of the CMIS model and services is a repository, which is an instance of the content management system
-and its store of metadata, content, and indexes.</p>
-</div>
-<div class="paragraph">
-<p>The repository is the end point to which all requests are directed and is the root path of the resources being
-addressed in CMIS.  With Spring Content CMIS, the repository is defined using the <code>@EnableCmis</code> annotation.  Each Spring
-Content CMIS application therefore exports, at most, one CMIS Repository.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisobject">CmisObject</h3>
-<div class="paragraph">
-<p>The Spring Data/Content domain model can be mapped to the CMIS domain model using two annotations; <code>@CmisDocument</code> and
-<code>@CmisFolder</code>.  These annotations should be placed on Spring Data entity types with each being placed on a single entity
-type.</p>
-</div>
-<div class="paragraph">
-<p>Both <code>@CmisDocument</code> and <code>@CmisFolder</code> inherit a common set of automatically mapped properties from a logical
-<code>CmisObject</code>, as follows:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@Id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:objectId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@CreationDate</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:creationDate</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@CreationBy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:createdBy</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ModifiedDate</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:lastModificationDate</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ModifiedBy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:lastModifiedBy</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>In addition, the <code>@CmisName</code> annotation must be present to identify the <code>cmis:name</code> field and the <code>@CmisDescription</code>
-annotation may be present to identify a <code>cmis:description</code> field.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisdocument">CmisDocument</h3>
-<div class="paragraph">
-<p>Entity types mapped to <code>@CmisDocument</code> that also have a <code>ContentStore</code> will also have additional content stream
-properties and service for accessing the binary information that is the document.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ContentId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@ContentLength</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamLength</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@MimeType</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:contentStreamMimeType</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Entity types mapped to <code>@CmisDocument</code> that are managed with a <code>Repository</code> that extends <code>LockingAndVersioningRepository</code>
-have additional versioning properties and service.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Field</th>
-<th class="tableblock halign-left valign-top">CMIS field</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@VersionNumber</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionLabel</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@AncestorRootId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionSeriesId</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@LockOwner</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:versionSeriesCheckedOutBy</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@VersionLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cmis:checkinComment</code></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Other version-related cmis properties, like <code>cmis:isLatestVersion</code> for example, are computed at runtime.  Private working
-copies (CMIS 1.1) are supported by default.</p>
-</div>
-<div class="paragraph">
-<p>Currently, renditions and fulltext indexing/query are not supported.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisfolder">CmisFolder</h3>
-<div class="paragraph">
-<p>With a CMIS repository, Document objects can live in one, or more, folders.  A folder can also exist in other folders
-creating a hierarchy.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content CMIS supports folder hierarchy by mapping an entity type to <code>@CmisFolder</code> and by mapping the parent/child
-relationship using the <code>@CmisReference</code> annotation.  However, Spring Content CMIS support single-filing of documents and
-folders only.  In JPA terms, it supports a bi-directional <code>@OneToMany</code> relationship between the folder and the document
-entity.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cmisnavigationservice">CmisNavigationService</h3>
-<div class="paragraph">
-<p>These two annotations are sufficient to achieve a working folder hierarchy.  However, it is also possible to provide a
-<code>CmisNavigationService</code> bean through configuration in order to provide a more efficient implementation for
-navigation.  This is recommended.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_cmis_workbench">CMIS Workbench</h2>
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A good option for testing is to use the <a href="https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html">CMIS Workbench</a>.
-If you wish to use this client application in your Spring application ensure you disable Spring&#8217;s hidden method filter
-otherwise it attempts to parse POSTed requests from the CMIS Workbench client causing the request to fail.</p>
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to the Elasticsearch
+cluster that you wish to use for indexing.</p>
 </div>
 <div class="paragraph">
-<p>Put this line in your <code>application.properties</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>spring.mvc.hiddenmethod.filter.enabled=false</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_using_spring_content_cmis">Using Spring Content CMIS</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_enabling_the_cmis_integration">Enabling the CMIS Integration</h3>
-<div class="paragraph">
-<p>To enable CMIS, place a <code>@EnableCmis</code> annotation on a suitable <code>@Configuration</code> class.</p>
+<p>Elasticsearch is enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content CMIS using Java Config</div>
+<div class="title">Example 1. Enabling Spring Content Elasticsearch with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableCmis(basePackages = "examples.acme",							<b class="conum">(1)</b>
-		id = "1",													<b class="conum">(2)</b>
-		name = "Example CMIS Integration",
-		description = "Spring Content CMIS Integration Example",
-		vendorName = "Spring Content",
-		productName = "Spring Content Integration CMIS",
-		productVersion = "1.0.0")
+@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
 public static class ApplicationConfig {
 
-	...beans...
+                                            <b class="conum">(3)</b>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
 
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>The packages to search for Spring Data Repositories and Spring Content Stores with entities that carry
-<code>@CmisDocument</code> and <code>@CmisFolder</code> annotations</p>
+<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
 </li>
 <li>
-<p>The id and other attribute of the Cmis Repository to export</p>
+<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
+</li>
+<li>
+<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
 </li>
 </ol>
 </div>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_domain_model_mapping">Domain Model Mapping</h3>
-<div class="sect3">
-<h4 id="_cmisobject_2">CmisObject</h4>
+</div>
+<div class="sect1">
+<h2 id="_making_stores_searchable">Making Stores Searchable</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>In this example we have a superclass entity for the common properties shared between the <code>@CmisDocument</code> and
-<code>@CmisFolder</code>.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@EntityListeners(AuditingEntityListener.class)
-@Inheritance(strategy = InheritanceType.JOINED)
-@NoArgsConstructor
-@Getter
-@Setter
-public class BaseObject {
-
-	@javax.persistence.Id									<b class="conum">(1)</b>
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long Id;
-
-	@CmisName												<b class="conum">(2)</b>
-	private String name;
-
-	@CmisDescription										<b class="conum">(3)</b>
-	private String description;
-
-	@CreatedBy												<b class="conum">(4)</b>
-	private String createdBy;
-
-	@CreatedDate
-	private Long createdDate;
-
-	@LastModifiedBy
-	private String lastModifiedBy;
-
-	@LastModifiedDate
-	private Long lastModifiedDate;
-
-	@Version
-	private Long vstamp;
-
-	@CmisReference(type = CmisReferenceType.Parent)			<b class="conum">(5)</b>
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private Folder parent;
-
-	public BaseObject(String name) {
-		this.name = name;
-	}
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>Mapped to <code>cmis:objectId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:name</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:description</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:createdBy</code>, <code>cmis:creationDate</code>, <code>cmis:lastModifiedBy</code> and <code>cmis:lastModificationDate</code></p>
-</li>
-<li>
-<p>Maps the child end of a bi-directional one to many parent/child relationship</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisfolder_2">CmisFolder</h4>
-<div class="paragraph">
-<p><code>Folder</code> extends <code>BaseObject</code> and maps the only remaining folder-related attribute, the child end of the parent/child
-relationship.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@NoArgsConstructor
-@Getter
-@Setter
-@CmisFolder																				<b class="conum">(1)</b>
-public class Folder extends BaseObject {
-
-	@CmisReference(type= CmisReferenceType.Child)										<b class="conum">(2)</b>
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", cascade = CascadeType.ALL)
-	private Collection&lt;BaseObject&gt; children;
-
-	public Folder(String name) {
-		super(name);
-	}
-}
-
-public interface FolderRepository extends JpaRepository&lt;Folder, Long&gt; {
-	List&lt;Folder&gt; findAllByParent(Folder parent);
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p><code>@CmisFolder</code> indicating this should be exported as a cmis:folder type</p>
-</li>
-<li>
-<p>Maps the parent end of a bi-directional one to many parent/child relationship</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisdocument_2">CmisDocument</h4>
-<div class="paragraph">
-<p><code>Document</code> also extends <code>BaseObject</code> and also maps the content stream and version attributes.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Entity
-@NoArgsConstructor
-@Getter
-@Setter
-@CmisDocument									<b class="conum">(1)</b>
-public class Document extends BaseObject {
-
-	@ContentId									<b class="conum">(2)</b>
-	private UUID contentId;
-
-	@ContentLength								<b class="conum">(3)</b>
-	private Long contentLen;
-
-	@MimeType									<b class="conum">(4)</b>
-	private String mimeType;
-
-	@LockOwner									<b class="conum">(5)</b>
-	private String lockOwner;
-
-	@AncestorId
-	private Long ancestorId;
-
-	@AncestorRootId								<b class="conum">(6)</b>
-	private Long ancestralRootId;
-
-	@SuccessorId
-	private Long successorId;
-
-	@VersionNumber
-	private String versionNumber = "0.0";		<b class="conum">(7)</b>
-
-	@VersionLabel
-	private String versionLabel;				<b class="conum">(8)</b>
-
-	public Document(String name) {
-		super(name);
-	}
-
-	public Document(Document doc) {
-		this.setName(doc.getName());
-		this.setDescription(doc.getDescription());
-		this.setParent(doc.getParent());
-	}
-}
-
-public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository&lt;Document, Long&gt; {
-	List&lt;Document&gt; findAllByParent(Folder parent);
-}
-
-
-public interface DocumentStorage extends ContentStore&lt;Document, UUID&gt; {
-	//
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p><code>@CmisDocument</code> indicating this should be exported as a cmis:document type</p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamLength</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:contentStreamMimeType</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionSeriesCheckedOutBy</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionSeriesId</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:versionLabel</code></p>
-</li>
-<li>
-<p>Mapped to <code>cmis:checkinComment</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cmisnavigationservice_2">CmisNavigationService</h4>
-<div class="paragraph">
-<p>Optionally, you may also configure a <code>CmisNavigationService</code> bean in order to provide a more efficient implementation
-for navigation.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	@Bean
-	public CmisNavigationService cmisNavigationService(FolderRepository folders, DocumentRepository docs) {
-
-		return new CmisNavigationService&lt;Folder&gt;() {
-			@Override
-			public List getChildren(Folder parent) {
-				List&lt;Object&gt; children = new ArrayList&lt;&gt;();
-				List&lt;Folder&gt; folderChildern = folders.findAllByParent(parent);
-				List&lt;Document&gt; documentChildren = docs.findAllByParent(parent);
-				children.addAll(folderChildern);
-				children.addAll(documentChildren);
-				return children;
-			}
-		};
-	}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>For more information you can refer to our github example project <a href="https://github.com/paulcwarren/spring-content-examples/tree/master/spring-eg-content-cmis">here</a>.</p>
-</div>
-</div>
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 </div>
