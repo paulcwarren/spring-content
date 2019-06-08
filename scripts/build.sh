@@ -4,19 +4,19 @@ function usage() {
   cat <<EOT
 Usage: $(basename "$0") <options>
 Options:
-  -a  Test entire project
-  -s  Test project identified by suffix (\`-s commons\` tests spring-content-commons)
+  -a  Builds the entire project
+  -s  Builds the project identified by suffix (\`-s commons\` builds spring-content-commons)
 EOT
 }
 
-function test() {
+function build() {
   
   if [[ -z "${1}" ]]; then
-		BUILD_TYPE=dev mvn clean test     
+		BUILD_TYPE=dev mvn clean compile
   elif [[ "${1}" == "all" ]]; then
-		BUILD_TYPE=dev mvn clean test     
+		BUILD_TYPE=dev mvn clean compile
   else
-		BUILD_TYPE=dev mvn -pl "spring-content-${1}" -am clean test
+		BUILD_TYPE=dev mvn -pl "spring-content-${1}" -am clean compile
   fi
 
 }
@@ -27,10 +27,10 @@ function main() {
   while getopts as:h o; do
       case $o in
         a)
-          test "all"
+          build "all"
           ;;
         s)
-          test "${OPTARG}"
+          build "${OPTARG}"
           ;;
         *)
           echo "Invalid flag: ${o}"
