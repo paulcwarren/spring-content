@@ -28,24 +28,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.rest.webmvc.ControllerUtils;
+import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.EmbeddedWrappers;
-import org.springframework.http.ResponseEntity;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.core.EmbeddedWrappers;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
@@ -89,8 +90,9 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@StoreType("contentstore")
+	@ResponseBody
 	@RequestMapping(value = ENTITY_CONTENTSEARCH_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<?> searchContent(RootResourceInformation repoInfo,
+	public CollectionModel<?> searchContent(RootResourceInformation repoInfo,
 			DefaultedPageable pageable,
 			Sort sort,
 			PersistentEntityResourceAssembler assembler,
@@ -103,8 +105,9 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@StoreType("contentstore")
+	@ResponseBody
 	@RequestMapping(value = ENTITY_SEARCHMETHOD_MAPPING, method = RequestMethod.GET)
-	public ResponseEntity<?> searchContent(RootResourceInformation repoInfo,
+	public CollectionModel<?> searchContent(RootResourceInformation repoInfo,
 										   DefaultedPageable pageable,
 										   Sort sort,
 										   PersistentEntityResourceAssembler assembler,
@@ -115,7 +118,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 		return searchContentInternal(repoInfo, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[]{}));
 	}
 
-	ResponseEntity<?> searchContentInternal(RootResourceInformation repoInfo,
+	CollectionModel<?> searchContentInternal(RootResourceInformation repoInfo,
 			DefaultedPageable pageable,
 			Sort sort,
 			PersistentEntityResourceAssembler assembler,
@@ -160,6 +163,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 
 		List contentIds = (List) reflectionService.invokeMethod(method, store, keywords[0]);
 
+		List<Object> results = new ArrayList<>();
 		if (contentIds != null && contentIds.size() > 0) {
 
 			Class<?> entityType = repoInfo.getDomainType();
@@ -173,7 +177,6 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 			Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType,
 					ContentId.class);
 
-			List<Object> results = new ArrayList<>();
 			if (idField.equals(contentIdField)) {
 				for (Object contentId : contentIds) {
 					Optional<Object> entity = repoInfo.getInvoker()
@@ -198,59 +201,75 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 					}
 				}
 			}
-			return ResponseEntity.ok(toResources(results, assembler, pagedResourcesAssembler, entityType, null));
+
+//			return ResponseEntity.ok(toResources(results, assembler, pagedResourcesAssembler, entityType, null));
 		}
 
-		return ResponseEntity.ok(new Resources(ControllerUtils.EMPTY_RESOURCE_LIST));
+		ResourceMetadata metadata = repoInfo.getResourceMetadata();
+		CollectionModel<?> result = toCollectionModel(results, assembler, metadata.getDomainType(), Optional.empty());
+		return result;
+
+//		return ResponseEntity.ok(new Resources(ControllerUtils.EMPTY_RESOURCE_LIST));
 	}
 
-	public static Resources<?> toResources(Iterable<?> source,
-										   PersistentEntityResourceAssembler assembler,
-										   PagedResourcesAssembler resourcesAssembler,
-										   Class<?> domainType,
-										   Link baseLink) {
+//	public static Resources<?> toResources(Iterable<?> source,
+//										   PersistentEntityResourceAssembler assembler,
+//										   PagedResourcesAssembler resourcesAssembler,
+//										   Class<?> domainType,
+//										   Link baseLink) {
+//
+//		if (source instanceof Page) {
+//			Page<Object> page = (Page<Object>) source;
+//			return entitiesToResources(page, assembler, resourcesAssembler, domainType, baseLink);
+//		}
+//		else if (source instanceof Iterable) {
+//			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
+//		}
+//		else {
+//			return new Resources(EMPTY_RESOURCE_LIST);
+//		}
+//	}
 
-		if (source instanceof Page) {
-			Page<Object> page = (Page<Object>) source;
-			return entitiesToResources(page, assembler, resourcesAssembler, domainType, baseLink);
-		}
-		else if (source instanceof Iterable) {
-			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
-		}
-		else {
-			return new Resources(EMPTY_RESOURCE_LIST);
-		}
-	}
+//	protected static Resources<?> entitiesToResources(Page<Object> page,
+//											   PersistentEntityResourceAssembler assembler, PagedResourcesAssembler resourcesAssembler, Class<?> domainType,
+//											   Link baseLink) {
+//
+//		if (page.getContent().isEmpty()) {
+//			return resourcesAssembler.toEmptyResource(page, domainType, baseLink);
+//		}
+//
+//		return baseLink == null ? resourcesAssembler.toResource(page, assembler)
+//				: resourcesAssembler.toResource(page, assembler, baseLink);
+//	}
 
-	protected static Resources<?> entitiesToResources(Page<Object> page,
-											   PersistentEntityResourceAssembler assembler, PagedResourcesAssembler resourcesAssembler, Class<?> domainType,
-											   Link baseLink) {
+	protected CollectionModel<?> entitiesToResources(Page<Object> page, PersistentEntityResourceAssembler assembler,
+			Class<?> domainType, Optional<Link> baseLink) {
 
 		if (page.getContent().isEmpty()) {
-			return resourcesAssembler.toEmptyResource(page, domainType, baseLink);
+			return baseLink.<PagedModel<?>> map(it -> pagedResourcesAssembler.toEmptyModel(page, domainType, it))//
+					.orElseGet(() -> pagedResourcesAssembler.toEmptyModel(page, domainType));
 		}
 
-		return baseLink == null ? resourcesAssembler.toResource(page, assembler)
-				: resourcesAssembler.toResource(page, assembler, baseLink);
+		return baseLink.map(it -> pagedResourcesAssembler.toModel(page, assembler, it))//
+				.orElseGet(() -> pagedResourcesAssembler.toModel(page, assembler));
 	}
 
-	protected static Resources<?> entitiesToResources(Iterable<Object> entities,
+	protected CollectionModel<?> entitiesToResources(Iterable<Object> entities,
 			PersistentEntityResourceAssembler assembler, Class<?> domainType) {
 
 		if (!entities.iterator().hasNext()) {
 
-			List<Object> content = Arrays
-					.<Object>asList(WRAPPERS.emptyCollectionOf(domainType));
-			return new Resources<Object>(content, getDefaultSelfLink());
+			List<Object> content = Arrays.<Object> asList(WRAPPERS.emptyCollectionOf(domainType));
+			return new CollectionModel<Object>(content, getDefaultSelfLink());
 		}
 
-		List<Resource<Object>> resources = new ArrayList<Resource<Object>>();
+		List<EntityModel<Object>> resources = new ArrayList<EntityModel<Object>>();
 
 		for (Object obj : entities) {
-			resources.add(obj == null ? null : assembler.toResource(obj));
+			resources.add(obj == null ? null : assembler.toModel(obj));
 		}
 
-		return new Resources<Resource<Object>>(resources, getDefaultSelfLink());
+		return new CollectionModel<EntityModel<Object>>(resources, getDefaultSelfLink());
 	}
 
 	protected static Link getDefaultSelfLink() {
@@ -258,4 +277,16 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 				ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
 	}
 
+	protected CollectionModel<?> toCollectionModel(Iterable<?> source, PersistentEntityResourceAssembler assembler,
+			Class<?> domainType, Optional<Link> baseLink) {
+
+		if (source instanceof Page) {
+			Page<Object> page = (Page<Object>) source;
+			return entitiesToResources(page, assembler, domainType, baseLink);
+		} else if (source instanceof Iterable) {
+			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
+		} else {
+			return new CollectionModel(EMPTY_RESOURCE_LIST);
+		}
+	}
 }
