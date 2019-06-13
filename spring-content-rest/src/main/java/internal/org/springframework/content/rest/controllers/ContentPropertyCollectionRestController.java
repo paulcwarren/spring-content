@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.Version;
@@ -34,8 +33,6 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -265,17 +262,6 @@ public class ContentPropertyCollectionRestController
 
 		response.setStatus(HttpStatus.NO_CONTENT.value());
 		return;
-	}
-
-	Resource<?> toResource(final HttpServletRequest request, Object newContent)
-			throws SecurityException, BeansException {
-		Link self = new Link(
-				StringUtils.trimTrailingCharacter(request.getRequestURL().toString(), '/')
-						+ "/"
-						+ BeanUtils.getFieldWithAnnotation(newContent, ContentId.class));
-		Resource<?> contentResource = new Resource<Object>(newContent,
-				Collections.singletonList(self));
-		return contentResource;
 	}
 
 	private boolean saveContentInternal(HttpHeaders headers,
