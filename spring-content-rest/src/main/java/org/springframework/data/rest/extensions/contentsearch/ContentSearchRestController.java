@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.Optional;
 
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.utils.ControllerUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
@@ -24,7 +24,6 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
@@ -36,25 +35,16 @@ import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedModel;
-import org.springframework.hateoas.server.core.EmbeddedWrappers;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
 
 @RepositoryRestController
 public class ContentSearchRestController /* extends AbstractRepositoryRestController */ {
 
-	private static final EmbeddedWrappers WRAPPERS = new EmbeddedWrappers(false);
 	private static final String ENTITY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent";
 	private static final String ENTITY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/findKeyword";
 	private static final String PROPERTY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/{contentProperty}/{searchMethod}";
@@ -73,9 +63,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	}
 
 	@Autowired
-	public ContentSearchRestController(Repositories repositories,
-			ContentStoreService stores, PagedResourcesAssembler<Object> assembler) {
-		// super(assembler);
+	public ContentSearchRestController(Repositories repositories, ContentStoreService stores, PagedResourcesAssembler<Object> assembler) {
 
 		this.repositories = repositories;
 		this.stores = stores;
@@ -97,8 +85,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 			Sort sort,
 			PersistentEntityResourceAssembler assembler,
 			@PathVariable String repository,
-			@RequestParam(name = "queryString") String queryString)
-			throws HttpRequestMethodNotSupportedException {
+			@RequestParam(name = "queryString") String queryString) {
 
 		return searchContentInternal(repoInfo, pageable, sort, assembler, "search", new String[]{queryString});
 	}
@@ -112,8 +99,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 										   Sort sort,
 										   PersistentEntityResourceAssembler assembler,
 										   @PathVariable String repository,
-										   @RequestParam(name = "keyword") List<String> keywords)
-			throws HttpRequestMethodNotSupportedException {
+										   @RequestParam(name = "keyword") List<String> keywords) {
 
 		return searchContentInternal(repoInfo, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[]{}));
 	}
@@ -201,92 +187,9 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 					}
 				}
 			}
-
-//			return ResponseEntity.ok(toResources(results, assembler, pagedResourcesAssembler, entityType, null));
 		}
 
 		ResourceMetadata metadata = repoInfo.getResourceMetadata();
-		CollectionModel<?> result = toCollectionModel(results, assembler, metadata.getDomainType(), Optional.empty());
-		return result;
-
-//		return ResponseEntity.ok(new Resources(ControllerUtils.EMPTY_RESOURCE_LIST));
-	}
-
-//	public static Resources<?> toResources(Iterable<?> source,
-//										   PersistentEntityResourceAssembler assembler,
-//										   PagedResourcesAssembler resourcesAssembler,
-//										   Class<?> domainType,
-//										   Link baseLink) {
-//
-//		if (source instanceof Page) {
-//			Page<Object> page = (Page<Object>) source;
-//			return entitiesToResources(page, assembler, resourcesAssembler, domainType, baseLink);
-//		}
-//		else if (source instanceof Iterable) {
-//			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
-//		}
-//		else {
-//			return new Resources(EMPTY_RESOURCE_LIST);
-//		}
-//	}
-
-//	protected static Resources<?> entitiesToResources(Page<Object> page,
-//											   PersistentEntityResourceAssembler assembler, PagedResourcesAssembler resourcesAssembler, Class<?> domainType,
-//											   Link baseLink) {
-//
-//		if (page.getContent().isEmpty()) {
-//			return resourcesAssembler.toEmptyResource(page, domainType, baseLink);
-//		}
-//
-//		return baseLink == null ? resourcesAssembler.toResource(page, assembler)
-//				: resourcesAssembler.toResource(page, assembler, baseLink);
-//	}
-
-	protected CollectionModel<?> entitiesToResources(Page<Object> page, PersistentEntityResourceAssembler assembler,
-			Class<?> domainType, Optional<Link> baseLink) {
-
-		if (page.getContent().isEmpty()) {
-			return baseLink.<PagedModel<?>> map(it -> pagedResourcesAssembler.toEmptyModel(page, domainType, it))//
-					.orElseGet(() -> pagedResourcesAssembler.toEmptyModel(page, domainType));
-		}
-
-		return baseLink.map(it -> pagedResourcesAssembler.toModel(page, assembler, it))//
-				.orElseGet(() -> pagedResourcesAssembler.toModel(page, assembler));
-	}
-
-	protected CollectionModel<?> entitiesToResources(Iterable<Object> entities,
-			PersistentEntityResourceAssembler assembler, Class<?> domainType) {
-
-		if (!entities.iterator().hasNext()) {
-
-			List<Object> content = Arrays.<Object> asList(WRAPPERS.emptyCollectionOf(domainType));
-			return new CollectionModel<Object>(content, getDefaultSelfLink());
-		}
-
-		List<EntityModel<Object>> resources = new ArrayList<EntityModel<Object>>();
-
-		for (Object obj : entities) {
-			resources.add(obj == null ? null : assembler.toModel(obj));
-		}
-
-		return new CollectionModel<EntityModel<Object>>(resources, getDefaultSelfLink());
-	}
-
-	protected static Link getDefaultSelfLink() {
-		return new Link(
-				ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
-	}
-
-	protected CollectionModel<?> toCollectionModel(Iterable<?> source, PersistentEntityResourceAssembler assembler,
-			Class<?> domainType, Optional<Link> baseLink) {
-
-		if (source instanceof Page) {
-			Page<Object> page = (Page<Object>) source;
-			return entitiesToResources(page, assembler, domainType, baseLink);
-		} else if (source instanceof Iterable) {
-			return entitiesToResources((Iterable<Object>) source, assembler, domainType);
-		} else {
-			return new CollectionModel(EMPTY_RESOURCE_LIST);
-		}
+		return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
 	}
 }
