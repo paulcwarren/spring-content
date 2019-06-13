@@ -9,6 +9,7 @@ import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 import lombok.Setter;
 import org.hamcrest.beans.HasPropertyWithValue;
 
+
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
