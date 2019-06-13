@@ -72,7 +72,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<scope>import</scope>
 			</dependency>
 
-
 			<!-- For Spring Boot 2.2.0.Mx support -->
 			<dependency>
 				<groupId>org.springframework</groupId>
@@ -109,8 +108,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- For Spring Boot 2.2.0.Mx support -->
 		</dependencies>
-
 	</dependencyManagement>
 
 	<modules>
@@ -355,6 +354,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 	</profiles>
 
 	<repositories>
+		<!-- For Spring Boot 2.2.0.Mx support -->
 		<repository>
 			<id>spring</id>
 			<name>libs-milestone-local</name>
@@ -365,6 +365,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			<name>central</name>
 			<url>https://repo.maven.apache.org/maven2</url>
 		</repository>
+		<!-- For Spring Boot 2.2.0.Mx support -->
 	</repositories>
 
 	<distributionManagement>
