@@ -12,11 +12,11 @@ EOT
 function build() {
   
   if [[ -z "${1}" ]]; then
-		BUILD_TYPE=dev mvn clean compile
+		BUILD_TYPE=dev ./mvnw clean compile
   elif [[ "${1}" == "all" ]]; then
-		BUILD_TYPE=dev mvn clean compile
+		BUILD_TYPE=dev ./mvnw clean compile
   else
-		BUILD_TYPE=dev mvn -pl "spring-content-${1}" -am clean compile
+		BUILD_TYPE=dev ./mvnw -pl "spring-content-${1}" -am clean compile
   fi
 
 }
