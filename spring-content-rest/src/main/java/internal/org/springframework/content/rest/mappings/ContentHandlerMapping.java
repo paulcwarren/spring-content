@@ -13,6 +13,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.util.UrlPathHelper;

@@ -1,7 +1,12 @@
 package org.springframework.content.rest.config;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.ContentStoreService;
@@ -9,10 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 @Configuration
 @ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions")
@@ -27,6 +28,11 @@ public class RestConfiguration implements InitializingBean {
 	private List<ContentRestConfigurer> configurers = new ArrayList<>();
 
 	private URI baseUri = NO_URI;
+	private StoreCorsRegistry corsRegistry;
+
+	public RestConfiguration() {
+		this.corsRegistry = new StoreCorsRegistry();
+	}
 
 	public URI getBaseUri() {
 		return baseUri;
@@ -36,9 +42,15 @@ public class RestConfiguration implements InitializingBean {
 		this.baseUri = baseUri;
 	}
 
+	public StoreCorsRegistry getCorsRegistry() {
+		return corsRegistry;
+	}
+
 	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
-		return new ContentHandlerMapping(stores, this);
+		ContentHandlerMapping mapping = new ContentHandlerMapping(stores, this);
+		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
+		return mapping;
 	}
 
 	@Bean
