@@ -38,6 +38,8 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -139,6 +141,22 @@ public class ContentEntityRestControllerIntegrationTest {
 					});
 					contentTests = Content.tests();
 					corsTests = Cors.tests();
+
+					//////////////////////////////////////////////
+					// Temporary test for testing spring data rest cors configurations
+					//
+					Context("an OPTIONS request to the repository from a known host", () -> {
+						It("should return the relevant CORS headers and OK", () -> {
+							mvc.perform(options("/testEntities/" + testEntity.getId())
+									.header("Access-Control-Request-Method", "PUT")
+									.header("Origin", "http://www.someurl.com"))
+									.andExpect(status().isOk())
+									.andExpect(header().string("Access-Control-Allow-Origin","http://www.someurl.com"));
+						});
+					});
+					//
+					//////////////////////////////////////////////
+
 				});
 				Context("given an entity with @Version", () -> {
 					BeforeEach(() -> {
