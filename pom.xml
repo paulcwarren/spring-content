@@ -126,7 +126,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<module>./spring-content-rest-boot-starter</module>
 		<module>./spring-content-s3</module>
 		<module>./spring-content-s3-boot-starter</module>
-    <module>./spring-content-renditions</module>
+		<module>./spring-content-renditions</module>
 		<module>./spring-content-renditions-boot-starter</module>
 		<module>./spring-content-solr</module>
 		<module>./spring-content-solr-boot-starter</module>
@@ -137,10 +137,10 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<module>./content-rest-spring-boot-starter</module>
 		<module>./content-s3-spring-boot-starter</module>
 		<module>./content-solr-spring-boot-starter</module>
-    <module>./spring-versions-commons</module>
+		<module>./spring-versions-commons</module>
 		<module>./spring-versions-jpa</module>
-    <module>./spring-versions-jpa-boot-starter</module>
-    <module>./spring-content-cmis</module>
+		<module>./spring-versions-jpa-boot-starter</module>
+		<module>./spring-content-cmis</module>
 	</modules>
 
 	<build>
