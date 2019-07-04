@@ -9,7 +9,13 @@ import javax.persistence.Version;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
+import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.Content;
@@ -37,12 +43,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
-
-import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
-import internal.org.springframework.content.rest.utils.ContentPropertyUtils;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import static java.lang.String.format;
@@ -56,7 +56,7 @@ public class ContentPropertyRestController extends AbstractContentPropertyContro
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
 
-	@Autowired(required = false)
+	@Autowired
 	public ContentPropertyRestController(ApplicationContext context,
 			ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
 		super();

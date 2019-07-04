@@ -6,6 +6,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.http.converter.ResourceRegionHttpMessageConverter;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 public class StoreByteRangeHttpRequestHandler extends ResourceHttpRequestHandler {
@@ -26,4 +28,9 @@ public class StoreByteRangeHttpRequestHandler extends ResourceHttpRequestHandler
 		return super.getMediaType(request, resource);
 	}
 
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		this.setResourceHttpMessageConverter(new ResourceHttpMessageConverter());
+		this.setResourceRegionHttpMessageConverter(new ResourceRegionHttpMessageConverter());
+	}
 }
