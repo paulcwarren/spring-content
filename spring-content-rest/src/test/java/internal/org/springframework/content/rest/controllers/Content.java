@@ -1,17 +1,18 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.ByteArrayInputStream;
+import java.util.Optional;
+
 import internal.org.springframework.content.rest.support.ContentEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
+
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.io.ByteArrayInputStream;
-import java.util.Optional;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
