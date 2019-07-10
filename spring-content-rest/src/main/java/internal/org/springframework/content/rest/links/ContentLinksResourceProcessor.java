@@ -1,8 +1,22 @@
 package internal.org.springframework.content.rest.links;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.persistence.Id;
+
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.DomainObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.InvalidPropertyException;
@@ -22,17 +36,7 @@ import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.ResourceProcessor;
 import org.springframework.hateoas.mvc.BasicLinkBuilder;
 import org.springframework.util.ReflectionUtils;
-
-import javax.persistence.Id;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import org.springframework.util.StringUtils;
 
 /**
  * Adds content and content collection links to Spring Data REST Entity Resources.
@@ -64,8 +68,9 @@ public class ContentLinksResourceProcessor
 		// entity
 		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
 		Object contentId = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
+		Object id = DomainObjectUtils.getId(object);
 		if (store != null && contentId != null) {
-			resource.add(getLink(config.getBaseUri(), store, contentId));
+			resource.add(getLink(config.getBaseUri(), store, id));
 		}
 
 		List<Field> processed = new ArrayList<>();
@@ -199,7 +204,7 @@ public class ContentLinksResourceProcessor
 
 		return builder.slash(ContentStoreUtils.storePath(store))
 				.slash(id)
-				.withRel(ContentStoreUtils.storePath(store));
+				.withRel(StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store)));
 	}
 
 	private Link getLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {
