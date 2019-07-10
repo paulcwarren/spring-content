@@ -3,7 +3,7 @@ branches:
     - travis
 language: java
 jdk:
-- oraclejdk8
+- openjdk8
 env:
 - BUILD_TYPE=snapshot
 before_install:
