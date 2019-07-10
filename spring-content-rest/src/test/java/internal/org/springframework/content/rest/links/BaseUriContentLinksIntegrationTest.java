@@ -1,5 +1,9 @@
 package internal.org.springframework.content.rest.links;
 
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.BaseUriConfig;
@@ -15,6 +19,7 @@ import internal.org.springframework.content.rest.support.TestEntityContentReposi
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
@@ -27,10 +32,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
-
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -75,7 +76,7 @@ public class BaseUriContentLinksIntegrationTest {
 	private EntityPropertyContentLinkTests entityPropertyContentLinkTests;
 
 	{
-		Describe("given an baseUri is set", () -> {
+		Describe("given the spring content baseUri property is set to contentApi", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -89,8 +90,8 @@ public class BaseUriContentLinksIntegrationTest {
 					entityContentLinkTests.setStore(contentRepository3);
 					entityContentLinkTests.setTestEntity(testEntity3);
 					entityContentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					entityContentLinkTests.setLinkRel("testEntity3s");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}");
+					entityContentLinkTests.setLinkRel("testEntity3");
+					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId());
 				});
 				entityContentLinkTests = new EntityContentLinkTests();
 			});
@@ -104,8 +105,8 @@ public class BaseUriContentLinksIntegrationTest {
 					entityContentLinkTests.setStore(contentRepository);
 					entityContentLinkTests.setTestEntity(testEntity);
 					entityContentLinkTests.setUrl("/api/testEntities/" + testEntity.getId());
-					entityContentLinkTests.setLinkRel("testEntitiesContent");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntitiesContent/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}");
+					entityContentLinkTests.setLinkRel("testEntity");
+					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntitiesContent/" + testEntity.getId());
 				});
 				entityContentLinkTests = new EntityContentLinkTests();
 			});
