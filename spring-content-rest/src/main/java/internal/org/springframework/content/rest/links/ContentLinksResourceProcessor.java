@@ -10,8 +10,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.Id;
-
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.DomainObjectUtils;
 import org.apache.commons.logging.Log;
@@ -68,19 +66,14 @@ public class ContentLinksResourceProcessor
 		// entity
 		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
 		Object contentId = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
-		Object id = DomainObjectUtils.getId(object);
+		Object entityId = DomainObjectUtils.getId(object);
 		if (store != null && contentId != null) {
-			resource.add(getLink(config.getBaseUri(), store, id));
+			resource.add(shortcutLink(config.getBaseUri(), store, entityId));
 		}
 
 		List<Field> processed = new ArrayList<>();
 
 		ResourceMetadata md = mappings.getMetadataFor(object.getClass());
-
-		Object entityId = BeanUtils.getFieldWithAnnotation(object, Id.class);
-		if (entityId == null) {
-			entityId = BeanUtils.getFieldWithAnnotation(object, org.springframework.data.annotation.Id.class);
-		}
 
 		// public fields
 		for (Field field : object.getClass().getFields()) {
@@ -120,7 +113,7 @@ public class ContentLinksResourceProcessor
 
 			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
 			if (store != null) {
-				resource.add(getLink(metadata, baseUri, entityId, field.getName(), null));
+				resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), null));
 			}
 		}
 		else if (Collection.class.isAssignableFrom(fieldType)) {
@@ -159,7 +152,7 @@ public class ContentLinksResourceProcessor
 							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
 								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
 								if (cid != null) {
-									resource.add(getLink(metadata, baseUri, entityId, field.getName(), cid));
+									resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), cid));
 								}
 							}
 						}
@@ -188,14 +181,14 @@ public class ContentLinksResourceProcessor
 				if (value != null) {
 					String cid = BeanUtils.getFieldWithAnnotation(value, ContentId.class).toString();
 					if (cid != null) {
-						resource.add(getLink(metadata, baseUri, entityId, field.getName(), cid));
+						resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), cid));
 					}
 				}
 			}
 		}
 	}
 
-	private Link getLink(URI baseUri, ContentStoreInfo store, Object id) {
+	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id) {
 		LinkBuilder builder = BasicLinkBuilder.linkToCurrentMapping();
 
 		if (baseUri != null) {
@@ -207,7 +200,7 @@ public class ContentLinksResourceProcessor
 				.withRel(StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store)));
 	}
 
-	private Link getLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {
+	private Link propertyLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {
 		LinkBuilder builder = new RepositoryLinkBuilder(md, new BaseUri(baseUri));
 
 		builder = builder.slash(id).slash(property);
