@@ -1,9 +1,15 @@
 package internal.org.springframework.content.rest.utils;
 
+import java.io.InputStream;
+import java.io.Serializable;
+import java.net.URI;
+import java.util.List;
+
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
 import internal.org.springframework.content.rest.io.AssociatedResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import org.atteo.evo.inflector.English;
+
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
@@ -18,11 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
-
-import java.io.InputStream;
-import java.io.Serializable;
-import java.net.URI;
-import java.util.List;
 
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
@@ -142,6 +143,44 @@ public final class ContentStoreUtils {
 		return iface.getSimpleName().replaceAll("Store", "");
 	}
 
+	public static String propertyName(String fieldName) {
+		String name = stripId(fieldName);
+		name = stripLength(name);
+		return stripMimeType(name);
+	}
+
+	private static String stripId(String fieldName) {
+		String name = fieldName.replaceAll("_Id", "");
+		name = name.replaceAll("Id", "");
+		name = name.replaceAll("_id", "");
+		return name.replaceAll("id", "");
+	}
+
+	private static String stripLength(String fieldName) {
+		String name = fieldName.replaceAll("_Length", "");
+		name = name.replaceAll("Length", "");
+		name = name.replaceAll("_length", "");
+		name = name.replaceAll("length", "");
+		name = fieldName.replaceAll("_len", "");
+		name = name.replaceAll("Len", "");
+		name = name.replaceAll("_len", "");
+		return name.replaceAll("len", "");
+	}
+
+	private static String stripMimeType(String fieldName) {
+		String name = fieldName.replaceAll("_MimeType", "");
+		name = name.replaceAll("_Mime_Type", "");
+		name = name.replaceAll("MimeType", "");
+		name = name.replaceAll("_mimetype", "");
+		name = name.replaceAll("_mime_type", "");
+		name = name.replaceAll("mimetype", "");
+		name = fieldName.replaceAll("_ContentType", "");
+		name = name.replaceAll("_Content_Type", "");
+		name = name.replaceAll("ContentType", "");
+		name = name.replaceAll("_contenttype", "");
+		name = name.replaceAll("_content_type", "");
+		return name.replaceAll("contenttype", "");
+	}
 
 	public static String storeLookupPath(String lookupPath, URI baseUri) {
 
