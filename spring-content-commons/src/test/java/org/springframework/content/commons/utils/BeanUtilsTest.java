@@ -1,27 +1,33 @@
 package org.springframework.content.commons.utils;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import java.lang.reflect.Field;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.hamcrest.CoreMatchers;
+import org.junit.runner.RunWith;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.lang.reflect.Field;
-
-import org.hamcrest.CoreMatchers;
-import org.junit.runner.RunWith;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class BeanUtilsTest {
 
 	private TestEntity testEntity;
+
 	{
 		Describe("BeanUtils", () -> {
 			Context("#setFieldWithAnnotation", () -> {
@@ -30,8 +36,7 @@ public class BeanUtilsTest {
 						testEntity = new TestEntity();
 					});
 					It("should set field directly", () -> {
-						BeanUtils.setFieldWithAnnotation(testEntity, ContentId.class,
-								"a value");
+						BeanUtils.setFieldWithAnnotation(testEntity, ContentId.class,"a value");
 						assertThat(testEntity.fieldOnly, is("a value"));
 					});
 					It("should set field via its setter", () -> {
@@ -75,7 +80,7 @@ public class BeanUtilsTest {
 				});
 			});
 
-			Context("setFieldWithAnnotationConditionally", () -> {
+			Context("#setFieldWithAnnotationConditionally", () -> {
 				Context("given a simple, non-inheriting class", () -> {
 					BeforeEach(() -> {
 						testEntity = new TestEntity();
@@ -160,7 +165,7 @@ public class BeanUtilsTest {
 				});
 			});
 
-			Context("getFieldWithAnnotation", () -> {
+			Context("#getFieldWithAnnotation", () -> {
 				Context("given a simple, non-inheriting class", () -> {
 					BeforeEach(() -> {
 						testEntity = new TestEntity();
@@ -213,7 +218,7 @@ public class BeanUtilsTest {
 				});
 			});
 
-			Context("hasFieldWithAnnotation", () -> {
+			Context("#hasFieldWithAnnotation", () -> {
 				Context("given a simple, non-inheriting class", () -> {
 					BeforeEach(() -> {
 						testEntity = new TestEntity();
@@ -260,7 +265,7 @@ public class BeanUtilsTest {
 				});
 			});
 
-			Context("getFieldWithAnnotationType", () -> {
+			Context("#getFieldWithAnnotationType", () -> {
 				Context("given a simple, non-inheriting class", () -> {
 					BeforeEach(() -> {
 						testEntity = new TestEntity();
@@ -317,7 +322,7 @@ public class BeanUtilsTest {
 				});
 			});
 
-			Context("findFieldWithAnnotation", () -> {
+			Context("#findFieldWithAnnotation", () -> {
 				Context("given a simple, non-inheriting class", () -> {
 					BeforeEach(() -> {
 						testEntity = new TestEntity();
@@ -359,6 +364,24 @@ public class BeanUtilsTest {
 							fail("should not fail");
 						}
 					});
+				});
+			});
+
+			Context("#findFieldsWithAnnotation", () -> {
+
+				It("should find fields", () -> {
+					assertThat(BeanUtils.findFieldsWithAnnotation(TestEntity2.class, MimeType.class, new BeanWrapperImpl(new TestEntity2())).length, is(1));
+				});
+			});
+
+			Context("#getFieldsWithAnnotation", () -> {
+
+				It("should find fields", () -> {
+					TestEntity2 t = new TestEntity2();
+					t.setContentId("100");
+					t.setOtherContentId("200");
+
+					assertThat(BeanUtils.getFieldsWithAnnotation(t, ContentId.class), is(new Object[]{"100", "200"}));
 				});
 			});
 		});
@@ -382,7 +405,55 @@ public class BeanUtilsTest {
 		}
 	}
 
-	public static class InheritingTestEntity extends TestEntity {
+	public static class InheritingTestEntity extends TestEntity {}
+
+	public static class TestEntity2 {
+		@ContentId public String contentId;
+		@ContentLength private String contentLen;
+		@MimeType private String mimeType;
+
+		@ContentId public String otherContentId;
+		@ContentLength private String otherContentLen;
+
+		public String getContentId() {
+			return contentId;
+		}
+
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
+
+		public String getContentLen() {
+			return contentLen;
+		}
+
+		public void setContentLen(String contentLen) {
+			this.contentLen = contentLen;
+		}
+
+		public String getMimeType() {
+			return mimeType;
+		}
+
+		public void setMimeType(String mimeType) {
+			this.mimeType = mimeType;
+		}
+
+		public String getOtherContentId() {
+			return otherContentId;
+		}
+
+		public void setOtherContentId(String otherContentId) {
+			this.otherContentId = otherContentId;
+		}
+
+		public String getOtherContentLen() {
+			return otherContentLen;
+		}
+
+		public void setOtherContentLen(String otherContentLen) {
+			this.otherContentLen = otherContentLen;
+		}
 	}
 
 	public static class MatchingCondition implements Condition {
