@@ -63,12 +63,19 @@ public class ContentLinksResourceProcessor
 		if (object == null)
 			return resource;
 
-		// entity
-		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
-		Object contentId = BeanUtils.getFieldWithAnnotation(object, ContentId.class);
 		Object entityId = DomainObjectUtils.getId(object);
-		if (store != null && contentId != null) {
-			resource.add(shortcutLink(config.getBaseUri(), store, entityId));
+
+		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
+
+		Field[] fields = BeanUtils.findFieldsWithAnnotation(object.getClass(), ContentId.class, new BeanWrapperImpl(object));
+		if (fields.length == 1) {
+			if (store != null) {
+				resource.add(shortcutLink(config.getBaseUri(), store, entityId));
+			}
+		} else if (fields.length > 1) {
+			for (Field field : fields) {
+				resource.add(fullyQualifiedLink(config.getBaseUri(), store, entityId, field.getName()));
+			}
 		}
 
 		List<Field> processed = new ArrayList<>();
@@ -198,6 +205,20 @@ public class ContentLinksResourceProcessor
 		return builder.slash(ContentStoreUtils.storePath(store))
 				.slash(id)
 				.withRel(StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store)));
+	}
+
+	private Link fullyQualifiedLink(URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
+		LinkBuilder builder = BasicLinkBuilder.linkToCurrentMapping();
+
+		if (baseUri != null) {
+			builder = builder.slash(baseUri);
+		}
+
+		String property = StringUtils.uncapitalize(ContentStoreUtils.propertyName(fieldName));
+		return builder.slash(ContentStoreUtils.storePath(store))
+				.slash(id)
+				.slash(property)
+				.withRel(property);
 	}
 
 	private Link propertyLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {

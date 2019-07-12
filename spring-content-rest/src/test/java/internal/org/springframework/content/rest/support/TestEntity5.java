@@ -23,13 +23,19 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class TestEntity4 {
+public class TestEntity5 {
 	public @Id @GeneratedValue Long id;
 
 	public String name;
-	public @ContentId UUID contentId;
-	public @ContentLength Long len;
-	public @MimeType String mimeType;
+
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+	private @MimeType String contentMimeType;
+
+	private @ContentId UUID renditionId;
+	private @ContentLength Long renditionLen;
+	private @MimeType String renditionMimeType;
+
 	private @Version Long version;
 	private @CreatedDate Date createdDate;
 	private @LastModifiedDate Date modifiedDate;
