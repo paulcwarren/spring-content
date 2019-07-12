@@ -95,7 +95,9 @@ public final class BeanUtils {
 
 		for (Field field : getAllFields(domainObjClass)) {
 			if (field.getAnnotation(annotationClass) != null) {
-				fields.add(field);
+				if (fields.contains(field) == false) {
+					fields.add(field);
+				}
 			}
 		}
 		return fields.toArray(new Field[] {});
@@ -144,8 +146,7 @@ public final class BeanUtils {
 		return type;
 	}
 
-	public static Object getFieldWithAnnotation(Object domainObj,
-			Class<? extends Annotation> annotationClass)
+	public static Object getFieldWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass)
 			throws SecurityException, BeansException {
 		Object value = null;
 
@@ -168,6 +169,39 @@ public final class BeanUtils {
 		}
 
 		return value;
+	}
+
+	public static Object[] getFieldsWithAnnotation(Object domainObj, Class<? extends Annotation> annotationClass) {
+
+		List<Field> fields = new ArrayList<>();
+		List<Object> values = new ArrayList<>();
+
+		PropertyDescriptor[] descriptors = new BeanWrapperImpl(domainObj).getPropertyDescriptors();
+		for (PropertyDescriptor descriptor : descriptors) {
+			Field candidate = getField(domainObj.getClass(), descriptor.getName());
+			if (candidate != null) {
+				if (candidate.getAnnotation(annotationClass) != null) {
+					try {
+						values.add(candidate.get(domainObj));
+						fields.add(candidate);
+					}
+					catch (IllegalAccessException e) {}
+				}
+			}
+		}
+
+		for (Field field : getAllFields(domainObj.getClass())) {
+			if (field.getAnnotation(annotationClass) != null) {
+				if (fields.contains(field) == false) {
+					try {
+						values.add(field.get(domainObj));
+						fields.add(field);
+					}
+					catch (IllegalAccessException e) {}
+				}
+			}
+		}
+		return values.toArray();
 	}
 
 	/**
