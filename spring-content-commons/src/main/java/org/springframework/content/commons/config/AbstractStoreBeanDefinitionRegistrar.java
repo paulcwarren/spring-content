@@ -40,10 +40,13 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -64,6 +67,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	private Environment environment;
 	private ResourceLoader resourceLoader;
 	private BeanFactory beanFactory;
+	private boolean multiStoreMode;
 
 	public void setEnvironment(Environment env) {
 		this.environment = env;
@@ -130,7 +134,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages);
+//		multiStoreMode = multipleStoreImplementationsDetected();
+//
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingType());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
@@ -158,10 +164,26 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			StoreFragmentDetector detector = new StoreFragmentDetector(environment, resourceLoader,"Impl", basePackages, metadataReaderFactory);
 			try {
 				final Class<?> storeClass = loadStoreClass((ConfigurableListableBeanFactory)registry, definition);
-				final Class<?> domainClass = AbstractStoreFactoryBean.getDomainClass(storeClass);
-				final Class<?> idClass = AbstractStoreFactoryBean.getContentIdClass(storeClass);
 
-				Predicate isCandidate = new IsCandidatePredicate();
+				List<TypeInformation<?>> types = null;
+				try {
+					types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments();
+				} catch (IllegalArgumentException iae) {
+					try {
+						types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(AssociativeStore.class).getTypeArguments();
+					} catch (IllegalArgumentException iae2) {
+						try {
+							types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(Store.class).getTypeArguments();
+						} catch (IllegalArgumentException iae3) {
+							return;
+						}
+					}
+				}
+
+				final Class<?> domainClass = types.size() ==2 ? types.get(0).getType() : null;
+				final Class<?> idClass = types.size() ==2 ? types.get(1).getType() : types.get(0).getType();
+
+				Predicate isCandidate = new IsCandidatePredicate(this.getIdentifyingType());
 
 				List<String> fragmentBeanNames = Arrays.stream(interfaces)
 						.filter(isCandidate::test)
@@ -262,7 +284,25 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		registry.registerBeanDefinition(fragmentBeanName, ParsingUtils.getSourceBeanDefinition(fragmentBuilder, source));
 	}
 
+	protected boolean multipleStoreImplementationsDetected() {
+
+		boolean multipleModulesFound = SpringFactoriesLoader
+				.loadFactoryNames(AbstractStoreFactoryBean.class, resourceLoader.getClassLoader()).size() > 1;
+
+		if (multipleModulesFound) {
+			LOGGER.info("Multiple store modules detected.  Entering strict resolution mode");
+		}
+
+		return multipleModulesFound;
+	}
+
 	private class IsCandidatePredicate implements Predicate<String> {
+
+		private Class<?> additionalType;
+
+		public IsCandidatePredicate(Class<?> additionalType) {
+			this.additionalType = additionalType;
+		}
 
 		@Override
 		public boolean test(String s) {
@@ -275,6 +315,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 				return false;
 			}
 
+			if (additionalType.getName().equals(s)) {
+				return false;
+			}
+
 			return true;
 		}
 	}
@@ -284,4 +328,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	 * @return configuration annotation
 	 */
 	protected abstract Class<? extends Annotation> getAnnotation();
+
+	/**
+	 * Return the identifying type for this repository
+	 */
+	protected abstract Class<?> getIdentifyingType();
 }

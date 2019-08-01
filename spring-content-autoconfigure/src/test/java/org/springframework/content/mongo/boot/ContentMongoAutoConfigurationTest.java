@@ -3,11 +3,12 @@ package org.springframework.content.mongo.boot;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
+
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.mongo.store.MongoContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;
@@ -49,7 +50,6 @@ public class ContentMongoAutoConfigurationTest {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository
-			extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository extends MongoContentStore<TestEntity, String> {
 	}
 }

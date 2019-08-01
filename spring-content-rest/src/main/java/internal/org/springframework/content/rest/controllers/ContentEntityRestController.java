@@ -1,5 +1,15 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Version;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
@@ -7,6 +17,7 @@ import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
@@ -33,15 +44,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import javax.persistence.Version;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import static java.lang.String.format;
 

@@ -17,8 +17,7 @@ public class StoreUtils {
 	private static final String BASE_PACKAGE_CLASSES = "basePackageClasses";
 	private static final String STORE_FACTORY_BEAN_CLASS = "storeFactoryBeanClass";
 
-	public static String[] getBasePackages(AnnotationAttributes attributes,
-			String[] defaultPackages) {
+	public static String[] getBasePackages(AnnotationAttributes attributes, String[] defaultPackages) {
 
 		String[] value = attributes.getStringArray("value");
 		String[] basePackages = attributes.getStringArray(BASE_PACKAGES);
@@ -50,7 +49,7 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages) {
+	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?> identifyingType) {
 
 		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
 		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
@@ -66,10 +65,34 @@ public class StoreUtils {
 
 		for (String basePackage : basePackages) {
 			Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
-			for (BeanDefinition candidate : candidates)
-				result.add((GenericBeanDefinition) candidate);
+			for (BeanDefinition candidate : candidates) {
+
+				boolean qualifiedForImplementation = !multiStoreMode || isStrictRepositoryCandidate(identifyingType, candidate.getBeanClassName(), loader);
+				if (qualifiedForImplementation) {
+					result.add((GenericBeanDefinition)candidate);
+				}
+			}
 		}
 
 		return result;
+	}
+
+	protected static boolean isStrictRepositoryCandidate(Class<?> identifyingType, String storeInterface, ResourceLoader loader) {
+
+		Class<?> storeClass = null;
+		try {
+			storeClass = loader.getClassLoader().loadClass(storeInterface);
+		}
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+
+			if (identifyingType.isAssignableFrom(storeClass)) {
+				return true;
+			}
+
+
+
+		return false;
 	}
 }
