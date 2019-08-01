@@ -1,0 +1,1 @@
+org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean=internal.org.springframework.content.mongo.config.MongoStoreFactoryBean

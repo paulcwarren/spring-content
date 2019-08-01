@@ -4,11 +4,12 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import org.junit.runner.RunWith;
+
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.fs.store.FilesystemContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,8 +41,7 @@ public class ContentFilesystemAutoConfigurationTest {
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(TestEntityContentRepository.class),
-							is(not(nullValue())));
+					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 
 					context.close();
 				});
@@ -131,6 +131,6 @@ public class ContentFilesystemAutoConfigurationTest {
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {
 	}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository extends FilesystemContentStore<TestEntity, String> {
 	}
 }

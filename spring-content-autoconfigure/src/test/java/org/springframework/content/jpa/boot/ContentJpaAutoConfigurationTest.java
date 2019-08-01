@@ -7,8 +7,8 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaStores;
+import org.springframework.content.jpa.store.JpaContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -109,5 +109,5 @@ public class ContentJpaAutoConfigurationTest {
 
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {}
 
-	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {}
+	public interface TestEntityContentRepository extends JpaContentStore<TestEntity, String> {}
 }

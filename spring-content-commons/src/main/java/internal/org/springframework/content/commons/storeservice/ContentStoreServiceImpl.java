@@ -14,6 +14,7 @@ import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.storeservice.StoreFilter;
+import org.springframework.data.util.ClassTypeInformation;
 
 public class ContentStoreServiceImpl implements ContentStoreService {
 
@@ -29,7 +30,7 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
 				ContentStoreInfo info = new ContentStoreInfoImpl(
 						factory.getStoreInterface(),
-						getDomainObjectClass(factory.getStoreInterface()),
+						ClassTypeInformation.from(factory.getStoreInterface()).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments().get(0).getType(),
 						(ContentStore<Object, Serializable>) factory.getStore());
 				contentStoreInfos.add(info);
 			}

@@ -2,11 +2,10 @@ package internal.org.springframework.content.fs.config;
 
 import java.lang.annotation.Annotation;
 
-import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.fs.config.EnableFilesystemStores;
+import org.springframework.content.fs.store.FilesystemContentStore;
 import org.springframework.core.type.AnnotationMetadata;
 
 public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistrar {
@@ -24,6 +23,11 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 	@Override
 	protected Class<? extends Annotation> getAnnotation() {
 		return EnableFilesystemStores.class;
+	}
+
+	@Override
+	protected Class<?> getIdentifyingType() {
+		return FilesystemContentStore.class;
 	}
 
 }

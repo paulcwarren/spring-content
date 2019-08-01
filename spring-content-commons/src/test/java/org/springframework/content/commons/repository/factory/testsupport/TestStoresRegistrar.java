@@ -11,4 +11,8 @@ public class TestStoresRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 		return EnableTestStores.class;
 	}
 
+	@Override
+	protected Class<?> getIdentifyingType() {
+		return TestContentStore.class;
+	}
 }
