@@ -1,5 +1,8 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.StringReader;
+import java.util.Optional;
+
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
@@ -7,12 +10,10 @@ import internal.org.springframework.content.rest.support.ContentEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import lombok.Getter;
 import lombok.Setter;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.io.StringReader;
-import java.util.Optional;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;

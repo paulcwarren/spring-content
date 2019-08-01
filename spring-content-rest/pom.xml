@@ -126,12 +126,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-mongo</artifactId>
-			<version>0.10.0-SNAPSHOT</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
 			<version>0.10.0-SNAPSHOT</version>
 			<scope>test</scope>
