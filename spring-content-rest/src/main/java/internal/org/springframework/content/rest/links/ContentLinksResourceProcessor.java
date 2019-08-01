@@ -71,7 +71,11 @@ public class ContentLinksResourceProcessor
 		Field[] fields = BeanUtils.findFieldsWithAnnotation(object.getClass(), ContentId.class, new BeanWrapperImpl(object));
 		if (fields.length == 1) {
 			if (store != null) {
-				resource.add(shortcutLink(config.getBaseUri(), store, entityId));
+
+				// for compatibility with v0.x.0 versions
+				originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> resource.add(l));
+
+				resource.add(shortcutLink(config.getBaseUri(), store, entityId, StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store))));
 			}
 		} else if (fields.length > 1) {
 			for (Field field : fields) {
@@ -196,7 +200,16 @@ public class ContentLinksResourceProcessor
 		}
 	}
 
-	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id) {
+	private Optional<Link> originalLink(URI baseUri, ContentStoreInfo store, Object id) {
+
+		if (id == null) {
+			return Optional.empty();
+		}
+
+		return Optional.of(shortcutLink(baseUri, store, id, ContentStoreUtils.storePath(store)));
+	}
+
+	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id, String linkRel) {
 		LinkBuilder builder = BasicLinkBuilder.linkToCurrentMapping();
 
 		if (baseUri != null) {
@@ -205,7 +218,7 @@ public class ContentLinksResourceProcessor
 
 		return builder.slash(ContentStoreUtils.storePath(store))
 				.slash(id)
-				.withRel(StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store)));
+				.withRel(linkRel);
 	}
 
 	private Link fullyQualifiedLink(URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
@@ -232,5 +245,15 @@ public class ContentLinksResourceProcessor
 		}
 
 		return builder.withRel(property);
+	}
+
+	protected Object invokeField(Field field, Object object) {
+
+		try {
+			return field.get(object);
+		}
+		catch (IllegalAccessException e) {
+			return null;
+		}
 	}
 }
