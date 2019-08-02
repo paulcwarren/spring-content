@@ -14,7 +14,7 @@ public class MongoContentStoresRegistrar extends AbstractStoreBeanDefinitionRegi
 	}
 
 	@Override
-	protected Class<?> getIdentifyingType() {
-		return MongoContentStore.class;
+	protected Class<?>[] getIdentifyingTypes() {
+		return new Class[]{MongoContentStore.class};
 	}
 }
