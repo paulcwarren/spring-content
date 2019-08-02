@@ -49,7 +49,7 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?> identifyingType) {
+	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType) {
 
 		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
 		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
@@ -77,7 +77,7 @@ public class StoreUtils {
 		return result;
 	}
 
-	protected static boolean isStrictRepositoryCandidate(Class<?> identifyingType, String storeInterface, ResourceLoader loader) {
+	protected static boolean isStrictRepositoryCandidate(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
 
 		Class<?> storeClass = null;
 		try {
@@ -87,11 +87,11 @@ public class StoreUtils {
 			e.printStackTrace();
 		}
 
+		for (Class<?> identifyingType : identifyingTypes) {
 			if (identifyingType.isAssignableFrom(storeClass)) {
 				return true;
 			}
-
-
+		}
 
 		return false;
 	}

@@ -134,9 +134,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 
-//		multiStoreMode = multipleStoreImplementationsDetected();
-//
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingType());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
@@ -183,7 +181,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 				final Class<?> domainClass = types.size() ==2 ? types.get(0).getType() : null;
 				final Class<?> idClass = types.size() ==2 ? types.get(1).getType() : types.get(0).getType();
 
-				Predicate isCandidate = new IsCandidatePredicate(this.getIdentifyingType());
+				Predicate isCandidate = new IsCandidatePredicate(this.getIdentifyingTypes());
 
 				List<String> fragmentBeanNames = Arrays.stream(interfaces)
 						.filter(isCandidate::test)
@@ -298,10 +296,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	private class IsCandidatePredicate implements Predicate<String> {
 
-		private Class<?> additionalType;
+		private Class<?>[] additionalTypes;
 
-		public IsCandidatePredicate(Class<?> additionalType) {
-			this.additionalType = additionalType;
+		public IsCandidatePredicate(Class<?>[] additionalTypes) {
+			this.additionalTypes = additionalTypes;
 		}
 
 		@Override
@@ -315,8 +313,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 				return false;
 			}
 
-			if (additionalType.getName().equals(s)) {
-				return false;
+			for (Class<?> additionalType : additionalTypes) {
+				if (additionalType.getName().equals(s)) {
+					return false;
+				}
 			}
 
 			return true;
@@ -331,6 +331,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	/**
 	 * Return the identifying type for this repository
+	 * @return
 	 */
-	protected abstract Class<?> getIdentifyingType();
+	protected abstract Class<?>[] getIdentifyingTypes();
 }

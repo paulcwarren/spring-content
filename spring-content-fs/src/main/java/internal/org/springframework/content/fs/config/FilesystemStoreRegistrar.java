@@ -26,8 +26,7 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 	}
 
 	@Override
-	protected Class<?> getIdentifyingType() {
-		return FilesystemContentStore.class;
+	protected Class<?>[] getIdentifyingTypes() {
+		return new Class[]{FilesystemContentStore.class};
 	}
-
 }
