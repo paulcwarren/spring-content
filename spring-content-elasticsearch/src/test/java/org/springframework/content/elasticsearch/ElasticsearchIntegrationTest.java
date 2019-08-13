@@ -32,6 +32,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -98,14 +99,28 @@ public class ElasticsearchIntegrationTest {
 				Context("when the content is searched", () -> {
 
 					It("should become searchable", () -> {
-						assertThat(() -> store.search("one"), eventuallyEval(hasItem(doc1.getContentId()), Duration.ofSeconds(10)));
+						assertThat(() -> store.search("one"), eventuallyEval(
+								allOf(
+										hasItem(doc1.getContentId()),
+										not(hasItem(doc2.getContentId()))
+								),
+								Duration.ofSeconds(10)));
 
-						assertThat(() -> store.search("two"), eventuallyEval(hasItem(doc2.getContentId()), Duration.ofSeconds(10)));
+						assertThat(() -> store.search("two"), eventuallyEval(
+								allOf(
+										not(hasItem(doc1.getContentId())),
+										hasItem(doc2.getContentId())
+								),
+								Duration.ofSeconds(10)));
 
 						assertThat(() -> store.search("one two"), eventuallyEval(hasItems(doc1.getContentId(), doc2.getContentId()), Duration.ofSeconds(10)));
 
-						assertThat(() -> store.search("+document +one -two"), eventuallyEval(hasItem(doc1.getContentId()), Duration.ofSeconds(10)));
-						assertThat(() -> store.search("+document +one -two"), eventuallyEval(hasItem(not(doc2.getContentId())), Duration.ofSeconds(10)));
+						assertThat(() -> store.search("+document +one -two"), eventuallyEval(
+								allOf(
+										hasItem(doc1.getContentId()),
+										hasItem(not(doc2.getContentId()))
+								),
+								Duration.ofSeconds(10)));
 					});
 				});
 

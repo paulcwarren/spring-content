@@ -47,7 +47,6 @@ public class SearchableImpl implements Searchable<Serializable> {
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.simpleQueryStringQuery(queryStr));
-
 		searchRequest.source(sourceBuilder);
 
 		SearchResponse res = null;
@@ -68,6 +67,7 @@ public class SearchableImpl implements Searchable<Serializable> {
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.queryStringQuery(query));
+		searchRequest.source(sourceBuilder);
 
 		SearchResponse res = null;
 		try {
