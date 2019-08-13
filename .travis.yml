@@ -11,7 +11,8 @@ before_install:
 install:
   - mvn install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 script:
- - mvn test jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B
+# - mvn test jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B
+ - mvn test -Dgpg.skip -Dmaven.javadoc.skip=true -B
 deploy:
   - provider: script
     script: scripts/deploy.sh
