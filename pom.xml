@@ -140,36 +140,36 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			</plugin>
 
 			<!-- unit test/coverage -->
-			<plugin>
-				<groupId>org.eluder.coveralls</groupId>
-				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>3.1.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.7.8</version>
-				<executions>
-					<!-- Prepare execution with Surefire -->
-					<execution>
-						<id>pre-unit-test</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-						<configuration>
-							<propertyName>surefireArgLine</propertyName>
-						</configuration>
-					</execution>
-					<!-- Generate report after tests are run -->
-					<execution>
-						<id>post-unit-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.eluder.coveralls</groupId>-->
+<!--				<artifactId>coveralls-maven-plugin</artifactId>-->
+<!--				<version>3.1.0</version>-->
+<!--			</plugin>-->
+<!--			<plugin>-->
+<!--				<groupId>org.jacoco</groupId>-->
+<!--				<artifactId>jacoco-maven-plugin</artifactId>-->
+<!--				<version>0.7.8</version>-->
+<!--				<executions>-->
+<!--					&lt;!&ndash; Prepare execution with Surefire &ndash;&gt;-->
+<!--					<execution>-->
+<!--						<id>pre-unit-test</id>-->
+<!--						<goals>-->
+<!--							<goal>prepare-agent</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<propertyName>surefireArgLine</propertyName>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					&lt;!&ndash; Generate report after tests are run &ndash;&gt;-->
+<!--					<execution>-->
+<!--						<id>post-unit-test</id>-->
+<!--						<phase>test</phase>-->
+<!--						<goals>-->
+<!--							<goal>report</goal>-->
+<!--						</goals>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
