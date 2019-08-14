@@ -1,8 +1,27 @@
 package org.springframework.content.jpa.io;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.concurrent.CountDownLatch;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,13 +33,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import javax.sql.DataSource;
-import java.io.*;
-import java.net.URI;
-import java.net.URL;
-import java.sql.*;
-import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
@@ -269,8 +281,17 @@ public abstract class AbstractBlobResource implements BlobResource {
 		try {
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(sql);
-			if (!rs.next())
-				return null;
+			if (!rs.next()) {
+				try {
+					rs.close();
+					stmt.close();
+					DataSourceUtils.releaseConnection(conn, ds);
+				} catch (SQLException sqle) {
+					logger.debug(format("failed to release database connection while fetching content %s", id), sqle);
+				} finally {
+					return null;
+				}
+			}
 			Blob b = rs.getBlob(2);
 			is = b.getBinaryStream();
 		}
