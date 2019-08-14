@@ -1,5 +1,7 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.ByteArrayInputStream;
+
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
@@ -9,11 +11,15 @@ import internal.org.springframework.content.rest.support.TestEntity3Repository;
 import internal.org.springframework.content.rest.support.TestEntity4;
 import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
 import internal.org.springframework.content.rest.support.TestEntity4Repository;
+import internal.org.springframework.content.rest.support.TestEntity6;
+import internal.org.springframework.content.rest.support.TestEntity6Repository;
+import internal.org.springframework.content.rest.support.TestEntity6Store;
 import internal.org.springframework.content.rest.support.TestEntityContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 import internal.org.springframework.content.rest.support.TestStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -26,12 +32,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import java.io.ByteArrayInputStream;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -63,6 +70,12 @@ public class ContentEntityRestControllerIntegrationTest {
 	@Autowired
 	TestEntity4ContentRepository store4;
 
+	// shared @Id/@ContentId
+	@Autowired
+	TestEntity6Repository repo6;
+	@Autowired
+	TestEntity6Store store6;
+
 	@Autowired
 	TestStore store;
 
@@ -74,6 +87,7 @@ public class ContentEntityRestControllerIntegrationTest {
 	private TestEntity testEntity;
 	private TestEntity3 testEntity3;
 	private TestEntity4 testEntity4;
+	private TestEntity6 testEntity6;
 
 	private Version version;
 	private LastModifiedDate lastModifiedDate;
@@ -160,6 +174,20 @@ public class ContentEntityRestControllerIntegrationTest {
 						lastModifiedDate.setContent(content);
 					});
 					lastModifiedDate = LastModifiedDate.tests();
+				});
+
+				Context("given an entity with a shared Id and ContentId field", () -> {
+
+					BeforeEach(() -> {
+						testEntity6 = new TestEntity6();
+						testEntity6 = repo6.save(testEntity6);
+					});
+
+					It("should return 404 when no content is set", () -> {
+						mvc.perform(get("/testEntity6s/" + testEntity6.getId())
+									.accept("text/plain"))
+							.andExpect(status().isNotFound());
+					});
 				});
 			});
 		});

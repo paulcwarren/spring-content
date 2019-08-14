@@ -1,8 +1,11 @@
 package internal.org.springframework.content.rest.utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
@@ -34,7 +37,7 @@ public final class ContentStoreUtils {
 
 	/**
 	 * Given a store and a collection of mime types this method will iterate the
-	 * mime-types to find a data source of mathcing content.  This might be the content itself
+	 * mime-types to find a data source of matching content.  This might be the content itself
 	 * or, if the store implements Renderable, a rendition.
 	 * 
 	 * @param store store the store to fetch the content from
@@ -46,8 +49,9 @@ public final class ContentStoreUtils {
 	@SuppressWarnings("unchecked")
 	public static ResourcePlan resolveResource(ContentStore<Object, Serializable> store, Object entity, Object property, List<MediaType> mimeTypes) {
 		Object entityMimeType = BeanUtils.getFieldWithAnnotation(property != null ? property : entity, org.springframework.content.commons.annotations.MimeType.class);
-		if (entityMimeType == null)
-			return null;
+		if (entityMimeType == null) {
+			return new ResourcePlan(new NonExistentResource(), null);
+		}
 
 		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
 
@@ -59,7 +63,7 @@ public final class ContentStoreUtils {
 
 		Resource r = null;
 		MimeType mimeType = null;
-		for (int i = 0; i < arrMimeTypes.length /*&& content == null*/; i++) {
+		for (int i = 0; i < arrMimeTypes.length; i++) {
 			mimeType = arrMimeTypes[i];
 			if (mimeType.includes(targetMimeType)) {
 				r = ((Store)store).getResource(contentId);
@@ -221,6 +225,59 @@ public final class ContentStoreUtils {
 
 		public MimeType getMimeType() {
 			return mimeType;
+		}
+	}
+
+	public static class NonExistentResource implements Resource {
+
+		@Override
+		public boolean exists() {
+			return false;
+		}
+
+		@Override
+		public URL getURL() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public URI getURI() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public File getFile() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public long contentLength() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public long lastModified() throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Resource createRelative(String s) throws IOException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getFilename() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getDescription() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			throw new UnsupportedOperationException();
 		}
 	}
 }
