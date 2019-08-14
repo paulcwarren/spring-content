@@ -98,6 +98,9 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		ContentStore<Object, Serializable> storeImpl = info.getImpementation();
 		ContentStoreUtils.ResourcePlan r = ContentStoreUtils.resolveResource(storeImpl, domainObj, null, mimeTypes);
+		if (r.getResource().exists() == false) {
+			throw new ResourceNotFoundException();
+		}
 
 		Object version = BeanUtils.getFieldWithAnnotation(domainObj, Version.class);
 		long lastModified = -1;
