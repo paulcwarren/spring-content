@@ -110,7 +110,9 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 			InputStream content = null;
 			try {
 				content = contentStore.getContent(entity);
-				return this.convert(fromMimeType, content, mimeType);
+				if (content != null) {
+					return this.convert(fromMimeType, content, mimeType);
+				}
 			}
 			catch (Exception e) {
 				LOGGER.error(String.format("Failed to get rendition from %s to %s", fromMimeType, mimeType), e);
