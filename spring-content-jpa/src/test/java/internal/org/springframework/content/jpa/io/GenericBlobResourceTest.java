@@ -1,14 +1,5 @@
 package internal.org.springframework.content.jpa.io;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import org.apache.commons.io.IOUtils;
-import org.junit.runner.RunWith;
-import org.springframework.content.jpa.io.AbstractBlobResource;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
-
-import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,11 +9,26 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import javax.sql.DataSource;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.apache.commons.io.IOUtils;
+import org.junit.runner.RunWith;
+
+import org.springframework.content.jpa.io.AbstractBlobResource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -147,8 +153,12 @@ public class GenericBlobResourceTest {
 					BeforeEach(() -> {
 						when(rs.next()).thenReturn(false);
 					});
-					It("should return false", () -> {
+					It("should return null", () -> {
 						assertThat(result, is(nullValue()));
+
+						verify(rs).close();
+						verify(statement).close();
+						verify(conn).close();
 					});
 				});
 			});
