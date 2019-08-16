@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -53,7 +54,7 @@ public class JpaVersionsAutoConfigurationTest {
 
     @Configuration
     @PropertySource("classpath:default.properties")
-    @EnableAutoConfiguration
+    @EnableAutoConfiguration(exclude= MongoAutoConfiguration.class)
     @EnableJpaRepositories( considerNestedRepositories = true,
                             basePackages = {"org.springframework.versions.jpa.boot",
                                             "org.springframework.versions"})
