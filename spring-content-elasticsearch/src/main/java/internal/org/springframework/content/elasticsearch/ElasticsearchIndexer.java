@@ -16,7 +16,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.ingest.GetPipelineRequest;
 import org.elasticsearch.action.ingest.GetPipelineResponse;
 import org.elasticsearch.action.ingest.PutPipelineRequest;
-import org.elasticsearch.action.ingest.WritePipelineResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -115,7 +115,7 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 			PutPipelineRequest put = new PutPipelineRequest(SPRING_CONTENT_ATTACHMENT,
 					new BytesArray(source.getBytes(StandardCharsets.UTF_8)),
 					XContentType.JSON);
-			WritePipelineResponse wpr = client.ingest().putPipeline(put, RequestOptions.DEFAULT);
+			AcknowledgedResponse wpr = client.ingest().putPipeline(put, RequestOptions.DEFAULT);
 			Assert.isTrue(wpr.isAcknowledged(), "Attachment pipeline not acknowledged by server");
 		}
 	}
