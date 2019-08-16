@@ -18,7 +18,7 @@ public class EmbeddedElasticConfig {
 	@Bean
 	public EmbeddedElastic embeddedElastic() throws IOException, InterruptedException {
 		return EmbeddedElastic.builder()
-				.withElasticVersion("6.4.3")
+				.withElasticVersion("6.8.2")
 				.withSetting(CLUSTER_NAME, "testCluster")
 				.withSetting("discovery.zen.ping_timeout", 0)
 				.withPlugin("ingest-attachment")
