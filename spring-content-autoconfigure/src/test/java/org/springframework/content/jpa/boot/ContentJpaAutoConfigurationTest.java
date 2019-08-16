@@ -1,5 +1,6 @@
 package org.springframework.content.jpa.boot;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
@@ -7,6 +8,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.content.jpa.store.JpaContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -31,6 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
+@Ginkgo4jConfiguration(threads=1)
 public class ContentJpaAutoConfigurationTest {
 
 	private AnnotationConfigApplicationContext context;
@@ -84,13 +87,14 @@ public class ContentJpaAutoConfigurationTest {
 
 	@Configuration
 	@PropertySource("classpath:/default.properties")
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude= MongoAutoConfiguration.class)
 	@EntityScan(basePackages="org.springframework.support")
 	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
 	@Configuration
+	@EnableAutoConfiguration(exclude=MongoAutoConfiguration.class)
 	public static class CustomBeanConfig extends TestConfig {
 		@Bean
 		public ContentJpaDatabaseInitializer initializer() {
