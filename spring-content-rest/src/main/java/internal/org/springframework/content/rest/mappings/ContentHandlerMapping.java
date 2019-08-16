@@ -80,6 +80,11 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	}
 
 	@Override
+	protected boolean hasCorsConfigurationSource(Object handler) {
+		return true;
+	}
+
+	@Override
 	protected CorsConfiguration getCorsConfiguration(Object handler, HttpServletRequest request) {
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
 		String storeLookupPath = ContentStoreUtils.storeLookupPath(lookupPath, this.getConfiguration().getBaseUri());
