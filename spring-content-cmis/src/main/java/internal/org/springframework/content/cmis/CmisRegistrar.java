@@ -22,6 +22,7 @@ import org.springframework.content.cmis.EnableCmis;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
+import org.springframework.context.annotation.AnnotationBeanNameGenerator;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -35,7 +36,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.config.SpringDataAnnotationBeanNameGenerator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -130,7 +130,7 @@ public class CmisRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoa
 		}
 
 		// create the cmis repository configuration (the root configuration object)
-		beanDefinitionRegistry.registerBeanDefinition("CmisRepositoryConfiguration", createCmisRepositoryConfigurationDefinition(cmisFolderRepositoryBeanDefinition, cmisDocumentRepositoryBeanDefinition, cmisDocumentStoreBeanDefinition, annotationMetadata));
+		beanDefinitionRegistry.registerBeanDefinition("CmisRepositoryConfiguration", createCmisRepositoryConfigurationDefinition(cmisFolderRepositoryBeanDefinition, cmisDocumentRepositoryBeanDefinition, cmisDocumentStoreBeanDefinition, annotationMetadata, beanDefinitionRegistry));
 	}
 
 	void cmisDocumentScan(String... basePackages) {
@@ -218,16 +218,17 @@ public class CmisRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoa
 			BeanDefinition cmisFolderRepoBeanDef,
 			BeanDefinition cmisDocumentRepoBeanDef,
 			BeanDefinition cmisDocumentStoreBeanDefinition,
-			AnnotationMetadata annotationMetadata) {
+			AnnotationMetadata annotationMetadata,
+			BeanDefinitionRegistry registry) {
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CmisRepositoryConfigurationImpl.class);
 		builder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 		builder.getRawBeanDefinition().setSource(annotationMetadata);
 
-		String beanName = new SpringDataAnnotationBeanNameGenerator().generateBeanName(cmisFolderRepoBeanDef);
+		String beanName = new AnnotationBeanNameGenerator().generateBeanName(cmisFolderRepoBeanDef, registry);
 		builder.addPropertyReference("cmisFolderRepository", beanName);
 
-		beanName = new SpringDataAnnotationBeanNameGenerator().generateBeanName(cmisDocumentRepoBeanDef);
+		beanName = new AnnotationBeanNameGenerator().generateBeanName(cmisDocumentRepoBeanDef, registry);
 		builder.addPropertyReference("cmisDocumentRepository", beanName);
 
 		beanName = StoreUtils.getStoreBeanName(cmisDocumentStoreBeanDefinition);
