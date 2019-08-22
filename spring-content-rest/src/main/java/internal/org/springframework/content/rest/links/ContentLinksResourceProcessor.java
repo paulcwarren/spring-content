@@ -254,8 +254,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
             storePath = format("%s/%s", basePath, storePath);
         }
 
+        builder = WebMvcLinkBuilder.linkTo(controller, method, storePath, id);
+
 		String property = StringUtils.uncapitalize(ContentStoreUtils.propertyName(fieldName));
-        builder = WebMvcLinkBuilder.linkTo(controller, method, storePath, id, property);
+		builder = builder.slash(property);
 
         return builder.withRel(property);
 	}
