@@ -25,6 +25,12 @@ deploy:
     skip_cleanup: true
     on:
       repo: paulcwarren/spring-content
+      branch: 1.0.x
+  - provider: script
+    script: scripts/deploy.sh
+    skip_cleanup: true
+    on:
+      repo: paulcwarren/spring-content
       tags: true
 notifications:
   slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
