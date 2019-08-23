@@ -1,18 +1,18 @@
 branches:
   except:
     - travis
+
 language: java
+
 jdk:
 - openjdk8
+
 env:
-- BUILD_TYPE=snapshot
-before_install:
-- ./scripts/before-install.sh
-install:
-  - mvn install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+- BUILD_TYPE=snapshot/$TRAVIS_BRANCH
+
 script:
-# - mvn test jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B
- - mvn test -Dgpg.skip -Dmaven.javadoc.skip=true -B
+ - mvn install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+
 deploy:
   - provider: script
     script: scripts/deploy.sh
@@ -32,5 +32,3 @@ deploy:
     on:
       repo: paulcwarren/spring-content
       tags: true
-notifications:
-  slack: cloudfoundry:xvgjKLNQTyqAFMnsTywVHik9
