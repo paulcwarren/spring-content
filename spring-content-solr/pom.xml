@@ -5,7 +5,7 @@
     <parent>
         <artifactId>spring-content</artifactId>
         <groupId>com.github.paulcwarren</groupId>
-        <version>1.0.0.M1-SNAPSHOT</version>
+        <version>1.0.0.M2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-commons</artifactId>
-            <version>1.0.0.M1-SNAPSHOT</version>
+            <version>1.0.0.M2-SNAPSHOT</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -71,7 +71,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
-			<version>1.0.0.M1-SNAPSHOT</version>
+			<version>1.0.0.M2-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
     </dependencies>
