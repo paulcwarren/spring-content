@@ -22,4 +22,5 @@ public class TestEntity implements ContentEntity {
 	private @ContentLength Long len;
 	private @MimeType String mimeType;
 	private @OriginalFileName String originalFileName;
+	private String title;
 }

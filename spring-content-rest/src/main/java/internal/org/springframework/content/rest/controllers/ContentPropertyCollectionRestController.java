@@ -33,6 +33,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -59,9 +60,10 @@ public class ContentPropertyCollectionRestController
 	private Repositories repositories;
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
+	private RepositoryInvokerFactory repoInvokerFactory;
 
 	@Autowired
-	public ContentPropertyCollectionRestController(ApplicationContext context, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler) {
+	public ContentPropertyCollectionRestController(ApplicationContext context, ContentStoreService stores, StoreByteRangeHttpRequestHandler handler, RepositoryInvokerFactory repoInvokerFactory) {
 		super();
 		try {
 			this.repositories = context.getBean(Repositories.class);
@@ -71,6 +73,7 @@ public class ContentPropertyCollectionRestController
 		}
 		this.storeService = stores;
 		this.handler = handler;
+		this.repoInvokerFactory = repoInvokerFactory;
 	}
 
 	@StoreType("contentstore")
@@ -81,7 +84,7 @@ public class ContentPropertyCollectionRestController
 			@RequestHeader(value = "Accept", required = false) String mimeType)
 			throws HttpRequestMethodNotSupportedException {
 
-		Object domainObj = findOne(repositories, repository, id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, repository, id);
 
 		PersistentEntity<?, ?> entity = repositories.getPersistentEntity(domainObj.getClass());
 		if (null == entity)
@@ -217,7 +220,7 @@ public class ContentPropertyCollectionRestController
 						@PathVariable String contentProperty)
 			throws HttpRequestMethodNotSupportedException {
 
-		Object domainObj = findOne(repositories, repository, id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, repository, id);
 
 		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
 		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
@@ -276,7 +279,7 @@ public class ContentPropertyCollectionRestController
 										InputStream stream)
 			throws HttpRequestMethodNotSupportedException {
 
-		Object domainObj = findOne(repositories, repository, id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, repository, id);
 
 		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
 		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
