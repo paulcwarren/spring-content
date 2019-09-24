@@ -18,4 +18,7 @@ public interface ContentEntity {
 
 	String getOriginalFileName();
 	void setOriginalFileName(String originalFileName);
+
+	String getTitle();
+	void setTitle(String title);
 }

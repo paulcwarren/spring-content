@@ -3,6 +3,7 @@ package internal.org.springframework.content.rest.controllers;
 import java.io.StringReader;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
@@ -60,32 +61,32 @@ public class Entity {
 		});
 		Context("a PUT to /{store}/{id} with a json body", () -> {
 			It("should set Entities data and return 200", () -> {
+				entity.setTitle("Spring Content");
 				mvc.perform(put(url)
-						.content("{\"name\":\"Spring Content\"}")
+						.content(new ObjectMapper().writeValueAsString(entity))
 						.contentType("application/hal+json"))
 						.andExpect(status().is2xxSuccessful());
 
-				Optional<TestEntity3> fetched = repository.findById(entity.getId());
+				Optional<ContentEntity> fetched = repository.findById(entity.getId());
 				assertThat(fetched.isPresent(), is(true));
-				assertThat(fetched.get().name, is("Spring Content"));
-				assertThat(fetched.get().contentId, is(nullValue()));
-				assertThat(fetched.get().len, is(nullValue()));
-				assertThat(fetched.get().mimeType, is(nullValue()));
+				assertThat(fetched.get().getTitle(), is("Spring Content"));
+				assertThat(fetched.get().getContentId(), is(nullValue()));
+				assertThat(fetched.get().getLen(), is(nullValue()));
 			});
 		});
 		Context("a PATCH to /{store}/{id} with a json body", () -> {
 			It("should patch the entity data and return 200", () -> {
 				mvc.perform(patch(url)
-						.content("{\"name\":\"Spring Content Modified\"}")
+						.content("{\"title\":\"Spring Content Modified\"}")
 						.contentType("application/hal+json"))
 						.andExpect(status().is2xxSuccessful());
 
-				Optional<TestEntity3> fetched = repository.findById(entity.getId());
+				Optional<ContentEntity> fetched = repository.findById(entity.getId());
 				assertThat(fetched.isPresent(), is(true));
-				assertThat(fetched.get().name, is("Spring Content Modified"));
-				assertThat(fetched.get().contentId, is(nullValue()));
-				assertThat(fetched.get().len, is(nullValue()));
-				assertThat(fetched.get().mimeType, is(nullValue()));
+				assertThat(fetched.get().getTitle(), is("Spring Content Modified"));
+				assertThat(fetched.get().getContentId(), is(nullValue()));
+				assertThat(fetched.get().getLen(), is(nullValue()));
+				assertThat(fetched.get().getMimeType(), is(nullValue()));
 			});
 		});
 		Context("a HEAD to /{store}/{id} with a json body", () -> {

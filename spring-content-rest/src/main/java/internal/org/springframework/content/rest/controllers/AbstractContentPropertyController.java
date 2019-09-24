@@ -13,6 +13,8 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvoker;
+import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
@@ -107,10 +109,8 @@ public abstract class AbstractContentPropertyController {
 		return null;
 	}
 
-	public static Object findOne(Repositories repositories, String repository, String id)
+	public static Object findOne(RepositoryInvokerFactory repoInvokerFactory, Repositories repositories, String repository, String id)
 			throws HttpRequestMethodNotSupportedException {
-
-		Optional<Object> domainObj = null;
 
 		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
 
@@ -119,48 +119,42 @@ public abstract class AbstractContentPropertyController {
 		}
 
 		Class<?> domainObjClazz = ri.getDomainType();
-		Class<?> idClazz = ri.getIdType();
 
-		Optional<Method> findOneMethod = ri.getCrudMethods().getFindOneMethod();
-		if (!findOneMethod.isPresent()) {
-			throw new HttpRequestMethodNotSupportedException("fineOne");
-		}
-
-		Object oid = new DefaultConversionService().convert(id, idClazz);
-		domainObj = (Optional<Object>) ReflectionUtils.invokeMethod(findOneMethod.get(),
-				repositories.getRepositoryFor(domainObjClazz).get(), oid);
-
-		if (null == domainObj) {
-			throw new ResourceNotFoundException();
-		}
-
-		return domainObj.orElseThrow(ResourceNotFoundException::new);
+		return findOne(repoInvokerFactory, repositories, domainObjClazz, id);
 	}
 
-	public static Object findOne(Repositories repositories, Class<?> domainObjClass,
-			String id) throws HttpRequestMethodNotSupportedException {
+	public static Object findOne(RepositoryInvokerFactory repoInvokerFactory, Repositories repositories, Class<?> domainObjClass, String id)
+			throws HttpRequestMethodNotSupportedException {
 
 		Optional<Object> domainObj = null;
 
-		RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories,
-				domainObjClass);
+		if (repoInvokerFactory != null) {
 
-		if (ri == null) {
-			throw new ResourceNotFoundException();
+			RepositoryInvoker invoker = repoInvokerFactory.getInvokerFor(domainObjClass);
+			if (invoker != null) {
+				domainObj = invoker.invokeFindById(id);
+			}
+		} else {
+
+			RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, domainObjClass);
+
+			if (ri == null) {
+				throw new ResourceNotFoundException();
+			}
+
+			Class<?> domainObjClazz = ri.getDomainType();
+			Class<?> idClazz = ri.getIdType();
+
+			Optional<Method> findOneMethod = ri.getCrudMethods().getFindOneMethod();
+			if (!findOneMethod.isPresent()) {
+				throw new HttpRequestMethodNotSupportedException("fineOne");
+			}
+
+			Object oid = new DefaultConversionService().convert(id, idClazz);
+			domainObj = (Optional<Object>) ReflectionUtils.invokeMethod(findOneMethod.get(),
+																		repositories.getRepositoryFor(domainObjClazz).get(),
+																		oid);
 		}
-
-		Class<?> domainObjClazz = ri.getDomainType();
-		Class<?> idClazz = ri.getIdType();
-
-		Optional<Method> findOneMethod = ri.getCrudMethods().getFindOneMethod();
-		if (!findOneMethod.isPresent()) {
-			throw new HttpRequestMethodNotSupportedException("fineOne");
-		}
-
-		Object oid = new DefaultConversionService().convert(id, idClazz);
-		domainObj = (Optional<Object>) ReflectionUtils.invokeMethod(findOneMethod.get(),
-				repositories.getRepositoryFor(domainObjClazz).get(), oid);
-
 		return domainObj.orElseThrow(ResourceNotFoundException::new);
 	}
 

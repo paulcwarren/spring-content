@@ -23,14 +23,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.support")
 @EnableTransactionManagement
-// @Import(RepositoryRestMvcConfiguration.class)
 @EnableFilesystemStores(basePackages = "internal.org.springframework.content.rest.support")
 @Profile("store")
 public class StoreConfig extends JpaInfrastructureConfig {
-
-	//////////////////////////////////////////////////////
-	// Required to make tests pass due to DATAREST-1397
-	// (https://jira.spring.io/browse/DATAREST-1397)
 
 	@Bean
 	RepositoryRestConfigurer repositoryRestConfigurer() {
@@ -40,6 +35,8 @@ public class StoreConfig extends JpaInfrastructureConfig {
 			config.getCorsRegistry().addMapping("/**") //
 					.allowedMethods("GET", "PUT", "POST") //
 					.allowedOrigins("http://far.far.away");
+
+			config.withEntityLookup().forRepository(TestEntity7Repository.class, TestEntity7::getName, TestEntity7Repository::findByName);
 		});
 	}
 
@@ -55,9 +52,6 @@ public class StoreConfig extends JpaInfrastructureConfig {
 			}
 		};
 	}
-
-	//
-	//////////////////////////////////////////////////////
 
 	@Bean
 	FileSystemResourceLoader fileSystemResourceLoader() {

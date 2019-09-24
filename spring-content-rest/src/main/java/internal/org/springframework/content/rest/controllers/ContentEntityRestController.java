@@ -30,6 +30,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -57,9 +58,10 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 	private Repositories repositories;
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
+	private RepositoryInvokerFactory repoInvokerFactory;
 
 	@Autowired
-	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler) {
+	public ContentEntityRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler, RepositoryInvokerFactory repoInvokerFactory) {
 		try {
 			this.repositories = context.getBean(Repositories.class);
 		}
@@ -68,6 +70,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 		}
 		this.storeService = storeService;
 		this.handler = handler;
+		this.repoInvokerFactory = repoInvokerFactory;
 	}
 
 	@StoreType("contentstore")
@@ -83,7 +86,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 					String.format("Store for path %s not found", store));
 		}
 
-		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, info.getDomainObjectClass(), id);
 
 		Object contentId = BeanUtils.getFieldWithAnnotation(domainObj, ContentId.class);
 		if (contentId == null) {
@@ -167,7 +170,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 					String.format("Store for path %s not found", store));
 		}
 
-		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, info.getDomainObjectClass(), id);
 
 		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
 		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
@@ -183,7 +186,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		// re-fetch to make sure we have the latest
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
-			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+			domainObj = findOne(repoInvokerFactory, repositories, info.getDomainObjectClass(), id);
 		}
 
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
@@ -206,7 +209,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 					String.format("Store for path %s not found", store));
 		}
 
-		Object domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+		Object domainObj = findOne(repoInvokerFactory, repositories, info.getDomainObjectClass(), id);
 
 		String etag = (BeanUtils.getFieldWithAnnotation(domainObj, Version.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, Version.class).toString() : null);
 		Object lastModifiedDate = (BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) != null ? BeanUtils.getFieldWithAnnotation(domainObj, LastModifiedDate.class) : null);
@@ -231,7 +234,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		// re-fetch to make sure we have the latest
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
-			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
+			domainObj = findOne(repoInvokerFactory, repositories, info.getDomainObjectClass(), id);
 		}
 
 		save(repositories, domainObj);
