@@ -24,7 +24,7 @@ public class S3ContentAutoConfigureRegistrar extends S3StoresRegistrar {
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

@@ -23,7 +23,7 @@ public class FilesystemContentAutoConfigureRegistrar extends FilesystemStoreRegi
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

@@ -26,7 +26,7 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

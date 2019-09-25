@@ -8,6 +8,7 @@ import java.util.Set;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
 
@@ -49,9 +50,9 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType) {
+	public static Set<GenericBeanDefinition> getStoreCandidates(Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType) {
 
-		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false);
+		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
 		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
 		scanner.setResourceLoader(loader);
 		// scanner.setEnvironment(environment);

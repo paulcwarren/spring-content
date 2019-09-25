@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.content.commons.repository.ContentRepository;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AssignableTypeFilter;
@@ -13,8 +14,8 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 public class StoreCandidateComponentProvider
 		extends ClassPathScanningCandidateComponentProvider {
 
-	public StoreCandidateComponentProvider(boolean useDefaultFilters) {
-		super(useDefaultFilters);
+	public StoreCandidateComponentProvider(boolean useDefaultFilters, Environment env) {
+		super(useDefaultFilters, env);
 		this.addIncludeFilter(new InterfaceTypeFilter(ContentRepository.class));
 		this.addIncludeFilter(new InterfaceTypeFilter(Store.class));
 	}
