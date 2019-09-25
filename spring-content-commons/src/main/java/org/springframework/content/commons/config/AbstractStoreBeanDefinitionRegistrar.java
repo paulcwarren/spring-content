@@ -73,6 +73,10 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		this.environment = env;
 	}
 
+	public Environment getEnvironment() {
+		return this.environment;
+	}
+
 	public void setResourceLoader(ResourceLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
@@ -134,7 +138,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(environment, resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
