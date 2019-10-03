@@ -65,7 +65,6 @@ public class ElasticsearchConfig {
     @Bean
     public RestHighLevelClient client() {
         return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
-//        return new RestHighLevelClient(RestClient.builder(new HttpHost("search-test2-tnipwmdwedcr6d2rmale5bjp7u.eu-west-2.es.amazonaws.com")));
     }
 
     @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")

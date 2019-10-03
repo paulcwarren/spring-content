@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,12 +26,14 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.util.Assert;
 
 import static com.github.grantwest.eventually.EventuallyLambdaMatcher.eventuallyEval;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -119,6 +122,25 @@ public class ElasticsearchIntegrationTest {
 								allOf(
 										hasItem(doc1.getContentId()),
 										hasItem(not(doc2.getContentId()))
+								),
+								Duration.ofSeconds(10)));
+					});
+				});
+
+				Context("when the content is searched with findKeyword", () -> {
+
+					It("should become searchable", () -> {
+						assertThat(() -> store.findKeyword("one"), eventuallyEval(
+								allOf(
+										hasItem(doc1.getContentId()),
+										not(hasItem(doc2.getContentId()))
+								),
+								Duration.ofSeconds(10)));
+
+						assertThat(() -> store.findKeyword("two"), eventuallyEval(
+								allOf(
+										not(hasItem(doc1.getContentId())),
+										hasItem(doc2.getContentId())
 								),
 								Duration.ofSeconds(10)));
 					});
