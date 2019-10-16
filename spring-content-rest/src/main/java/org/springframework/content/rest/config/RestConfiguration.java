@@ -4,15 +4,24 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import internal.org.springframework.content.rest.controllers.ContentServiceHandlerMethodArgumentResolver;
+import internal.org.springframework.content.rest.controllers.ResourceETagMethodArgumentResolver;
+import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
+import internal.org.springframework.content.rest.controllers.ResourceTypeMethodArgumentResolver;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Configuration
@@ -62,6 +71,38 @@ public class RestConfiguration implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		for (ContentRestConfigurer configurer : configurers) {
 			configurer.configure(this);
+		}
+	}
+
+	@Configuration
+	public static class WebConfig implements WebMvcConfigurer {
+
+		@Autowired
+		private RestConfiguration config;
+
+		@Autowired
+		private ApplicationContext context;
+
+		@Autowired(required = false)
+		private Repositories repositories;
+
+		@Autowired
+		private RepositoryInvokerFactory repoInvokerFactory;
+
+		@Autowired
+		private ContentStoreService stores;
+
+		@Override
+		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+
+			if (repositories == null) {
+				repositories = new Repositories(context);
+			}
+
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ResourceTypeMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ResourceETagMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 		}
 	}
 }

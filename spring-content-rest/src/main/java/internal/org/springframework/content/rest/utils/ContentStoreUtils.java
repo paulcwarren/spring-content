@@ -9,7 +9,7 @@ import java.net.URL;
 import java.util.List;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-import internal.org.springframework.content.rest.io.AssociatedResource;
+import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import org.atteo.evo.inflector.English;
 
@@ -33,59 +33,6 @@ import static org.springframework.util.StringUtils.trimTrailingCharacter;
 public final class ContentStoreUtils {
 
 	private ContentStoreUtils() {
-	}
-
-	/**
-	 * Given a store and a collection of mime types this method will iterate the
-	 * mime-types to find a data source of matching content.  This might be the content itself
-	 * or, if the store implements Renderable, a rendition.
-	 * 
-	 * @param store store the store to fetch the content from
-	 * @param entity the entity whose content is being fetched
-	 * @param property
-	 * @param mimeTypes the requested mime types
-	 * @return resource plan (a wrapper around the resource to serve and the resolved mimetype)
-	 */
-	@SuppressWarnings("unchecked")
-	public static ResourcePlan resolveResource(ContentStore<Object, Serializable> store, Object entity, Object property, List<MediaType> mimeTypes) {
-		Object entityMimeType = BeanUtils.getFieldWithAnnotation(property != null ? property : entity, org.springframework.content.commons.annotations.MimeType.class);
-		if (entityMimeType == null) {
-			return new ResourcePlan(new NonExistentResource(), null);
-		}
-
-		MediaType targetMimeType = MediaType.valueOf(entityMimeType.toString());
-
-		MediaType.sortBySpecificityAndQuality(mimeTypes);
-
-		MediaType[] arrMimeTypes = mimeTypes.toArray(new MediaType[] {});
-
-		Serializable contentId = (Serializable)BeanUtils.getFieldWithAnnotation(property != null ? property : entity, ContentId.class);
-
-		Resource r = null;
-		MimeType mimeType = null;
-		for (int i = 0; i < arrMimeTypes.length; i++) {
-			mimeType = arrMimeTypes[i];
-			if (mimeType.includes(targetMimeType)) {
-				r = ((Store)store).getResource(contentId);
-				r = new AssociatedResource(entity, r);
-				mimeType = targetMimeType;
-				break;
-			}
-			else if (store instanceof Renderable) {
-				InputStream content = ((Renderable<Object>) store).getRendition(property != null ? property : entity, mimeType.toString());
-				if (content != null) {
- 					Resource original = ((Store)store).getResource(contentId);
-					r = new AssociatedResource(entity, original);
-					r = new RenderedResource(content, r);
-					break;
-				}
-			}
-		}
-
-		if (r != null) {
-		}
-
-		return new ResourcePlan(r, mimeType);
 	}
 
 	public static ContentStoreInfo findContentStore(ContentStoreService stores,

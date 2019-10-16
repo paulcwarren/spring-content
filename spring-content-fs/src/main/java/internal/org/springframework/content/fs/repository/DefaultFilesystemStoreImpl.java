@@ -70,6 +70,14 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			return getResource(contentId);
 		}
 
+		if (resource == null) {
+			Object newContentId = UUID.randomUUID();
+			Object convertedContentId = convertToExternalContentIdType(entity, newContentId);
+			resource = getResource((SID)convertedContentId);
+			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedContentId);
+			return resource;
+		}
+
 		return null;
 	}
 

@@ -31,6 +31,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -49,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		RepositoryRestMvcConfiguration.class, RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class StoreRestControllerIntegrationTest {
+public class StoreRestEndpointsIntegrationTest {
 
 	@Autowired
 	TestStore store;
@@ -65,7 +66,7 @@ public class StoreRestControllerIntegrationTest {
 	private LastModifiedDate lastModifiedDate;
 
 	{
-		Describe("StoreRestController", () -> {
+		Describe("Store Rest Endpoints", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -81,13 +82,13 @@ public class StoreRestControllerIntegrationTest {
 					});
 				});
 				Context("given a POST to that path with content", () -> {
-					It("should set the content and return 200", () -> {
+					It("should set the content and return 201", () -> {
 
 						String content = "New multi-part content";
 
 						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
 								"test-file.txt", "text/plain", content.getBytes())))
-								.andExpect(status().isOk());
+								.andExpect(status().isCreated());
 
 						Resource r = store.getResource(path);
 						assertThat(IOUtils.contentEquals(

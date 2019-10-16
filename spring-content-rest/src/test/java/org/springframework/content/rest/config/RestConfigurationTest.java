@@ -65,16 +65,7 @@ public class RestConfigurationTest {
 
 				It("should have the content rest controllers", () -> {
 					assertThat(
-							context.getBean("contentEntityRestController"),
-							is(not(nullValue())));
-					assertThat(
-							context.getBean("contentPropertyCollectionRestController"),
-							is(not(nullValue())));
-					assertThat(
-							context.getBean("contentPropertyRestController"),
-							is(not(nullValue())));
-					assertThat(context.getBean("storeRestController"),
-							is(not(nullValue())));
+							context.getBean("storeRestController"), is(not(nullValue())));
 				});
 
 				It("should be configurable", () -> {

@@ -28,4 +28,17 @@ public class FileServiceImpl implements FileService {
 			dir = temp;
 		}
 	}
+
+	@Override
+	public void rmdirs(File from) throws IOException {
+		if (from.isFile()) {
+			throw new IOException("Not a directory");
+		}
+		File dir = from;
+		while (dir != null && dir.listFiles().length == 0) {
+			File temp = dir.getParentFile();
+			dir.delete();
+			dir = temp;
+		}
+	}
 }

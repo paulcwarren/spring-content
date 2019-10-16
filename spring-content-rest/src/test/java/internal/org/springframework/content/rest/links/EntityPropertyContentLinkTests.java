@@ -49,11 +49,9 @@ public class EntityPropertyContentLinkTests {
 								new StringReader(
 										response.getContentAsString()));
 				assertThat(halResponse, is(not(nullValue())));
-				assertThat(halResponse.getLinksByRel(linkRel),
-						is(not(nullValue())));
+				assertThat(halResponse.getLinksByRel(linkRel), is(not(nullValue())));
 				assertThat(halResponse.getLinksByRel(linkRel).size(), is(1));
-				assertThat(halResponse.getLinksByRel(linkRel).get(0).getHref(),
-						matchesPattern(expectedLinkRegex));
+				assertThat(halResponse.getLinksByRel(linkRel).get(0).getHref(), matchesPattern(expectedLinkRegex));
 			});
 		});
 		Context("a GET to /repository/id", () -> {

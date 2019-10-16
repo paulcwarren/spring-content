@@ -1,5 +1,12 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.InputStream;
+import java.util.Optional;
+
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntity4;
+import org.apache.commons.io.IOUtils;
+
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -7,11 +14,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -76,6 +86,7 @@ public class Version {
                         .andExpect(status().isOk());
             });
         });
+
         Context("a PUT to /{store}/{id} with a non-matching If-Match header", () -> {
             It("should respond with 412 Precondition Failed", () -> {
                 mvc.perform(put(url)

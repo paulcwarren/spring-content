@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -73,6 +74,25 @@ public class AbstractStoreFactoryBeanTest {
 			return null;
 		}
 
+		@Override
+		public Resource getResource(Object entity) {
+			return null;
+		}
+
+		@Override
+		public void associate(Object entity, Serializable id) {
+
+		}
+
+		@Override
+		public void unassociate(Object entity) {
+
+		}
+
+		@Override
+		public Resource getResource(Serializable id) {
+			return null;
+		}
 	}
 
 	public interface TestStore extends ContentStore<String, UUID> {

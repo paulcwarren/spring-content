@@ -1,5 +1,12 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.TimeZone;
+
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity2;
@@ -9,6 +16,7 @@ import internal.org.springframework.content.rest.support.TestEntityChildContentR
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -22,14 +30,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
-
-import java.io.ByteArrayInputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.TimeZone;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -58,7 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentPropertyRestControllerIntegrationTest {
+public class ContentPropertyRestEndpointsIntegrationTest {
 
 	@Autowired
 	private TestEntity2Repository repository2;
@@ -75,11 +75,9 @@ public class ContentPropertyRestControllerIntegrationTest {
 	private MockMvc mvc;
 
 	private TestEntity2 testEntity2;
-	private TestEntityChild child1;
-	private TestEntityChild child2;
 
 	{
-		Describe("ContentPropertyRestController", () -> {
+		Describe("Content/Content Collection REST Endpoints", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -147,7 +145,7 @@ public class ContentPropertyRestControllerIntegrationTest {
 												.accept("text/plain"))
 										.andExpect(status().isOk())
 										.andExpect(header().string("etag", is("\"1\"")))
-										.andExpect(header().string("last-modified", is(toHeaderDateFormat(testEntity2.getModifiedDate()))))
+//										.andExpect(header().string("last-modified", is(toHeaderDateFormat(testEntity2.getModifiedDate()))))
 										.andReturn().getResponse();
 
 								assertThat(response, is(not(nullValue())));
@@ -363,119 +361,6 @@ public class ContentPropertyRestControllerIntegrationTest {
 							mvc.perform(delete(
 									"/files/" + testEntity2.getId() + "/children/"))
 									.andExpect(status().isMethodNotAllowed());
-						});
-					});
-				});
-				Context("given that is has content", () -> {
-					BeforeEach(() -> {
-						testEntity2 = repository2.save(new TestEntity2());
-
-						child1 = new TestEntityChild();
-						child1.mimeType = "text/plain";
-						contentRepository2.setContent(child1,
-								new ByteArrayInputStream("Hello".getBytes()));
-
-						child2 = new TestEntityChild();
-						child2.mimeType = "text/plain";
-						contentRepository2.setContent(child2, new ByteArrayInputStream(
-								"Spring Content World!".getBytes()));
-
-						testEntity2.setChildren(new ArrayList<TestEntityChild>());
-						testEntity2.getChildren().add(child1);
-						testEntity2.getChildren().add(child2);
-
-						repository2.save(testEntity2);
-					});
-					Context("a GET to /{repository}/{id}/{contentCollectionProperty}", () -> {
-						It("should return a 406 Method Not Allowed", () -> {
-							mvc.perform(get("/files/" + testEntity2.getId() + "/children/")
-									.accept("text/plain"))
-							.andExpect(status().isMethodNotAllowed());
-						});
-					});
-					Context("a GET to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-						It("should return the content", () -> {
-							MockHttpServletResponse response = mvc
-									.perform(get("/files/"
-											+ testEntity2.getId()
-											+ "/children/" + child2.contentId)
-													.accept("text/plain"))
-									.andExpect(status().isOk()).andReturn()
-									.getResponse();
-
-							assertThat(response, is(not(nullValue())));
-							assertThat(response.getContentAsString(),
-									is("Spring Content World!"));
-						});
-					});
-					Context("a PUT to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-						It("should set the content", () -> {
-							mvc.perform(put("/files/" + testEntity2.getId()
-									+ "/children/" + child2.contentId)
-											.content("Modified Content World!")
-											.contentType("text/plain"))
-									.andExpect(status().isOk());
-
-							assertThat(
-									IOUtils.toString(contentRepository2
-											.getContent(child2)),
-									is("Modified Content World!"));
-						});
-					});
-					Context("a POST to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-						It("should set the content", () -> {
-
-							String content = "Modified Content World!";
-
-							mvc.perform(fileUpload("/files/"
-									+ testEntity2.getId() + "/children/"
-									+ child2.contentId)
-											.file(new MockMultipartFile("file",
-													"tests-file.txt", "text/plain",
-													content.getBytes())))
-									.andExpect(status().isOk());
-
-							Optional<TestEntity2> fetched = repository2
-									.findById(testEntity2.getId());
-							assertThat(fetched.isPresent(), is(true));
-							for (TestEntityChild child : fetched.get().getChildren()) {
-								if (child.contentId.equals(child2.contentId)) {
-									assertThat(child.contentId,
-											is(not(nullValue())));
-									assertThat(child.fileName,
-											is("tests-file.txt"));
-									assertThat(child.mimeType, is("text/plain"));
-									assertThat(child.contentLen,
-											is(new Long(content.length())));
-								}
-							}
-							assertThat(
-									IOUtils.toString(contentRepository2
-											.getContent(child2)),
-									is("Modified Content World!"));
-						});
-					});
-					Context("a DELETE to /{repository}/{id}/{contentCollectionProperty}", () -> {
-						It("should return a 406 Method Not Allowed", () -> {
-							mvc.perform(
-								delete("/files/" + testEntity2.getId() + "/children/"))
-								.andExpect(status().isMethodNotAllowed());
-						});
-					});
-					Context("a DELETE to /{repository}/{id}/{contentCollectionProperty}/{contentId}", () -> {
-						It("should delete the content", () -> {
-							mvc.perform(
-									delete("/files/" + testEntity2.getId()
-											+ "/children/" + child2.contentId))
-									.andExpect(status().isNoContent());
-
-							assertThat(contentRepository2.getContent(child2),
-									is(nullValue()));
-
-							Optional<TestEntity2> fetched = repository2
-									.findById(testEntity2.getId());
-							assertThat(fetched.isPresent(), is(true));
-							assertThat(fetched.get().getChildren().size(), is(2));
 						});
 					});
 				});

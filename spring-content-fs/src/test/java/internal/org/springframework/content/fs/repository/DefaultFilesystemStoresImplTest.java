@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FContext;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -40,6 +41,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -147,13 +149,12 @@ public class DefaultFilesystemStoresImplTest {
 					Context("when the entity has a String-arg constructor - Issue #57", () ->{
 						BeforeEach(() -> {
 							PlacementService placementService = new PlacementServiceImpl();
-							filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
-									loader, placementService, fileService);
+							placer = spy(placementService);
 
 							entity = new TestEntity();
 						});
-						It("should not call the placement service by default", () -> {
-							verify(loader, never()).getResource(anyString());
+						It("should not call the placement service trying to convert the entity to a string", () -> {
+							verify(placer, never()).convert(eq(entity), eq(String.class));
 						});
 					});
 				});
