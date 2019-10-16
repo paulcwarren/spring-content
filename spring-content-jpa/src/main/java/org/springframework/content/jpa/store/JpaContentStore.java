@@ -1,6 +1,8 @@
 package org.springframework.content.jpa.store;
 
+import java.io.Serializable;
+
 import org.springframework.content.commons.repository.ContentStore;
 
-public interface JpaContentStore<T, ID> extends ContentStore<T, ID> {
+public interface JpaContentStore<T, CID extends Serializable> extends ContentStore<T, CID> {
 }

@@ -2,173 +2,253 @@ package internal.org.springframework.content.rest.controllers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.io.RenderableResource;
+import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
-import org.apache.commons.io.IOUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.io.DeletableResource;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.rest.controllers.ContentService;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.WritableResource;
+import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.MediaType;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UrlPathHelper;
+import org.springframework.web.server.ResponseStatusException;
+
+import static java.lang.String.format;
 
 @ContentRestController
-public class StoreRestController extends AbstractContentPropertyController {
+public class StoreRestController {
 
-	private static final String BASE_MAPPING = "/{store}/**";
+	private static final Logger logger = LoggerFactory.getLogger(StoreRestController.class);
 
+	private static final String STORE_REQUEST_MAPPING = "/{store}/**";
+
+	private Repositories repositories;
 	private ContentStoreService storeService;
 	private StoreByteRangeHttpRequestHandler handler;
+	private RepositoryInvokerFactory repoInvokerFactory;
 
 	@Autowired
-	public StoreRestController(ContentStoreService storeService,
-			StoreByteRangeHttpRequestHandler handler) {
-		super();
+	public StoreRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler, RepositoryInvokerFactory repoInvokerFactory) {
+		try {
+			this.repositories = context.getBean(Repositories.class);
+		}
+		catch (BeansException be) {
+			this.repositories = new Repositories(context);
+		}
 		this.storeService = storeService;
 		this.handler = handler;
+		this.repoInvokerFactory = repoInvokerFactory;
 	}
 
-	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.GET)
-	public void getContent(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String store) throws ServletException, IOException {
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
+	public void getContent(HttpServletRequest request,
+			  			   HttpServletResponse response,
+						   @RequestHeader(value = "Accept", required = false) String mimeType,
+			 			   Resource resource,
+						   MediaType resourceType,
+						   Object resourceETag) {
 
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
-		if (info == null) {
-			throw new IllegalArgumentException("Entity not a content repository");
-		}
-
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
-
-		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null || r.exists() == false) {
+		if (resource == null || resource.exists() == false) {
 			throw new ResourceNotFoundException();
 		}
 
-		request.setAttribute("SPRING_CONTENT_RESOURCE", r);
+		long lastModified = -1;
+		try {
+			lastModified = resource.lastModified();
+		} catch (IOException e) {}
+		if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
+			return;
+		}
 
-		handler.handleRequest(request, response);
+		// if a rendition was requested, prep it now
+		List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(mimeType));
+		if (mimeTypes.size() == 0) {
+			mimeTypes.add(MediaType.ALL);
+		}
 
-		return;
+		MediaType mimeTypeToUse = null;
+		if (resource instanceof RenderableResource) {
+			MediaType.sortBySpecificityAndQuality(mimeTypes);
+			for (int i = 0; i < mimeTypes.size(); i++) {
+				mimeTypeToUse = mimeTypes.get(i);
+				if (mimeTypeToUse.includes(resourceType)) {
+					resourceType = mimeTypeToUse;
+					break;
+				}
+				else {
+					if (((RenderableResource) resource).isRenderableAs(mimeTypeToUse)) {
+						resource = new RenderedResource(((RenderableResource) resource).renderAs(mimeTypeToUse), resource);
+						resourceType = mimeTypeToUse;
+					}
+				}
+			}
+		}
+
+		request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
+		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", resourceType);
+
+		try {
+			handler.handleRequest(request, response);
+		}
+		catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+		}
 	}
 
-	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = {
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {
 			"content-type!=multipart/form-data", "accept!=application/hal+json" })
 	@ResponseBody
-	public void putContent(HttpServletRequest request, HttpServletResponse response,
-							@RequestHeader HttpHeaders headers,
-							@PathVariable String store)
+	public void putContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+							Resource resource,
+							Object resourceETag,
+							ContentService contentService)
 			throws IOException {
 
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		handleUpdate(headers, store, path, request.getInputStream());
+		handleMultipart(response,
+						headers,
+						contentService,
+						resource,
+						resourceETag != null ? resourceETag.toString() : null,
+						request.getInputStream(),
+						headers.getContentType(),
+				null);
 	}
 
-	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void putMultipartContent(HttpServletRequest request,
-									@RequestHeader HttpHeaders headers,
-									@PathVariable String store,
-			@RequestParam("file") MultipartFile multiPart)
+	public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+									@RequestParam("file") MultipartFile multiPart,
+									Resource resource,
+									Object resourceETag,
+									ContentService contentService)
 			throws IOException {
 
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		handleUpdate(headers, store, path, multiPart.getInputStream());
+		handleMultipart(response,
+				headers,
+				contentService,
+				resource,
+				resourceETag != null ? resourceETag.toString() : null,
+				multiPart.getInputStream(),
+				MediaType.parseMediaType(multiPart.getContentType()),
+				multiPart.getOriginalFilename());
 	}
 
-	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
 	@ResponseBody
-	public void postMultipartContent(HttpServletRequest request,
-									 @RequestHeader HttpHeaders headers,
-									 @PathVariable String store,
-			@RequestParam("file") MultipartFile multiPart)
-			throws IOException {
+	public void postMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+									@RequestParam("file") MultipartFile multiPart,
+									Resource resource,
+									Object resourceETag,
+									ContentService contentService)
+									throws IOException {
 
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		handleUpdate(headers, store, path, multiPart.getInputStream());
+		handleMultipart(response,
+						headers,
+						contentService,
+						resource,
+						resourceETag != null ? resourceETag.toString() : null,
+						multiPart.getInputStream(),
+						MediaType.parseMediaType(multiPart.getContentType()),
+						multiPart.getOriginalFilename());
 	}
 
-	@StoreType("store")
-	@RequestMapping(value = BASE_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
-	public void deleteContent(HttpServletRequest request, HttpServletResponse response,
-							  @RequestHeader HttpHeaders headers,
-							  @PathVariable String store)
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
+	public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
+								Resource resource,
+								Object resourceETag,
+								ContentService contentService)
 			throws IOException {
 
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
-		if (info == null) {
-			throw new IllegalArgumentException("Not a Store");
-		}
-
-		String path = new UrlPathHelper().getPathWithinApplication(request);
-		String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
-
-		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null || r.exists() == false) {
+		if (!resource.exists()) {
 			throw new ResourceNotFoundException();
-		}
-		if (r instanceof DeletableResource == false) {
-			throw new UnsupportedOperationException();
+		} else {
+			HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
 		}
 
-		HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
-
-		((DeletableResource) r).delete();
+		contentService.unsetContent(resource);
 
 		response.setStatus(HttpStatus.NO_CONTENT.value());
 	}
 
-	protected void handleUpdate(HttpHeaders headers, String store, String path, InputStream content)
+	protected void handleMultipart(HttpServletResponse response,
+									HttpHeaders headers,
+									ContentService contentService,
+									Resource resource,
+									Object resourceETag,
+									InputStream content,
+									MediaType mimeType,
+									String originalFilename)
 			throws IOException {
 
-		ContentStoreInfo info = ContentStoreUtils.findStore(storeService, store);
-		if (info == null) {
-			throw new IllegalArgumentException("Not a Store");
+		boolean isNew = false;
+
+		if (resource.exists()) {
+			HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
+		} else {
+			isNew = true;
 		}
 
-		String pathToUse = path.substring(store.length() + 1);
-		Resource r = ((Store) info.getImpementation()).getResource(pathToUse);
-		if (r == null) {
-			throw new ResourceNotFoundException();
-		}
-		if (r instanceof WritableResource == false) {
-			throw new UnsupportedOperationException();
-		}
+		contentService.setContent(content, mimeType, originalFilename, resource);
 
-		if (r.exists()) {
-			HeaderUtils.evaluateHeaderConditions(headers, null, new Date(r.lastModified()));
+		if (isNew) {
+			response.setStatus(HttpStatus.CREATED.value());
 		}
-
-		InputStream in = content;
-		OutputStream out = ((WritableResource) r).getOutputStream();
-		IOUtils.copy(in, out);
-		IOUtils.closeQuietly(out);
-		IOUtils.closeQuietly(in);
+		else {
+			response.setStatus(HttpStatus.OK.value());
+		}
 	}
+
+    public static Object save(Repositories repositories, Object domainObj)
+            throws HttpRequestMethodNotSupportedException {
+
+        RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories,
+                domainObj.getClass());
+
+        if (ri == null) {
+            throw new ResourceNotFoundException();
+        }
+
+        Class<?> domainObjClazz = ri.getDomainType();
+
+        if (domainObjClazz != null) {
+            Optional<Method> saveMethod = ri.getCrudMethods().getSaveMethod();
+            if (!saveMethod.isPresent()) {
+                throw new HttpRequestMethodNotSupportedException("save");
+            }
+            domainObj = ReflectionUtils.invokeMethod(saveMethod.get(),
+                    repositories.getRepositoryFor(domainObjClazz).get(), domainObj);
+        }
+
+        return domainObj;
+    }
 }

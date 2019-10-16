@@ -2,6 +2,8 @@ package internal.org.springframework.content.fs.io;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.runner.RunWith;
+
+import org.springframework.content.commons.utils.FileService;
 import org.springframework.core.io.FileSystemResource;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
@@ -18,14 +20,17 @@ public class FileSystemDeletableResourceTest {
 	private FileSystemDeletableResource resource;
 
 	private FileSystemResource delegate;
+	private FileService fileService;
+
 
 	{
 		Describe("FileSystemDeletableResource", () -> {
 			BeforeEach(() -> {
 				delegate = mock(FileSystemResource.class);
+				fileService = mock(FileService.class);
 			});
 			JustBeforeEach(() -> {
-				resource = new FileSystemDeletableResource(delegate);
+				resource = new FileSystemDeletableResource(delegate, fileService);
 			});
 			It("should delegate isOpen", () -> {
 				resource.isOpen();

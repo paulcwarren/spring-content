@@ -18,6 +18,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.Resource;
 import org.springframework.data.annotation.Id;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
@@ -196,6 +197,26 @@ public class EnableJpaStoresTest {
 
 		@Override
 		public InputStream getContent(TestEntity property) {
+			return null;
+		}
+
+		@Override
+		public Resource getResource(TestEntity entity) {
+			return null;
+		}
+
+		@Override
+		public void associate(TestEntity entity, String id) {
+
+		}
+
+		@Override
+		public void unassociate(TestEntity entity) {
+
+		}
+
+		@Override
+		public Resource getResource(String id) {
 			return null;
 		}
 	}

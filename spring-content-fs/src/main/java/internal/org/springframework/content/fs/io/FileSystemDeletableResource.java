@@ -11,28 +11,42 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.utils.FileService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
+
+import static java.lang.String.format;
 
 public class FileSystemDeletableResource implements WritableResource, DeletableResource {
 
 	private static Log logger = LogFactory.getLog(FileSystemDeletableResource.class);
 
-	private FileSystemResource resource;
+	private final FileSystemResource resource;
+	private final FileService fileService;
 
-	public FileSystemDeletableResource(FileSystemResource resource) {
+	public FileSystemDeletableResource(FileSystemResource resource, FileService fileService) {
 		this.resource = resource;
+		this.fileService = fileService;
 	}
 
 	@Override
 	public void delete() {
+
+		File parent = null;
 		try {
+			parent = resource.getFile().getParentFile();
 			FileUtils.forceDelete(this.getFile());
+		} catch (IOException e) {
+			logger.warn(format("Unable to get file for resource %s", resource));
 		}
-		catch (IOException ioe) {
-			logger.debug(String.format("Unexpected error deleting resource %s", this),
-					ioe);
+
+		if (parent != null) {
+			try {
+				fileService.rmdirs(parent);
+			} catch (IOException e) {
+				logger.warn(format("Removing orphaned directories starting at %s, left by removal of resource %s", parent.getAbsolutePath(), resource));
+			}
 		}
 	}
 

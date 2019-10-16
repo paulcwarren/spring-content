@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PessimisticLockException;
 
-@ControllerAdvice(basePackageClasses = ContentRestExceptionHandler.class)
-public class ContentRestExceptionHandler {
+@ControllerAdvice(basePackageClasses = StoreRestExceptionHandler.class)
+public class StoreRestExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ContentRestExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(StoreRestExceptionHandler.class);
 
     /**
 	 * Send a {@code 409 Conflict} in case of concurrent modification.
@@ -73,7 +73,7 @@ public class ContentRestExceptionHandler {
 
         @JsonProperty("cause")
         public ExceptionMessage getCause() {
-            return throwable.getCause() != null ? new ContentRestExceptionHandler.ExceptionMessage(throwable.getCause()) : null;
+            return throwable.getCause() != null ? new StoreRestExceptionHandler.ExceptionMessage(throwable.getCause()) : null;
         }
     }
 }

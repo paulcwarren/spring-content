@@ -6,6 +6,8 @@ import internal.org.springframework.content.fs.io.FileSystemDeletableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.utils.FileService;
+import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -30,11 +32,13 @@ public class FileSystemResourceLoader
 			.getLogger(FileSystemResourceLoader.class);
 
 	private FileSystemResource root;
+	private FileService fileService = null;
 
 	public FileSystemResourceLoader(String root) {
 		Assert.notNull(root);
 		logger.info(String.format("Defaulting filesystem root to %s", root));
 		this.root = new FileSystemResource(suffixPath(cleanPath(root)));
+		this.fileService = new FileServiceImpl();
 	}
 
 	@Deprecated
@@ -58,7 +62,7 @@ public class FileSystemResourceLoader
 		Assert.notNull(root);
 		Resource resource = root.createRelative(location);
 		if (resource instanceof FileSystemResource) {
-			resource = new FileSystemDeletableResource((FileSystemResource) resource);
+			resource = new FileSystemDeletableResource((FileSystemResource) resource, fileService);
 		}
 		return resource;
 	}

@@ -21,4 +21,16 @@ public interface FileService {
 	 * 			IOException
 	 */
 	void rmdirs(File from, File to) throws IOException;
+
+	/**
+	 * Removes directories.
+	 *
+	 * Starting at the leaf of {@code from} and working upwards removes directories if, and only if, empty.
+
+	 * @param from
+	 * 			the directory path to be removed
+	 * @throws
+	 * 			IOException
+	 */
+	void rmdirs(File from) throws IOException;
 }

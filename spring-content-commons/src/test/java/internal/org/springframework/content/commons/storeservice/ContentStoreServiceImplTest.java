@@ -62,12 +62,12 @@ public class ContentStoreServiceImplTest {
 				});
 				It("should return no store info", () -> {
 					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
-					assertThat(infos.length, is(0));
+					assertThat(infos.length, is(1));
 				});
 				It("should return no associativestore info", () -> {
 					ContentStoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class);
-					assertThat(infos.length, is(0));
+					assertThat(infos.length, is(1));
 				});
 				It("should return content store info", () -> {
 					ContentStoreInfo[] infos = contentRepoService.getContentStores();

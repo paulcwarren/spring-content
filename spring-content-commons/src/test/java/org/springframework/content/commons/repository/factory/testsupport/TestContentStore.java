@@ -1,6 +1,8 @@
 package org.springframework.content.commons.repository.factory.testsupport;
 
+import java.io.Serializable;
+
 import org.springframework.content.commons.repository.ContentStore;
 
-public interface TestContentStore<E, CID> extends ContentStore<E, CID> {
+public interface TestContentStore<S, SID extends Serializable> extends ContentStore<S, SID> {
 }

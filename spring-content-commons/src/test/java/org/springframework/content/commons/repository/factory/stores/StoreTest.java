@@ -78,7 +78,7 @@ public class StoreTest {
 	public interface TestAssociativeStore extends AssociativeStore<Object, URI> {
 	}
 
-	public interface TestAssociativeAndContentStore extends AssociativeStore<Object, URI>, ContentStore<Object, URI> {
+	public interface TestAssociativeAndContentStore extends ContentStore<Object, URI> {
 	}
 
 	@Test

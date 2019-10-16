@@ -19,12 +19,12 @@ public class ContentStoreInfoImpl implements ContentStoreInfo {
 		this.storeImpl = storeImpl;
 	}
 
-	public ContentStoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass,
-			ContentStore<Object, Serializable> storeImpl) {
-		this.storeInterface = interfaceClass;
-		this.storeDomainClass = storeDomainClass;
-		this.storeImpl = storeImpl;
-	}
+//	public ContentStoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass,
+//			ContentStore<Object, Serializable> storeImpl) {
+//		this.storeInterface = interfaceClass;
+//		this.storeDomainClass = storeDomainClass;
+//		this.storeImpl = storeImpl;
+//	}
 
 	@Override
 	public Class<?> getInterface() {

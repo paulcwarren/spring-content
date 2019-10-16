@@ -1,10 +1,11 @@
 package org.springframework.content.commons.repository;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 import org.springframework.versions.LockParticipant;
 
-public interface ContentStore<S, SID> extends ContentRepository<S, SID> {
+public interface ContentStore<S, SID extends Serializable> extends AssociativeStore<S, SID>, ContentRepository<S, SID> {
 
 	@LockParticipant
 	void setContent(S property, InputStream content);

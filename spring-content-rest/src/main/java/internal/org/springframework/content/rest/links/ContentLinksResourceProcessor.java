@@ -15,7 +15,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import internal.org.springframework.content.rest.controllers.ContentEntityRestController;
+import internal.org.springframework.content.rest.controllers.StoreRestController;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.DomainObjectUtils;
 import org.apache.commons.logging.Log;
@@ -29,19 +29,21 @@ import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
-import org.springframework.data.rest.webmvc.support.RepositoryLinkBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.hateoas.server.core.LinkBuilderSupport;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static java.lang.String.format;
 
@@ -55,10 +57,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
-	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(ContentEntityRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, String.class, String.class, String.class);
+	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, String.class, Resource.class, MediaType.class, Object.class);
 
 	static {
-		Assert.notNull(GET_CONTENT_METHOD, "Unable to find ContentEntityRestController.getContent method");
+		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");
 	}
 
 
@@ -78,6 +80,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		if (object == null)
 			return resource;
 
+		ResourceMetadata md = mappings.getMetadataFor(object.getClass());
 		Object entityId = DomainObjectUtils.getId(object);
 
 		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
@@ -87,19 +90,18 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 			if (store != null) {
 
 				// for compatibility with v0.x.0 versions
-				originalLink(ContentEntityRestController.class, GET_CONTENT_METHOD, config.getBaseUri(), store, entityId).ifPresent((l) -> resource.add(l));
+				originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> resource.add(l));
 
-				resource.add(shortcutLink(ContentEntityRestController.class, GET_CONTENT_METHOD, config.getBaseUri(), store, entityId, StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store))));
+				resource.add(shortcutLink(config.getBaseUri(), store, entityId, StringUtils.uncapitalize(ContentStoreUtils.getSimpleName(store))));
 			}
 		} else if (fields.length > 1) {
 			for (Field field : fields) {
-				resource.add(fullyQualifiedLink(ContentEntityRestController.class, GET_CONTENT_METHOD, config.getBaseUri(), store, entityId, field.getName()));
+				resource.add(fullyQualifiedLink(config.getBaseUri(), store, entityId, field.getName()));
 			}
 		}
 
 		List<Field> processed = new ArrayList<>();
 
-		ResourceMetadata md = mappings.getMetadataFor(object.getClass());
 
 		// public fields
 		for (Field field : object.getClass().getFields()) {
@@ -139,7 +141,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
 			if (store != null) {
-				resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), null));
+				resource.add(propertyLink(baseUri, store, entityId, field.getName(), null));
 			}
 		}
 		else if (Collection.class.isAssignableFrom(fieldType)) {
@@ -178,7 +180,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
 								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
 								if (cid != null) {
-									resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), cid));
+									resource.add(propertyLink(baseUri, store, entityId, field.getName(), cid));
 								}
 							}
 						}
@@ -207,63 +209,45 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 				if (value != null) {
 					String cid = BeanUtils.getFieldWithAnnotation(value, ContentId.class).toString();
 					if (cid != null) {
-						resource.add(propertyLink(metadata, baseUri, entityId, field.getName(), cid));
+						resource.add(propertyLink(baseUri, store, entityId, field.getName(), cid));
 					}
 				}
 			}
 		}
 	}
 
-	private Optional<Link> originalLink(Class<?> controller, Method method, URI baseUri, ContentStoreInfo store, Object id) {
+	private Optional<Link> originalLink(URI baseUri, ContentStoreInfo store, Object id) {
 
 		if (id == null) {
 			return Optional.empty();
 		}
 
-		return Optional.of(shortcutLink(controller, method, baseUri, store, id, ContentStoreUtils.storePath(store)));
+		return Optional.of(shortcutLink(baseUri, store, id, ContentStoreUtils.storePath(store)));
 	}
 
-	private Link shortcutLink(Class<?> controller, Method method, URI baseUri, ContentStoreInfo store, Object id, String rel) {
-        LinkBuilder builder = null;
+	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id, String rel) {
 
-        String storePath = ContentStoreUtils.storePath(store);
-        if (!StringUtils.isEmpty(baseUri.toString())) {
-            String basePath = baseUri.toString();
-            if (basePath.startsWith("/")) {
-                basePath = StringUtils.trimLeadingCharacter(basePath, '/');
-            }
+		LinkBuilder builder = null;
+		builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
 
-            storePath = format("%s/%s", basePath, storePath);
-        }
+		builder = builder.slash(id);
 
-        builder = WebMvcLinkBuilder.linkTo(controller, method, storePath, id);
-
-        return builder.withRel(rel);
+		return builder.withRel(rel);
 	}
 
-	private Link fullyQualifiedLink(Class<?> controller, Method method, URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
-        LinkBuilder builder = null;
+	private Link fullyQualifiedLink(URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
+		LinkBuilder builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
 
-        String storePath = ContentStoreUtils.storePath(store);
-        if (!StringUtils.isEmpty(baseUri.toString())) {
-            String basePath = baseUri.toString();
-            if (basePath.startsWith("/")) {
-                basePath = StringUtils.trimLeadingCharacter(basePath, '/');
-            }
-
-            storePath = format("%s/%s", basePath, storePath);
-        }
-
-        builder = WebMvcLinkBuilder.linkTo(controller, method, storePath, id);
+		builder = builder.slash(id);
 
 		String property = StringUtils.uncapitalize(ContentStoreUtils.propertyName(fieldName));
 		builder = builder.slash(property);
 
-        return builder.withRel(property);
+		return builder.withRel(property);
 	}
 
-	private Link propertyLink(ResourceMetadata md, URI baseUri, Object id, String property, String contentId) {
-		LinkBuilder builder = new RepositoryLinkBuilder(md, new BaseUri(baseUri));
+	private Link propertyLink(URI baseUri, ContentStoreInfo store, Object id, String property, String contentId) {
+		LinkBuilder builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
 
 		builder = builder.slash(id).slash(property);
 
@@ -274,13 +258,37 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return builder.withRel(property);
 	}
 
-	protected Object invokeField(Field field, Object object) {
+	public static class StoreLinkBuilder extends LinkBuilderSupport<StoreLinkBuilder> {
 
-		try {
-			return field.get(object);
+		public StoreLinkBuilder(BaseUri baseUri) {
+			super(baseUri.getUriComponentsBuilder());
 		}
-		catch (IllegalAccessException e) {
-			return null;
+
+		@Override
+		protected StoreLinkBuilder getThis() {
+			return this;
+		}
+
+		@Override
+		protected StoreLinkBuilder createNewInstance(UriComponentsBuilder builder, List list) {
+			return new StoreLinkBuilder(new BaseUri(builder.toUriString()));
+		}
+
+		public static StoreLinkBuilder linkTo(ContentStoreInfo store, BaseUri baseUri) {
+			return new StoreLinkBuilder(new BaseUri(storePath(store, baseUri)));
+		}
+
+		private static String storePath(ContentStoreInfo store, BaseUri baseUri) {
+			String storePath = ContentStoreUtils.storePath(store);
+			if (!StringUtils.isEmpty(baseUri.getUri().toString())) {
+				String basePath = baseUri.getUri().toString();
+				if (basePath.startsWith("/")) {
+					basePath = StringUtils.trimLeadingCharacter(basePath, '/');
+				}
+
+				storePath = format("%s/%s", basePath, storePath);
+			}
+			return storePath;
 		}
 	}
 }
