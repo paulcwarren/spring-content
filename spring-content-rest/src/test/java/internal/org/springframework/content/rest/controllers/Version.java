@@ -1,5 +1,10 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.util.Optional;
+
+import internal.org.springframework.content.rest.support.ContentEntity;
+import lombok.Setter;
+
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -7,6 +12,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -19,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Setter
 public class Version {
 
     private MockMvc mvc;
@@ -26,6 +33,7 @@ public class Version {
     private CrudRepository repo;
     private ContentStore store;
     private String etag;
+    private ContentEntity entity;
 
     public static Version tests() {
         return new Version();
@@ -71,9 +79,25 @@ public class Version {
             It("should update the content", () -> {
                 mvc.perform(put(url)
                         .content("Hello Modified Spring Content World!")
-                        .contentType("text/plain")
+                        .contentType("text/other")
                         .header("if-match", etag))
                         .andExpect(status().isOk());
+            });
+            It("should update the content attributes", () -> {
+                mvc.perform(multipart(url)
+                        .file(new MockMultipartFile("file",
+                                "test-file-modified.txt",
+                                "text/other", "Hello Modified Spring Content World!".getBytes()))
+                        .header("if-match", etag))
+                        .andExpect(status().isOk());
+
+                if (entity != null) {
+                    Optional<ContentEntity> fetched = repo.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getLen(), is(36L));
+                    assertThat(fetched.get().getMimeType(), is("text/other"));
+                    assertThat(fetched.get().getOriginalFileName(), is("test-file-modified.txt"));
+                }
             });
         });
         Context("a PUT to /{store}/{id} with a non-matching If-Match header", () -> {
@@ -130,25 +154,5 @@ public class Version {
                         .andExpect(status().isPreconditionFailed());
             });
         });
-    }
-
-    public void setMvc(MockMvc mvc) {
-        this.mvc = mvc;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setRepo(CrudRepository repo) {
-        this.repo = repo;
-    }
-
-    public void setStore(ContentStore store) {
-        this.store = store;
-    }
-
-    public void setEtag(String etag) {
-        this.etag = etag;
     }
 }

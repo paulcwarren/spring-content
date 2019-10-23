@@ -153,6 +153,7 @@ public class ContentEntityRestControllerIntegrationTest {
 						version.setRepo(repo4);
 						version.setStore(store4);
 						version.setEtag(format("\"%s\"", testEntity4.getVersion()));
+						version.setEntity(testEntity4);
 					});
 					version = Version.tests();
 				});

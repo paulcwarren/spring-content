@@ -229,11 +229,6 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 
 		info.getImpementation().setContent(domainObj, content);
 
-		// re-fetch to make sure we have the latest
-		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
-			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		}
-
 		save(repositories, domainObj);
 
 		if (isNew) {

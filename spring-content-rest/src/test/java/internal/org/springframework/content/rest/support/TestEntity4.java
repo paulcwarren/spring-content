@@ -15,6 +15,7 @@ import lombok.Setter;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,7 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class TestEntity4 {
+public class TestEntity4 implements ContentEntity {
 	public @Id @GeneratedValue Long id;
 
 	public String name;
@@ -33,4 +34,5 @@ public class TestEntity4 {
 	private @Version Long version;
 	private @CreatedDate Date createdDate;
 	private @LastModifiedDate Date modifiedDate;
+	private @OriginalFileName String originalFileName;
 }
