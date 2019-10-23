@@ -3,8 +3,10 @@ package internal.org.springframework.content.rest.controllers;
 import java.io.InputStream;
 import java.util.Optional;
 
+import internal.org.springframework.content.rest.support.ContentEntity;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity4;
+import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 
 import org.springframework.content.commons.repository.ContentStore;
@@ -29,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Setter
 public class Version {
 
     private MockMvc mvc;
@@ -36,6 +39,7 @@ public class Version {
     private CrudRepository repo;
     private ContentStore store;
     private String etag;
+    private ContentEntity entity;
 
     public static Version tests() {
         return new Version();
@@ -81,9 +85,25 @@ public class Version {
             It("should update the content", () -> {
                 mvc.perform(put(url)
                         .content("Hello Modified Spring Content World!")
-                        .contentType("text/plain")
+                        .contentType("text/other")
                         .header("if-match", etag))
                         .andExpect(status().isOk());
+            });
+            It("should update the content attributes", () -> {
+                mvc.perform(multipart(url)
+                        .file(new MockMultipartFile("file",
+                                "test-file-modified.txt",
+                                "text/other", "Hello Modified Spring Content World!".getBytes()))
+                        .header("if-match", etag))
+                        .andExpect(status().isOk());
+
+                if (entity != null) {
+                    Optional<ContentEntity> fetched = repo.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getLen(), is(36L));
+                    assertThat(fetched.get().getMimeType(), is("text/other"));
+                    assertThat(fetched.get().getOriginalFileName(), is("test-file-modified.txt"));
+                }
             });
         });
 
@@ -141,25 +161,5 @@ public class Version {
                         .andExpect(status().isPreconditionFailed());
             });
         });
-    }
-
-    public void setMvc(MockMvc mvc) {
-        this.mvc = mvc;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setRepo(CrudRepository repo) {
-        this.repo = repo;
-    }
-
-    public void setStore(ContentStore store) {
-        this.store = store;
-    }
-
-    public void setEtag(String etag) {
-        this.etag = etag;
     }
 }
