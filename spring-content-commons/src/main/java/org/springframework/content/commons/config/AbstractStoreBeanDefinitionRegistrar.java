@@ -13,6 +13,7 @@ import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragmentDefinition;
 import internal.org.springframework.content.commons.config.StoreFragmentDetector;
 import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
+import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
 import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
 import internal.org.springframework.content.commons.utils.StoreUtils;
@@ -126,6 +127,11 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(AnnotatedStoreEventInvoker.class);
 		if (registry.containsBeanDefinition("annotatedStoreEventHandler") == false) {
 			registry.registerBeanDefinition("annotatedStoreEventHandler", annotatedStoreEventHandlerDef);
+		}
+
+		if (registry.containsBeanDefinition("renditionService") == false) {
+			BeanDefinition renditionServiceBeanDef = createBeanDefinition(RenditionServiceImpl.class);
+			registry.registerBeanDefinition("renditionService", renditionServiceBeanDef);
 		}
 
 		createOperationsBean(registry);

@@ -24,7 +24,8 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 
 	private static final Log LOGGER = LogFactory.getLog(RenderableImpl.class);
 
-	private List<RenditionProvider> providers = new ArrayList<RenditionProvider>();
+	@Autowired
+	private RenditionService renditionService;
 	private ContentStore contentStore;
 	private Class<?> domainClass;
 	private Class<?> idClass;
@@ -47,55 +48,19 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 		this.contentStore = store;
 	}
 
-	@Autowired(required = false)
-	public void setProviders(RenditionProvider... providers) {
-		for (RenditionProvider provider : providers) {
-			this.providers.add(provider);
-		}
-	}
-
 	@Override
 	public boolean canConvert(String fromMimeType, String toMimeType) {
-		for (RenditionProvider provider : providers) {
-			if (MimeType.valueOf(fromMimeType)
-					.includes(MimeType.valueOf(provider.consumes()))) {
-				for (String produce : provider.produces()) {
-					if (MimeType.valueOf(toMimeType)
-							.includes(MimeType.valueOf(produce))) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+		return renditionService.canConvert(fromMimeType, toMimeType);
 	}
 
 	@Override
 	public String[] conversions(String fromMimeType) {
-		Set<String> conversions = new HashSet<>();
-		for (RenditionProvider provider : providers) {
-			if (provider.consumes().equals(fromMimeType)) {
-				conversions.addAll(Arrays.asList(provider.produces()));
-			}
-		}
-		return conversions.toArray(new String[] {});
+		return renditionService.conversions(fromMimeType);
 	}
 
 	@Override
-	public InputStream convert(String fromMimeType, InputStream fromInputSource,
-			String toMimeType) {
-		for (RenditionProvider provider : providers) {
-			if (MimeType.valueOf(fromMimeType)
-					.includes(MimeType.valueOf(provider.consumes()))) {
-				for (String produce : provider.produces()) {
-					if (MimeType.valueOf(toMimeType)
-							.includes(MimeType.valueOf(produce))) {
-						return provider.convert(fromInputSource, toMimeType);
-					}
-				}
-			}
-		}
-		return null;
+	public InputStream convert(String fromMimeType, InputStream fromInputSource, String toMimeType) {
+		return renditionService.convert(fromMimeType, fromInputSource, toMimeType);
 	}
 
 	@Override
