@@ -103,6 +103,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 		<module>./spring-versions-jpa</module>
     <module>./spring-versions-jpa-boot-starter</module>
     <module>./spring-content-cmis</module>
+		<module>spring-content-test</module>
 	</modules>
 
 	<build>
