@@ -537,9 +537,6 @@ public class DefaultFilesystemStoresImplTest {
 							It("should delete the resource", () -> {
 								verify(deletableResource, times(1)).delete();
 							});
-							It("should remove orphaned directories", () -> {
-								verify(fileService, times(1)).rmdirs(parent, root);
-							});
 						});
 					});
 
@@ -569,10 +566,6 @@ public class DefaultFilesystemStoresImplTest {
 
 							It("should delete the resource", () -> {
 								verify(deletableResource, times(1)).delete();
-							});
-
-							It("should remove orphaned directories", () -> {
-								verify(fileService, times(1)).rmdirs(parent, root);
 							});
 
 							Context("when the property has a dedicated ContentId field", () -> {

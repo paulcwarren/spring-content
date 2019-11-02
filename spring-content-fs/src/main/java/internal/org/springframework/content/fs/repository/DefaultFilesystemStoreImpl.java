@@ -179,21 +179,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		Resource resource = getResource(entity);
 
 		if (resource != null && resource.exists() && resource instanceof DeletableResource) {
-			File parent = null;
 			try {
-				parent = resource.getFile().getParentFile();
 				((DeletableResource) resource).delete();
 			} catch (IOException e) {
 				logger.warn(format("Unable to get file for resource %s", resource));
-			}
-
-			File root = loader.getRootResource().getFile();
-			if (parent != null) {
-				try {
-					fileService.rmdirs(parent, root);
-				} catch (IOException e) {
-					logger.warn(format("Removing orphaned directories from %s to %s for resource %s", parent.getAbsolutePath(), root.getAbsolutePath(), resource));
-				}
 			}
 		}
 
