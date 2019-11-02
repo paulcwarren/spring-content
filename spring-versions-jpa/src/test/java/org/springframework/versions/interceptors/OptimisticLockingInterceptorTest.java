@@ -73,6 +73,7 @@ public class OptimisticLockingInterceptorTest {
                         when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class));
                         when(mi.getArguments()).thenReturn(new Object[]{entity, new ByteArrayInputStream("".getBytes())});
                         when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
                     });
                     JustBeforeEach(() -> {
                         result = interceptor.invoke(mi);

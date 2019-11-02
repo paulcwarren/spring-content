@@ -62,7 +62,8 @@ public class AbstractStoreFactoryBeanTest {
 			implements ContentStore<Object, Serializable> {
 
 		@Override
-		public void setContent(Object property, InputStream content) {
+		public Object setContent(Object property, InputStream content) {
+			return null;
 		}
 
 		@Override

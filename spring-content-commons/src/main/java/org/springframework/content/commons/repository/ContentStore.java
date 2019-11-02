@@ -8,7 +8,7 @@ import org.springframework.versions.LockParticipant;
 public interface ContentStore<S, SID extends Serializable> extends AssociativeStore<S, SID>, ContentRepository<S, SID> {
 
 	@LockParticipant
-	void setContent(S property, InputStream content);
+	S setContent(S property, InputStream content);
 
 	@LockParticipant
 	void unsetContent(S property);

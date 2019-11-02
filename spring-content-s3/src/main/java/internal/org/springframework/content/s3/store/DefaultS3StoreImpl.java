@@ -132,7 +132,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	@Transactional
 	@Override
-	public void setContent(S entity, InputStream content) {
+	public S setContent(S entity, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		if (contentId == null) {
 			UUID newId = UUID.randomUUID();
@@ -147,7 +147,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 		Resource resource = this.getResource(entity);
 		if (resource == null) {
-			return;
+			return entity;
 		}
 
 		OutputStream os = null;
@@ -182,6 +182,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				// ignore
 			}
 		}
+		return entity;
 	}
 
 	@Transactional

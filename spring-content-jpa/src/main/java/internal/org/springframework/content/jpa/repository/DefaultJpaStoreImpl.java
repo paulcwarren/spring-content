@@ -98,7 +98,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void setContent(S entity, InputStream content) {
+	public S setContent(S entity, InputStream content) {
 		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
@@ -130,7 +130,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 				((BlobResource) resource).getId());
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, contentLen);
 
-		return;
+		return entity;
 	}
 
 	private void waitForCommit(BlobResource resource) {
