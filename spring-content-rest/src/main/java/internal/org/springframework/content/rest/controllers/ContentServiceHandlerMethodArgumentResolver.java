@@ -50,7 +50,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getPathInfo();
+        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
         pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
