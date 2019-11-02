@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -75,7 +76,7 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	@Configuration
-	public static class WebConfig implements WebMvcConfigurer {
+	public static class WebConfig implements WebMvcConfigurer, InitializingBean {
 
 		@Autowired
 		private RestConfiguration config;
@@ -86,7 +87,7 @@ public class RestConfiguration implements InitializingBean {
 		@Autowired(required = false)
 		private Repositories repositories;
 
-		@Autowired
+		@Autowired(required = false)
 		private RepositoryInvokerFactory repoInvokerFactory;
 
 		@Autowired
@@ -95,14 +96,22 @@ public class RestConfiguration implements InitializingBean {
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			if (repositories == null) {
-				repositories = new Repositories(context);
-			}
-
 			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ResourceTypeMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ResourceETagMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+		}
+
+		@Override
+		public void afterPropertiesSet() throws Exception {
+
+			if (repositories == null) {
+				repositories = new Repositories(context);
+			}
+
+			if (repoInvokerFactory == null) {
+				repoInvokerFactory = new DefaultRepositoryInvokerFactory(repositories);
+			}
 		}
 	}
 }

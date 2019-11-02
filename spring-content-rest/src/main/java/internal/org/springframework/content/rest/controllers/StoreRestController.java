@@ -21,12 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
@@ -46,28 +48,24 @@ import org.springframework.web.server.ResponseStatusException;
 import static java.lang.String.format;
 
 @ContentRestController
-public class StoreRestController {
+public class StoreRestController implements InitializingBean  {
 
 	private static final Logger logger = LoggerFactory.getLogger(StoreRestController.class);
 
 	private static final String STORE_REQUEST_MAPPING = "/{store}/**";
 
+	@Autowired
+	ApplicationContext context;
+	@Autowired(required=false)
 	private Repositories repositories;
+	@Autowired
 	private ContentStoreService storeService;
+	@Autowired
 	private StoreByteRangeHttpRequestHandler handler;
+	@Autowired(required=false)
 	private RepositoryInvokerFactory repoInvokerFactory;
 
-	@Autowired
-	public StoreRestController(ApplicationContext context, ContentStoreService storeService, StoreByteRangeHttpRequestHandler handler, RepositoryInvokerFactory repoInvokerFactory) {
-		try {
-			this.repositories = context.getBean(Repositories.class);
-		}
-		catch (BeansException be) {
-			this.repositories = new Repositories(context);
-		}
-		this.storeService = storeService;
-		this.handler = handler;
-		this.repoInvokerFactory = repoInvokerFactory;
+	public StoreRestController() {
 	}
 
 	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
@@ -251,4 +249,17 @@ public class StoreRestController {
 
         return domainObj;
     }
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		try {
+			this.repositories = context.getBean(Repositories.class);
+		}
+		catch (BeansException be) {
+			this.repositories = new Repositories(context);
+		}
+		if (this.repoInvokerFactory == null) {
+			this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
+		}
+	}
 }
