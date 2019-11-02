@@ -71,7 +71,7 @@ public class StoreRestController implements InitializingBean  {
 	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
 	public void getContent(HttpServletRequest request,
 			  			   HttpServletResponse response,
-						   @RequestHeader(value = "Accept", required = false) String mimeType,
+						   @RequestHeader(value = "Accept", required = false) String requestedMimeTypes,
 			 			   Resource resource,
 						   MediaType resourceType,
 						   Object resourceETag) {
@@ -89,31 +89,31 @@ public class StoreRestController implements InitializingBean  {
 		}
 
 		// if a rendition was requested, prep it now
-		List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(mimeType));
-		if (mimeTypes.size() == 0) {
-			mimeTypes.add(MediaType.ALL);
-		}
-
-		MediaType mimeTypeToUse = null;
+		MediaType renderedResourceType = resourceType;
 		if (resource instanceof RenderableResource) {
+
+			List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+			if (mimeTypes.size() == 0) {
+				mimeTypes.add(MediaType.ALL);
+			}
+
 			MediaType.sortBySpecificityAndQuality(mimeTypes);
-			for (int i = 0; i < mimeTypes.size(); i++) {
-				mimeTypeToUse = mimeTypes.get(i);
-				if (mimeTypeToUse.includes(resourceType)) {
-					resourceType = mimeTypeToUse;
+			for (MediaType requestedMimeType : mimeTypes) {
+				if (requestedMimeType.includes(resourceType)) {
+					renderedResourceType = resourceType;
 					break;
 				}
 				else {
-					if (((RenderableResource) resource).isRenderableAs(mimeTypeToUse)) {
-						resource = new RenderedResource(((RenderableResource) resource).renderAs(mimeTypeToUse), resource);
-						resourceType = mimeTypeToUse;
+					if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
+						resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
+						renderedResourceType = requestedMimeType;
 					}
 				}
 			}
 		}
 
 		request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
-		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", resourceType);
+		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
 
 		try {
 			handler.handleRequest(request, response);
