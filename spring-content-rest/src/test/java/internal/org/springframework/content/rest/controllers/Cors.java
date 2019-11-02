@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.controllers;
 
 import lombok.Getter;
 import lombok.Setter;
+
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -25,7 +26,7 @@ public class Cors {
 		Context("an OPTIONS request from a known host", () -> {
 			It("should return the relevant CORS headers and OK", () -> {
 				mvc.perform(options(url)
-						.header("Access-Control-Request-Method", "POST")
+						.header("Access-Control-Request-Method", "DELETE")
 						.header("Origin", "http://www.someurl.com"))
 						.andExpect(status().isOk())
 						.andExpect(header().string("Access-Control-Allow-Origin","http://www.someurl.com"));
@@ -34,7 +35,7 @@ public class Cors {
 		Context("an OPTIONS request from an unknown host", () -> {
 			It("should be forbidden", () -> {
 				mvc.perform(options(url)
-						.header("Access-Control-Request-Method", "POST")
+						.header("Access-Control-Request-Method", "DELETE")
 						.header("Origin", "http://www.someotherurl.com"))
 						.andExpect(status().isForbidden());
 			});

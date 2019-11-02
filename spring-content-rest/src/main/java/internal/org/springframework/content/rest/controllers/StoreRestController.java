@@ -180,6 +180,24 @@ public class StoreRestController implements InitializingBean  {
 						multiPart.getOriginalFilename());
 	}
 
+	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = {"content-type!=multipart/form-data"})
+	@ResponseBody
+	public void postContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+			Resource resource,
+			Object resourceETag,
+			ContentService contentService)
+			throws IOException {
+
+		handleMultipart(response,
+				headers,
+				contentService,
+				resource,
+				resourceETag != null ? resourceETag.toString() : null,
+				request.getInputStream(),
+				headers.getContentType(),
+				null);
+	}
+
 	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
 	public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
 								Resource resource,
