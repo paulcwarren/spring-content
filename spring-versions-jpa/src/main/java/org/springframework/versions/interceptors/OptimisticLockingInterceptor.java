@@ -55,8 +55,9 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
                 Object entity = methodInvocation.getArguments()[0];
                 entity = lock(entity);
                 ((ProxyMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
-                methodInvocation.proceed();
+                entity = methodInvocation.proceed();
                 touch(entity, Version.class);
+                return entity;
             }
         }
         else if (unsetContentMethod.equals(methodInvocation.getMethod())) {

@@ -100,7 +100,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	@Transactional
-	public void setContent(S entity, InputStream content) {
+	public S setContent(S entity, InputStream content) {
 		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
@@ -139,6 +139,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 					"Unexpected error setting content length for content for resource %s",
 					resource.toString()), e);
 		}
+
+		return entity;
 	}
 
 	@Override
