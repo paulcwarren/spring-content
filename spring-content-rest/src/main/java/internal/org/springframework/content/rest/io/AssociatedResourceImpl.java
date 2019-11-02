@@ -78,7 +78,7 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
 
     @Override
     public boolean exists() {
-        return original.exists();
+        return (original != null ? original.exists() : false);
     }
 
     @Override
