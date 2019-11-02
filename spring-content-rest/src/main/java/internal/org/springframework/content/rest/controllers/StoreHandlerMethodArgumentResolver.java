@@ -73,7 +73,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
 
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getPathInfo();
+        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
