@@ -93,7 +93,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void setContent(S property, InputStream content) {
+	public S setContent(S property, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
 			contentId = UUID.randomUUID();
@@ -123,6 +123,8 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			logger.debug(format("Unable to retrieve content length for %s", contentId));
 		}
 		BeanUtils.setFieldWithAnnotation(property, ContentLength.class, contentLen);
+
+		return property;
 	}
 
 	@Override

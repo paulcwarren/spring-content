@@ -188,7 +188,8 @@ public class EnableJpaStoresTest {
 		private EntityManager em;
 
 		@Override
-		public void setContent(TestEntity property, InputStream content) {
+		public TestEntity setContent(TestEntity property, InputStream content) {
+			return null;
 		}
 
 		@Override

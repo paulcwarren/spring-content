@@ -70,14 +70,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			return getResource(contentId);
 		}
 
-		if (resource == null) {
-			Object newContentId = UUID.randomUUID();
-			Object convertedContentId = convertToExternalContentIdType(entity, newContentId);
-			resource = getResource((SID)convertedContentId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedContentId);
-			return resource;
-		}
-
 		return null;
 	}
 
@@ -108,7 +100,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	@Transactional
-	public void setContent(S entity, InputStream content) {
+	public S setContent(S entity, InputStream content) {
 		Resource resource = getResource(entity);
 		if (resource == null) {
 			UUID contentId = UUID.randomUUID();
@@ -147,6 +139,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 					"Unexpected error setting content length for content for resource %s",
 					resource.toString()), e);
 		}
+
+		return entity;
 	}
 
 	@Override
