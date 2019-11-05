@@ -16,6 +16,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -90,7 +92,7 @@ public class LastModifiedDate {
 
                 assertThat(response, is(not(nullValue())));
                 assertThat(response.getContentAsString(), is(content));
-                assertThat(response.getHeader("last-modified"), is(format.format(lastModifiedDate)));
+                assertThat(response.getHeader("last-modified"), is(greaterThanOrEqualTo(format.format(lastModifiedDate))));
             });
         });
         Context("a GET request to /{store}/{id} with an if-modified-since date the same as the entity's modified date", () -> {
