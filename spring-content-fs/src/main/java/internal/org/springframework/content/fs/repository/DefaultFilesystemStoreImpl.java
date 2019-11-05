@@ -166,9 +166,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	@Transactional
-	public void unsetContent(S entity) {
+	public S unsetContent(S entity) {
 		if (entity == null)
-			return;
+			return entity;
 
 		Resource resource = getResource(entity);
 
@@ -194,6 +194,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		// reset content fields
 		unassociate(entity);
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+
+		return entity;
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {

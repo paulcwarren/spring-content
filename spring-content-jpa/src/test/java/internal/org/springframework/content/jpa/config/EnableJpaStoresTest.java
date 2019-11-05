@@ -192,7 +192,8 @@ public class EnableJpaStoresTest {
 		}
 
 		@Override
-		public void unsetContent(TestEntity property) {
+		public TestEntity unsetContent(TestEntity property) {
+			return null;
 		}
 
 		@Override

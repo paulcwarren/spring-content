@@ -10,7 +10,7 @@ public interface ContentStore<S, SID> extends ContentRepository<S, SID> {
 	S setContent(S property, InputStream content);
 
 	@LockParticipant
-	void unsetContent(S property);
+	S unsetContent(S property);
 
 	InputStream getContent(S property);
 

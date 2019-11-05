@@ -177,17 +177,17 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
         @Override
         public void unsetContent(Resource resource) {
-            store.unsetContent(embeddedProperty == null ? domainObj : embeddedProperty);
+            Object updatedDomainObj = store.unsetContent(embeddedProperty == null ? domainObj : embeddedProperty);
 
-            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, null);
+            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class)) {
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class, null);
             }
 
-            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class, null);
+            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class)) {
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class, null);
             }
 
-            repoInvoker.invokeSave(domainObj);
+            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
         }
     }
 }

@@ -100,6 +100,22 @@ public class Version {
                 }
             });
         });
+        Context("a DELETE to /{store}/{id} with a matching If-Match header", () -> {
+            It("should delete the content, attributes and return a 200 response", () -> {
+                mvc.perform(delete(url)
+                        .contentType("text/plain"))
+                        .andExpect(status().isNoContent());
+
+                if (entity != null) {
+                    Optional<ContentEntity> fetched = repo.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getContentId(), is(nullValue()));
+                    assertThat(fetched.get().getLen(), is(0L));
+                    assertThat(fetched.get().getMimeType(), is(nullValue()));
+                    assertThat(store.getContent(fetched.get()), is(nullValue()));
+                }
+            });
+        });
         Context("a PUT to /{store}/{id} with a non-matching If-Match header", () -> {
             It("should respond with 412 Precondition Failed", () -> {
                 mvc.perform(put(url)
