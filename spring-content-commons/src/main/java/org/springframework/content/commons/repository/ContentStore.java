@@ -11,7 +11,7 @@ public interface ContentStore<S, SID extends Serializable> extends AssociativeSt
 	S setContent(S property, InputStream content);
 
 	@LockParticipant
-	void unsetContent(S property);
+	S unsetContent(S property);
 
 	InputStream getContent(S property);
 

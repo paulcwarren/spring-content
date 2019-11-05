@@ -161,7 +161,7 @@ public class ContentEntityRestEndpointsIntegrationTest {
 				Context("given an entity with @Version", () -> {
 					BeforeEach(() -> {
 						testEntity4 = new TestEntity4();
-						store4.setContent(testEntity4, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						testEntity4 = store4.setContent(testEntity4, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
 						String url = "/testEntity4s/" + testEntity4.getId();
@@ -181,7 +181,7 @@ public class ContentEntityRestEndpointsIntegrationTest {
 						String content = "Hello Spring Content LastModifiedDate World!";
 
 						testEntity4 = new TestEntity4();
-						store4.setContent(testEntity4, new ByteArrayInputStream(content.getBytes()));
+						testEntity4 = store4.setContent(testEntity4, new ByteArrayInputStream(content.getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
 						String url = "/testEntity4s/" + testEntity4.getId();

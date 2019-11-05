@@ -186,11 +186,16 @@ public class Content {
 				});
 			});
 			Context("a DELETE to /{store}/{id} with the mimetype", () -> {
-				It("should delete the content and return a 200 response", () -> {
+				It("should delete the content, attributes and return a 200 response", () -> {
 					mvc.perform(delete(url)
 							.contentType("text/plain"))
 							.andExpect(status().isNoContent());
 
+					Optional<ContentEntity> fetched = repository.findById(entity.getId());
+					assertThat(fetched.isPresent(), is(true));
+					assertThat(fetched.get().getContentId(), is(nullValue()));
+					assertThat(fetched.get().getLen(), is(0L));
+					assertThat(fetched.get().getMimeType(), is(nullValue()));
 					assertThat(store.getContent(entity), is(nullValue()));
 				});
 			});

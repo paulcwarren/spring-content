@@ -208,9 +208,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	@Transactional
 	@Override
-	public void unsetContent(S entity) {
+	public S unsetContent(S entity) {
 		if (entity == null)
-			return;
+			return entity;
 
 		deleteIfExists(entity);
 
@@ -232,6 +232,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 					}
 				});
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+
+		return entity;
 	}
 
 	private String absolutify(String bucket, String location) {
