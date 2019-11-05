@@ -17,9 +17,12 @@ import java.io.InputStream;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
@@ -79,6 +82,7 @@ public class OptimisticLockingInterceptorTest {
                         result = interceptor.invoke(mi);
                     });
                     It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity), anyObject());
                         verify(mi).proceed();
@@ -99,11 +103,13 @@ public class OptimisticLockingInterceptorTest {
                         when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class));
                         when(mi.getArguments()).thenReturn(new Object[]{entity});
                         when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
                     });
                     JustBeforeEach(() -> {
                         result = interceptor.invoke(mi);
                     });
                     It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity));
                         verify(mi).proceed();

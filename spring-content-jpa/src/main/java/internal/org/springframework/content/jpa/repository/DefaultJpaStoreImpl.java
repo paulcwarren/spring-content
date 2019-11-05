@@ -140,7 +140,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void unsetContent(S metadata) {
+	public S unsetContent(S metadata) {
 		Object id = BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
 		if (id == null) {
 			id = -1L;
@@ -156,6 +156,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		}
 		unassociate(metadata);
 		BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, 0);
+
+		return metadata;
 	}
 
 	protected Object convertToExternalContentIdType(S property, Object contentId) {

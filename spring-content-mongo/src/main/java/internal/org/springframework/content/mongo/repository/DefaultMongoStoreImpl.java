@@ -150,12 +150,12 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
-	public void unsetContent(S property) {
+	public S unsetContent(S property) {
 		if (property == null)
-			return;
+			return property;
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null)
-			return;
+			return property;
 
 		try {
 			String location = placer.convert(contentId, String.class);
@@ -188,6 +188,8 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 			logger.error(format("Unexpected error unsetting content for entity %s", property), ase);
 			throw new StoreAccessException(format("Unsetting content for entity %s", property), ase);
 		}
+
+		return property;
 	}
 
 	protected Object convertToExternalContentIdType(S property, Object contentId) {
