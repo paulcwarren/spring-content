@@ -15,11 +15,13 @@ public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	public static class TestConfigStoreImpl implements ContentStore {
 		@Override
-		public void setContent(Object property, InputStream content) {
+		public Object setContent(Object property, InputStream content) {
+			return null;
 		}
 
 		@Override
-		public void unsetContent(Object property) {
+		public Object unsetContent(Object property) {
+			return null;
 		}
 
 		@Override

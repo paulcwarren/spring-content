@@ -179,12 +179,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			}
 		}
 
-		info.getImpementation().unsetContent(domainObj);
-
-		// re-fetch to make sure we have the latest
-		if (BeanUtils.hasFieldWithAnnotation(domainObj, Version.class)) {
-			domainObj = findOne(repositories, info.getDomainObjectClass(), id);
-		}
+		domainObj = info.getImpementation().unsetContent(domainObj);
 
 		if (BeanUtils.hasFieldWithAnnotation(domainObj, MimeType.class)) {
 			BeanUtils.setFieldWithAnnotation(domainObj, MimeType.class, null);
@@ -227,7 +222,7 @@ public class ContentEntityRestController extends AbstractContentPropertyControll
 			}
 		}
 
-		info.getImpementation().setContent(domainObj, content);
+		domainObj = info.getImpementation().setContent(domainObj, content);
 
 		save(repositories, domainObj);
 
