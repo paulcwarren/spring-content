@@ -5,7 +5,7 @@
     <parent>
         <artifactId>spring-content</artifactId>
         <groupId>com.github.paulcwarren</groupId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.13.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,7 +14,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-commons</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.13.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-test</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>0.13.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
