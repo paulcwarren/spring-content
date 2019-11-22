@@ -6,9 +6,9 @@ language: java
 
 jdk:
 - openjdk8
-- openjdk10
-- openjdk11
-- openjdk12  
+#- openjdk10
+#- openjdk11
+#- openjdk12  
 
 env:
 - BUILD_TYPE=snapshot/$TRAVIS_BRANCH
