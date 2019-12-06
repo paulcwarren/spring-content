@@ -36,6 +36,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.MethodNotAllowedException;
+import org.springframework.web.util.UrlPathHelper;
 
 public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -74,6 +75,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
         String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        pathInfo = new UrlPathHelper().getPathWithinApplication(webRequest.getNativeRequest(HttpServletRequest.class));
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
