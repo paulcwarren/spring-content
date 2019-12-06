@@ -17,6 +17,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.util.UrlPathHelper;
 
 public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -33,6 +34,7 @@ public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgume
     public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
 
         String pathInfo = nativeWebRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        pathInfo = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
         pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
