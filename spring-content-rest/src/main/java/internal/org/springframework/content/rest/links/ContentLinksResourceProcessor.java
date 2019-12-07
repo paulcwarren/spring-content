@@ -43,6 +43,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static java.lang.String.format;
@@ -228,7 +229,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id, String rel) {
 
 		LinkBuilder builder = null;
-		builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
+		builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
 		builder = builder.slash(id);
 
@@ -236,7 +237,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	}
 
 	private Link fullyQualifiedLink(URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
-		LinkBuilder builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
+		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
 		builder = builder.slash(id);
 
@@ -247,7 +248,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	}
 
 	private Link propertyLink(URI baseUri, ContentStoreInfo store, Object id, String property, String contentId) {
-		LinkBuilder builder = StoreLinkBuilder.linkTo(store, new BaseUri(baseUri));
+		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
 		builder = builder.slash(id).slash(property);
 
@@ -260,8 +261,8 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	public static class StoreLinkBuilder extends LinkBuilderSupport<StoreLinkBuilder> {
 
-		public StoreLinkBuilder(BaseUri baseUri) {
-			super(baseUri.getUriComponentsBuilder());
+		public StoreLinkBuilder(BaseUri baseUri, ContentStoreInfo store) {
+			super(baseUri.getUriComponentsBuilder().path(storePath(store)));
 		}
 
 		@Override
@@ -271,24 +272,19 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 		@Override
 		protected StoreLinkBuilder createNewInstance(UriComponentsBuilder builder, List list) {
-			return new StoreLinkBuilder(new BaseUri(builder.toUriString()));
+			return new StoreLinkBuilder(new BaseUri(builder.toUriString()), null);
 		}
 
-		public static StoreLinkBuilder linkTo(ContentStoreInfo store, BaseUri baseUri) {
-			return new StoreLinkBuilder(new BaseUri(storePath(store, baseUri)));
+		public static StoreLinkBuilder linkTo(BaseUri baseUri, ContentStoreInfo store) {
+			return new StoreLinkBuilder(baseUri, store);
 		}
 
-		private static String storePath(ContentStoreInfo store, BaseUri baseUri) {
-			String storePath = ContentStoreUtils.storePath(store);
-			if (!StringUtils.isEmpty(baseUri.getUri().toString())) {
-				String basePath = baseUri.getUri().toString();
-				if (basePath.startsWith("/")) {
-					basePath = StringUtils.trimLeadingCharacter(basePath, '/');
-				}
-
-				storePath = format("%s/%s", basePath, storePath);
+		private static String storePath(ContentStoreInfo store) {
+			if (store == null) {
+				return "";
 			}
-			return storePath;
+			
+			return format("/%s", ContentStoreUtils.storePath(store));
 		}
 	}
 }

@@ -38,6 +38,7 @@ public class EntityContentLinkTests {
 
 	private Object testEntity;
 	private String url;
+	private String contextPath = "";
 	private String linkRel;
 	private String expectedLinkRegex;
 
@@ -50,7 +51,8 @@ public class EntityContentLinkTests {
 			Context("a GET to /{api}?/{repository}/{id}", () -> {
 				It("should provide a response with a content link", () -> {
 					MockHttpServletResponse response = mvc.perform(get(url)
-									.accept("application/hal+json"))
+									.accept("application/hal+json")
+									.contextPath(contextPath))
 							.andExpect(status().isOk()).andReturn().getResponse();
 					assertThat(response, is(not(nullValue())));
 

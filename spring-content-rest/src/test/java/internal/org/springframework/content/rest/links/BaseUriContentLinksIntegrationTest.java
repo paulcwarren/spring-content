@@ -90,7 +90,7 @@ public class BaseUriContentLinksIntegrationTest {
 					entityContentLinkTests.setStore(contentRepository3);
 					entityContentLinkTests.setTestEntity(testEntity3);
 					entityContentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					entityContentLinkTests.setLinkRel("testEntity3");
+					entityContentLinkTests.setLinkRel("testEntity3s");
 					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId());
 				});
 				entityContentLinkTests = new EntityContentLinkTests();
