@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package internal.org.springframework.content.rest.links;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,31 +33,31 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-import internal.org.springframework.content.rest.support.BaseUriConfig;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
 import internal.org.springframework.content.rest.support.TestEntity3Repository;
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-//@Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		ContextPathTest.ContextPathConfig.class,
+		ContextPathContentLinksIntegrationTest.ContextPathConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
-		RestConfiguration.class })
+		RestConfiguration.class,
+		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContextPathTest {
+public class ContextPathContentLinksIntegrationTest {
 
 	@Autowired
-	private TestEntity3Repository repo3;
-
+	TestEntity3Repository repository3;
 	@Autowired
-	private TestEntity3ContentRepository store3;
+	TestEntity3ContentRepository contentRepository3;
 
 	@Autowired
 	private WebApplicationContext context;
@@ -65,30 +66,28 @@ public class ContextPathTest {
 
 	private TestEntity3 testEntity3;
 
-	private Content contentTests;
-	
+	private EntityContentLinkTests entityContentLinkTests;
+
 	{
-		Describe("ContextPath Content Tests", () -> {
+		Describe("given the spring content baseUri property is set to contentApi", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
-			Context("given an entity is the subject of a repository and storage", () -> {
-				Context("given the repository and storage are exported to the same URI", () -> {
-					BeforeEach(() -> {
-						testEntity3 = repo3.save(new TestEntity3());
-						testEntity3.name = "tests";
-						testEntity3 = repo3.save(testEntity3);
 
-						contentTests.setMvc(mvc);
-						contentTests.setUrl("/contextPath/testEntity3s/" + testEntity3.getId());
-						contentTests.setEntity(testEntity3);
-						contentTests.setRepository(repo3);
-						contentTests.setStore(store3);
-						contentTests.setContextPath("/contextPath");
+			Context("given an Entity and a Store with a default store path", () -> {
+				BeforeEach(() -> {
+					testEntity3 = repository3.save(new TestEntity3());
 
-					});
-					contentTests = Content.tests();
+					entityContentLinkTests.setMvc(mvc);
+					entityContentLinkTests.setRepository(repository3);
+					entityContentLinkTests.setStore(contentRepository3);
+					entityContentLinkTests.setTestEntity(testEntity3);
+					entityContentLinkTests.setUrl("/contextPath/testEntity3s/" + testEntity3.getId());
+					entityContentLinkTests.setContextPath("/contextPath");
+					entityContentLinkTests.setLinkRel("testEntity3s");
+					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contextPath/testEntity3s/" + testEntity3.getId());
 				});
+				entityContentLinkTests = new EntityContentLinkTests();
 			});
 		});
 	}
