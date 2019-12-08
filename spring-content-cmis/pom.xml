@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>spring-content</artifactId>
 		<groupId>com.github.paulcwarren</groupId>
-		<version>1.0.0.M4-SNAPSHOT</version>
+		<version>1.0.0.M5-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>spring-content-cmis</artifactId>
@@ -62,7 +62,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>1.0.0.M4-SNAPSHOT</version>
+			<version>1.0.0.M5-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -120,13 +120,13 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs-boot-starter</artifactId>
-			<version>1.0.0.M4-SNAPSHOT</version>
+			<version>1.0.0.M5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-versions-jpa-boot-starter</artifactId>
-			<version>1.0.0.M4-SNAPSHOT</version>
+			<version>1.0.0.M5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
