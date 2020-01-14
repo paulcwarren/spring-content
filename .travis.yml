@@ -17,7 +17,7 @@ install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
- - mvn install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+ - mvn -P tests install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 deploy:
   - provider: script
