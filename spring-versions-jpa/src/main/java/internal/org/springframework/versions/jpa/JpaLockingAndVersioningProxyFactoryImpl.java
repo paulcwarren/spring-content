@@ -3,6 +3,7 @@ package internal.org.springframework.versions.jpa;
 import internal.org.springframework.versions.AuthenticationFacade;
 import internal.org.springframework.versions.LockingService;
 import org.aopalliance.aop.Advice;
+import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,10 +25,10 @@ public class JpaLockingAndVersioningProxyFactoryImpl implements LockingAndVersio
     private AuthenticationFacade auth;
 
     public JpaLockingAndVersioningProxyFactoryImpl(BeanFactory beanFactory,
-                                                   PlatformTransactionManager ptm,
-                                                   EntityManager em,
-                                                   LockingService locker,
-                                                   AuthenticationFacade auth) {
+            PlatformTransactionManager ptm,
+            EntityManager em,
+            LockingService locker,
+            AuthenticationFacade auth) {
         this.beanFactory = beanFactory;
         this.ptm = ptm;
         this.em = em;
@@ -35,16 +36,26 @@ public class JpaLockingAndVersioningProxyFactoryImpl implements LockingAndVersio
         this.auth = auth;
     }
 
-    public void apply(ProxyFactory result) {
+    public void apply(ProxyFactory proxy) {
         Assert.notNull(beanFactory, "Locking and Versioning requires a BeanFactory");
         Assert.notNull(ptm, "Locking and Versioning requires a PlatformTransactionManager");
         Assert.notNull(em, "Locking and Versioning requires an EntityManager");
         Assert.notNull(locker, "Locking and Versioning requires a locking service");
         Assert.notNull(auth, "Locking and Versioning requires an authentication service");
 
-        result.addAdvice(transactionInterceptor(ptm));
-        result.addAdvice(new OptimisticLockingInterceptor(em));
-        result.addAdvice(new PessimisticLockingInterceptor(locker, auth));
+        addTransactionAdviceIfNeeded(proxy, ptm);
+        proxy.addAdvice(new OptimisticLockingInterceptor(em));
+        proxy.addAdvice(new PessimisticLockingInterceptor(locker, auth));
+    }
+
+    protected void addTransactionAdviceIfNeeded(ProxyFactory proxy, PlatformTransactionManager ptm) {
+        Advisor[] advisors = proxy.getAdvisors();
+        for (Advisor advisor : advisors) {
+            if (advisor.getAdvice() instanceof TransactionInterceptor) {
+                return;
+            }
+        }
+        proxy.addAdvice(transactionInterceptor(ptm));
     }
 
     protected Advice transactionInterceptor(PlatformTransactionManager ptm) {

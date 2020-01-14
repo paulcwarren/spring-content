@@ -19,6 +19,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -97,6 +98,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		}
 	}
 
+	@Transactional
 	@Override
 	public S setContent(S entity, InputStream content) {
 		Resource resource = getResource(entity);
@@ -124,8 +126,6 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			IOUtils.closeQuietly(os);
 		}
 
-		waitForCommit((BlobResource) resource);
-
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
 				((BlobResource) resource).getId());
 		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, contentLen);
@@ -139,6 +139,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		}
 	}
 
+	@Transactional
 	@Override
 	public S unsetContent(S metadata) {
 		Object id = BeanUtils.getFieldWithAnnotation(metadata, ContentId.class);
