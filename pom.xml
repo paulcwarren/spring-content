@@ -201,7 +201,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 					<!-- Generate report after tests are run -->
 					<execution>
 						<id>post-unit-test</id>
-						<phase>test</phase>
+						<phase>integration-test</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
@@ -214,16 +214,45 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<version>2.18.1</version>
 				<configuration>
 					<argLine>${surefireArgLine}</argLine>
+				    <skipTests>true</skipTests>
 				</configuration>
 				<executions>
-					<execution>
+<!-- 					<execution>
 						<id>run-unit-tests</id>
 						<goals>
 							<goal>test</goal>
 						</goals>
 
 					</execution>
-				</executions>
+ -->
+			     <execution>
+			       <id>unit-tests</id>
+			       <phase>test</phase>
+			       <goals>
+			         <goal>test</goal>
+			        </goals>
+			       <configuration>
+			        <skipTests>false</skipTests>
+			        <includes>
+			          <include>**/*Test.java</include>
+			        </includes>
+			      </configuration>
+			     </execution>
+			     <execution>
+			      <id>integration-tests</id>
+			       <phase>integration-test</phase>
+			       <goals>
+			        <goal>test</goal>
+			      </goals>
+			       <configuration>
+			        <skipTests>false</skipTests>
+			        <includes>
+			          <include>**/*IT.*</include>
+			          <include>**/*Tests.*</include>
+			        </includes>
+			      </configuration>
+			    </execution>
+			  </executions>
 			</plugin>
 
 			<!-- Doc Publishing -->
