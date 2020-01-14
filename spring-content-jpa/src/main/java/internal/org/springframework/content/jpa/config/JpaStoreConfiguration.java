@@ -1,11 +1,16 @@
 package internal.org.springframework.content.jpa.config;
 
 import internal.org.springframework.content.jpa.io.MySQLBlobResource;
+import internal.org.springframework.content.jpa.io.PostgresBlobResource;
 import internal.org.springframework.content.jpa.io.SQLServerBlobResource;
 import org.springframework.content.jpa.io.CustomizableBlobResourceLoader;
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
 import internal.org.springframework.content.jpa.io.GenericBlobResource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.jpa.io.AbstractBlobResource;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,18 +23,18 @@ import java.util.List;
 @Configuration
 public class JpaStoreConfiguration {
 
-	@Autowired
-	private DataSource dataSource;
+	private static Log logger = LogFactory.getLog(JpaStoreConfiguration.class);
 
 	@Bean
-	public DelegatingBlobResourceLoader blobResourceLoader(DataSource ds,
-			List<BlobResourceLoader> loaders) {
+	public DelegatingBlobResourceLoader blobResourceLoader(DataSource ds, List<BlobResourceLoader> loaders) {
 		return new DelegatingBlobResourceLoader(ds, loaders);
 	}
 
 	@Bean
 	public BlobResourceLoader genericBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
-		return new CustomizableBlobResourceLoader(new JdbcTemplate(ds), txnMgr, "GENERIC", (l, t, txn) -> { return new GenericBlobResource(l, t, txn); });
+		return new CustomizableBlobResourceLoader(new JdbcTemplate(ds), txnMgr, "GENERIC", (l, t, txn) -> {
+			return new GenericBlobResource(l, t, txn); 
+		});
 	}
 
 	@Bean
@@ -37,6 +42,10 @@ public class JpaStoreConfiguration {
 		return new CustomizableBlobResourceLoader(new JdbcTemplate(ds), txnMgr, "MySQL", (l, t, txn) -> { return new MySQLBlobResource(l, t, txn); });
 	}
 
+	@Bean
+	public BlobResourceLoader postgresBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
+		return new CustomizableBlobResourceLoader(new JdbcTemplate(ds), txnMgr, "PostgreSQL", (l, t, txn) -> { return new PostgresBlobResource(l, t, txn); });
+	}
 	@Bean
 	public BlobResourceLoader sqlServerBlobResourceLoader(DataSource ds, PlatformTransactionManager txnMgr) {
 		return new CustomizableBlobResourceLoader(new JdbcTemplate(ds), txnMgr, "Microsoft SQL Server", (l, t, txn) -> { return new SQLServerBlobResource(l, t, txn); });

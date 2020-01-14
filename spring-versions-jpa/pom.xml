@@ -55,7 +55,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>2.8.47</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -66,8 +65,20 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>test</scope>
         </dependency>
 
+        <!-- New -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+            <scope>test</scope>
+		</dependency>
+				<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
     </dependencies>
 
 </project>
