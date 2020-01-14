@@ -13,6 +13,9 @@ jdk:
 env:
 - BUILD_TYPE=snapshot/$TRAVIS_BRANCH
 
+install:
+- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
 script:
  - mvn install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
