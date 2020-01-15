@@ -78,6 +78,10 @@ Spring Content JPA is designed to be used with this feature and therefore you mu
 The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
 streams it does comes with a significant performance disadvantage over bytea fields.
 
+Large Objects *must* be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
+convenience `ContentStore` modification methods are already marked as `@Transactional`.  Note, however query methods are not and
+therefore the transaction must be handled by the consumer.
+
 === SQL Server
 
 The SQL Server implementation uses https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering[adaptive buffering]
