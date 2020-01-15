@@ -527,6 +527,11 @@ that actually does stream the content properly (i.e. in reasonable size chunks) 
 <p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
 streams it does comes with a significant performance disadvantage over bytea fields.</p>
 </div>
+<div class="paragraph">
+<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
+convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
+therefore the transaction must be handled by the consumer.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_sql_server">SQL Server</h3>
@@ -577,7 +582,7 @@ content is initially set.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-14 05:55:33 UTC
+Last updated 2020-01-15 05:37:03 UTC
 </div>
 </div>
 </body>

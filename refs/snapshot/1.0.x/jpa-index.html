@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.0.0.M5-SNAPSHOT,</span>
-<span id="revdate">2020-01-14</span>
+<span id="revdate">2020-01-15</span>
 </div>
 </div>
 <div id="content">
@@ -1320,6 +1320,11 @@ that actually does stream the content properly (i.e. in reasonable size chunks) 
 <p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
 streams it does comes with a significant performance disadvantage over bytea fields.</p>
 </div>
+<div class="paragraph">
+<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
+convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
+therefore the transaction must be handled by the consumer.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_sql_server">2.1.3. SQL Server</h4>
@@ -1465,7 +1470,7 @@ content is initially set.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.M5-SNAPSHOT<br>
-Last updated 2020-01-14 05:55:33 UTC
+Last updated 2020-01-15 05:37:03 UTC
 </div>
 </div>
 </body>
