@@ -67,7 +67,7 @@ public class PostgresBlobResourceOutputStream extends BlobResourceOutputStream {
 				rs.moveToInsertRow();
 			} 
 			
-			LargeObjectManager lobj = ((org.postgresql.PGConnection)con).getLargeObjectAPI();
+			LargeObjectManager lobj = con.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
 			long oid = lobj.createLO(LargeObjectManager.READ | LargeObjectManager.WRITE);
 			lo = lobj.open(oid);
 			return lo.getOutputStream();
@@ -131,7 +131,7 @@ public class PostgresBlobResourceOutputStream extends BlobResourceOutputStream {
 	private void deleteReplacedLO(Connection con2, Long oidToBeRemoved) {
 		LargeObjectManager lobj;
 		try {
-			lobj = ((org.postgresql.PGConnection)con).getLargeObjectAPI();
+			lobj = con.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
 			lobj.delete(oidToBeRemoved);
 		} catch (SQLException e) {
 			e.printStackTrace();
