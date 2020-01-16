@@ -47,6 +47,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static java.lang.String.format;
 
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
 @ContentRestController
 public class StoreRestController implements InitializingBean  {
 
@@ -64,6 +68,8 @@ public class StoreRestController implements InitializingBean  {
 	private StoreByteRangeHttpRequestHandler handler;
 	@Autowired(required=false)
 	private RepositoryInvokerFactory repoInvokerFactory;
+	@Autowired(required=false)
+	private PlatformTransactionManager ptm;
 
 	public StoreRestController() {
 	}
@@ -115,10 +121,24 @@ public class StoreRestController implements InitializingBean  {
 		request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
 		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
 
+		TransactionStatus status = null;
 		try {
+		    if (ptm != null) {
+	            status = ptm.getTransaction(new DefaultTransactionDefinition());
+		    }
+		    
 			handler.handleRequest(request, response);
+			
+			if (status != null && status.isCompleted() == false) {
+			    ptm.commit(status);
+			}
 		}
 		catch (Exception e) {
+		    
+            if (status != null && status.isCompleted() == false) {
+                ptm.rollback(status);
+            }
+		    
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
 		}
 	}
