@@ -5,7 +5,9 @@ import java.lang.annotation.Annotation;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.content.fs.config.EnableFilesystemStores;
+import org.springframework.content.fs.store.FilesystemAssociativeStore;
 import org.springframework.content.fs.store.FilesystemContentStore;
+import org.springframework.content.fs.store.FilesystemStore;
 import org.springframework.core.type.AnnotationMetadata;
 
 public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistrar {
@@ -27,6 +29,6 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 
 	@Override
 	protected Class<?>[] getIdentifyingTypes() {
-		return new Class[]{FilesystemContentStore.class};
+		return new Class[]{FilesystemStore.class, FilesystemAssociativeStore.class, FilesystemContentStore.class};
 	}
 }
