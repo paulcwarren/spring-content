@@ -73,12 +73,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		ContentSearchRestControllerIntegrationTest.TestConfig.class,
+		ContentSearchRestControllerIT.TestConfig.class,
 		DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("search")
-public class ContentSearchRestControllerIntegrationTest {
+public class ContentSearchRestControllerIT {
 
 	@Autowired
 	TestEntityWithSharedIdsRepository repository;

@@ -52,7 +52,7 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentLinksResourceProcessorIntegrationTest {
+public class ContentLinksResourceProcessorIT {
 
 	@Autowired
 	private Repositories repositories;
