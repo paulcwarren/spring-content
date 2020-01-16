@@ -6,7 +6,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,11 +15,9 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.postgresql.PGConnection;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
 import org.springframework.content.jpa.io.AbstractBlobResource;
-import org.springframework.content.jpa.io.AbstractBlobResource.ClosingInputStream;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -59,7 +56,7 @@ public class PostgresBlobResource extends AbstractBlobResource {
 				} 
 			}
 			
-			LargeObjectManager lobj = ((org.postgresql.PGConnection)conn).getLargeObjectAPI();
+			LargeObjectManager lobj = conn.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
 			long oid = rs.getLong(2);
 			LargeObject obj = lobj.open(oid, LargeObjectManager.READ);
 			is = obj.getInputStream(-1);
