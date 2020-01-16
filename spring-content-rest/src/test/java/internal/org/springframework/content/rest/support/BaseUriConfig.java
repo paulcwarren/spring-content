@@ -1,6 +1,11 @@
 package internal.org.springframework.content.rest.support;
 
-import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+
 import org.apache.commons.io.IOUtils;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -16,11 +21,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurerAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
+import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
 @Configuration
 @EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.support")

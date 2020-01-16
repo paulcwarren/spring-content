@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 import org.apache.commons.io.IOUtils;
-
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -19,6 +17,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
 @Configuration
 @EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.support")

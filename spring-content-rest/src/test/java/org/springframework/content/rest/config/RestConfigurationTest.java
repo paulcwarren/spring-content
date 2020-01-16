@@ -12,6 +12,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.fs.store.FilesystemContentStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
@@ -105,7 +106,6 @@ public class RestConfigurationTest {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
 	}
 
-	public interface TestEntityContentRepository
-			extends ContentStore<TestEntity, String> {
+	public interface TestEntityContentRepository extends FilesystemContentStore<TestEntity, String> {
 	}
 }

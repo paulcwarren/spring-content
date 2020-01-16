@@ -28,6 +28,7 @@ import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.fs.store.FilesystemContentStore;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -452,7 +453,7 @@ public class ContentSearchRestControllerIntegrationTest {
 	}
 
 	public interface TestEntityNotSearchableStore
-			extends ContentStore<TestEntityNotSearchable, UUID> {
+			extends FilesystemContentStore<TestEntityNotSearchable, UUID> {
 	}
 
 	@Entity(name = "testentitysharedid")
@@ -464,7 +465,7 @@ public class ContentSearchRestControllerIntegrationTest {
 	}
 
 	public interface TestEntityWithSharedIdsSearchableStore
-			extends ContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
+			extends FilesystemContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
 	}
 
 	// stub out a Searchable implementation so that the content store can be intantiated
@@ -542,6 +543,6 @@ public class ContentSearchRestControllerIntegrationTest {
 	}
 
 	public interface TestEntityWithSeparateIdsSearchableStore
-			extends ContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
+			extends FilesystemContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
 	}
 }
