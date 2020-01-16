@@ -54,215 +54,215 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 @ContentRestController
 public class StoreRestController implements InitializingBean  {
 
-	private static final Logger logger = LoggerFactory.getLogger(StoreRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(StoreRestController.class);
 
-	private static final String STORE_REQUEST_MAPPING = "/{store}/**";
+    private static final String STORE_REQUEST_MAPPING = "/{store}/**";
 
-	@Autowired
-	ApplicationContext context;
-	@Autowired(required=false)
-	private Repositories repositories;
-	@Autowired
-	private ContentStoreService storeService;
-	@Autowired
-	private StoreByteRangeHttpRequestHandler handler;
-	@Autowired(required=false)
-	private RepositoryInvokerFactory repoInvokerFactory;
-	@Autowired(required=false)
-	private PlatformTransactionManager ptm;
+    @Autowired
+    ApplicationContext context;
+    @Autowired(required=false)
+    private Repositories repositories;
+    @Autowired
+    private ContentStoreService storeService;
+    @Autowired
+    private StoreByteRangeHttpRequestHandler handler;
+    @Autowired(required=false)
+    private RepositoryInvokerFactory repoInvokerFactory;
+    @Autowired(required=false)
+    private PlatformTransactionManager ptm;
 
-	public StoreRestController() {
-	}
+    public StoreRestController() {
+    }
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
-	public void getContent(HttpServletRequest request,
-			  			   HttpServletResponse response,
-						   @RequestHeader(value = "Accept", required = false) String requestedMimeTypes,
-			 			   Resource resource,
-						   MediaType resourceType,
-						   Object resourceETag) {
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
+    public void getContent(HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestHeader(value = "Accept", required = false) String requestedMimeTypes,
+            Resource resource,
+            MediaType resourceType,
+            Object resourceETag) {
 
-		if (resource == null || resource.exists() == false) {
-			throw new ResourceNotFoundException();
-		}
+        if (resource == null || resource.exists() == false) {
+            throw new ResourceNotFoundException();
+        }
 
-		long lastModified = -1;
-		try {
-			lastModified = resource.lastModified();
-		} catch (IOException e) {}
-		if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
-			return;
-		}
+        long lastModified = -1;
+        try {
+            lastModified = resource.lastModified();
+        } catch (IOException e) {}
+        if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
+            return;
+        }
 
-		// if a rendition was requested, prep it now
-		MediaType renderedResourceType = resourceType;
-		if (resource instanceof RenderableResource) {
+        // if a rendition was requested, prep it now
+        MediaType renderedResourceType = resourceType;
+        if (resource instanceof RenderableResource) {
 
-			List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-			if (mimeTypes.size() == 0) {
-				mimeTypes.add(MediaType.ALL);
-			}
+            List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+            if (mimeTypes.size() == 0) {
+                mimeTypes.add(MediaType.ALL);
+            }
 
-			MediaType.sortBySpecificityAndQuality(mimeTypes);
-			for (MediaType requestedMimeType : mimeTypes) {
-				if (requestedMimeType.includes(resourceType)) {
-					renderedResourceType = resourceType;
-					break;
-				}
-				else {
-					if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
-						resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
-						renderedResourceType = requestedMimeType;
-					}
-				}
-			}
-		}
+            MediaType.sortBySpecificityAndQuality(mimeTypes);
+            for (MediaType requestedMimeType : mimeTypes) {
+                if (requestedMimeType.includes(resourceType)) {
+                    renderedResourceType = resourceType;
+                    break;
+                }
+                else {
+                    if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
+                        resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
+                        renderedResourceType = requestedMimeType;
+                    }
+                }
+            }
+        }
 
-		request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
-		request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
+        request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
+        request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
 
-		TransactionStatus status = null;
-		try {
-		    if (ptm != null) {
-	            status = ptm.getTransaction(new DefaultTransactionDefinition());
-		    }
-		    
-			handler.handleRequest(request, response);
-			
-			if (status != null && status.isCompleted() == false) {
-			    ptm.commit(status);
-			}
-		}
-		catch (Exception e) {
-		    
+        TransactionStatus status = null;
+        try {
+            if (ptm != null) {
+                status = ptm.getTransaction(new DefaultTransactionDefinition());
+            }
+
+            handler.handleRequest(request, response);
+
+            if (status != null && status.isCompleted() == false) {
+                ptm.commit(status);
+            }
+        }
+        catch (Exception e) {
+
             if (status != null && status.isCompleted() == false) {
                 ptm.rollback(status);
             }
-		    
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
-		}
-	}
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {
-			"content-type!=multipart/form-data", "accept!=application/hal+json" })
-	@ResponseBody
-	public void putContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-							Resource resource,
-							Object resourceETag,
-							ContentService contentService)
-			throws IOException {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+        }
+    }
 
-		handleMultipart(response,
-						headers,
-						contentService,
-						resource,
-						resourceETag != null ? resourceETag.toString() : null,
-						request.getInputStream(),
-						headers.getContentType(),
-				null);
-	}
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {
+            "content-type!=multipart/form-data", "accept!=application/hal+json" })
+    @ResponseBody
+    public void putContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+            Resource resource,
+            Object resourceETag,
+            ContentService contentService)
+                    throws IOException {
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
-	@ResponseBody
-	public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-									@RequestParam("file") MultipartFile multiPart,
-									Resource resource,
-									Object resourceETag,
-									ContentService contentService)
-			throws IOException {
+        handleMultipart(response,
+                headers,
+                contentService,
+                resource,
+                resourceETag != null ? resourceETag.toString() : null,
+                        request.getInputStream(),
+                        headers.getContentType(),
+                        null);
+    }
 
-		handleMultipart(response,
-				headers,
-				contentService,
-				resource,
-				resourceETag != null ? resourceETag.toString() : null,
-				multiPart.getInputStream(),
-				MediaType.parseMediaType(multiPart.getContentType()),
-				multiPart.getOriginalFilename());
-	}
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
+    @ResponseBody
+    public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+            @RequestParam("file") MultipartFile multiPart,
+            Resource resource,
+            Object resourceETag,
+            ContentService contentService)
+                    throws IOException {
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
-	@ResponseBody
-	public void postMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-									@RequestParam("file") MultipartFile multiPart,
-									Resource resource,
-									Object resourceETag,
-									ContentService contentService)
-									throws IOException {
+        handleMultipart(response,
+                headers,
+                contentService,
+                resource,
+                resourceETag != null ? resourceETag.toString() : null,
+                        multiPart.getInputStream(),
+                        MediaType.parseMediaType(multiPart.getContentType()),
+                        multiPart.getOriginalFilename());
+    }
 
-		handleMultipart(response,
-						headers,
-						contentService,
-						resource,
-						resourceETag != null ? resourceETag.toString() : null,
-						multiPart.getInputStream(),
-						MediaType.parseMediaType(multiPart.getContentType()),
-						multiPart.getOriginalFilename());
-	}
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
+    @ResponseBody
+    public void postMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+            @RequestParam("file") MultipartFile multiPart,
+            Resource resource,
+            Object resourceETag,
+            ContentService contentService)
+                    throws IOException {
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = {"content-type!=multipart/form-data"})
-	@ResponseBody
-	public void postContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-			Resource resource,
-			Object resourceETag,
-			ContentService contentService)
-			throws IOException {
+        handleMultipart(response,
+                headers,
+                contentService,
+                resource,
+                resourceETag != null ? resourceETag.toString() : null,
+                        multiPart.getInputStream(),
+                        MediaType.parseMediaType(multiPart.getContentType()),
+                        multiPart.getOriginalFilename());
+    }
 
-		handleMultipart(response,
-				headers,
-				contentService,
-				resource,
-				resourceETag != null ? resourceETag.toString() : null,
-				request.getInputStream(),
-				headers.getContentType(),
-				null);
-	}
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = {"content-type!=multipart/form-data"})
+    @ResponseBody
+    public void postContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
+            Resource resource,
+            Object resourceETag,
+            ContentService contentService)
+                    throws IOException {
 
-	@RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
-	public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
-								Resource resource,
-								Object resourceETag,
-								ContentService contentService)
-			throws IOException {
+        handleMultipart(response,
+                headers,
+                contentService,
+                resource,
+                resourceETag != null ? resourceETag.toString() : null,
+                        request.getInputStream(),
+                        headers.getContentType(),
+                        null);
+    }
 
-		if (!resource.exists()) {
-			throw new ResourceNotFoundException();
-		} else {
-			HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
-		}
+    @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
+    public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
+            Resource resource,
+            Object resourceETag,
+            ContentService contentService)
+                    throws IOException {
 
-		contentService.unsetContent(resource);
+        if (!resource.exists()) {
+            throw new ResourceNotFoundException();
+        } else {
+            HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
+        }
 
-		response.setStatus(HttpStatus.NO_CONTENT.value());
-	}
+        contentService.unsetContent(resource);
 
-	protected void handleMultipart(HttpServletResponse response,
-									HttpHeaders headers,
-									ContentService contentService,
-									Resource resource,
-									Object resourceETag,
-									InputStream content,
-									MediaType mimeType,
-									String originalFilename)
-			throws IOException {
+        response.setStatus(HttpStatus.NO_CONTENT.value());
+    }
 
-		boolean isNew = false;
+    protected void handleMultipart(HttpServletResponse response,
+            HttpHeaders headers,
+            ContentService contentService,
+            Resource resource,
+            Object resourceETag,
+            InputStream content,
+            MediaType mimeType,
+            String originalFilename)
+                    throws IOException {
 
-		if (resource.exists()) {
-			HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
-		} else {
-			isNew = true;
-		}
+        boolean isNew = false;
 
-		contentService.setContent(content, mimeType, originalFilename, resource);
+        if (resource.exists()) {
+            HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
+        } else {
+            isNew = true;
+        }
 
-		if (isNew) {
-			response.setStatus(HttpStatus.CREATED.value());
-		}
-		else {
-			response.setStatus(HttpStatus.OK.value());
-		}
-	}
+        contentService.setContent(content, mimeType, originalFilename, resource);
+
+        if (isNew) {
+            response.setStatus(HttpStatus.CREATED.value());
+        }
+        else {
+            response.setStatus(HttpStatus.OK.value());
+        }
+    }
 
     public static Object save(Repositories repositories, Object domainObj)
             throws HttpRequestMethodNotSupportedException {
@@ -288,16 +288,16 @@ public class StoreRestController implements InitializingBean  {
         return domainObj;
     }
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		try {
-			this.repositories = context.getBean(Repositories.class);
-		}
-		catch (BeansException be) {
-			this.repositories = new Repositories(context);
-		}
-		if (this.repoInvokerFactory == null) {
-			this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
-		}
-	}
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try {
+            this.repositories = context.getBean(Repositories.class);
+        }
+        catch (BeansException be) {
+            this.repositories = new Repositories(context);
+        }
+        if (this.repoInvokerFactory == null) {
+            this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
+        }
+    }
 }
