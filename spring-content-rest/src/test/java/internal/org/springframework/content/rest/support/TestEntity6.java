@@ -6,12 +6,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Getter

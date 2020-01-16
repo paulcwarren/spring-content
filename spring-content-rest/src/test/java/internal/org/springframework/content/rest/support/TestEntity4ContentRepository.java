@@ -1,6 +1,6 @@
 package internal.org.springframework.content.rest.support;
 
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.fs.store.FilesystemContentStore;
 
-public interface TestEntity4ContentRepository extends ContentStore<TestEntity4, Long> {
+public interface TestEntity4ContentRepository extends FilesystemContentStore<TestEntity4, Long> {
 }

@@ -95,13 +95,22 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
+			<groupId>com.jayway.restassured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<version>2.3.4</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-test</artifactId> 
+			<scope>test</scope> </dependency> -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -130,6 +139,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
 			<scope>test</scope>
@@ -141,10 +155,21 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-		    <groupId>com.theoryinpractise</groupId>
-		    <artifactId>halbuilder-standard</artifactId>
-		    <version>4.0.1</version>
-		    <scope>test</scope>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-jpa</artifactId>
+			<version>1.0.0.M5-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.theoryinpractise</groupId>
+			<artifactId>halbuilder-standard</artifactId>
+			<version>4.0.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
