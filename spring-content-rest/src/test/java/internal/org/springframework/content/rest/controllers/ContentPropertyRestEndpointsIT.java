@@ -58,7 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentPropertyRestEndpointsIntegrationTest {
+public class ContentPropertyRestEndpointsIT {
 
 	@Autowired
 	private TestEntity2Repository repository2;

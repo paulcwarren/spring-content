@@ -1,9 +1,7 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.ByteArrayInputStream;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.BaseUriConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
@@ -11,15 +9,11 @@ import internal.org.springframework.content.rest.support.TestEntity3Repository;
 import internal.org.springframework.content.rest.support.TestEntity4;
 import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
 import internal.org.springframework.content.rest.support.TestEntity4Repository;
-import internal.org.springframework.content.rest.support.TestEntity6;
-import internal.org.springframework.content.rest.support.TestEntity6Repository;
-import internal.org.springframework.content.rest.support.TestEntity6Store;
 import internal.org.springframework.content.rest.support.TestEntityContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 import internal.org.springframework.content.rest.support.TestStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -32,54 +26,45 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
+import java.io.ByteArrayInputStream;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		StoreConfig.class,
+		BaseUriConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentEntityRestEndpointsIntegrationTest {
+public class BaseUriIT {
 
 	// different exported URI
 	@Autowired
-	TestEntityRepository repository;
+	private TestEntityRepository repository;
 	@Autowired
-	TestEntityContentRepository contentRepository;
+	private TestEntityContentRepository contentRepository;
 
 	// same exported URI
 	@Autowired
-	TestEntity3Repository repo3;
+	private TestEntity3Repository repo3;
 	@Autowired
-	TestEntity3ContentRepository store3;
+	private TestEntity3ContentRepository store3;
 
 	// same exported URI
 	@Autowired
-	TestEntity4Repository repo4;
+	private TestEntity4Repository repo4;
 	@Autowired
-	TestEntity4ContentRepository store4;
-
-	// shared @Id/@ContentId
-	@Autowired
-	TestEntity6Repository repo6;
-	@Autowired
-	TestEntity6Store store6;
+	private TestEntity4ContentRepository store4;
 
 	@Autowired
-	TestStore store;
+	private TestStore store;
 
 	@Autowired
 	private WebApplicationContext context;
@@ -89,7 +74,6 @@ public class ContentEntityRestEndpointsIntegrationTest {
 	private TestEntity testEntity;
 	private TestEntity3 testEntity3;
 	private TestEntity4 testEntity4;
-	private TestEntity6 testEntity6;
 
 	private Version version;
 	private LastModifiedDate lastModifiedDate;
@@ -99,7 +83,7 @@ public class ContentEntityRestEndpointsIntegrationTest {
 	private Cors corsTests;
 
 	{
-		Describe("Content Entity REST Endpoints", () -> {
+		Describe("BaseUri Content Tests", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -111,13 +95,13 @@ public class ContentEntityRestEndpointsIntegrationTest {
 						testEntity3 = repo3.save(testEntity3);
 
 						entityTests.setMvc(mvc);
-						entityTests.setUrl("/testEntity3s/" + testEntity3.id);
+						entityTests.setUrl("/api/testEntity3s/" + testEntity3.id);
 						entityTests.setEntity(testEntity3);
 						entityTests.setRepository(repo3);
 						entityTests.setLinkRel("testEntity");
 
 						contentTests.setMvc(mvc);
-						contentTests.setUrl("/testEntity3s/" + testEntity3.getId());
+						contentTests.setUrl("/contentApi/testEntity3s/" + testEntity3.getId());
 						contentTests.setEntity(testEntity3);
 						contentTests.setRepository(repo3);
 						contentTests.setStore(store3);
@@ -131,47 +115,32 @@ public class ContentEntityRestEndpointsIntegrationTest {
 						testEntity = repository.save(new TestEntity());
 
 						contentTests.setMvc(mvc);
-						contentTests.setUrl("/testEntitiesContent/" + testEntity.getId());
+						contentTests.setUrl("/contentApi/testEntitiesContent/" + testEntity.getId());
 						contentTests.setEntity(testEntity);
 						contentTests.setRepository(repository);
 						contentTests.setStore(contentRepository);
 
 						corsTests.setMvc(mvc);
-						corsTests.setUrl("/testEntitiesContent/" + testEntity.getId());
+						corsTests.setUrl("/contentApi/testEntitiesContent/" + testEntity.getId());
 					});
 					contentTests = Content.tests();
 					corsTests = Cors.tests();
-
-					//////////////////////////////////////////////
-					// Temporary test for testing spring data rest cors configurations
-					//
-					Context("an OPTIONS request to the repository from a known host", () -> {
-						It("should return the relevant CORS headers and OK", () -> {
-							mvc.perform(options("/testEntities/" + testEntity.getId())
-									.header("Access-Control-Request-Method", "PUT")
-									.header("Origin", "http://www.someurl.com"))
-									.andExpect(status().isOk())
-									.andExpect(header().string("Access-Control-Allow-Origin","http://www.someurl.com"));
-						});
-					});
-					//
-					//////////////////////////////////////////////
-
 				});
+
 				Context("given an entity with @Version", () -> {
 					BeforeEach(() -> {
 						testEntity4 = new TestEntity4();
 						testEntity4 = store4.setContent(testEntity4, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
-						String url = "/testEntity4s/" + testEntity4.getId();
+						String url = "/contentApi/testEntity4s/" + testEntity4.getId();
 
+						version.setEntity(testEntity4);
 						version.setMvc(mvc);
 						version.setUrl(url);
 						version.setRepo(repo4);
 						version.setStore(store4);
 						version.setEtag(format("\"%s\"", testEntity4.getVersion()));
-						version.setEntity(testEntity4);
 					});
 					version = Version.tests();
 				});
@@ -184,7 +153,7 @@ public class ContentEntityRestEndpointsIntegrationTest {
 						testEntity4 = store4.setContent(testEntity4, new ByteArrayInputStream(content.getBytes()));
 						testEntity4.mimeType = "text/plain";
 						testEntity4 = repo4.save(testEntity4);
-						String url = "/testEntity4s/" + testEntity4.getId();
+						String url = "/contentApi/testEntity4s/" + testEntity4.getId();
 
 						lastModifiedDate.setMvc(mvc);
 						lastModifiedDate.setUrl(url);
@@ -193,20 +162,6 @@ public class ContentEntityRestEndpointsIntegrationTest {
 						lastModifiedDate.setContent(content);
 					});
 					lastModifiedDate = LastModifiedDate.tests();
-				});
-
-				Context("given an entity with a shared Id and ContentId field", () -> {
-
-					BeforeEach(() -> {
-						testEntity6 = new TestEntity6();
-						testEntity6 = repo6.save(testEntity6);
-					});
-
-					It("should return 404 when no content is set", () -> {
-						mvc.perform(get("/testEntity6s/" + testEntity6.getId())
-									.accept("text/plain"))
-							.andExpect(status().isNotFound());
-					});
 				});
 			});
 		});

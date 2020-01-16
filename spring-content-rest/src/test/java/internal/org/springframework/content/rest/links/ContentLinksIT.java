@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.BaseUriConfig;
+import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity2Repository;
@@ -41,14 +41,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 @Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		BaseUriConfig.class,
+		StoreConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class,
 		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class BaseUriContentLinksIntegrationTest {
+public class ContentLinksIT {
 
 	@Autowired
 	TestEntityRepository repository;
@@ -76,7 +76,7 @@ public class BaseUriContentLinksIntegrationTest {
 	private EntityPropertyContentLinkTests entityPropertyContentLinkTests;
 
 	{
-		Describe("given the spring content baseUri property is set to contentApi", () -> {
+		Describe("given no baseUri are set", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
@@ -89,9 +89,9 @@ public class BaseUriContentLinksIntegrationTest {
 					entityContentLinkTests.setRepository(repository3);
 					entityContentLinkTests.setStore(contentRepository3);
 					entityContentLinkTests.setTestEntity(testEntity3);
-					entityContentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					entityContentLinkTests.setLinkRel("testEntity3s");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId());
+					entityContentLinkTests.setUrl("/testEntity3s/" + testEntity3.getId());
+					entityContentLinkTests.setLinkRel("testEntity3");
+					entityContentLinkTests.setExpectedLinkRegex("http://localhost/testEntity3s/" + testEntity3.getId());
 				});
 				entityContentLinkTests = new EntityContentLinkTests();
 			});
@@ -104,9 +104,9 @@ public class BaseUriContentLinksIntegrationTest {
 					entityContentLinkTests.setRepository(repository);
 					entityContentLinkTests.setStore(contentRepository);
 					entityContentLinkTests.setTestEntity(testEntity);
-					entityContentLinkTests.setUrl("/api/testEntities/" + testEntity.getId());
+					entityContentLinkTests.setUrl("/testEntities/" + testEntity.getId());
 					entityContentLinkTests.setLinkRel("testEntity");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntitiesContent/" + testEntity.getId());
+					entityContentLinkTests.setExpectedLinkRegex("http://localhost/testEntitiesContent/" + testEntity.getId());
 				});
 				entityContentLinkTests = new EntityContentLinkTests();
 			});
@@ -145,9 +145,9 @@ public class BaseUriContentLinksIntegrationTest {
 						entityPropertyContentLinkTests.setRepository(repository2);
 						entityPropertyContentLinkTests.setStore(contentRepository2);
 						entityPropertyContentLinkTests.setTestEntity(testEntity2);
-						entityPropertyContentLinkTests.setUrl("/api/files/" + testEntity2.getId());
+						entityPropertyContentLinkTests.setUrl("/files/" + testEntity2.getId());
 						entityPropertyContentLinkTests.setLinkRel("child");
-						entityPropertyContentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/files/" + testEntity2.getId()
+						entityPropertyContentLinkTests.setExpectedLinkRegex("http://localhost/files/" + testEntity2.getId()
 								+ "/child/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}");
 					});
 					entityPropertyContentLinkTests = new EntityPropertyContentLinkTests();

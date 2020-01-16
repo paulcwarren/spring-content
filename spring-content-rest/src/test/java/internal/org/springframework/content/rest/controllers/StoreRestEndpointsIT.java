@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		RepositoryRestMvcConfiguration.class, RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class StoreRestEndpointsIntegrationTest {
+public class StoreRestEndpointsIT {
 
 	@Autowired
 	TestStore store;

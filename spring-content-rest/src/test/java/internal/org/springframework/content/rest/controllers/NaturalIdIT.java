@@ -36,7 +36,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 		RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class NaturalIdTest {
+public class NaturalIdIT {
 
 	@Autowired
 	private TestEntity7Repository repo7;
