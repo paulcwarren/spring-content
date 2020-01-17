@@ -33,189 +33,204 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Setter
 public class Content {
 
-	private MockMvc mvc;
-	private String url;
-	private String contextPath = "";
-	private ContentEntity entity;
-	private CrudRepository repository;
-	private ContentStore store;
+    private MockMvc mvc;
+    private String url;
+    private String contextPath = "";
+    private ContentEntity entity;
+    private CrudRepository repository;
+    private ContentStore store;
 
-	public static Content tests() {
-		return new Content();
-	}
+    public static Content tests() {
+        return new Content();
+    }
 
-	{
-		Context("a GET to /{store}/{id} accepting a content mime-type", () -> {
-			It("should return 404", () -> {
-				mvc.perform(get(url)
-						.accept("text/plain"))
-						.andExpect(status().isNotFound());
-			});
-		});
-		Context("a PUT to /{store}/{id} with a content body", () -> {
-			It("should set the content and return 201", () -> {
-				String content = "Hello New Spring Content World!";
-				mvc.perform(
-						put(url)
-								.contextPath(contextPath)
-								.content(content)
-								.contentType("text/plain"))
-						.andExpect(status().isCreated());
+    {
+        Context("a GET to /{store}/{id} accepting a content mime-type", () -> {
+            It("should return 404", () -> {
+                mvc.perform(get(url)
+                        .accept("text/plain"))
+                .andExpect(status().isNotFound());
+            });
+        });
+        Context("a PUT to /{store}/{id} with a content body", () -> {
+            It("should set the content and return 201", () -> {
+                String content = "Hello New Spring Content World!";
+                mvc.perform(
+                        put(url)
+                        .contextPath(contextPath)
+                        .content(content)
+                        .contentType("text/plain"))
+                .andExpect(status().isCreated());
 
-				Optional<ContentEntity> fetched = repository.findById(entity.getId());
-				assertThat(fetched.isPresent(), is(true));
-				assertThat(fetched.get().getContentId(), is(not(nullValue())));
-				assertThat(fetched.get().getLen(), is(31L));
-				assertThat(fetched.get().getMimeType(), is("text/plain"));
-				assertThat(IOUtils.toString(store.getContent(fetched.get())), is(content));
-			});
-		});
-		Context("a DELETE to /{store}/{id} with a mime-type", () -> {
-			It("should return 404", () -> {
-				mvc.perform(delete(url)
-						.contextPath(contextPath)
-						.accept("text/plain")).andExpect(status().isNotFound());
-			});
-		});
-		Context("a POST to /{store}/{id} with a multi-part form-data request", () -> {
-			It("should set the content and return 200", () -> {
-				String content = "This is Spring Content!";
+                Optional<ContentEntity> fetched = repository.findById(entity.getId());
+                assertThat(fetched.isPresent(), is(true));
+                assertThat(fetched.get().getContentId(), is(not(nullValue())));
+                assertThat(fetched.get().getLen(), is(31L));
+                assertThat(fetched.get().getMimeType(), is("text/plain"));
+                assertThat(IOUtils.toString(store.getContent(fetched.get())), is(content));
+            });
+        });
+        Context("a DELETE to /{store}/{id} with a mime-type", () -> {
+            It("should return 404", () -> {
+                mvc.perform(delete(url)
+                        .contextPath(contextPath)
+                        .accept("text/plain")).andExpect(status().isNotFound());
+            });
+        });
+        Context("a POST to /{store}/{id} with a multi-part form-data request", () -> {
+            It("should set the content and return 200", () -> {
+                String content = "This is Spring Content!";
 
-				mvc.perform(multipart(url)
-						.file(new MockMultipartFile("file", "tests-file.txt", "text/plain", content.getBytes()))
-						.contextPath(contextPath)
-					)
-					.andExpect(status().isCreated());
+                mvc.perform(multipart(url)
+                        .file(new MockMultipartFile("file", "tests-file.txt", "text/plain", content.getBytes()))
+                        .contextPath(contextPath)
+                        )
+                .andExpect(status().isCreated());
 
-				Optional<ContentEntity> fetched = repository.findById(entity.getId());
-				assertThat(fetched.isPresent(), is(true));
-				assertThat(fetched.get().getContentId(), is(not(nullValue())));
-				assertThat(fetched.get().getOriginalFileName(), is("tests-file.txt"));
-				assertThat(fetched.get().getMimeType(), is("text/plain"));
-				assertThat(fetched.get().getLen(), is(new Long(content.length())));
-			});
-		});
+                Optional<ContentEntity> fetched = repository.findById(entity.getId());
+                assertThat(fetched.isPresent(), is(true));
+                assertThat(fetched.get().getContentId(), is(not(nullValue())));
+                assertThat(fetched.get().getOriginalFileName(), is("tests-file.txt"));
+                assertThat(fetched.get().getMimeType(), is("text/plain"));
+                assertThat(fetched.get().getLen(), is(new Long(content.length())));
+            });
+        });
 
-		Context("given the Entity has content", () -> {
-			BeforeEach(() -> {
-				String content = "Hello Spring Content World!";
-				store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
-				entity.setMimeType("text/plain");
-				entity = (ContentEntity)repository.save(entity);
-			});
-			Context("a GET to /{store}/{id}", () -> {
-				It("should return the original content and 200", () -> {
-					MockHttpServletResponse response = mvc
-							.perform(get(url)
-									.contextPath(contextPath)
-									.accept("text/plain"))
-							.andExpect(status().isOk()).andReturn().getResponse();
+        Context("given the Entity has content", () -> {
+            BeforeEach(() -> {
+                String content = "Hello Spring Content World!";
+                store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
+                entity.setMimeType("text/plain");
+                entity = (ContentEntity)repository.save(entity);
+            });
+            Context("a GET to /{store}/{id}", () -> {
+                It("should return the original content and 200", () -> {
+                    MockHttpServletResponse response = mvc
+                            .perform(get(url)
+                                    .contextPath(contextPath)
+                                    .accept("text/plain"))
+                            .andExpect(status().isOk()).andReturn().getResponse();
 
-					assertThat(response, is(not(nullValue())));
-					assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
-				});
-			});
-			Context("a GET to /{store}/{id} with no accept header", () -> {
-				It("should return the original content", () -> {
-					MockHttpServletResponse response = mvc.perform(
-							get(url)
-							.contextPath(contextPath)
-						)
-						.andExpect(status().isOk())
-						.andReturn().getResponse();
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+                });
+            });
+            Context("a GET to /{store}/{id} with no accept header", () -> {
+                It("should return the original content", () -> {
+                    MockHttpServletResponse response = mvc.perform(
+                            get(url)
+                            .contextPath(contextPath)
+                            )
+                            .andExpect(status().isOk())
+                            .andReturn().getResponse();
 
-					assertThat(response, is(not(nullValue())));
-					assertThat(response.getContentAsString(),is("Hello Spring Content World!"));
-				});
-			});
-			Context("a GET to /{store}/{id} with a mime type that matches a renderer", () -> {
-				It("should return the rendition and 200", () -> {
-					MockHttpServletResponse response = mvc
-							.perform(get(url)
-									.contextPath(contextPath)
-									.accept("text/html"))
-							.andExpect(status().isOk()).andReturn()
-							.getResponse();
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(),is("Hello Spring Content World!"));
+                });
+            });
+            Context("a GET to /{store}/{id} with a mime type that matches a renderer", () -> {
+                It("should return the rendition and 200", () -> {
+                    MockHttpServletResponse response = mvc
+                            .perform(get(url)
+                                    .contextPath(contextPath)
+                                    .accept("text/html"))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
 
-					assertThat(response, is(not(nullValue())));
-					assertThat(response.getContentLength(), is(-1));
-					assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
-				});
-			});
-			Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content", () -> {
-				It("should return the original content and 200", () -> {
-					MockHttpServletResponse response = mvc.perform(get(url)
-									.contextPath(contextPath)
-									.accept(new String[] { "text/xml", "text/*" }))
-							.andExpect(status().isOk()).andReturn()
-							.getResponse();
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentLength(), is(-1));
+                    assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+                    assertThat(response.getContentType(), is("text/html"));
+                });
+            });
+            Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content", () -> {
+                It("should return the original content and 200", () -> {
+                    MockHttpServletResponse response = mvc.perform(get(url)
+                            .contextPath(contextPath)
+                            .accept(new String[] { "text/xml", "text/*" }))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
 
-					assertThat(response, is(not(nullValue())));
-					assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
-				});
-			});
-			Context("a GET to /{store}/{id} with a range header", () -> {
-				It("should return the content range and 206", () -> {
-					MockHttpServletResponse response = mvc
-							.perform(get(url)
-									.contextPath(contextPath)
-									.accept("text/plain")
-									.header("range", "bytes=6-19"))
-							.andExpect(status().isPartialContent()).andReturn()
-							.getResponse();
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+                    assertThat(response.getContentType(), is("text/plain"));
+                });
+            });
+            Context("a GET to /{store}/{id} with multiple mime types the middle of which matches the content", () -> {
+                It("should return the original content and 200", () -> {
+                    MockHttpServletResponse response = mvc.perform(get(url)
+                            .contextPath(contextPath)
+                            .accept(new String[] { "text/xml", "text/html", "*/*" }))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
 
-					assertThat(response, is(not(nullValue())));
-					assertThat(response.getContentAsString(), is("Spring Content"));
-				});
-			});
-			Context("a PUT to /{store}/{id}", () -> {
-				It("should overwrite the content and return 200", () -> {
-					mvc.perform(put(url)
-							.contextPath(contextPath)
-							.content("Hello Modified Spring Content World!")
-							.contentType("text/plain"))
-							.andExpect(status().isOk());
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+                    assertThat(response.getContentType(), is("text/html"));
+                });
+            });
+            Context("a GET to /{store}/{id} with a range header", () -> {
+                It("should return the content range and 206", () -> {
+                    MockHttpServletResponse response = mvc
+                            .perform(get(url)
+                                    .contextPath(contextPath)
+                                    .accept("text/plain")
+                                    .header("range", "bytes=6-19"))
+                            .andExpect(status().isPartialContent()).andReturn()
+                            .getResponse();
 
-					assertThat(IOUtils.toString(store.getContent(entity)), is("Hello Modified Spring Content World!"));
-				});
-			});
-			Context("a POST to /{store}/{id} with a multi-part request", () -> {
-				It("should overwrite the content and return 200", () -> {
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("Spring Content"));
+                });
+            });
+            Context("a PUT to /{store}/{id}", () -> {
+                It("should overwrite the content and return 200", () -> {
+                    mvc.perform(put(url)
+                            .contextPath(contextPath)
+                            .content("Hello Modified Spring Content World!")
+                            .contentType("text/plain"))
+                    .andExpect(status().isOk());
 
-					String content = "This is Modified Spring Content!";
+                    assertThat(IOUtils.toString(store.getContent(entity)), is("Hello Modified Spring Content World!"));
+                });
+            });
+            Context("a POST to /{store}/{id} with a multi-part request", () -> {
+                It("should overwrite the content and return 200", () -> {
 
-					mvc.perform(multipart(url)
-							.file(new MockMultipartFile("file",
-									"tests-file-modified.txt",
-									"text/plain", content.getBytes()))
-							.contextPath(contextPath)
-						)
-						.andExpect(status().isOk());
+                    String content = "This is Modified Spring Content!";
 
-					Optional<ContentEntity> fetched = repository.findById(entity.getId());
-					assertThat(fetched.isPresent(), is(true));
-					assertThat(fetched.get().getContentId(), is(not(nullValue())));
-					assertThat(fetched.get().getOriginalFileName(), is("tests-file-modified.txt"));
-					assertThat(fetched.get().getMimeType(), is("text/plain"));
-					assertThat(fetched.get().getLen(), is(new Long(content.length())));
-				});
-			});
-			Context("a DELETE to /{store}/{id} with the mimetype", () -> {
-				It("should delete the content, attributes and return a 200 response", () -> {
-					mvc.perform(delete(url)
-							.contentType("text/plain")
-							.contextPath(contextPath)
-						)
-						.andExpect(status().isNoContent());
+                    mvc.perform(multipart(url)
+                            .file(new MockMultipartFile("file",
+                                    "tests-file-modified.txt",
+                                    "text/plain", content.getBytes()))
+                            .contextPath(contextPath)
+                            )
+                    .andExpect(status().isOk());
 
-					Optional<ContentEntity> fetched = repository.findById(entity.getId());
-					assertThat(fetched.isPresent(), is(true));
-					assertThat(fetched.get().getContentId(), is(nullValue()));
-					assertThat(fetched.get().getLen(), is(0L));
-					assertThat(fetched.get().getMimeType(), is(nullValue()));
-					assertThat(store.getContent(entity), is(nullValue()));
-				});
-			});
-		});
-	}
+                    Optional<ContentEntity> fetched = repository.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getContentId(), is(not(nullValue())));
+                    assertThat(fetched.get().getOriginalFileName(), is("tests-file-modified.txt"));
+                    assertThat(fetched.get().getMimeType(), is("text/plain"));
+                    assertThat(fetched.get().getLen(), is(new Long(content.length())));
+                });
+            });
+            Context("a DELETE to /{store}/{id} with the mimetype", () -> {
+                It("should delete the content, attributes and return a 200 response", () -> {
+                    mvc.perform(delete(url)
+                            .contentType("text/plain")
+                            .contextPath(contextPath)
+                            )
+                    .andExpect(status().isNoContent());
+
+                    Optional<ContentEntity> fetched = repository.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getContentId(), is(nullValue()));
+                    assertThat(fetched.get().getLen(), is(0L));
+                    assertThat(fetched.get().getMimeType(), is(nullValue()));
+                    assertThat(store.getContent(entity), is(nullValue()));
+                });
+            });
+        });
+    }
 }
