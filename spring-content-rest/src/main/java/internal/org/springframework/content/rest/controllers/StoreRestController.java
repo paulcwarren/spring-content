@@ -94,34 +94,50 @@ public class StoreRestController implements InitializingBean  {
             return;
         }
 
-        // if a rendition was requested, prep it now
-        MediaType renderedResourceType = resourceType;
-        if (resource instanceof RenderableResource) {
 
-            List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-            if (mimeTypes.size() == 0) {
-                mimeTypes.add(MediaType.ALL);
+        TransactionStatus status = null;
+        try {
+            if (ptm != null) {
+                status = ptm.getTransaction(new DefaultTransactionDefinition());
             }
 
-            MediaType.sortBySpecificityAndQuality(mimeTypes);
-            for (MediaType requestedMimeType : mimeTypes) {
-                if (requestedMimeType.includes(resourceType)) {
-                    renderedResourceType = resourceType;
-                    break;
+            // if a rendition was requested, prep it now
+            MediaType renderedResourceType = resourceType;
+            if (resource instanceof RenderableResource) {
+
+                List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                if (mimeTypes.size() == 0) {
+                    mimeTypes.add(MediaType.ALL);
                 }
-                else {
-                    if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
-                        resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
-                        renderedResourceType = requestedMimeType;
+
+                MediaType.sortBySpecificityAndQuality(mimeTypes);
+                for (MediaType requestedMimeType : mimeTypes) {
+                    if (requestedMimeType.includes(resourceType)) {
+                        renderedResourceType = resourceType;
+                        break;
+                    }
+                    else {
+                        if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
+                            resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
+                            renderedResourceType = requestedMimeType;
+                            break;
+                        }
                     }
                 }
             }
+
+            request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
+            request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
+
+            if (status != null && status.isCompleted() == false) {
+                ptm.commit(status);
+            }
+        } catch (Exception e) {
+            if (status != null) {
+                ptm.rollback(status);
+            }
         }
 
-        request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
-        request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
-
-        TransactionStatus status = null;
         try {
             if (ptm != null) {
                 status = ptm.getTransaction(new DefaultTransactionDefinition());
