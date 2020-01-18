@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.hsql;
+package internal.org.springframework.content.rest.it;
 
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
