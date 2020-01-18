@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.jpa;
+package internal.org.springframework.content.rest.it.pg;
 
 import javax.sql.DataSource;
 
@@ -42,7 +42,7 @@ public class Application {
 	@Import(RestConfiguration.class)
 	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
 	@EnableTransactionManagement
-	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.hsql")
+	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
 	public static class AppConfig {
         
         @Value("/org/springframework/content/jpa/schema-drop-postgresql.sql")

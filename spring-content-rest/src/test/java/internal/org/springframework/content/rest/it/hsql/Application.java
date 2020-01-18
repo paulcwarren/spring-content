@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.hsql;
+package internal.org.springframework.content.rest.it.hsql;
 
 import javax.sql.DataSource;
 
@@ -44,7 +44,7 @@ public class Application {
 	@Import({RestConfiguration.class})
 	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
 	@EnableTransactionManagement
-	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.hsql")
+	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
 	public static class AppConfig {
 	    @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")
 	    private ClassPathResource dropReopsitoryTables;
