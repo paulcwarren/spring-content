@@ -262,7 +262,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	public static class StoreLinkBuilder extends LinkBuilderSupport<StoreLinkBuilder> {
 
 		public StoreLinkBuilder(BaseUri baseUri, ContentStoreInfo store) {
-			super(baseUri.getUriComponentsBuilder().path(storePath(store)));
+			super(baseUri.getUriComponentsBuilder().path(storePath(store)).build());
 		}
 
 		@Override
