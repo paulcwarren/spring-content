@@ -1,5 +1,8 @@
 package org.springframework.content.elasticsearch;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 import javax.sql.DataSource;
 
 import org.apache.http.HttpHost;
@@ -7,6 +10,8 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.content.elasticsearch.EnableElasticsearchFulltextIndexing;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +29,8 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
+
 @Configuration
 @EnableElasticsearchFulltextIndexing
 @EnableJpaRepositories(considerNestedRepositories = true)
@@ -35,6 +42,34 @@ public class ElasticsearchConfig {
         return new DefaultFormattingConversionService();
     }
 
+    @Bean
+    public RestHighLevelClient client(EmbeddedElastic server) {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", server.getHttpPort(), "http")));
+//        return new RestHighLevelClient(RestClient.builder(new HttpHost("search-test2-tnipwmdwedcr6d2rmale5bjp7u.eu-west-2.es.amazonaws.com")));
+    }
+
+    @Bean
+    public RenditionProvider resourceConverter() {
+        return new RenditionProvider() {
+
+            @Override
+            public String consumes() {
+                return "image/png";
+            }
+
+            @Override
+            public String[] produces() {
+                return new String[] {"text/plain"};
+            }
+
+            @Override
+            public InputStream convert(InputStream fromInputSource, String toMimeType) {
+                return new ByteArrayInputStream("It was the best of times, the worst of times, it was the age of wisdom, it was the age of foolishness".getBytes());
+            }
+        };
+    }
+
+    
     @Bean
     public DataSource dataSource() {
         EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
@@ -60,12 +95,6 @@ public class ElasticsearchConfig {
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory().getObject());
         return txManager;
-    }
-
-    @Bean
-    public RestHighLevelClient client() {
-        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
-//        return new RestHighLevelClient(RestClient.builder(new HttpHost("search-test2-tnipwmdwedcr6d2rmale5bjp7u.eu-west-2.es.amazonaws.com")));
     }
 
     @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")

@@ -5,6 +5,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -18,10 +21,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 
+import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
+
 import static internal.org.springframework.content.elasticsearch.ElasticsearchIndexer.INDEX_NAME;
 import static java.lang.String.format;
 
 public class SearchableImpl implements Searchable<Serializable> {
+
+    private static final Log LOGGER = LogFactory.getLog(ElasticsearchIndexer.class);
 
 	private final RestHighLevelClient client;
 	private Class<?> domainClass;
@@ -53,8 +60,9 @@ public class SearchableImpl implements Searchable<Serializable> {
 		try {
 			res = client.search(searchRequest, RequestOptions.DEFAULT);
 		}
-		catch (IOException ioe) {
-			throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), ioe);
+		catch (IOException | ElasticsearchStatusException e) {
+		    LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
+			throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
 		}
 
 		return getIDs(res.getHits());
