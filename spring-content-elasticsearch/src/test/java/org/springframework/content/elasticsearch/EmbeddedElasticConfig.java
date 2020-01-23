@@ -18,12 +18,12 @@ public class EmbeddedElasticConfig {
 	@Bean
 	public EmbeddedElastic embeddedElastic() throws IOException, InterruptedException {
 		return EmbeddedElastic.builder()
-				.withElasticVersion("6.8.2")
+				.withElasticVersion("6.8.6")
 				.withSetting(CLUSTER_NAME, "testCluster")
 				.withSetting("discovery.zen.ping_timeout", 0)
 				.withPlugin("ingest-attachment")
 				.withEsJavaOpts("-Xms128m -Xmx512m")
-				.withStartTimeout(1, MINUTES)
+				.withStartTimeout(2, MINUTES)
 				.build()
 				.start();
 	}

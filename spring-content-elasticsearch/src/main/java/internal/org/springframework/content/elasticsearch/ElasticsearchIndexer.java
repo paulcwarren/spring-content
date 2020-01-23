@@ -1,5 +1,7 @@
 package internal.org.springframework.content.elasticsearch;
 
+import static java.lang.String.format;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,17 +23,16 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.xcontent.XContentType;
-
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.StoreEventHandler;
+import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.util.Assert;
-
-import static java.lang.String.format;
 
 @StoreEventHandler
 public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
@@ -42,10 +43,12 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 	private static final String SPRING_CONTENT_ATTACHMENT = "spring-content-attachment-pipeline";
 	private static final int BUFFER_SIZE = 3 * 1024;
 
-	private RestHighLevelClient client;
+	private final RestHighLevelClient client;
+	private final RenditionService renditionService;
 
-	public ElasticsearchIndexer(RestHighLevelClient client) throws IOException {
+	public ElasticsearchIndexer(RestHighLevelClient client, RenditionService renditionService) throws IOException {
 		this.client = client;
+		this.renditionService = renditionService;
 		ensureAttachmentPipeline();
 	}
 
@@ -54,9 +57,19 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 		String id = BeanUtils.getFieldWithAnnotation(event.getSource(), ContentId.class).toString();
 		InputStream stream = event.getStore().getContent(event.getSource());
 
+		if (renditionService != null) {
+			Object mimeType = BeanUtils.getFieldWithAnnotation(event.getSource(), MimeType.class);
+			if (mimeType != null) {
+				String strMimeType = mimeType.toString();
+				if (renditionService.canConvert(strMimeType, "text/plain")) {
+					stream = renditionService.convert(strMimeType, stream, "text/plain");
+				}
+			}
+		}
+
 		StringBuilder result = new StringBuilder();
 		try {
-			try (BufferedInputStream in = new BufferedInputStream(stream, BUFFER_SIZE); ) {
+			try (BufferedInputStream in = new BufferedInputStream(stream, BUFFER_SIZE)) {
 				Base64.Encoder encoder = Base64.getEncoder();
 				byte[] chunk = new byte[BUFFER_SIZE];
 				int len = 0;
