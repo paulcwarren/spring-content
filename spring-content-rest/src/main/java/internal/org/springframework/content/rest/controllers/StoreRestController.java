@@ -133,9 +133,14 @@ public class StoreRestController implements InitializingBean  {
                 ptm.commit(status);
             }
         } catch (Exception e) {
+            
+            logger.error("Unable to retrieve rendition", e);
+            
             if (status != null) {
                 ptm.rollback(status);
             }
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
         }
 
         try {
@@ -151,6 +156,8 @@ public class StoreRestController implements InitializingBean  {
         }
         catch (Exception e) {
 
+            logger.error("Unable to handle request", e);
+            
             if (status != null && status.isCompleted() == false) {
                 ptm.rollback(status);
             }

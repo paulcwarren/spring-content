@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.convert.Jsr310Converters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.resource.HttpResource;
 
 import java.io.File;
@@ -142,7 +143,7 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
         HttpHeaders headers = new HttpHeaders();
         // Modified to show download
         Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
-        if (originalFileName != null) {
+        if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
             headers.setContentDispositionFormData("attachment", (String) originalFileName);
         }
         return headers;
