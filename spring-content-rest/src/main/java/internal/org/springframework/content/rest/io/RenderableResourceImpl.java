@@ -12,15 +12,17 @@ import org.apache.commons.io.IOUtils;
 
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
+import org.springframework.web.servlet.resource.HttpResource;
 
 /**
  * Represents an input stream provided by a renderer as a resource.
  *
  * TODO: refactor this into the renditions sub-system.
  */
-public class RenderableResourceImpl implements Resource, RenderableResource {
+public class RenderableResourceImpl implements Resource, HttpResource, RenderableResource {
 
     private final Renderable renderer;
     private final AssociatedResource original;
@@ -116,5 +118,14 @@ public class RenderableResourceImpl implements Resource, RenderableResource {
     @Override
     public String getDescription() {
         return original.getDescription();
+    }
+
+    @Override
+    public HttpHeaders getResponseHeaders() {
+        if (original instanceof HttpResource) {
+            return ((HttpResource)original).getResponseHeaders();
+        } else {
+          return new HttpHeaders();  
+        }
     }
 }
