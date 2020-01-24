@@ -476,6 +476,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_overview">2.1. Overview</a></li>
 <li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
 <li><a href="#_making_stores_searchable">2.3. Making Stores Searchable</a></li>
+<li><a href="#_text_extraction">2.4. Text Extraction</a></li>
 </ul>
 </li>
 </ul>
@@ -1275,8 +1276,84 @@ public static class ApplicationConfig {
 <h3 id="_making_stores_searchable">2.3. Making Stores Searchable</h3>
 <div class="paragraph">
 <p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
-<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.
-:leveloffset: -1</p>
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_text_extraction">2.4. Text Extraction</h3>
+<div class="paragraph">
+<p>For images and other media, it also possible to configure the elasticsearch integration
+to perform text extraction and send that instead of the image content to elasticsearch.</p>
+</div>
+<div class="paragraph">
+<p>This requires two stages of configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Add one or more renderers to the application context.  These renderers
+are used to perform the text extraction.  The renderer <strong>must</strong> produce the mimetype
+<code>text/plain</code> and will be invoked by the elasticsearch indexer when content matching
+their "consume" mime-type is added.</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock">
+<div class="title">Example 12. Adding a renderer to perform text extraction</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing
+@EnableFilesystemStores
+public static class ApplicationConfig {
+
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+    @Bean
+    public RenditionProvider jpgTextExtractor() {
+        return new RenditionProvider() {
+
+            @Override
+            public String consumes() {
+                return "image/jpg";
+            }
+
+            @Override
+            public String[] produces() {
+                return new String[] {"text/plain"};
+            }
+
+            @Override
+            public InputStream convert(InputStream fromInputSource, String toMimeType) {
+                ...implementation...
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Make the Store Renderable</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock">
+<div class="title">Example 13. Making the Store interface Renderable</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentStore extends ContentStore&lt;Document, UUID&gt; implements Searchable&lt;Document&gt;, Renderable&lt;Document&gt; {
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1285,7 +1362,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.M6-SNAPSHOT<br>
-Last updated 2020-01-24 01:05:55 UTC
+Last updated 2020-01-24 01:30:26 UTC
 </div>
 </div>
 </body>
