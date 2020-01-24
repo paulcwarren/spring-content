@@ -1,13 +1,14 @@
 package internal.org.springframework.content.rest.controllers;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
 import java.util.Optional;
+import java.util.UUID;
 
 import internal.org.springframework.content.rest.support.ContentEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
-
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -16,13 +17,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -67,7 +67,7 @@ public class Content {
                 assertThat(fetched.get().getContentId(), is(not(nullValue())));
                 assertThat(fetched.get().getLen(), is(31L));
                 assertThat(fetched.get().getMimeType(), is("text/plain"));
-                assertThat(IOUtils.toString(store.getContent(fetched.get())), is(content));
+                assertThat(IOUtils.toString(store.getContent(fetched.get()), Charset.defaultCharset()), is(content));
             });
         });
         Context("a DELETE to /{store}/{id} with a mime-type", () -> {
@@ -82,7 +82,7 @@ public class Content {
                 String content = "This is Spring Content!";
 
                 mvc.perform(multipart(url)
-                        .file(new MockMultipartFile("file", "tests-file.txt", "text/plain", content.getBytes()))
+                        .file(new MockMultipartFile("file", "表单ID及字段.txt", "text/plain", content.getBytes()))
                         .contextPath(contextPath)
                         )
                 .andExpect(status().isCreated());
@@ -90,7 +90,7 @@ public class Content {
                 Optional<ContentEntity> fetched = repository.findById(entity.getId());
                 assertThat(fetched.isPresent(), is(true));
                 assertThat(fetched.get().getContentId(), is(not(nullValue())));
-                assertThat(fetched.get().getOriginalFileName(), is("tests-file.txt"));
+                assertThat(fetched.get().getOriginalFileName(), is("表单ID及字段.txt"));
                 assertThat(fetched.get().getMimeType(), is("text/plain"));
                 assertThat(fetched.get().getLen(), is(new Long(content.length())));
             });
@@ -99,12 +99,13 @@ public class Content {
         Context("given the Entity has content", () -> {
             BeforeEach(() -> {
                 String content = "Hello Spring Content World!";
-                store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
+                entity = (ContentEntity) store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
                 entity.setMimeType("text/plain");
-                entity = (ContentEntity)repository.save(entity);
+                entity.setOriginalFileName("表单ID及字段.txt");
+                entity = (ContentEntity) repository.save(entity);
             });
             Context("a GET to /{store}/{id}", () -> {
-                It("should return the original content and 200", () -> {
+                It("should return the original content, filename and 200", () -> {
                     MockHttpServletResponse response = mvc
                             .perform(get(url)
                                     .contextPath(contextPath)
@@ -112,6 +113,7 @@ public class Content {
                             .andExpect(status().isOk()).andReturn().getResponse();
 
                     assertThat(response, is(not(nullValue())));
+                    assertThat(response.getHeader("Content-Disposition"), containsString("表单ID及字段.txt"));
                     assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
                 });
             });
@@ -191,7 +193,7 @@ public class Content {
                             .contentType("text/plain"))
                     .andExpect(status().isOk());
 
-                    assertThat(IOUtils.toString(store.getContent(entity)), is("Hello Modified Spring Content World!"));
+                    assertThat(IOUtils.toString(store.getContent(entity), Charset.defaultCharset()), is("Hello Modified Spring Content World!"));
                 });
             });
             Context("a POST to /{store}/{id} with a multi-part request", () -> {
