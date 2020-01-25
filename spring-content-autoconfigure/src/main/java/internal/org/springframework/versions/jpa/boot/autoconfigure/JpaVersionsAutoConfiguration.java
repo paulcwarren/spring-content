@@ -34,4 +34,8 @@ public class JpaVersionsAutoConfiguration {
                                                              ResourceLoader resourceLoader) {
         return new JpaVersionsDatabaseInitializer(dataSource, resourceLoader, this.properties);
     }
+    
+    @Configuration
+    @Import(JpaVersionsAutoConfigureRegistrar.class)
+    public static class JpaVersionAutoConfig {}
 }
