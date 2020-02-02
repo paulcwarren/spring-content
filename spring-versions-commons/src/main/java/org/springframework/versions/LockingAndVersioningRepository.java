@@ -82,11 +82,21 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * method would usually be preferred over CrudRepository's findAll that would find all versions
      * of all entities.
      *
+     * @return list of latest versionWithEntity entities
+     * @deprecated
+     */
+    @Deprecated
+    <S extends T> List<S> findAllVersionsLatest();
+
+    /**
+     * Returns the latest version of all entities.  When extending LockingAndVersioningRepository this
+     * method would usually be preferred over CrudRepository's findAll that would find all versions
+     * of all entities.
+     *
      * @param <S> the type of entity
      * @return list of latest versionWithEntity entities
      */
-    @Query("select t from #{#entityName} t where t.successorId = null and t.id NOT IN (select f1.id FROM #{#entityName} f1 inner join #{#entityName} f2 on f1.ancestorId = f2.id and f2.successorId = null)")
-    <S extends T> List<S> findAllVersionsLatest();
+    <S extends T> List<S> findAllVersionsLatest(Class<S> entityClass);
 
     /**
      * Returns a list of all versions for the given entity.
@@ -95,8 +105,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @param entity the entity to find versions for
      * @return list of entity versions
      */
-    @Query("select t from #{#entityName} t where t.ancestralRootId = ?#{#entity.ancestralRootId}")
-    <S extends T> List<S> findAllVersions(@Param("entity") S entity);
+    <S extends T> List<S> findAllVersions(S entity);
 
     /**
      * Deletes a given entity version.  The entity must be the head of the version list.
