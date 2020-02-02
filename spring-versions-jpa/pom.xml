@@ -39,6 +39,11 @@
             <artifactId>spring-versions-commons</artifactId>
             <version>1.0.0.M6-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.4</version>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
