@@ -72,7 +72,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Transactional
     public <S extends T> S lock(S entity) {
         Authentication authentication = auth.getAuthentication();
-        if (!authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("no principal");
         }
         Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
