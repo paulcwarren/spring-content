@@ -192,7 +192,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         Object newId = getId(newVersion);
 
         newVersion = this.lock(newVersion);
-		newVersion = em.merge(newVersion);
+      newVersion = em.merge(newVersion);
 
         return newVersion;
     }
@@ -201,7 +201,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Transactional
     public <S extends T> S version(S currentVersion, VersionInfo info) {
 
-    	Authentication authentication = auth.getAuthentication();
+      Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("no principal");
         }
@@ -244,7 +244,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             Object newId = getId(newVersion);
 
             newVersion = this.lock(newVersion);
-			newVersion = em.merge(newVersion);
+         newVersion = em.merge(newVersion);
         } else {
 
             newVersion = currentVersion;
@@ -322,7 +322,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Override
     public <S extends T> void delete(S entity) {
 
-    	Authentication authentication = auth.getAuthentication();
+      Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("no principal");
         }

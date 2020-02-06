@@ -29,23 +29,23 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @ComponentScan(excludeFilters={
-		@Filter(type = FilterType.REGEX,
-				pattern = {
-						".*MongoConfiguration", 
-		})
+      @Filter(type = FilterType.REGEX,
+            pattern = {
+                  ".*MongoConfiguration", 
+      })
 })
 public class Application {
 
-	public static void main(String[] args) {
+   public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
-	
-	@Configuration
+   
+   @Configuration
     @Import({RestConfiguration.class, SecurityConfiguration.class})
-	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
-	@EnableTransactionManagement
-	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
-	public static class AppConfig {
+   @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
+   @EnableTransactionManagement
+   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
+   public static class AppConfig {
         
         @Value("/org/springframework/content/jpa/schema-drop-sqlserver.sql")
         private ClassPathResource dropReopsitoryTables;
@@ -111,5 +111,5 @@ public class Application {
             txManager.setEntityManagerFactory(entityManagerFactory().getObject());
             return txManager;
         }
-	}
+   }
 }

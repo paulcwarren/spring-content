@@ -37,74 +37,74 @@ import static org.mockito.Mockito.verify;
 @Ginkgo4jConfiguration(threads = 1)
 public class RestConfigurationTest {
 
-	private AnnotationConfigWebApplicationContext context;
+   private AnnotationConfigWebApplicationContext context;
 
-	// mocks
-	private static ContentRestConfigurer configurer;
+   // mocks
+   private static ContentRestConfigurer configurer;
 
-	{
-		Describe("RestConfiguration", () -> {
-			BeforeEach(() -> {
-				configurer = mock(ContentRestConfigurer.class);
-			});
-			Context("given a context with a ContentRestConfiguration", () -> {
-				BeforeEach(() -> {
-					context = new AnnotationConfigWebApplicationContext();
-					context.setServletContext(new MockServletContext());
-					context.register(TestConfig.class,
-							DelegatingWebMvcConfiguration.class,
-							RepositoryRestMvcConfiguration.class,
-							RestConfiguration.class);
-					context.refresh();
-				});
+   {
+      Describe("RestConfiguration", () -> {
+         BeforeEach(() -> {
+            configurer = mock(ContentRestConfigurer.class);
+         });
+         Context("given a context with a ContentRestConfiguration", () -> {
+            BeforeEach(() -> {
+               context = new AnnotationConfigWebApplicationContext();
+               context.setServletContext(new MockServletContext());
+               context.register(TestConfig.class,
+                     DelegatingWebMvcConfiguration.class,
+                     RepositoryRestMvcConfiguration.class,
+                     RestConfiguration.class);
+               context.refresh();
+            });
 
-				It("should have a content handler mapping bean", () -> {
-					assertThat(context.getBean("contentHandlerMapping"),
-							is(not(nullValue())));
-				});
+            It("should have a content handler mapping bean", () -> {
+               assertThat(context.getBean("contentHandlerMapping"),
+                     is(not(nullValue())));
+            });
 
-				It("should have the content rest controllers", () -> {
-					assertThat(
-							context.getBean("storeRestController"), is(not(nullValue())));
-				});
+            It("should have the content rest controllers", () -> {
+               assertThat(
+                     context.getBean("storeRestController"), is(not(nullValue())));
+            });
 
-				It("should be configurable", () -> {
-					RestConfiguration config = context.getBean(RestConfiguration.class);
-					assertThat(config, is(not(nullValue())));
+            It("should be configurable", () -> {
+               RestConfiguration config = context.getBean(RestConfiguration.class);
+               assertThat(config, is(not(nullValue())));
 
-					verify(configurer).configure(config);
-				});
-			});
-		});
-	}
+               verify(configurer).configure(config);
+            });
+         });
+      });
+   }
 
-	@Configuration
-	@EnableFilesystemStores
-	public static class TestConfig {
+   @Configuration
+   @EnableFilesystemStores
+   public static class TestConfig {
 
-		@Bean
-		public FileSystemResourceLoader filesystemRoot() throws IOException {
-			return new FileSystemResourceLoader(Files.createTempDirectory("").toFile().getAbsolutePath());
-		}
+      @Bean
+      public FileSystemResourceLoader filesystemRoot() throws IOException {
+         return new FileSystemResourceLoader(Files.createTempDirectory("").toFile().getAbsolutePath());
+      }
 
-		@Bean
-		public ContentRestConfigurer configurer() {
-			return configurer;
-		}
-	}
+      @Bean
+      public ContentRestConfigurer configurer() {
+         return configurer;
+      }
+   }
 
-	@Document
-	@Content
-	public class TestEntity {
-		@Id
-		private String id;
-		@ContentId
-		private String contentId;
-	}
+   @Document
+   @Content
+   public class TestEntity {
+      @Id
+      private String id;
+      @ContentId
+      private String contentId;
+   }
 
-	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
-	}
+   public interface TestEntityRepository extends MongoRepository<TestEntity, String> {
+   }
 
-	public interface TestEntityContentRepository extends FilesystemContentStore<TestEntity, String> {
-	}
+   public interface TestEntityContentRepository extends FilesystemContentStore<TestEntity, String> {
+   }
 }
