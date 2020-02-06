@@ -1,4 +1,4 @@
-package org.springframework.data.rest.extensions.versioning;
+package org.springframework.data.rest.versioning;
 
 import java.lang.reflect.Method;
 import java.security.Principal;
@@ -51,7 +51,7 @@ public class LockingAndVersioningRestController {
 		LOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "lock", Object.class);
 		UNLOCK_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "unlock", Object.class);
 		VERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "version", Object.class, VersionInfo.class);
-		FINDALLLATESTVERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersionsLatest");
+		FINDALLLATESTVERSION_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersionsLatest", Class.class);
 		FINDALLVERSIONS_METHOD = ReflectionUtils.findMethod(LockingAndVersioningRepository.class, "findAllVersions", Object.class);
 	}
 
@@ -137,14 +137,14 @@ public class LockingAndVersioningRestController {
 												  @PathVariable String repository)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
-		RepositoryInformation repositoryInfo = RepositoryUtils.findRepositoryInformation(repositories, repository);
-		Class<?> domainType = repositoryInfo.getDomainType();
+			RepositoryInformation repositoryInfo = RepositoryUtils.findRepositoryInformation(repositories, repository);
+			Class<?> domainType = repositoryInfo.getDomainType();
 
-		List results = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainType).get());
+			List results = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainType).get(), domainType);
 
-        ResourceMetadata metadata = repoInfo.getResourceMetadata();
-        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
-        return result;
+	        ResourceMetadata metadata = repoInfo.getResourceMetadata();
+	        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+	        return result;
 	}
 
 	@ResponseBody

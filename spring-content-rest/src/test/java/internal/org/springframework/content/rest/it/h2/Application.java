@@ -2,6 +2,8 @@ package internal.org.springframework.content.rest.it.h2;
 
 import javax.sql.DataSource;
 
+import internal.org.springframework.content.rest.it.SecurityConfiguration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,6 +25,8 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -31,7 +35,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ComponentScan(excludeFilters={
 		@Filter(type = FilterType.REGEX,
 				pattern = {
-						".*MongoConfiguration", 
+						".*MongoConfiguration"
 		})
 })
 public class Application {
@@ -41,7 +45,7 @@ public class Application {
     }
 	
 	@Configuration
-	@Import({RestConfiguration.class})
+	@Import({RestConfiguration.class, SecurityConfiguration.class})
 	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
 	@EnableTransactionManagement
 	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")

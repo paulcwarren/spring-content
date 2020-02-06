@@ -2,6 +2,8 @@ package internal.org.springframework.content.rest.it.hsql;
 
 import javax.sql.DataSource;
 
+import internal.org.springframework.content.rest.it.SecurityConfiguration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -41,7 +43,7 @@ public class Application {
     }
 	
 	@Configuration
-	@Import({RestConfiguration.class})
+	@Import({RestConfiguration.class, SecurityConfiguration.class})
 	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
 	@EnableTransactionManagement
 	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
