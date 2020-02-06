@@ -31,69 +31,69 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @ComponentScan(excludeFilters={
-		@Filter(type = FilterType.REGEX,
-				pattern = {
-						".*MongoConfiguration", 
-		})
+      @Filter(type = FilterType.REGEX,
+            pattern = {
+                  ".*MongoConfiguration", 
+      })
 })
 public class Application {
 
-	public static void main(String[] args) {
+   public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
-	
-	@Configuration
-	@Import({RestConfiguration.class, SecurityConfiguration.class})
-	@EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
-	@EnableTransactionManagement
-	@EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
-	public static class AppConfig {
-	    @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")
-	    private ClassPathResource dropReopsitoryTables;
+   
+   @Configuration
+   @Import({RestConfiguration.class, SecurityConfiguration.class})
+   @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
+   @EnableTransactionManagement
+   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
+   public static class AppConfig {
+       @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")
+       private ClassPathResource dropReopsitoryTables;
 
-	    @Value("/org/springframework/content/jpa/schema-hsqldb.sql")
-	    private ClassPathResource dataReopsitorySchema;
+       @Value("/org/springframework/content/jpa/schema-hsqldb.sql")
+       private ClassPathResource dataReopsitorySchema;
 
-	    @Bean
-	    DataSourceInitializer datasourceInitializer(DataSource dataSource) {
-	        ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+       @Bean
+       DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+           ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
 
-	        databasePopulator.addScript(dropReopsitoryTables);
-	        databasePopulator.addScript(dataReopsitorySchema);
-	        databasePopulator.setIgnoreFailedDrops(true);
+           databasePopulator.addScript(dropReopsitoryTables);
+           databasePopulator.addScript(dataReopsitorySchema);
+           databasePopulator.setIgnoreFailedDrops(true);
 
-	        DataSourceInitializer initializer = new DataSourceInitializer();
-	        initializer.setDataSource(dataSource);
-	        initializer.setDatabasePopulator(databasePopulator);
+           DataSourceInitializer initializer = new DataSourceInitializer();
+           initializer.setDataSource(dataSource);
+           initializer.setDatabasePopulator(databasePopulator);
 
-	        return initializer;
-	    }
+           return initializer;
+       }
 
-	    @Bean
-	    public DataSource dataSource() {
-	        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-	        return builder.setType(EmbeddedDatabaseType.HSQL).build();
-	    }
+       @Bean
+       public DataSource dataSource() {
+           EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+           return builder.setType(EmbeddedDatabaseType.HSQL).build();
+       }
 
-	    @Bean
-	    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-	        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-	        vendorAdapter.setDatabase(Database.HSQL);
-	        vendorAdapter.setGenerateDdl(true);
+       @Bean
+       public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+           HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+           vendorAdapter.setDatabase(Database.HSQL);
+           vendorAdapter.setGenerateDdl(true);
 
-	        LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-	        factory.setJpaVendorAdapter(vendorAdapter);
-	        factory.setPackagesToScan("internal.org.springframework.content.rest.support");
-	        factory.setDataSource(dataSource());
+           LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+           factory.setJpaVendorAdapter(vendorAdapter);
+           factory.setPackagesToScan("internal.org.springframework.content.rest.support");
+           factory.setDataSource(dataSource());
 
-	        return factory;
-	    }
+           return factory;
+       }
 
-	    @Bean
-	    public PlatformTransactionManager transactionManager() {
-	        JpaTransactionManager txManager = new JpaTransactionManager();
-	        txManager.setEntityManagerFactory(entityManagerFactory().getObject());
-	        return txManager;
-	    }
-	}
+       @Bean
+       public PlatformTransactionManager transactionManager() {
+           JpaTransactionManager txManager = new JpaTransactionManager();
+           txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+           return txManager;
+       }
+   }
 }
