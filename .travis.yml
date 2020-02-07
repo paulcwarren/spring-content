@@ -16,6 +16,11 @@ env:
 before_install:
 - docker pull exoplatform/sqlserver:2017-CU8
 - docker run -d -e SA_PASSWORD=5F4Dt9ky9dU$ -e SQLSERVER_DATABASE=sc -e SQLSERVER_USER=user -e SQLSERVER_PASSWORD=5F4Dt9ky9dU$ -p 1433:1433 exoplatform/sqlserver:2017-CU8
+- curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+- curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+- sudo apt-get update
+- sudo apt-get install mssql-tools unixodbc-dev
+- /opt/mssql-tools/bin/sqlcmd -S localhost -U user -P '5F4Dt9ky9dU$'
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
