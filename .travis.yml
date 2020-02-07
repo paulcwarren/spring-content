@@ -20,7 +20,7 @@ before_install:
 - curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
 - sudo apt-get update
 - sudo ACCEPT_EULA=Y apt-get install mssql-tools unixodbc-dev -y
-- /opt/mssql-tools/bin/sqlcmd -S localhost -U user -P '5F4Dt9ky9dU$'
+- /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P '5F4Dt9ky9dU$'
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
