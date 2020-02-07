@@ -18,10 +18,6 @@ before_install:
 - docker run -d -e SA_PASSWORD=5F4Dt9ky9dU$ -e SQLSERVER_DATABASE=sc -e SQLSERVER_USER=user -e SQLSERVER_PASSWORD=5F4Dt9ky9dU$ -p 1433:1433 exoplatform/sqlserver:2017-CU8
 - docker pull postgres:12.1
 - docker run -d -e POSTGRES_PASSWORD=5F4Dt9ky9dU$ -p 5432:5432 postgres:12.1
-- sudo apt-get install python-pip -y
-- sudo apt-get install libpq-dev python-dev -y
-- sudo pip install pgcli
-- PGPASSWORD=5F4Dt9ky9dU$ pgcli -h localhost -p 5432 -U postgres postgres
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
