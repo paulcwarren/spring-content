@@ -15,8 +15,7 @@ env:
 
 before_install:
 - docker pull exoplatform/sqlserver:2017-CU8
-- docker run -d -e SA_PASSWORD=pass -e SQLSERVER_DATABASE=sc -e SQLSERVER_USER=user -e SQLSERVER_PASSWORD=pass -p 1433:1433 exoplatform/sqlserver:2017-CU8
-- docker ps -a
+- docker run -d -e SA_PASSWORD=5F4Dt9ky9dU$ -e SQLSERVER_DATABASE=sc -e SQLSERVER_USER=user -e SQLSERVER_PASSWORD=5F4Dt9ky9dU$ -p 1433:1433 exoplatform/sqlserver:2017-CU8
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
