@@ -16,11 +16,10 @@ env:
 before_install:
 - docker pull exoplatform/sqlserver:2017-CU8
 - docker run -d -e SA_PASSWORD=5F4Dt9ky9dU$ -e SQLSERVER_DATABASE=sc -e SQLSERVER_USER=user -e SQLSERVER_PASSWORD=5F4Dt9ky9dU$ -p 1433:1433 exoplatform/sqlserver:2017-CU8
-#- curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-#- curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
-#- sudo apt-get update
-#- sudo ACCEPT_EULA=Y apt-get install mssql-tools unixodbc-dev -y
-#- /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P '5F4Dt9ky9dU$'
+- docker pull postgres:12.1
+- docker run --name postgres -e POSTGRES_PASSWORD=5F4Dt9ky9dU$ -d postgres
+- sudo apt-get install postgresql-client -y
+- PGPASSWORD=5F4Dt9ky9dU$ pgcli -h localhost -U postgres postgres
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
