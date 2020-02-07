@@ -21,7 +21,7 @@ before_install:
 - sudo apt-get install python-pip -y
 - sudo apt-get install libpq-dev python-dev -y
 - sudo pip install pgcli
-- PGPASSWORD=5F4Dt9ky9dU$ pgcli -h localhost -U postgres postgres
+- PGPASSWORD=5F4Dt9ky9dU$ pgcli -h localhost -p 5432 -U postgres postgres
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
