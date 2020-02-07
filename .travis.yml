@@ -19,7 +19,6 @@ before_install:
 - docker pull postgres:12.1
 - docker run --name postgres -e POSTGRES_PASSWORD=5F4Dt9ky9dU$ -d postgres
 - sudo apt-get install python-pip -y
-- sudo yum install python-pip -y
 - sudo apt-get install libpq-dev python-dev -y
 - sudo pip install pgcli
 - PGPASSWORD=5F4Dt9ky9dU$ pgcli -h localhost -U postgres postgres
