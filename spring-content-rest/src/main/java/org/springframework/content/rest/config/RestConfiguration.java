@@ -26,7 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Configuration
-@ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions")
+@ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions, org.springframework.data.rest.versioning")
 public class RestConfiguration implements InitializingBean {
 
 	private static final URI NO_URI = URI.create("");
