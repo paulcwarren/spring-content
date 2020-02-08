@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 import javax.sql.DataSource;
 
@@ -42,6 +43,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.util.Assert;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -353,6 +355,10 @@ public class StoreIT {
 
 		@Bean
 		public DataSource dataSource() {
+			Assert.notNull(url, "url not set");
+			Assert.notNull(username, "username not set");
+			Assert.notNull(password, "password not set");
+
 			DriverManagerDataSource ds = new DriverManagerDataSource();
 	        ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
 	        ds.setUrl(url);
@@ -371,6 +377,11 @@ public class StoreIT {
 			factory.setJpaVendorAdapter(vendorAdapter);
 			factory.setPackagesToScan(getClass().getPackage().getName());
 			factory.setDataSource(dataSource());
+
+			factory.setJpaVendorAdapter(vendorAdapter);
+			HashMap<String, Object> properties = new HashMap<>();
+			properties.put("hibernate.dialect","org.hibernate.dialect.MySQL55Dialect");
+			factory.setJpaPropertyMap(properties);
 
 			return factory;
 		}
