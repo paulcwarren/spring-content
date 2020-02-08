@@ -1,4 +1,4 @@
-package org.springframework.data.rest.versioning;
+package it.org.springframework.data.rest.versioning;
 
 import java.io.File;
 import java.io.IOException;
@@ -204,9 +204,9 @@ public class LockingAndVersioningRestIT {
 
     @SpringBootApplication
     @EnableJpaRepositories(considerNestedRepositories = true,
-                            basePackages={"org.springframework.data.rest.versioning", "org.springframework.versions"})
+                            basePackages={"it.org.springframework.data.rest.versioning", "org.springframework.versions"})
     @EnableTransactionManagement
-    @EnableFilesystemStores(basePackages = "org.springframework.data.rest.versioning")
+    @EnableFilesystemStores(basePackages = "it.org.springframework.data.rest.versioning")
     @Import({JpaLockingAndVersioningConfig.class, RestConfiguration.class, SecurityConfiguration.class})
     public static class Application {
 
@@ -268,7 +268,7 @@ public class LockingAndVersioningRestIT {
 
                 LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
                 factory.setJpaVendorAdapter(vendorAdapter);
-                factory.setPackagesToScan("org.springframework.data.rest.versioning");
+                factory.setPackagesToScan("it.org.springframework.data.rest.versioning");
                 factory.setDataSource(dataSource());
 
                 return factory;
