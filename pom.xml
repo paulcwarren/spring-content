@@ -83,7 +83,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			<dependency>
 				<groupId>org.springframework.data</groupId>
 				<artifactId>spring-data-releasetrain</artifactId>
-				<version>Moore-M4</version>
+				<version>1.4.6.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
