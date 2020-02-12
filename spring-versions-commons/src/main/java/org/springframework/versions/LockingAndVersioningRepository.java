@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 public interface LockingAndVersioningRepository<T, ID extends Serializable> {
 
@@ -85,6 +86,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @return list of latest versionWithEntity entities
      * @deprecated
      */
+    @RestResource(exported=false)
     @Deprecated
     <S extends T> List<S> findAllVersionsLatest();
 
