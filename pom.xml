@@ -71,44 +71,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-
-			<!-- For Spring Boot 2.2.0.Mx support -->
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-framework-bom</artifactId>
-				<version>5.2.0.M2</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-releasetrain</artifactId>
-				<version>Moore-M4</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.integration</groupId>
-				<artifactId>spring-integration-bom</artifactId>
-				<version>5.2.0.M2</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-bom</artifactId>
-				<version>5.2.0.M2</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId> org.springframework.session</groupId>
-				<artifactId>spring-session-bom</artifactId>
-				<version>Corn-M1</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<!-- For Spring Boot 2.2.0.Mx support -->
 		</dependencies>
 	</dependencyManagement>
 
@@ -381,21 +343,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 			</build>
 		</profile>
 	</profiles>
-
-	<repositories>
-		<!-- For Spring Boot 2.2.0.Mx support -->
-		<repository>
-			<id>spring</id>
-			<name>libs-milestone-local</name>
-			<url>https://repo.spring.io/libs-milestone-local</url>
-		</repository>
-		<repository>
-			<id>central</id>
-			<name>central</name>
-			<url>https://repo.maven.apache.org/maven2</url>
-		</repository>
-		<!-- For Spring Boot 2.2.0.Mx support -->
-	</repositories>
 
 	<distributionManagement>
 		<snapshotRepository>
