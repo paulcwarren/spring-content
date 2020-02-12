@@ -1,21 +1,26 @@
 package org.springframework.content.renditions.renderers;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import org.apache.poi.POIXMLProperties;
-import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.junit.runner.RunWith;
-import org.springframework.content.commons.renditions.RenditionProvider;
-import org.springframework.content.renditions.RenditionException;
-import org.springframework.renditions.poi.POIService;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.hasItem;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.apache.poi.POIXMLException;
+import org.apache.poi.POIXMLProperties;
+import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.junit.runner.RunWith;
+
+import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.content.renditions.RenditionException;
+import org.springframework.renditions.poi.POIService;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItemInArray;
@@ -23,8 +28,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -97,7 +103,7 @@ public class WordToJpegRendererTest {
 							doc = mock(XWPFDocument.class);
 							when(poi.xwpfDocument(anyObject())).thenReturn(doc);
 							props = mock(POIXMLProperties.class);
-							doThrow(Exception.class).when(doc).getProperties();
+								doThrow(POIXMLException.class).when(doc).getProperties();
 						});
 						It("should throw a RenditionException", () -> {
 							assertThat(e, is(not(nullValue())));
