@@ -8,6 +8,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.convert.Jsr310Converters;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
@@ -19,6 +20,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -144,7 +146,8 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
         // Modified to show download
         Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
         if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
-            headers.setContentDispositionFormData("attachment", (String) originalFileName);
+            ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
+            headers.setContentDisposition(builder.build());
         }
         return headers;
     }
