@@ -1,6 +1,7 @@
 package internal.org.springframework.content.rest.controllers;
 
 import java.io.ByteArrayInputStream;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.UUID;
@@ -106,6 +107,9 @@ public class Content {
             });
             Context("a GET to /{store}/{id}", () -> {
                 It("should return the original content, filename and 200", () -> {
+
+                    assertThat(Charset.defaultCharset(), is(Charset.forName("UTF-8")));
+
                     MockHttpServletResponse response = mvc
                             .perform(get(url)
                                     .contextPath(contextPath)
@@ -113,7 +117,7 @@ public class Content {
                             .andExpect(status().isOk()).andReturn().getResponse();
 
                     assertThat(response, is(not(nullValue())));
-                    assertThat(response.getHeader("Content-Disposition"), containsString("表单ID及字段.txt"));
+                    assertThat(response.getHeader("Content-Disposition"), containsString("filename*=UTF-8''" + URLEncoder.encode("表单ID及字段.txt")));
                     assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
                 });
             });
