@@ -19,12 +19,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -230,7 +239,7 @@ public class ContentPropertyRestEndpointsIT {
 										.accept("text/plain"))
 										.andExpect(status().isOk())
 										.andExpect(header().string("etag", is("\"1\"")))
-										.andExpect(header().string("last-modified", is(toHeaderDateFormat(testEntity2.getModifiedDate()))))
+										.andExpect(header().string("last-modified", isWithinASecond(testEntity2.getModifiedDate())))
 										.andExpect(content().string(is("Hello Spring Content World!")));
 							});
 						});
@@ -377,5 +386,32 @@ public class ContentPropertyRestEndpointsIT {
 		SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 		format.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return format.format(dt);
+	}
+
+	public static Matcher<String> isWithinASecond(final Date expectedDate) {
+		return new TypeSafeMatcher<String>() {
+
+			@Override
+			protected void describeMismatchSafely(String foo, Description description) {
+				description.appendText("was ").appendValue(foo);
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("Date ").appendValue(expectedDate);
+			}
+
+			@Override
+			protected boolean matchesSafely(String actualDate) {
+				// Your custom matching logic goes here
+				Instant instant = Instant.ofEpochMilli(expectedDate.getTime());
+				LocalDateTime expectedDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("GMT"));
+
+				LocalDateTime actualDateTime = LocalDateTime.parse(actualDate, DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z", Locale.ENGLISH));
+
+				long diff = ChronoUnit.SECONDS.between(expectedDateTime, actualDateTime);
+				return diff <= 1;
+			}
+		};
 	}
 }
