@@ -4,10 +4,19 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
@@ -92,7 +101,7 @@ public class LastModifiedDate {
 
                 assertThat(response, is(not(nullValue())));
                 assertThat(response.getContentAsString(), is(content));
-                assertThat(response.getHeader("last-modified"), is(greaterThanOrEqualTo(format.format(lastModifiedDate))));
+                assertThat(response.getHeader("last-modified"), isWithinASecond(lastModifiedDate));
             });
         });
         Context("a GET request to /{store}/{id} with an if-modified-since date the same as the entity's modified date", () -> {
@@ -117,7 +126,7 @@ public class LastModifiedDate {
             It("should respond with 200 and the content", () -> {
                 mvc.perform(get(url)
                         .accept("text/plain")
-                        .header("if-unmodified-since", toHeaderDateFormat(lastModifiedDate)))
+                        .header("if-unmodified-since", isWithinASecond(lastModifiedDate)))
                         .andExpect(status().isOk())
                         .andExpect(content().string(is(content)));
             });
@@ -166,6 +175,32 @@ public class LastModifiedDate {
                         .andExpect(status().isNoContent());
             });
         });
+    }
+
+    public static Matcher<String> isWithinASecond(final Date expectedDate) {
+        return new TypeSafeMatcher<String>() {
+
+            @Override
+            protected void describeMismatchSafely(String foo, Description description) {
+                description.appendText("was ").appendValue(foo);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("Date ").appendValue(expectedDate);
+            }
+
+            @Override
+            protected boolean matchesSafely(String actualDate) {
+                Instant instant = Instant.ofEpochMilli(expectedDate.getTime());
+                LocalDateTime expectedDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("GMT"));
+
+                LocalDateTime actualDateTime = LocalDateTime.parse(actualDate, DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z", Locale.ENGLISH));
+
+                long diff = ChronoUnit.SECONDS.between(expectedDateTime, actualDateTime);
+                return diff <= 1;
+            }
+        };
     }
 
     private static String toHeaderDateFormat(Date dt) {
