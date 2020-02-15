@@ -67,12 +67,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private ContentStoreService stores;
 	private RestConfiguration config;
-	private RepositoryResourceMappings mappings;
 
-	public ContentLinksResourceProcessor(Repositories repos, ContentStoreService stores, RestConfiguration config, RepositoryResourceMappings mappings) {
+	public ContentLinksResourceProcessor(ContentStoreService stores, RestConfiguration config) {
 		this.stores = stores;
 		this.config = config;
-		this.mappings = mappings;
 	}
 
 	public PersistentEntityResource process(final PersistentEntityResource resource) {
@@ -81,7 +79,6 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		if (object == null)
 			return resource;
 
-		ResourceMetadata md = mappings.getMetadataFor(object.getClass());
 		Object entityId = DomainObjectUtils.getId(object);
 
 		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
@@ -101,120 +98,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 			}
 		}
 
-		List<Field> processed = new ArrayList<>();
-
-
-		// public fields
-		for (Field field : object.getClass().getFields()) {
-			processed.add(field);
-			handleField(field, resource, md, config.getBaseUri(), entityId);
-		}
-
-		// handle properties
-		BeanWrapper wrapper = new BeanWrapperImpl(object);
-		for (PropertyDescriptor descriptor : wrapper.getPropertyDescriptors()) {
-			Field field = null;
-			try {
-				field = object.getClass().getDeclaredField(descriptor.getName());
-				if (processed.contains(field) == false) {
-					handleField(field, resource, md, config.getBaseUri(), entityId);
-				}
-			}
-			catch (NoSuchFieldException nsfe) {
-				log.trace(format("No field for property %s, ignoring",
-						descriptor.getName()));
-			}
-			catch (SecurityException se) {
-				log.warn(format(
-						"Unexpected security error while handling content links for property %s",
-						descriptor.getName()));
-			}
-		}
-
 		return resource;
-	}
-
-	private void handleField(Field field, final PersistentEntityResource resource, ResourceMetadata metadata, URI baseUri, Object entityId) {
-
-		Class<?> fieldType = field.getType();
-		if (fieldType.isArray()) {
-			fieldType = fieldType.getComponentType();
-
-			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, fieldType);
-			if (store != null) {
-				resource.add(propertyLink(baseUri, store, entityId, field.getName(), null));
-			}
-		}
-		else if (Collection.class.isAssignableFrom(fieldType)) {
-			Type type = field.getGenericType();
-
-			if (type instanceof ParameterizedType) {
-
-				ParameterizedType pType = (ParameterizedType) type;
-				Type[] arr = pType.getActualTypeArguments();
-
-				for (Type tp : arr) {
-					fieldType = (Class<?>) tp;
-				}
-
-				ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
-						fieldType);
-				if (store != null) {
-					Object object = resource.getContent();
-					BeanWrapper wrapper = new BeanWrapperImpl(object);
-					Object value = null;
-					try {
-						value = wrapper.getPropertyValue(field.getName());
-					}
-					catch (InvalidPropertyException ipe) {
-						try {
-							value = ReflectionUtils.getField(field, object);
-						}
-						catch (IllegalStateException ise) {
-							log.trace(format("Didn't get value for property %s", field.getName()));
-						}
-					}
-					if (value != null) {
-						Iterator iter = ((Collection) value).iterator();
-						while (iter.hasNext()) {
-							Object o = iter.next();
-							if (BeanUtils.hasFieldWithAnnotation(o, ContentId.class)) {
-								String cid = BeanUtils.getFieldWithAnnotation(o, ContentId.class).toString();
-								if (cid != null) {
-									resource.add(propertyLink(baseUri, store, entityId, field.getName(), cid));
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else {
-			ContentStoreInfo store = ContentStoreUtils.findContentStore(stores,
-					fieldType);
-			if (store != null) {
-				Object object = resource.getContent();
-				BeanWrapper wrapper = new BeanWrapperImpl(object);
-				Object value = null;
-				try {
-					value = wrapper.getPropertyValue(field.getName());
-				}
-				catch (InvalidPropertyException ipe) {
-					try {
-						value = ReflectionUtils.getField(field, object);
-					}
-					catch (IllegalStateException ise) {
-						log.trace(format("Didn't get value for property %s", field.getName()));
-					}
-				}
-				if (value != null) {
-					String cid = BeanUtils.getFieldWithAnnotation(value, ContentId.class).toString();
-					if (cid != null) {
-						resource.add(propertyLink(baseUri, store, entityId, field.getName(), cid));
-					}
-				}
-			}
-		}
 	}
 
 	private Optional<Link> originalLink(URI baseUri, ContentStoreInfo store, Object id) {
@@ -243,18 +127,6 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 		String property = StringUtils.uncapitalize(ContentStoreUtils.propertyName(fieldName));
 		builder = builder.slash(property);
-
-		return builder.withRel(property);
-	}
-
-	private Link propertyLink(URI baseUri, ContentStoreInfo store, Object id, String property, String contentId) {
-		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
-
-		builder = builder.slash(id).slash(property);
-
-		if (contentId != null) {
-			builder = builder.slash(contentId);
-		}
 
 		return builder.withRel(property);
 	}
