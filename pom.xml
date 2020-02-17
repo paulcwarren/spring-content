@@ -167,7 +167,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 						<groupId>org.apache.maven.scm</groupId>
 						<!--<artifactId>maven-scm-provider-jgit</artifactId>-->
 						<artifactId>maven-scm-provider-gitexe</artifactId>
-						<version>1.9.5</version>
+						<version>1.11.2</version>
 					</dependency>
 				</dependencies>
 			</plugin>
