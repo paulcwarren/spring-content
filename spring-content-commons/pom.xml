@@ -22,20 +22,11 @@
             <artifactId>solr-solrj</artifactId>
             <optional>true</optional>
         </dependency>
-
-		<!-- Locking and Versioning -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
-			<version>5.2.3.RELEASE</version>
-		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-versions-commons</artifactId>
 			<version>1.0.0.M6-SNAPSHOT</version>
 		</dependency>
-		<!-- Locking and Versioning -->
-
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
