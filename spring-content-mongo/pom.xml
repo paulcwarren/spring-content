@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>ginkgo4j</artifactId>
-			<version>1.0.0</version>
+			<version>${ginkgo4j-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
