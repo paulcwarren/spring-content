@@ -226,9 +226,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                 <configuration>
                    <argLine>${surefireArgLine}</argLine>
                     <skipTests>true</skipTests>
-                    <forkCount>5</forkCount>
-                    <reuseForks>true</reuseForks>
-                    <argLine>-Xmx1024m</argLine>
                     <properties>
                         <property>
                             <name>listener</name>
