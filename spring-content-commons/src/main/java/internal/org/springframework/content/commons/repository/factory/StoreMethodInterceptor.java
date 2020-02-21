@@ -1,8 +1,13 @@
 package internal.org.springframework.content.commons.repository.factory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +17,7 @@ import internal.org.springframework.content.commons.config.StoreFragments;
 import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.io.input.TeeInputStream;
 
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.repository.AfterStoreEvent;
@@ -141,6 +147,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		StoreEvent before = null;
 		AfterStoreEvent after = null;
 
+		File tmpStreamFile = Files.createTempFile("", "").toFile();
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
 				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
@@ -149,7 +156,8 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 		else if (setContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
-				before = new BeforeSetContentEvent(invocation.getArguments()[0], store);
+				InputStream eventStream = new TeeInputStream((InputStream) invocation.getArguments()[1], new FileOutputStream(tmpStreamFile), true);
+				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, eventStream);
 				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
 		}
@@ -191,6 +199,10 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 
 		if (before != null) {
 			publisher.publishEvent(before);
+
+			if (before instanceof BeforeSetContentEvent) {
+				invocation.getArguments()[1] = new FileInputStream(tmpStreamFile);
+			}
 		}
 		Object result;
 		try {
