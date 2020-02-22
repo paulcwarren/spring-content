@@ -109,28 +109,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M3</version>
-                <executions>
-                    <execution>
-                        <id>enforce-property</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireEnvironmentVariable>
-                                    <variableName>BUILD_TYPE</variableName>
-                                </requireEnvironmentVariable>
-                            </rules>
-                            <fail>true</fail>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
@@ -180,8 +158,17 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
     </build>
 
     <profiles>
-    <profile>
+        <profile>
             <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>!env.BUILD_TYPE</name>
+                </property>
+            </activation>
+            <properties>
+                <docs.output.dir>../target/generated-docs/refs/dev/</docs.output.dir>
+            </properties>
         </profile>
 
       <!-- test/coverage -->
