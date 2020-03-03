@@ -250,6 +250,35 @@ public class StoreMethodInterceptorTest {
 					});
 				});
 
+				Context("when the BeforeSetContentEvent does not consume any of the inputstream", () -> {
+
+					BeforeEach(() -> {
+						onBeforeSetContentPublishEvent((invocationOnMock) -> {
+							return null;
+						});
+					});
+
+					It("should still receive the inputstream in the setContent invocation", () -> {
+						assertThat(e, is(nullValue()));
+
+						InOrder inOrder = Mockito.inOrder(publisher, store);
+
+						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
+						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+
+						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+
+						inOrder.verify(store).setContent(anyObject(), setContentArgCaptor.capture());
+
+						try (InputStream setContentInputStream = setContentArgCaptor.getValue()) {
+							assertThat(IOUtils.toString(setContentInputStream), is("test"));
+						}
+
+						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						assertThat(afterArgCaptor.getValue().getResult(), is(result));
+					});
+				});
+
 				Context("when setContent is invoked with illegal arguments", () -> {
 
 					BeforeEach(() -> {
