@@ -1,5 +1,6 @@
 package internal.org.springframework.content.commons.repository;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
@@ -393,7 +394,7 @@ public class AnnotatedStoreEventInvokerTest {
 			Context("given an event handler and a BeforeSetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new BeforeSetContentEvent(source, store);
+					event = new BeforeSetContentEvent(source, store, (InputStream)null);
 				});
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
@@ -408,7 +409,7 @@ public class AnnotatedStoreEventInvokerTest {
 			Context("given an event handler accepting the event and a BeforeSetContent event", () -> {
 				BeforeEach(() -> {
 					EventSource source = new EventSource();
-					event = new BeforeSetContentEvent(source, store);
+					event = new BeforeSetContentEvent(source, store, (InputStream)null);
 				});
 				It("should call that correct handler method", () -> {
 					Method handler = ReflectionUtils.findMethod(CustomEventHandler.class,
