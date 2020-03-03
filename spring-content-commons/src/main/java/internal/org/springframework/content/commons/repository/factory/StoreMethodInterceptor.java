@@ -148,6 +148,8 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		AfterStoreEvent after = null;
 
 		File tmpStreamFile = Files.createTempFile("", "").toFile();
+		InputStream eventStream = null;
+
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
 				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
@@ -156,7 +158,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 		else if (setContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
-				InputStream eventStream = new TeeInputStream((InputStream) invocation.getArguments()[1], new FileOutputStream(tmpStreamFile), true);
+				eventStream = new TeeInputStream((InputStream) invocation.getArguments()[1], new FileOutputStream(tmpStreamFile), true);
 				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, eventStream);
 				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
@@ -201,6 +203,10 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 			publisher.publishEvent(before);
 
 			if (before instanceof BeforeSetContentEvent) {
+
+				while (eventStream.read() != -1) {}
+				eventStream.close();
+
 				invocation.getArguments()[1] = new FileInputStream(tmpStreamFile);
 			}
 		}
