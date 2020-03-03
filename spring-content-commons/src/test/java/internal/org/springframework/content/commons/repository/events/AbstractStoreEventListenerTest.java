@@ -200,7 +200,7 @@ public class AbstractStoreEventListenerTest {
 				});
 				Context("given a before set content event", () -> {
 					BeforeEach(() -> {
-						event = new BeforeSetContentEvent(new EventSource(), store);
+						event = new BeforeSetContentEvent(new EventSource(), store, null);
 					});
 					It("should call the event consumer", () -> {
 						ArgumentCaptor<BeforeSetContentEvent> argumentCaptor = ArgumentCaptor
