@@ -31,11 +31,18 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @ContextConfiguration(classes = { BeforeSetEventIT.TestConfig.class })
 public class BeforeSetEventIT {
+
+    static TestConfig.ExampleAnnotatedEventHandler ev;
 
     @Autowired
     private TestEntityContentStore store;
@@ -43,16 +50,18 @@ public class BeforeSetEventIT {
     {
         Describe("BeforeSetEvent InputStream Access", () -> {
 
-            Context("when the content input stream is consumed by the beforesetevent", () -> {
+            Context("when the content input stream is consumed by a beforesetevent", () -> {
 
                 It("should still set the content in the store", () -> {
                     TestEntity te = new TestEntity();
-                    ByteArrayInputStream bais = new ByteArrayInputStream("BeforeSetEvent content".getBytes());
+                    ByteArrayInputStream bais = new ByteArrayInputStream("Still here!".getBytes());
                     te = store.setContent(te, bais);
                     IOUtils.closeQuietly(bais);
                     try (InputStream foo = store.getContent(te)) {
-                        assertThat(IOUtils.toString(foo), is("BeforeSetEvent content"));
+                        assertThat(IOUtils.toString(foo), is("Still here!"));
                     }
+
+                    verify(ev, times(1));
                 });
             });
         });
@@ -69,7 +78,8 @@ public class BeforeSetEventIT {
 
         @Bean
         public ExampleAnnotatedEventHandler eventHandler() {
-            return new ExampleAnnotatedEventHandler();
+            ev = spy(new ExampleAnnotatedEventHandler());
+            return ev;
         }
 
         @StoreEventHandler
