@@ -2,9 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/paulcwarren/spring-content/badge.svg?branch=master)](https://coveralls.io/github/paulcwarren/spring-content?branch=master)
 [![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-# Spring Content
-
-Cloud-Native Content Services for Spring.
+# Cloud-Native Content Services for Spring.
 
 Spring Content provides modules for managing content in JPA, MongoDB's GridFS, S3 or Filesystem storage.  When combined with Spring Data/REST it allows content to be associated with Spring Data Entities.  The Solr module provides an integration with Apache Solr for fulltext indexing and search capabilities.  The Renditions module provides a pluggable renditions framework and several out-of-the-box renderers that can render stored content in several different formats.   
 
