@@ -76,10 +76,6 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
                 HttpMethod method = HttpMethod.valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod());
                 r = (Resource) this.resolveProperty(method, this.getRepositories(), this.getStores(), pathSegments, (i, e, p, propertyIsEmbedded) -> {
 
-                    if (p == null) {
-                        return new ContentStoreUtils.NonExistentResource();
-                    }
-
                     AssociativeStore s = i.getImplementation(AssociativeStore.class);
                     Resource resource = s.getResource(p);
                     resource = new AssociatedResourceImpl(p, resource);

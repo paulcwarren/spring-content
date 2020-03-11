@@ -40,7 +40,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class BaseUriContentLinksIT {
+public class ContentLinkRelIT {
 
 	@Autowired
 	TestEntityRepository repository;
@@ -62,22 +62,22 @@ public class BaseUriContentLinksIT {
 	private ContentLinkTests contentLinkTests;
 
 	{
-		Describe("given the spring content baseUri property is set to contentApi", () -> {
+		Describe("given an exporting store specifying a linkRel of foo", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
 
-			Context("given an Entity and a Store with a default store path", () -> {
+			Context("given an Entity and a Store specifying a linkRel and a store path", () -> {
 				BeforeEach(() -> {
-					testEntity3 = repository3.save(new TestEntity3());
+					testEntity = repository.save(new TestEntity());
 
 					contentLinkTests.setMvc(mvc);
-					contentLinkTests.setRepository(repository3);
-					contentLinkTests.setStore(contentRepository3);
-					contentLinkTests.setTestEntity(testEntity3);
-					contentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					contentLinkTests.setLinkRel("testEntity3");
-					contentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId() );
+					contentLinkTests.setRepository(repository);
+					contentLinkTests.setStore(contentRepository);
+					contentLinkTests.setTestEntity(testEntity);
+					contentLinkTests.setUrl("/api/testEntities/" + testEntity.getId());
+					contentLinkTests.setLinkRel("foo");
+					contentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntitiesContent/" + testEntity.getId() );
 				});
 				contentLinkTests = new ContentLinkTests();
 			});

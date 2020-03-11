@@ -2,7 +2,10 @@ package internal.org.springframework.content.rest.links;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.util.List;
+import java.util.regex.Matcher;
 
+import com.theoryinpractise.halbuilder.api.Link;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
@@ -17,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -29,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Setter
-public class EntityContentLinkTests {
+public class ContentLinkTests {
 
 	private MockMvc mvc;
 

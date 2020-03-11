@@ -39,6 +39,7 @@ public class RestConfiguration implements InitializingBean {
 
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
+	private boolean fullyQualifiedLinks = false;
 
 	public RestConfiguration() {
 		this.corsRegistry = new StoreCorsRegistry();
@@ -50,6 +51,14 @@ public class RestConfiguration implements InitializingBean {
 
 	public void setBaseUri(URI baseUri) {
 		this.baseUri = baseUri;
+	}
+
+	public boolean fullyQualifiedLinks() {
+		return fullyQualifiedLinks;
+	}
+
+	public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
+		this.fullyQualifiedLinks = fullyQualifiedLinks;
 	}
 
 	public StoreCorsRegistry getCorsRegistry() {

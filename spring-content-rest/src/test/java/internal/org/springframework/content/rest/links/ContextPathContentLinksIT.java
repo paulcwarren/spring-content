@@ -66,7 +66,7 @@ public class ContextPathContentLinksIT {
 
 	private TestEntity3 testEntity3;
 
-	private EntityContentLinkTests entityContentLinkTests;
+	private ContentLinkTests contentLinkTests;
 
 	{
 		Describe("given the spring content baseUri property is set to contentApi", () -> {
@@ -78,16 +78,16 @@ public class ContextPathContentLinksIT {
 				BeforeEach(() -> {
 					testEntity3 = repository3.save(new TestEntity3());
 
-					entityContentLinkTests.setMvc(mvc);
-					entityContentLinkTests.setRepository(repository3);
-					entityContentLinkTests.setStore(contentRepository3);
-					entityContentLinkTests.setTestEntity(testEntity3);
-					entityContentLinkTests.setUrl("/contextPath/testEntity3s/" + testEntity3.getId());
-					entityContentLinkTests.setContextPath("/contextPath");
-					entityContentLinkTests.setLinkRel("testEntity3s");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/contextPath/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setMvc(mvc);
+					contentLinkTests.setRepository(repository3);
+					contentLinkTests.setStore(contentRepository3);
+					contentLinkTests.setTestEntity(testEntity3);
+					contentLinkTests.setUrl("/contextPath/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setContextPath("/contextPath");
+					contentLinkTests.setLinkRel("testEntity3");
+					contentLinkTests.setExpectedLinkRegex("http://localhost/contextPath/testEntity3s/" + testEntity3.getId() );
 				});
-				entityContentLinkTests = new EntityContentLinkTests();
+				contentLinkTests = new ContentLinkTests();
 			});
 		});
 	}

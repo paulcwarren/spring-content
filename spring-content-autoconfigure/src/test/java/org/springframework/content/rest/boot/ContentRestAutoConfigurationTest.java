@@ -50,21 +50,22 @@ public class ContentRestAutoConfigurationTest {
 				});
 			});
 
-			Context("given an environment specifying a base uri", () -> {
+			Context("given an environment specifying rest properties", () -> {
 				BeforeEach(() -> {
 					System.setProperty("spring.content.rest.base-uri", "/contentApi");
+					System.setProperty("spring.content.rest.content-links", "false");
 				});
 				AfterEach(() -> {
 					System.clearProperty("spring.content.rest.base-uri");
 				});
-				It("should have a filesystem properties bean with the correct root set", () -> {
+				It("should have a filesystem properties bean with the correct properties set", () -> {
 					AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
 					context.register(TestConfig.class);
 					context.setServletContext(new MockServletContext());
 					context.refresh();
 
-					assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).getBaseUri(),
-								is(URI.create("/contentApi")));
+					assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).getBaseUri(), is(URI.create("/contentApi")));
+					assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).fullyQualifiedLinks(), is(false));
 
 					assertThat(context.getBean(SpringBootContentRestConfigurer.class), is(not(nullValue())));
 

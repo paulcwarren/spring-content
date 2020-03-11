@@ -29,10 +29,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -93,9 +93,23 @@ public class ContentLinksResourceProcessorIT {
 					resource = build.build();
 				});
 
-				It("should add an original link and a shortcut link for the content id property", () -> {
-					assertThat(resource.getLinks("testEntity3s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+				It("should add an entity content links", () -> {
 					assertThat(resource.getLinks("testEntity3"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+					assertThat(resource.getLinks("testEntity3s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+				});
+
+				Context("when fully qualified links property is true", () -> {
+					BeforeEach(() -> {
+						processor.getRestConfiguration().setFullyQualifiedLinks(true);
+					});
+
+					AfterEach(() -> {
+						processor.getRestConfiguration().setFullyQualifiedLinks(false);
+					});
+
+					It("should add an entity content link against a 'content' linkrel", () -> {
+						assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999/content"))));
+					});
 				});
 			});
 
