@@ -1,0 +1,83 @@
+== Changing the link relation
+
+For each exported Spring Resource, Spring Content REST will generate a suitable linkrel.
+
+However, it can sometimes be useful to control this yourself.
+
+Given the following example:
+
+====
+[source, java]
+----
+  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+  public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+
+Spring Content REST will export the Spring Resource to the following linkrel:
+
+====
+[source, java]
+----
+  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "dvds" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }
+----
+====
+
+Specifying a `linkRel` on the StoreRestResource, as follows:
+
+====
+[source, java]
+----
+  @StoreRestResource(linkRel="content")
+  public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+
+will result in the following linkrel instead:
+
+====
+[source, java]
+----
+ "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }
+----
+====
+

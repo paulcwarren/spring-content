@@ -14,6 +14,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -56,6 +57,17 @@ public class SpringBootContentRestConfigurerTest {
                     });
                 });
 
+                Context("given a fullyQualifiedLinks property setting", () -> {
+
+                    BeforeEach(() -> {
+                        properties.setFullyQualifiedLinks(true);
+                    });
+
+                    It("should set the property on the RestConfiguration", () -> {
+                        verify(restConfig).setFullyQualifiedLinks(eq(true));
+                    });
+                });
+
                 Context("given a null base uri property", () -> {
 
                     It("should not set the property on the RestConfiguration", () -> {
@@ -71,6 +83,7 @@ public class SpringBootContentRestConfigurerTest {
 
                     It("should not set the property on the RestConfiguration", () -> {
                         verify(restConfig, never()).setBaseUri(anyObject());
+                        verify(restConfig, never()).setFullyQualifiedLinks(anyBoolean());
                     });
                 });
             });

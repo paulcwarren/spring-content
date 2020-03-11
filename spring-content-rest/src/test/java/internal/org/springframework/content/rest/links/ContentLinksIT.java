@@ -59,7 +59,7 @@ public class ContentLinksIT {
 	private TestEntity testEntity;
 	private TestEntity3 testEntity3;
 
-	private EntityContentLinkTests entityContentLinkTests;
+	private ContentLinkTests contentLinkTests;
 
 	{
 		Describe("given no baseUri are set", () -> {
@@ -71,30 +71,15 @@ public class ContentLinksIT {
 				BeforeEach(() -> {
 					testEntity3 = repository3.save(new TestEntity3());
 
-					entityContentLinkTests.setMvc(mvc);
-					entityContentLinkTests.setRepository(repository3);
-					entityContentLinkTests.setStore(contentRepository3);
-					entityContentLinkTests.setTestEntity(testEntity3);
-					entityContentLinkTests.setUrl("/testEntity3s/" + testEntity3.getId());
-					entityContentLinkTests.setLinkRel("testEntity3");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setMvc(mvc);
+					contentLinkTests.setRepository(repository3);
+					contentLinkTests.setStore(contentRepository3);
+					contentLinkTests.setTestEntity(testEntity3);
+					contentLinkTests.setUrl("/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setLinkRel("testEntity3");
+					contentLinkTests.setExpectedLinkRegex("http://localhost/testEntity3s/" + testEntity3.getId() );
 				});
-				entityContentLinkTests = new EntityContentLinkTests();
-			});
-
-			Context("given an Entity and a Store specifying a store path", () -> {
-				BeforeEach(() -> {
-					testEntity = repository.save(new TestEntity());
-
-					entityContentLinkTests.setMvc(mvc);
-					entityContentLinkTests.setRepository(repository);
-					entityContentLinkTests.setStore(contentRepository);
-					entityContentLinkTests.setTestEntity(testEntity);
-					entityContentLinkTests.setUrl("/testEntities/" + testEntity.getId());
-					entityContentLinkTests.setLinkRel("testEntity");
-					entityContentLinkTests.setExpectedLinkRegex("http://localhost/testEntitiesContent/" + testEntity.getId());
-				});
-				entityContentLinkTests = new EntityContentLinkTests();
+				contentLinkTests = new ContentLinkTests();
 			});
 		});
 	}

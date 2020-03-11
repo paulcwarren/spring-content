@@ -2,7 +2,7 @@ package internal.org.springframework.content.rest.links;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.BaseUriConfig;
+import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
 import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
@@ -12,9 +12,11 @@ import internal.org.springframework.content.rest.support.TestEntityRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,14 +35,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 @Ginkgo4jConfiguration(threads = 1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		BaseUriConfig.class,
+		StoreConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class,
 		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class BaseUriContentLinksIT {
+public class EntityContentLinksIT {
 
 	@Autowired
 	TestEntityRepository repository;
@@ -62,12 +64,14 @@ public class BaseUriContentLinksIT {
 	private ContentLinkTests contentLinkTests;
 
 	{
-		Describe("given the spring content baseUri property is set to contentApi", () -> {
+		Describe("EntityLinks", () -> {
+
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
 
-			Context("given an Entity and a Store with a default store path", () -> {
+			Context("when entity links are enabled", () -> {
+
 				BeforeEach(() -> {
 					testEntity3 = repository3.save(new TestEntity3());
 
@@ -75,9 +79,9 @@ public class BaseUriContentLinksIT {
 					contentLinkTests.setRepository(repository3);
 					contentLinkTests.setStore(contentRepository3);
 					contentLinkTests.setTestEntity(testEntity3);
-					contentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					contentLinkTests.setLinkRel("testEntity3");
-					contentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId() );
+					contentLinkTests.setUrl("/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setLinkRel("testEntity3s");
+					contentLinkTests.setExpectedLinkRegex("http://localhost/testEntity3s/" + testEntity3.getId());
 				});
 				contentLinkTests = new ContentLinkTests();
 			});
