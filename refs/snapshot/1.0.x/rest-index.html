@@ -535,6 +535,8 @@ Copies of this document may be made for your own use and for distribution to oth
 </ul>
 </li>
 <li><a href="#_changing_the_base_uri">5.2. Changing the Base URI</a></li>
+<li><a href="#_changing_the_link_relation">5.3. Changing the link relation</a></li>
+<li><a href="#_fully_qualified_links">5.4. Fully Qualified Links</a></li>
 </ul>
 </li>
 </ul>
@@ -725,8 +727,8 @@ for Spring Content stores.  This is often closely related to Spring Data reposit
 <div class="sect3">
 <h4 id="_resources">3.1.1. Resources</h4>
 <div class="paragraph">
-<p>Spring Resources, managed by a Spring Content Store, are standard Spring Resources that, when exported using Spring
-Content REST, are accessible by REST endpoint.</p>
+<p>Spring Content Stores manage Spring Resources that, when exported using Spring Content REST, are accessible by REST
+endpoint.</p>
 </div>
 <div class="paragraph">
 <p>Consider the following Store interface:</p>
@@ -744,21 +746,17 @@ Content REST, are accessible by REST endpoint.</p>
 <p>In this example, the Store&#8217;s Resources are exported to the URI <code>/dvds</code>.  The path is derived from the
 uncapitalized, pluralized, simple class name of the interface.  When interacting with this endpoint any additional path
 is deemed to be the Resource&#8217;s location and will be used to fetch the Resource using the Store&#8217;s <code>getResource</code> method.
-For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4</code> assumes
-<code>/comedy/monty_pythons_flying_circus.mp4</code> is the location of the Resource.</p>
-</div>
-<div class="paragraph">
-<p>The HTTP methods are then mapped onto the relevant Resource methods; GET maps to <code>getInputStream</code>, PUT maps onto
-<code>getOutputStream</code> and so on.</p>
+For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4</code> will fetch from the <code>DvdStore</code> (<code>/dvds</code>),
+the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_entity_resources">3.1.2. Entity Resources</h4>
 <div class="paragraph">
-<p>Entity Resources are associated with Spring Data Entities.</p>
+<p>Entity Resources are Spring Resource associated with Spring Data Entities.</p>
 </div>
 <div class="paragraph">
-<p>Assume the following <code>Entity</code> class with associated <code>Repository</code> and <code>Store</code> interfaces:</p>
+<p>Assume the following <code>Entity</code> class, <code>Repository</code> and <code>Store</code> interfaces:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -767,8 +765,10 @@ For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4
 <pre class="highlight"><code class="language-java" data-lang="java">  @Entity
   public class Dvd {
   	@Id
-  	@ContentId
-  	private UUID id;
+  	private Long id;
+
+    @ContentId
+    private UUID contentId;
 
   	@ContentLength
   	private Long contentLength;
@@ -779,7 +779,7 @@ For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4
   	// getters and setters
   }
 
-  public interface DvdRepository extends CrudRepository&lt;Dvd, UUID&gt; {}
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
 
   public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
@@ -787,15 +787,15 @@ For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4
 </div>
 </div>
 <div class="paragraph">
-<p>In this example a single Resource (the DVD video stream) is associated with a Dvd Entity by annotating additional fields
-on the Entity using the <code>@ContentId</code> and <code>@MimeType</code> annotations.   In this example Spring Data REST exports a collection
-resource at <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being
-managed.  <code>Dvd</code> in this case.  Item resources are also exported to the URI <code>/dvds/{id}</code>.  The HTTP methods used to
-request this endpoint map into the methods of  <code>CrudRepository</code>.</p>
+<p>In this example a single Spring Resource (the DVD&#8217;s video stream) is associated with a Dvd Entity by annotating additional
+fields on the Entity using the <code>@ContentId</code>, <code>@ContentLength</code> and <code>@MimeType</code> annotations.   In this example Spring Data
+REST exports a collection  resource to <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class
+name of the domain class.  Item resources are also exported to the URI <code>/dvds/{id}</code>.  The HTTP methods used to request
+this endpoint map onto the methods of <code>CrudRepository</code>.</p>
 </div>
 <div class="paragraph">
-<p>Similarly, Spring Content REST also exports Entity Resources to the URI <code>/dvds/{id}</code>.  In this case the HTTP methods
-map onto the methods on <code>ContentStore</code> as follows:-</p>
+<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}</code>.  In this case the
+HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
 </div>
 <div class="ulist">
 <ul>
@@ -814,11 +814,11 @@ map onto the methods on <code>ContentStore</code> as follows:-</p>
 <div class="sect3">
 <h4 id="_property_resources">3.1.3. Property Resources</h4>
 <div class="paragraph">
-<p>Property Resources are associated with the properties of Spring Data Entities.  This allows many Resources to be
-associated with a single Entity.</p>
+<p>Property Resources are associated with the properties of Spring Data Entities, that themselves maybe Spring Data Entities.
+This allows many Resources to be associated with a single Entity.</p>
 </div>
 <div class="paragraph">
-<p>Consider the following <code>Entity</code> model with <code>Repository</code> and <code>Store</code> interfaces:</p>
+<p>Consider the following <code>Entity</code> model, with <code>Repository</code> and <code>Store</code> interfaces:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -1023,7 +1023,7 @@ Resources links for both into the HAL responses created by Spring Data REST.</p>
 <div class="sect2">
 <h3 id="_the_store_resource">3.2. The Store Resource</h3>
 <div class="paragraph">
-<p>Spring Content REST exports Store Resources to <code>/{store}/**</code>.  The resource path can be customized using the
+<p>Spring Content REST exports Store Resources to <code>/{store}/**</code>.  The resource path and linkrel can be customized using the
 <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
 <div class="sect3">
@@ -1516,13 +1516,235 @@ class CustomContentRestMvcConfiguration {
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_changing_the_link_relation">5.3. Changing the link relation</h3>
+<div class="paragraph">
+<p>For each exported Spring Resource, Spring Content REST will generate a suitable linkrel.</p>
+</div>
+<div class="paragraph">
+<p>However, it can sometimes be useful to control this yourself.</p>
+</div>
+<div class="paragraph">
+<p>Given the following example:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Content REST will export the Spring Resource to the following linkrel:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "dvds" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Specifying a <code>linkRel</code> on the StoreRestResource, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @StoreRestResource(linkRel="content")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>will result in the following linkrel instead:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_fully_qualified_links">5.4. Fully Qualified Links</h3>
+<div class="paragraph">
+<p>By default, and where possible, Spring Content REST exports Spring Resources to shortened link URIs.  These will often
+match the Spring Data Rest Entity URI.</p>
+</div>
+<div class="paragraph">
+<p>Given the following example:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>As there is only a single associated Spring Resource, Spring Content REST will generate the following URI:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "dvds" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To generate fully qualified link URIs set the following property:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.fullyQualifiedLinks=true</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Or if you are not using Spring Boot, you can do the following:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.setFullyQualifiedLinks(true);
+      }
+    };
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Content REST will now generate links as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1/content"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>content</code> is the extracted property name taken from the field <code>contentId</code>.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.M7-SNAPSHOT<br>
-Last updated 2020-03-11 03:13:01 UTC
+Last updated 2020-03-11 06:34:22 UTC
 </div>
 </div>
 </body>

@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<title>Repository Resources (Spring Data REST Extensions)</title>
+<title>Changing the link relation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -432,10 +432,108 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Repository Resources (Spring Data REST Extensions)</h1>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_changing_the_link_relation">Changing the link relation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For each exported Spring Resource, Spring Content REST will generate a suitable linkrel.</p>
+</div>
+<div class="paragraph">
+<p>However, it can sometimes be useful to control this yourself.</p>
+</div>
+<div class="paragraph">
+<p>Given the following example:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Content REST will export the Spring Resource to the following linkrel:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "dvds" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Specifying a <code>linkRel</code> on the StoreRestResource, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @StoreRestResource(linkRel="content")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>will result in the following linkrel instead:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
