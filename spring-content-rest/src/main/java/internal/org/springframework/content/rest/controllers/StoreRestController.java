@@ -34,6 +34,7 @@ import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.MimeType;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -101,26 +102,27 @@ public class StoreRestController implements InitializingBean  {
                 status = ptm.getTransaction(new DefaultTransactionDefinition());
             }
 
-            // if a rendition was requested, prep it now
-            MediaType producedResourceType = resourceType;
-            if (resource instanceof RenderableResource) {
+            MediaType producedResourceType = null;
+            List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+            if (acceptedMimeTypes.size() == 0) {
+                acceptedMimeTypes.add(MediaType.ALL);
+            }
 
-                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-                if (acceptedMimeTypes.size() == 0) {
-                    acceptedMimeTypes.add(MediaType.ALL);
+            MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
+            for (MediaType acceptedMimeType : acceptedMimeTypes) {
+                if (resource instanceof RenderableResource && ((RenderableResource)resource).isRenderableAs(acceptedMimeType)) {
+                    resource = new RenderedResource(((RenderableResource) resource).renderAs(acceptedMimeType), resource);
+                    producedResourceType = acceptedMimeType;
+                    break;
+                } else if (acceptedMimeType.includes(resourceType)) {
+                    producedResourceType = resourceType;
+                    break;
                 }
+            }
 
-                MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
-                for (MediaType acceptedMimeType : acceptedMimeTypes) {
-                    if (((RenderableResource) resource).isRenderableAs(acceptedMimeType)) {
-                        resource = new RenderedResource(((RenderableResource) resource).renderAs(acceptedMimeType), resource);
-                        producedResourceType = acceptedMimeType;
-                        break;
-                    } else if (acceptedMimeType.includes(resourceType)) {
-                        producedResourceType = resourceType;
-                        break;
-                    }
-                }
+            if (producedResourceType == null) {
+                response.setStatus(HttpStatus.NOT_FOUND.value());
+                return;
             }
 
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
@@ -131,7 +133,7 @@ public class StoreRestController implements InitializingBean  {
             }
         } catch (Exception e) {
             
-            logger.error("Unable to retrieve rendition", e);
+            logger.error("Unable to retrieve content", e);
             
             if (status != null) {
                 ptm.rollback(status);

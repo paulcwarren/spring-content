@@ -4,12 +4,12 @@ import java.io.ByteArrayInputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Optional;
-import java.util.UUID;
 
 import internal.org.springframework.content.rest.support.ContentEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
+
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -194,6 +194,14 @@ public class Content {
                     assertThat(response, is(not(nullValue())));
                     assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
                     assertThat(response.getContentType(), is("text/html"));
+                });
+            });
+            Context("a GET to /{store}/{id} with a mime type that does not match a renderer or the original content", () -> {
+                It("should return the original content and 200", () -> {
+                    mvc.perform(get(url)
+                        .contextPath(contextPath)
+                        .accept("text/css"))
+                    .andExpect(status().isNotFound());
                 });
             });
             Context("a GET to /{store}/{id} with a range header", () -> {
