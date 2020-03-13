@@ -149,6 +149,27 @@ public class Content {
                     assertThat(response.getContentType(), is("text/html"));
                 });
             });
+            Context("a GET to /{store}/{id} with a mime type that matches a renderer and the original content-type", () -> {
+
+                BeforeEach(() -> {
+                    entity = (ContentEntity) store.setContent(entity, new ByteArrayInputStream("<html><body>original content</body></html>".getBytes()));
+                    entity.setMimeType("text/html");
+                    entity = (ContentEntity) repository.save(entity);
+                });
+
+                It("should return the rendition and 200", () -> {
+                    MockHttpServletResponse response = mvc
+                            .perform(get(url)
+                                    .contextPath(contextPath)
+                                    .accept("text/html"))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
+
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+                    assertThat(response.getContentType(), is("text/html"));
+                });
+            });
             Context("a GET to /{store}/{id} with multiple mime types the last of which matches the content", () -> {
                 It("should return the original content and 200", () -> {
                     MockHttpServletResponse response = mvc.perform(get(url)

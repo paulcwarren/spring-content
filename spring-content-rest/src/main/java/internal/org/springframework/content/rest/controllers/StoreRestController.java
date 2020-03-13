@@ -112,16 +112,13 @@ public class StoreRestController implements InitializingBean  {
 
                 MediaType.sortBySpecificityAndQuality(mimeTypes);
                 for (MediaType requestedMimeType : mimeTypes) {
-                    if (requestedMimeType.includes(resourceType)) {
+                    if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
+                        resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
+                        renderedResourceType = requestedMimeType;
+                        break;
+                    } else if (requestedMimeType.includes(resourceType)) {
                         renderedResourceType = resourceType;
                         break;
-                    }
-                    else {
-                        if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
-                            resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
-                            renderedResourceType = requestedMimeType;
-                            break;
-                        }
                     }
                 }
             }
