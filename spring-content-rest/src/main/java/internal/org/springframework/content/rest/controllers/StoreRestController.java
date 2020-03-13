@@ -102,29 +102,29 @@ public class StoreRestController implements InitializingBean  {
             }
 
             // if a rendition was requested, prep it now
-            MediaType renderedResourceType = resourceType;
+            MediaType producedResourceType = resourceType;
             if (resource instanceof RenderableResource) {
 
-                List<MediaType> mimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-                if (mimeTypes.size() == 0) {
-                    mimeTypes.add(MediaType.ALL);
+                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                if (acceptedMimeTypes.size() == 0) {
+                    acceptedMimeTypes.add(MediaType.ALL);
                 }
 
-                MediaType.sortBySpecificityAndQuality(mimeTypes);
-                for (MediaType requestedMimeType : mimeTypes) {
-                    if (((RenderableResource) resource).isRenderableAs(requestedMimeType)) {
-                        resource = new RenderedResource(((RenderableResource) resource).renderAs(requestedMimeType), resource);
-                        renderedResourceType = requestedMimeType;
+                MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
+                for (MediaType acceptedMimeType : acceptedMimeTypes) {
+                    if (((RenderableResource) resource).isRenderableAs(acceptedMimeType)) {
+                        resource = new RenderedResource(((RenderableResource) resource).renderAs(acceptedMimeType), resource);
+                        producedResourceType = acceptedMimeType;
                         break;
-                    } else if (requestedMimeType.includes(resourceType)) {
-                        renderedResourceType = resourceType;
+                    } else if (acceptedMimeType.includes(resourceType)) {
+                        producedResourceType = resourceType;
                         break;
                     }
                 }
             }
 
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
-            request.setAttribute("SPRING_CONTENT_CONTENTTYPE", renderedResourceType);
+            request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
 
             if (status != null && status.isCompleted() == false) {
                 ptm.commit(status);
