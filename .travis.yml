@@ -19,6 +19,7 @@ before_install:
 - docker pull postgres:12.1
 - docker run -d -e POSTGRES_PASSWORD=5F4Dt9ky9dU$ -p 5432:5432 postgres:12.1
 - docker run -d -e MYSQL_ROOT_PASSWORD=5F4Dt9ky9dU$ -e MYSQL_DATABASE=sc -p 3306:3306 mysql:8.0.19
+- docker run -d --name elasticsearch  -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" paulcwarren/elasticsearch:latest
 
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
