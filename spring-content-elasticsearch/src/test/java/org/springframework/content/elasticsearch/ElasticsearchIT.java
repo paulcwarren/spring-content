@@ -27,6 +27,7 @@ import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.CrudRepository;
 
 import static com.github.grantwest.eventually.EventuallyLambdaMatcher.eventuallyEval;
@@ -43,6 +44,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -65,11 +67,11 @@ public class ElasticsearchIT {
    {
       for (Class<?> indexStrategyContext : indexStrategyContexts) {
 
-         Describe(format("given an application context with a %s", strategyName(indexStrategyContext)), () -> {
+         Describe(format("Index Strategy %s", strategyName(indexStrategyContext)), () -> {
 
             BeforeEach(() -> {
                context = new AnnotationConfigApplicationContext();
-               context.register(GlobalIndexingStrategy.class);
+               context.register(indexStrategyContext);
                context.register(ElasticsearchConfig.class);
                context.refresh();
 
@@ -208,6 +210,55 @@ public class ElasticsearchIT {
             });
          });
       }
+
+      Describe("Paging", () -> {
+
+         BeforeEach(() -> {
+            context = new AnnotationConfigApplicationContext();
+            context.register(EntityIndexingStrategy.class);
+            context.register(ElasticsearchConfig.class);
+            context.refresh();
+
+            repo = context.getBean(DocumentRepository.class);
+            store = context.getBean(DocumentContentStore.class);
+            client = context.getBean(RestHighLevelClient.class);
+
+            for (int i=0; i < 10; i++) {
+               Document doc = new Document();
+               doc.setTitle(format("doc %s", i));
+               doc = store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
+               repo.save(doc);
+            }
+         });
+
+         AfterEach(() -> {
+            assertThat(context, is(not(nullValue())));
+
+            if (client != null) {
+               DeleteIndexRequest dir = new DeleteIndexRequest("_all");
+               client.indices().delete(dir, RequestOptions.DEFAULT);
+            }
+         });
+
+         It("should return results in pages", () -> {
+            assertThat(() -> store.search("one", PageRequest.of(0, 3)),
+                    eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+
+            assertThat(() -> store.search("one", PageRequest.of(1, 3)),
+                    eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+
+            assertThat(() -> store.search("one", PageRequest.of(2, 3)),
+                    eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+
+            assertThat(() -> store.search("one", PageRequest.of(3, 3)),
+                    eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
+         });
+
+         It("should return specific result page", () -> {
+            assertThat(() -> store.search("one", PageRequest.of(3, 3)),
+                    eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
+         });
+      });
    }
 
    private String strategyName(Class<?> indexStrategyContext) {

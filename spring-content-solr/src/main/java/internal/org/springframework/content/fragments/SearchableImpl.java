@@ -1,6 +1,7 @@
 package internal.org.springframework.content.fragments;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.solr.SolrProperties;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 public class SearchableImpl implements Searchable<Object> {
@@ -38,6 +40,11 @@ public class SearchableImpl implements Searchable<Object> {
 	@Override
 	public List<Object> search(String queryStr) {
 		return getIds(executeQuery(this.getDomainClass(), queryStr));
+	}
+
+	@Override
+	public List<Object> search(String queryStr, Pageable pageable) {
+		throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
