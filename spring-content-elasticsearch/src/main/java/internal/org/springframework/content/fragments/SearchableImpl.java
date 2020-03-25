@@ -22,6 +22,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.data.domain.Pageable;
 
 import static java.lang.String.format;
 
@@ -65,6 +66,29 @@ public class SearchableImpl implements Searchable<Serializable> {
 		}
 		catch (IOException | ElasticsearchStatusException e) {
 		    LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
+			throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
+		}
+
+		return getIDs(res.getHits());
+	}
+
+	@Override
+	public List<Serializable> search(String queryStr, Pageable pageable) {
+		SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
+		searchRequest.types(domainClass.getName());
+
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(QueryBuilders.simpleQueryStringQuery(queryStr));
+		sourceBuilder.from(pageable.getPageNumber() * pageable.getPageSize());
+		sourceBuilder.size(pageable.getPageSize());
+		searchRequest.source(sourceBuilder);
+
+		SearchResponse res = null;
+		try {
+			res = client.search(searchRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException | ElasticsearchStatusException e) {
+			LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
 			throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
 		}
 
