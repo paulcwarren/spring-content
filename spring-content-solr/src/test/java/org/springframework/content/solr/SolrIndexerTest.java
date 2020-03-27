@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -48,16 +49,16 @@ public class SolrIndexerTest {
 	private Object contentEntity;
 	private AfterSetContentEvent afterSetEvent;
 	private BeforeUnsetContentEvent beforeUnsetEvent;
+	private InputStream content;
 	private Throwable e;
 
 	{
 		Describe("SolrUpdateEventHandler", () -> {
 			BeforeEach(() -> {
-				solrClient = mock(SolrClient.class);
 				store = mock(ContentStore.class);
-				props = mock(SolrProperties.class);
+				content = mock(InputStream.class);
 				indexer = mock(IndexService.class);
-				handler = new SolrIndexer(solrClient, props, indexer);
+				handler = new SolrIndexer(indexer);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {
@@ -72,82 +73,59 @@ public class SolrIndexerTest {
 				Context("given a content entity", () -> {
 					BeforeEach(() -> {
 						contentEntity = new ContentEntity();
-						((ContentEntity) contentEntity).contentId = UUID.randomUUID()
-								.toString();
+						((ContentEntity) contentEntity).contentId = UUID.randomUUID().toString();
 						((ContentEntity) contentEntity).contentLen = 128L;
 						((ContentEntity) contentEntity).mimeType = "text/plain";
+
+						when(store.getContent(eq(contentEntity))).thenReturn(content);
 					});
-					It("should call update", () -> {
+					It("should use the indexer to index the content", () -> {
 						assertThat(e, is(nullValue()));
-						verify(solrClient).request(anyObject(), anyObject());
+						verify(indexer).index(eq(contentEntity), eq(content));
 					});
-					It("should store the content type", () -> {
-						ArgumentCaptor<ContentStreamUpdateRequest> argument = forClass(
-								ContentStreamUpdateRequest.class);
-						verify(solrClient).request(argument.capture(), anyObject());
-						assertThat(argument.getValue().getParams().get("literal.id"),
-								is(((ContentEntity) contentEntity).getClass()
-										.getCanonicalName() + ":"
-										+ ((ContentEntity) contentEntity).contentId));
-					});
-					Context("given a username", () -> {
-						BeforeEach(() -> {
-							when(props.getUser()).thenReturn("username");
-							when(props.getPassword()).thenReturn("password");
-						});
-						It("should set basic credentials on the request", () -> {
-							ArgumentCaptor<ContentStreamUpdateRequest> argument = forClass(
-									ContentStreamUpdateRequest.class);
-							verify(solrClient).request(argument.capture(), anyObject());
-							assertThat(argument.getValue().getBasicAuthUser(),
-									is("username"));
-							assertThat(argument.getValue().getBasicAuthPassword(),
-									is("password"));
-						});
-					});
-					Context("given a SolrServer Exception", () -> {
-						BeforeEach(() -> {
-							when(solrClient.request(anyObject(), anyObject()))
-									.thenThrow(SolrServerException.class);
-						});
-						It("should throw a ContextAccessException", () -> {
-							assertThat(e, is(instanceOf(StoreAccessException.class)));
-						});
-					});
-					Context("given a IOException", () -> {
-						BeforeEach(() -> {
-							when(solrClient.request(anyObject(), anyObject()))
-									.thenThrow(IOException.class);
-						});
-						It("should throw a ContextAccessException", () -> {
-							assertThat(e, is(instanceOf(StoreAccessException.class)));
-						});
-					});
+
+//					Context("given a SolrServer Exception", () -> {
+//						BeforeEach(() -> {
+//							when(solrClient.request(anyObject(), anyObject()))
+//									.thenThrow(SolrServerException.class);
+//						});
+//						It("should throw a ContextAccessException", () -> {
+//							assertThat(e, is(instanceOf(StoreAccessException.class)));
+//						});
+//					});
+//					Context("given a IOException", () -> {
+//						BeforeEach(() -> {
+//							when(solrClient.request(anyObject(), anyObject()))
+//									.thenThrow(IOException.class);
+//						});
+//						It("should throw a ContextAccessException", () -> {
+//							assertThat(e, is(instanceOf(StoreAccessException.class)));
+//						});
+//					});
 				});
-				Context("given a content entity with a null contentId", () -> {
-					BeforeEach(() -> {
-						contentEntity = new ContentEntity();
-					});
-					It("should call update", () -> {
-						assertThat(e, is(nullValue()));
-						verify(solrClient, never()).request(anyObject(), anyString());
-					});
-				});
-				Context("given a bogus content entity", () -> {
-					BeforeEach(() -> {
-						contentEntity = new NotAContentEntity();
-					});
-					It("", () -> {
-						assertThat(e, is(nullValue()));
-						verify(solrClient, never()).request(anyObject(), anyString());
-					});
-				});
+//				Context("given a content entity with a null contentId", () -> {
+//					BeforeEach(() -> {
+//						contentEntity = new ContentEntity();
+//					});
+//					It("should call update", () -> {
+//						assertThat(e, is(nullValue()));
+//						verify(solrClient, never()).request(anyObject(), anyString());
+//					});
+//				});
+//				Context("given a bogus content entity", () -> {
+//					BeforeEach(() -> {
+//						contentEntity = new NotAContentEntity();
+//					});
+//					It("", () -> {
+//						assertThat(e, is(nullValue()));
+//						verify(solrClient, never()).request(anyObject(), anyString());
+//					});
+//				});
 			});
 			Context("#onBeforeUnsetContent", () -> {
 				JustBeforeEach(() -> {
 					try {
-						beforeUnsetEvent = new BeforeUnsetContentEvent(contentEntity,
-								store);
+						beforeUnsetEvent = new BeforeUnsetContentEvent(contentEntity, store);
 						handler.onBeforeUnsetContent(beforeUnsetEvent);
 					}
 					catch (Exception e) {
@@ -157,73 +135,66 @@ public class SolrIndexerTest {
 				Context("given a content entity", () -> {
 					BeforeEach(() -> {
 						contentEntity = new ContentEntity();
-						((ContentEntity) contentEntity).contentId = UUID.randomUUID()
-								.toString();
+						((ContentEntity) contentEntity).contentId = UUID.randomUUID().toString();
 						((ContentEntity) contentEntity).contentLen = 128L;
 						((ContentEntity) contentEntity).mimeType = "text/plain";
 					});
-					It("should delete the correct id", () -> {
-						ArgumentCaptor<UpdateRequest> argument = forClass(
-								UpdateRequest.class);
-						verify(solrClient).request(argument.capture(), anyObject());
-						String expected = ((ContentEntity) contentEntity).getClass()
-								.getCanonicalName() + ":"
-								+ ((ContentEntity) contentEntity).contentId;
-						assertThat(argument.getValue().getDeleteById(),
-								hasItem(expected));
-					});
-					Context("given a username", () -> {
-						BeforeEach(() -> {
-							when(props.getUser()).thenReturn("username");
-							when(props.getPassword()).thenReturn("password");
-						});
-						It("should set basic credentials on the request", () -> {
-							ArgumentCaptor<UpdateRequest> argument = forClass(
-									UpdateRequest.class);
-							verify(solrClient).request(argument.capture(), anyObject());
-							assertThat(argument.getValue().getBasicAuthUser(),
-									is("username"));
-							assertThat(argument.getValue().getBasicAuthPassword(),
-									is("password"));
-						});
-					});
-					Context("given a SolrServer Exception", () -> {
-						BeforeEach(() -> {
-							when(solrClient.request(anyObject(), anyObject()))
-									.thenThrow(SolrServerException.class);
-						});
-						It("should throw a ContextAccessException", () -> {
-							assertThat(e, is(instanceOf(StoreAccessException.class)));
-						});
-					});
-					Context("given a IOException", () -> {
-						BeforeEach(() -> {
-							when(solrClient.request(anyObject(), anyObject()))
-									.thenThrow(IOException.class);
-						});
-						It("should throw a ContextAccessException", () -> {
-							assertThat(e, is(instanceOf(StoreAccessException.class)));
-						});
-					});
-				});
-				Context("given a content entity with a null contentId", () -> {
-					BeforeEach(() -> {
-						contentEntity = new ContentEntity();
-					});
-					It("should call update", () -> {
+					It("should use the indexer to unindex the content", () -> {
 						assertThat(e, is(nullValue()));
-						verify(solrClient, never()).deleteById(anyString());
+						verify(indexer).unindex(eq(contentEntity));
 					});
+//					Context("given a username", () -> {
+//						BeforeEach(() -> {
+//							when(props.getUser()).thenReturn("username");
+//							when(props.getPassword()).thenReturn("password");
+//						});
+//						It("should set basic credentials on the request", () -> {
+//							ArgumentCaptor<UpdateRequest> argument = forClass(
+//									UpdateRequest.class);
+//							verify(solrClient).request(argument.capture(), anyObject());
+//							assertThat(argument.getValue().getBasicAuthUser(),
+//									is("username"));
+//							assertThat(argument.getValue().getBasicAuthPassword(),
+//									is("password"));
+//						});
+//					});
+//					Context("given a SolrServer Exception", () -> {
+//						BeforeEach(() -> {
+//							when(solrClient.request(anyObject(), anyObject()))
+//									.thenThrow(SolrServerException.class);
+//						});
+//						It("should throw a ContextAccessException", () -> {
+//							assertThat(e, is(instanceOf(StoreAccessException.class)));
+//						});
+//					});
+//					Context("given a IOException", () -> {
+//						BeforeEach(() -> {
+//							when(solrClient.request(anyObject(), anyObject()))
+//									.thenThrow(IOException.class);
+//						});
+//						It("should throw a ContextAccessException", () -> {
+//							assertThat(e, is(instanceOf(StoreAccessException.class)));
+//						});
+//					});
 				});
-				Context("given a bogus content entity", () -> {
-					BeforeEach(() -> {
-						contentEntity = new NotAContentEntity();
-					});
-					It("should never attempt deletion", () -> {
-						assertThat(e, is(nullValue()));
-						verify(solrClient, never()).deleteById(anyString());
-					});
-				});
+//				Context("given a content entity with a null contentId", () -> {
+//					BeforeEach(() -> {
+//						contentEntity = new ContentEntity();
+//					});
+//					It("should call update", () -> {
+//						assertThat(e, is(nullValue()));
+//						verify(solrClient, never()).deleteById(anyString());
+//					});
+//				});
+//				Context("given a bogus content entity", () -> {
+//					BeforeEach(() -> {
+//						contentEntity = new NotAContentEntity();
+//					});
+//					It("should never attempt deletion", () -> {
+//						assertThat(e, is(nullValue()));
+//						verify(solrClient, never()).deleteById(anyString());
+//					});
+//				});
 			});
 		});
 	}
