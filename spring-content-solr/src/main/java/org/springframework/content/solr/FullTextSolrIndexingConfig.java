@@ -19,22 +19,13 @@ public class FullTextSolrIndexingConfig {
 	@Autowired
 	private SolrProperties props;
 
-//	@Autowired
-//	private ConversionService contentConversionService;
-
-//	@Bean
-//	public StoreExtension solrFulltextSearcher() {
-//		return new SolrSearchContentRepositoryExtension(solrClient,
-//				new ReflectionServiceImpl(), contentConversionService, props);
-//	}
-
 	@Bean
 	public Object solrFulltextEventListener() {
-		return new SolrIndexer(solrClient, props, solrFulltextIndexService());
+		return new SolrIndexer(solrFulltextIndexService());
 	}
 
 	@Bean
 	public IndexService solrFulltextIndexService() {
-		return new SolrFulltextIndexServiceImpl();
+		return new SolrFulltextIndexServiceImpl(solrClient, props);
 	}
 }
