@@ -30,7 +30,7 @@ public class FullTextSolrIndexingConfig {
 
 	@Bean
 	public Object solrFulltextEventListener() {
-		return new SolrIndexer(solrClient, props);
+		return new SolrIndexer(solrClient, props, solrFulltextIndexService());
 	}
 
 	@Bean

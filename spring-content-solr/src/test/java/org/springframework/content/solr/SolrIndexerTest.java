@@ -29,6 +29,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.search.IndexService;
 
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
@@ -41,6 +42,7 @@ public class SolrIndexerTest {
 	private SolrClient solrClient;
 	private ContentStore<Object, Serializable> store;
 	private SolrProperties props;
+	private IndexService indexer;
 
 	// args
 	private Object contentEntity;
@@ -54,7 +56,8 @@ public class SolrIndexerTest {
 				solrClient = mock(SolrClient.class);
 				store = mock(ContentStore.class);
 				props = mock(SolrProperties.class);
-				handler = new SolrIndexer(solrClient, props);
+				indexer = mock(IndexService.class);
+				handler = new SolrIndexer(solrClient, props, indexer);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {
