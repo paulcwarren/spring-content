@@ -49,7 +49,7 @@ public class EnableFullTextSolrIndexingTest {
 				assertThat(context.getBean(SolrIndexer.class), is(not(nullValue())));
 			});
 			It("should have a Searchable implementation bean", () -> {
-				assertThat(context.getBean(SearchableImpl.class), is(not(nullValue())));
+				assertThat(context.getBeansOfType(SearchableImpl.class), is(not(nullValue())));
 			});
 		});
 	}
