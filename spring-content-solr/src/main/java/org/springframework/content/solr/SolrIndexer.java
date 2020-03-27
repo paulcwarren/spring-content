@@ -17,6 +17,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.Assert;
@@ -28,9 +29,10 @@ public class SolrIndexer {
 	private SolrProperties properties;
 
 	@Autowired
-	public SolrIndexer(SolrClient solrClient, SolrProperties properties) {
+	public SolrIndexer(SolrClient solrClient, SolrProperties properties, IndexService indexer) {
 		Assert.notNull(solrClient, "solrClient must not be null");
 		Assert.notNull(properties, "properties must not be null");
+		Assert.notNull(indexer, "indexer must not be null");
 
 		this.solrClient = solrClient;
 		this.properties = properties;
