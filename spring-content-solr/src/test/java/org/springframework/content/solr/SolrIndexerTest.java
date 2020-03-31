@@ -1,36 +1,39 @@
 package org.springframework.content.solr;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentCaptor.forClass;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
-import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
+
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.repository.events.AfterSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.search.IndexService;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
@@ -40,9 +43,7 @@ public class SolrIndexerTest {
 	private SolrIndexer handler;
 
 	// mocks
-	private SolrClient solrClient;
 	private ContentStore<Object, Serializable> store;
-	private SolrProperties props;
 	private IndexService indexer;
 
 	// args
@@ -50,6 +51,7 @@ public class SolrIndexerTest {
 	private AfterSetContentEvent afterSetEvent;
 	private BeforeUnsetContentEvent beforeUnsetEvent;
 	private InputStream content;
+	private StoreAccessException sae;
 	private Throwable e;
 
 	{
@@ -93,34 +95,34 @@ public class SolrIndexerTest {
 //							assertThat(e, is(instanceOf(StoreAccessException.class)));
 //						});
 //					});
-//					Context("given a IOException", () -> {
-//						BeforeEach(() -> {
-//							when(solrClient.request(anyObject(), anyObject()))
-//									.thenThrow(IOException.class);
-//						});
-//						It("should throw a ContextAccessException", () -> {
-//							assertThat(e, is(instanceOf(StoreAccessException.class)));
-//						});
-//					});
+					Context("given the indexer throws an Exception", () -> {
+						BeforeEach(() -> {
+							sae = new StoreAccessException("badness");
+							doThrow(sae).when(indexer).index(anyObject(), anyObject());
+						});
+						It("should re-throw that exception", () -> {
+							assertThat(e, is(sae));
+						});
+					});
 				});
-//				Context("given a content entity with a null contentId", () -> {
-//					BeforeEach(() -> {
-//						contentEntity = new ContentEntity();
-//					});
-//					It("should call update", () -> {
-//						assertThat(e, is(nullValue()));
-//						verify(solrClient, never()).request(anyObject(), anyString());
-//					});
-//				});
-//				Context("given a bogus content entity", () -> {
-//					BeforeEach(() -> {
-//						contentEntity = new NotAContentEntity();
-//					});
-//					It("", () -> {
-//						assertThat(e, is(nullValue()));
-//						verify(solrClient, never()).request(anyObject(), anyString());
-//					});
-//				});
+				Context("given a content entity with a null contentId", () -> {
+					BeforeEach(() -> {
+						contentEntity = new ContentEntity();
+					});
+					It("should call update", () -> {
+						assertThat(e, is(nullValue()));
+						verify(indexer, never()).index(anyObject(), anyObject());
+					});
+				});
+				Context("given a bogus content entity", () -> {
+					BeforeEach(() -> {
+						contentEntity = new NotAContentEntity();
+					});
+					It("", () -> {
+						assertThat(e, is(nullValue()));
+						verify(indexer, never()).index(anyObject(), anyObject());
+					});
+				});
 			});
 			Context("#onBeforeUnsetContent", () -> {
 				JustBeforeEach(() -> {
@@ -167,34 +169,34 @@ public class SolrIndexerTest {
 //							assertThat(e, is(instanceOf(StoreAccessException.class)));
 //						});
 //					});
-//					Context("given a IOException", () -> {
-//						BeforeEach(() -> {
-//							when(solrClient.request(anyObject(), anyObject()))
-//									.thenThrow(IOException.class);
-//						});
-//						It("should throw a ContextAccessException", () -> {
-//							assertThat(e, is(instanceOf(StoreAccessException.class)));
-//						});
-//					});
+					Context("given a IOException", () -> {
+						BeforeEach(() -> {
+							sae = new StoreAccessException("badness");
+							doThrow(sae).when(indexer).unindex(anyObject());
+						});
+						It("should throw a ContextAccessException", () -> {
+							assertThat(e, is(sae));
+						});
+					});
 				});
-//				Context("given a content entity with a null contentId", () -> {
-//					BeforeEach(() -> {
-//						contentEntity = new ContentEntity();
-//					});
-//					It("should call update", () -> {
-//						assertThat(e, is(nullValue()));
-//						verify(solrClient, never()).deleteById(anyString());
-//					});
-//				});
-//				Context("given a bogus content entity", () -> {
-//					BeforeEach(() -> {
-//						contentEntity = new NotAContentEntity();
-//					});
-//					It("should never attempt deletion", () -> {
-//						assertThat(e, is(nullValue()));
-//						verify(solrClient, never()).deleteById(anyString());
-//					});
-//				});
+				Context("given a content entity with a null contentId", () -> {
+					BeforeEach(() -> {
+						contentEntity = new ContentEntity();
+					});
+					It("should call update", () -> {
+						assertThat(e, is(nullValue()));
+						verify(indexer, never()).unindex(anyObject());
+					});
+				});
+				Context("given a bogus content entity", () -> {
+					BeforeEach(() -> {
+						contentEntity = new NotAContentEntity();
+					});
+					It("should never attempt deletion", () -> {
+						assertThat(e, is(nullValue()));
+						verify(indexer, never()).unindex(anyObject());
+					});
+				});
 			});
 		});
 	}
