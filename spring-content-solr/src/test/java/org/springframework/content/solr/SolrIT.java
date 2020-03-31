@@ -15,6 +15,7 @@ import lombok.Setter;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.request.QueryRequest;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.hamcrest.CoreMatchers;
@@ -26,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -39,8 +39,6 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -64,6 +62,9 @@ public class SolrIT {
 	{
 		Describe("Index", () -> {
 			BeforeEach(() -> {
+				solrProperties.setUser(System.getenv("SOLR_USER"));
+				solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
+
 				doc = new Document();
 				doc.setTitle("title of document 1");
 				doc.setAuthor("author@email.com");
@@ -82,8 +83,11 @@ public class SolrIT {
 					docRepo.delete(doc);
 				}
 				if (solr != null) {
-					solr.deleteByQuery("*");
-					solr.commit();
+					UpdateRequest req = new UpdateRequest();
+					req.deleteByQuery("*");
+					req.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
+					req.process(solr, null);
+					req.commit(solr, null);
 				}
 			});
 			It("should index the content of that document", () -> {
@@ -93,6 +97,7 @@ public class SolrIT {
 					String fq = format("id:%s\\:%s", Document.class.getCanonicalName(), doc.getContentId());
 					query.addFilterQuery(fq);
 					QueryRequest request = new QueryRequest(query);
+					request.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
 					QueryResponse response = null;
 					try {
 						response = request.process(solr);
@@ -123,6 +128,7 @@ public class SolrIT {
 						String fq = format("id:%s\\:%s", Document.class.getCanonicalName(), doc.getContentId());
 						query.addFilterQuery(fq);
 						QueryRequest request = new QueryRequest(query);
+						request.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
 						QueryResponse response = null;
 						try {
 							response = request.process(solr);
@@ -149,6 +155,7 @@ public class SolrIT {
 					query.setFields("content");
 
 					QueryRequest request = new QueryRequest(query);
+					request.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
 
 					QueryResponse response = request.process(solr);
 					SolrDocumentList results = response.getResults();
@@ -162,6 +169,9 @@ public class SolrIT {
 			Describe("Paging", () -> {
 
 				BeforeEach(() -> {
+					solrProperties.setUser(System.getenv("SOLR_USER"));
+					solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
+
 					for (int i=0; i < 10; i++) {
 						Document doc = new Document();
 						doc.setTitle(format("doc %s", i));
@@ -180,8 +190,11 @@ public class SolrIT {
 						}
 					}
 					if (solr != null) {
-						solr.deleteByQuery("*");
-						solr.commit();
+						UpdateRequest req = new UpdateRequest();
+						req.deleteByQuery("*");
+						req.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
+						req.process(solr, null);
+						req.commit(solr, null);
 					}
 				});
 
