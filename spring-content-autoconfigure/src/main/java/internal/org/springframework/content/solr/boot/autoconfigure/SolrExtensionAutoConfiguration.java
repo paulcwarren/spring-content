@@ -1,9 +1,11 @@
 package internal.org.springframework.content.solr.boot.autoconfigure;
 
+import internal.org.springframework.content.solr.SolrFulltextIndexServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.solr.SolrIndexer;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +20,10 @@ public class SolrExtensionAutoConfiguration {
 
    @Autowired
    private SolrProperties props;
+
    @Autowired
    private SolrClient solrClient;
+
    @Autowired
    @Qualifier("solrConversionService")
    private ConversionService solrConversionService;
@@ -28,7 +32,12 @@ public class SolrExtensionAutoConfiguration {
    }
 
    @Bean
+   public IndexService solrIndexService() {
+      return new SolrFulltextIndexServiceImpl(solrClient, props);
+   }
+
+   @Bean
    public Object solrFulltextEventListener() {
-      return new SolrIndexer(solrClient, props);
+      return new SolrIndexer(solrIndexService());
    }
 }
