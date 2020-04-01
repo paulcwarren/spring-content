@@ -1,4 +1,4 @@
-package internal.org.springframework.content.solr;
+package org.springframework.content.solr;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -6,6 +6,7 @@ import java.nio.file.Files;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.fragments.SearchableImpl;
+import internal.org.springframework.content.solr.SolrFulltextIndexServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.junit.Test;
@@ -13,12 +14,10 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.content.solr.EnableFullTextSolrIndexing;
-import org.springframework.content.solr.SolrIndexer;
-import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +26,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -51,8 +51,8 @@ public class EnableFullTextSolrIndexingTest {
 			It("should have a Searchable implementation bean", () -> {
 				assertThat(context.getBeansOfType(SearchableImpl.class), is(not(nullValue())));
 			});
-			It("should have a Solr fulltext index service bean", () -> {
-				assertThat(context.getBean(SolrFulltextIndexServiceImpl.class), is(not(nullValue())));
+			It("should have a solr-based fulltext index service bean", () -> {
+				assertThat(context.getBean(IndexService.class), is(instanceOf(SolrFulltextIndexServiceImpl.class)));
 			});
 		});
 	}
