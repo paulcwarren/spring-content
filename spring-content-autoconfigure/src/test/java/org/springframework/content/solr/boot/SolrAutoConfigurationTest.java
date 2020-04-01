@@ -5,12 +5,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 
+import internal.org.springframework.content.solr.SolrFulltextIndexServiceImpl;
 import org.apache.solr.client.solrj.SolrClient;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.solr.SolrIndexer;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -77,8 +79,13 @@ public class SolrAutoConfigurationTest {
       }
 
       @Bean
+      public IndexService solrIndexService() {
+         return new SolrFulltextIndexServiceImpl(solrClient, props);
+      }
+
+      @Bean
       public Object solrFulltextEventListener() {
-         return new SolrIndexer(solrClient, props);
+         return new SolrIndexer(solrIndexService());
       }
    }
 }
