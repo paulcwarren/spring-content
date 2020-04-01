@@ -47,10 +47,10 @@ public class SolrFulltextIndexServiceImpl implements IndexService {
             solrClient.request(up, null);
         }
         catch (SolrServerException e) {
-            throw new StoreAccessException(format("Error updating entry in solr index %s", id), e);
+            throw new StoreAccessException(format("Error indexing entity with id '%s'", id), e);
         }
         catch (IOException e) {
-            throw new StoreAccessException(format("Error updating entry in solr index %s", id), e);
+            throw new StoreAccessException(format("Error indexing entity with id '%s'", id), e);
         }
     }
 
@@ -71,10 +71,10 @@ public class SolrFulltextIndexServiceImpl implements IndexService {
             solrClient.request(up, null);
         }
         catch (SolrServerException e) {
-            throw new StoreAccessException(format("Error deleting entry from solr index %s", id.toString()), e);
+            throw new StoreAccessException(format("Error unindexing entity with id '%s'", id), e);
         }
         catch (IOException e) {
-            throw new StoreAccessException(format("Error deleting entry from solr index %s", id.toString()), e);
+            throw new StoreAccessException(format("Error unindexing entity with id '%s'", id), e);
         }
     }
 
