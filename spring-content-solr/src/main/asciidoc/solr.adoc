@@ -73,3 +73,10 @@ If required, credentials can be specified using the following configuration prop
 
 With fulltext-indexing enabled, Store interfaces can be made `Searchable`.  See
 <<content-repositories.search,Searchable Stores>> for more information on how to do this.
+
+== Custom Indexing
+
+When you `@EnableFullTextSolrIndexing` a store event handler is registered that intercepts content being added to a
+Store and sends that content to your Solr instance for full-text indexing.  This is usually all you need.  However,
+sometimes you may need more control over when documents are indexed.  For these cases you can use the `IndexService`
+bean directly in your code to index (or unindex) content as required.
