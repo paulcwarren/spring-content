@@ -561,10 +561,21 @@ public static class ApplicationConfig {
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_custom_indexing">Custom Indexing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you <code>@EnableFullTextSolrIndexing</code> a store event handler is registered that intercepts content being added to a
+Store and sends that content to your Solr instance for full-text indexing.  This is usually all you need.  However,
+sometimes you may need more control over when documents are indexed.  For these cases you can use the <code>IndexService</code>
+bean directly in your code to index (or unindex) content as required.</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-04-02 02:50:49 UTC
+Last updated 2020-04-02 03:51:26 UTC
 </div>
 </div>
 </body>

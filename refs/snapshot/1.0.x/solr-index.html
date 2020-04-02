@@ -477,6 +477,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_dependencies">2.2. Dependencies</a></li>
 <li><a href="#_configuring">2.3. Configuring</a></li>
 <li><a href="#_making_stores_searchable">2.4. Making Stores Searchable</a></li>
+<li><a href="#_custom_indexing">2.5. Custom Indexing</a></li>
 </ul>
 </li>
 </ul>
@@ -1341,13 +1342,22 @@ public static class ApplicationConfig {
 <a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_custom_indexing">2.5. Custom Indexing</h3>
+<div class="paragraph">
+<p>When you <code>@EnableFullTextSolrIndexing</code> a store event handler is registered that intercepts content being added to a
+Store and sends that content to your Solr instance for full-text indexing.  This is usually all you need.  However,
+sometimes you may need more control over when documents are indexed.  For these cases you can use the <code>IndexService</code>
+bean directly in your code to index (or unindex) content as required.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.M8-SNAPSHOT<br>
-Last updated 2020-04-02 02:50:49 UTC
+Last updated 2020-04-02 03:51:26 UTC
 </div>
 </div>
 </body>
