@@ -38,17 +38,24 @@ public static class ApplicationConfig {
 With fulltext-indexing enabled, Store interfaces can be made `Searchable`.  See
 <<content-repositories.search,Searchable Stores>> for more information on how to do this.
 
+== Custom Indexing
+
+When you `@EnableElasticsearchFulltextIndexing` a store event handler is registered that intercepts content being added
+to a Store and sends that content to your Elasticsearch instance for full-text indexing.  This is usually all you need.
+However, sometimes you may need more control over when documents are indexed.  For these cases you can use the
+`IndexService` bean directly in your code to index (or unindex) content as required.
+
 == Text Extraction
 
-For images and other media, it also possible to configure the elasticsearch integration 
-to perform text extraction and send that instead of the image content to elasticsearch.
+For images and other media, it also possible to configure the elasticsearch integration to perform text extraction and
+send that instead of the image content to Elasticsearch.
 
 This requires two stages of configuration:
 
-* Add one or more renderers to the application context.  These renderers 
-are used to perform the text extraction.  The renderer *must* produce the mimetype 
-`text/plain` and will be invoked by the elasticsearch indexer when content matching 
-their "consume" mime-type is added.
+1. Add one or more renderers to the application context.  These renderers are used to perform the text extraction.  To be
+used for text extraction a renderer *must* produce `text/plain` content but can consume any suitable mimetype.   When
+content matching its `consume` mime type is added to a Store the renderer will invoked to extract text and this text
+will be sent to the Elasticsearch for fulltext indexing in place of the original content.
 
 .Adding a renderer to perform text extraction
 ====
@@ -69,12 +76,12 @@ public static class ApplicationConfig {
             
             @Override
             public String consumes() {
-                return "image/jpg";
+                return "image/jpg";                     // can be any mime-type
             }
 
             @Override
             public String[] produces() {
-                return new String[] {"text/plain"};
+                return new String[] {"text/plain"};     // must be 'text/plain'
             }
 
             @Override
@@ -84,9 +91,10 @@ public static class ApplicationConfig {
         }
     }
 }
+----
 ====
 
-* Make the Store Renderable
+2. Make the Store Renderable
 
 .Making the Store interface Renderable
 ====
@@ -95,4 +103,3 @@ public static class ApplicationConfig {
 public interface DocumentStore extends ContentStore<Document, UUID> implements Searchable<Document>, Renderable<Document> {
 }
 ====
-
