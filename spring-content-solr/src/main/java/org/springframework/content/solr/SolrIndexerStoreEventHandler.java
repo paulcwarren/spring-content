@@ -23,12 +23,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.Assert;
 
 @StoreEventHandler
-public class SolrIndexer {
+public class SolrIndexerStoreEventHandler {
 
 	private final IndexService indexer;
 
 	@Autowired
-	public SolrIndexer(IndexService indexer) {
+	public SolrIndexerStoreEventHandler(IndexService indexer) {
 		Assert.notNull(indexer, "indexer must not be null");
 
 		this.indexer = indexer;

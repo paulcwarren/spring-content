@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.search.IndexService;
-import org.springframework.content.solr.SolrIndexer;
+import org.springframework.content.solr.SolrIndexerStoreEventHandler;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -85,7 +85,7 @@ public class SolrAutoConfigurationTest {
 
       @Bean
       public Object solrFulltextEventListener() {
-         return new SolrIndexer(solrIndexService());
+         return new SolrIndexerStoreEventHandler(solrIndexService());
       }
    }
 }

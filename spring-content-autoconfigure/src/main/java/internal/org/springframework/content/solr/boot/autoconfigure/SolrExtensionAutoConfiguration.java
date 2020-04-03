@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.content.commons.search.IndexService;
-import org.springframework.content.solr.SolrIndexer;
+import org.springframework.content.solr.SolrIndexerStoreEventHandler;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -38,6 +38,6 @@ public class SolrExtensionAutoConfiguration {
 
    @Bean
    public Object solrFulltextEventListener() {
-      return new SolrIndexer(solrIndexService());
+      return new SolrIndexerStoreEventHandler(solrIndexService());
    }
 }
