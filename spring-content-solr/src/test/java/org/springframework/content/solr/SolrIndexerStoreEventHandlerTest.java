@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import org.apache.solr.client.solrj.SolrClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -38,9 +37,9 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class SolrIndexerTest {
+public class SolrIndexerStoreEventHandlerTest {
 
-	private SolrIndexer handler;
+	private SolrIndexerStoreEventHandler handler;
 
 	// mocks
 	private ContentStore<Object, Serializable> store;
@@ -55,12 +54,12 @@ public class SolrIndexerTest {
 	private Throwable e;
 
 	{
-		Describe("SolrUpdateEventHandler", () -> {
+		Describe("SolrIndexerStoreEventHandler", () -> {
 			BeforeEach(() -> {
 				store = mock(ContentStore.class);
 				content = mock(InputStream.class);
 				indexer = mock(IndexService.class);
-				handler = new SolrIndexer(indexer);
+				handler = new SolrIndexerStoreEventHandler(indexer);
 			});
 			Context("#onAfterSetContent", () -> {
 				JustBeforeEach(() -> {

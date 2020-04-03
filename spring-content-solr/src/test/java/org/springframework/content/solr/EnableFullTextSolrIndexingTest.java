@@ -46,7 +46,7 @@ public class EnableFullTextSolrIndexingTest {
 				assertThat(context.getBean(SolrProperties.class), is(not(nullValue())));
 			});
 			It("should have a Solr indexing store event handler bean", () -> {
-				assertThat(context.getBean(SolrIndexer.class), is(not(nullValue())));
+				assertThat(context.getBean(SolrIndexerStoreEventHandler.class), is(not(nullValue())));
 			});
 			It("should have a Searchable implementation bean", () -> {
 				assertThat(context.getBeansOfType(SearchableImpl.class), is(not(nullValue())));

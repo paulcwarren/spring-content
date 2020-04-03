@@ -21,7 +21,7 @@ public class FullTextSolrIndexingConfig {
 
 	@Bean
 	public Object solrFulltextEventListener() {
-		return new SolrIndexer(solrFulltextIndexService());
+		return new SolrIndexerStoreEventHandler(solrFulltextIndexService());
 	}
 
 	@Bean
