@@ -1,0 +1,7 @@
+HTTP/1.1 500 
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Fri, 03 Apr 2020 05:49:56 GMT
+Connection: close
+
+{"timestamp":"2020-04-03T05:49:56.620+0000","status":500,"error":"Internal Server Error","message":"Failed to parse multipart servlet request; nested exception is java.io.IOException: org.apache.tomcat.util.http.fileupload.FileUploadException: the request was rejected because no multipart boundary was found","path":"/photos"}
