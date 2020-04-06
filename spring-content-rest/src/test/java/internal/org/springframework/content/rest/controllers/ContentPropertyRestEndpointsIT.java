@@ -188,7 +188,7 @@ public class ContentPropertyRestEndpointsIT {
 										  + testEntity2.getId()
 										  + "/child").accept(
 										  new String[] {"text/xml",
-												  "text/*"}))
+												  "text/plain"}))
 								  .andExpect(status().isOk()).andReturn()
 								  .getResponse();
 
@@ -275,7 +275,7 @@ public class ContentPropertyRestEndpointsIT {
 										  + "/child/"
 										  + testEntity2.getChild().contentId).accept(
 										  new String[] {"text/xml",
-												  "text/*"}))
+												  "text/plain"}))
 								  .andExpect(status().isOk()).andReturn()
 								  .getResponse();
 
@@ -379,7 +379,7 @@ public class ContentPropertyRestEndpointsIT {
 									  + testEntity3.getId()
 									  + "/content").accept(
 									  new String[] {"text/xml",
-											  "text/*"}))
+											  "text/plain"}))
 							  .andExpect(status().isOk()).andReturn()
 							  .getResponse();
 
