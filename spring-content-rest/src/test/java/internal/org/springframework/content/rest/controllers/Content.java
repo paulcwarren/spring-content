@@ -97,7 +97,7 @@ public class Content {
             });
         });
 
-        Context("given the Entity has content", () -> {
+        Context("given the Entity has text/plain content", () -> {
             BeforeEach(() -> {
                 String content = "Hello Spring Content World!";
                 entity = (ContentEntity) store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
@@ -174,7 +174,7 @@ public class Content {
                 It("should return the original content and 200", () -> {
                     MockHttpServletResponse response = mvc.perform(get(url)
                             .contextPath(contextPath)
-                            .accept(new String[] { "text/xml", "text/*" }))
+                            .accept(new String[] { "text/xml", "text/plain" }))
                             .andExpect(status().isOk()).andReturn()
                             .getResponse();
 
@@ -188,6 +188,36 @@ public class Content {
                     MockHttpServletResponse response = mvc.perform(get(url)
                             .contextPath(contextPath)
                             .accept(new String[] { "text/xml", "text/html", "*/*" }))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
+
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+                    assertThat(response.getContentType(), is("text/html"));
+                });
+            });
+            Context("a GET to /{store}/{id} with a mime type specifying charset", () -> {
+                It("should return the original content and 200", () -> {
+                    MockHttpServletResponse response = mvc.perform(get(url)
+                            .contextPath(contextPath)
+                            .accept(new String[] { "text/html;charset=ISO-8859-1" }))
+                            .andExpect(status().isOk()).andReturn()
+                            .getResponse();
+
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
+                    assertThat(response.getContentType(), is("text/html;charset=ISO-8859-1"));
+                });
+            });
+            Context("a GET to /{store}/{id} when the original mime type has a charset", () -> {
+                BeforeEach(() -> {
+                    entity.setMimeType("text/html;charset=ISO-8859-1");
+                    entity = (ContentEntity) repository.save(entity);
+                });
+                It("should return the original content and 200", () -> {
+                    MockHttpServletResponse response = mvc.perform(get(url)
+                            .contextPath(contextPath)
+                            .accept(new String[] { "text/html" }))
                             .andExpect(status().isOk()).andReturn()
                             .getResponse();
 

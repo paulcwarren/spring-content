@@ -104,25 +104,27 @@ public class StoreRestController implements InitializingBean  {
 
             MediaType producedResourceType = null;
             List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-            if (acceptedMimeTypes.size() == 0) {
-                acceptedMimeTypes.add(MediaType.ALL);
-            }
+            if (acceptedMimeTypes.size() > 0) {
 
-            MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
-            for (MediaType acceptedMimeType : acceptedMimeTypes) {
-                if (resource instanceof RenderableResource && ((RenderableResource)resource).isRenderableAs(acceptedMimeType)) {
-                    resource = new RenderedResource(((RenderableResource) resource).renderAs(acceptedMimeType), resource);
-                    producedResourceType = acceptedMimeType;
-                    break;
-                } else if (acceptedMimeType.includes(resourceType)) {
-                    producedResourceType = resourceType;
-                    break;
+                MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
+                for (MediaType acceptedMimeType : acceptedMimeTypes) {
+                    if (resource instanceof RenderableResource && ((RenderableResource) resource)
+                            .isRenderableAs(acceptedMimeType)) {
+                        resource = new RenderedResource(((RenderableResource) resource)
+                                .renderAs(acceptedMimeType), resource);
+                        producedResourceType = acceptedMimeType;
+                        break;
+                    }
+                    else if (acceptedMimeType.includes(resourceType)) {
+                        producedResourceType = resourceType;
+                        break;
+                    }
                 }
-            }
 
-            if (producedResourceType == null) {
-                response.setStatus(HttpStatus.NOT_FOUND.value());
-                return;
+                if (producedResourceType == null) {
+                    response.setStatus(HttpStatus.NOT_FOUND.value());
+                    return;
+                }
             }
 
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
