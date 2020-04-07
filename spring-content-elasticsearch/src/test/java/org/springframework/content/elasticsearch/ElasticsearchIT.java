@@ -1,5 +1,8 @@
 package org.springframework.content.elasticsearch;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
 import java.time.Duration;
 
 import javax.persistence.Entity;
@@ -12,9 +15,13 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.io.IOUtils;
+import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
@@ -25,6 +32,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.domain.PageRequest;
@@ -35,9 +43,12 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
+import static java.lang.Thread.sleep;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -85,15 +96,19 @@ public class ElasticsearchIT {
             AfterEach(() -> {
                assertThat(context, is(not(nullValue())));
 
-               // assert the right index exists as a double check we are testing the correct thing!
-               if (client != null) {
-                  GetIndexRequest gir = new GetIndexRequest(indexName);
-                  GetIndexResponse resp = client.indices().get(gir, RequestOptions.DEFAULT);
-                  assertThat(resp.getIndices().length, is(1));
+               try {
+                  // assert the right index exists as a double check we are testing the correct thing!
+                  if (client != null) {
+                     GetIndexRequest gir = new GetIndexRequest(indexName);
+                     GetIndexResponse resp = client.indices().get(gir, RequestOptions.DEFAULT);
+                     assertThat(resp.getIndices().length, is(1));
+                  }
+               } catch (ElasticsearchStatusException ese) {}
 
+               try {
                   DeleteIndexRequest dir = new DeleteIndexRequest("_all");
                   client.indices().delete(dir, RequestOptions.DEFAULT);
-               }
+               } catch (ElasticsearchStatusException ese) {}
             });
 
             Context("given some documents", () -> {
@@ -132,6 +147,25 @@ public class ElasticsearchIT {
                   req = new GetRequest(indexName, doc1.getClass().getName(), doc2.getContentId());
                   res = client.get(req, RequestOptions.DEFAULT);
                   assertThat(res.isExists(), is(true));
+               });
+
+               It("should be possible to close the index", () -> {
+                  IndexService indexer = ((IndexService)context.getBean(IndexService.class));
+                  indexer.index(doc1, new ByteArrayInputStream("customized index".getBytes()));
+
+                  AcknowledgedResponse resp = client.indices().close(new CloseIndexRequest(indexName));
+                  assertThat(resp.isAcknowledged(), is(true));
+
+                  String command = format("curl -X GET http://localhost:9200/_cat/indices/%s?h=status", indexName);
+                  Process process = Runtime.getRuntime().exec(command);
+
+                  InputStream inputStream = process.getInputStream();
+                  process.waitFor();
+
+                  int exitCode = process.exitValue();
+                  assertThat(exitCode, is(0));
+
+                  assertThat(IOUtils.toString(inputStream), containsString("close"));
                });
 
                Context("when the content is searched", () -> {
