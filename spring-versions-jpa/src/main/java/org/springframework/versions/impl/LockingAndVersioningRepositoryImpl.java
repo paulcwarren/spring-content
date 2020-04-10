@@ -320,7 +320,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Override
-    public <S extends T> void delete(S entity) {
+    public void delete(T entity) {
 
       Authentication authentication = auth.getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -344,14 +344,14 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         Object ancestorRootId = getAncestralRootId(entity);
         Object ancestorId = getAncestorId(entity);
 
-        S ancestor = null;
+        T ancestor = null;
         if (ancestorId == null) {
             ancestorId = ancestorRootId;
         }
 
         if (ancestorId != null) {
 
-            ancestor = (S) em.find(entity.getClass(), ancestorId);
+            ancestor = (T) em.find(entity.getClass(), ancestorId);
 
             Principal lockOwner = null;
             if ((lockOwner = lockingService.lockOwner(ancestorId)) != null && !Objects.equals(authentication.getName(),lockOwner.getName())) {
@@ -372,7 +372,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         em.remove(em.contains(entity) ? entity : em.merge(entity));
     }
 
-    protected <S extends T> boolean isHead(S entity) {
+    protected <T> boolean isHead(T entity) {
         boolean isHead = false;
         if (BeanUtils.hasFieldWithAnnotation(entity, SuccessorId.class)) {
             return BeanUtils.getFieldWithAnnotation(entity, SuccessorId.class) == null;
@@ -466,15 +466,15 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return ancestorRootIdField.getName();
     }
 
-    protected <S extends T> Object getAncestralRootId(S entity) {
+    protected <T> Object getAncestralRootId(T entity) {
         return BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class);
     }
 
-    protected <S extends T> Object getAncestorId(S entity) {
+    protected <T> Object getAncestorId(T entity) {
         return BeanUtils.getFieldWithAnnotation(entity, AncestorId.class);
     }
 
-    protected <S extends T> Object getId(S entity) {
+    protected <T> Object getId(T entity) {
         Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
         if (id == null) {
             id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
