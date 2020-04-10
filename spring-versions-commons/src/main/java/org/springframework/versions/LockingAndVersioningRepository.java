@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RestResource;
 
@@ -115,13 +116,12 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * If the entity is locked the lock will be carried over to the previous version when
      * it becomes the new head.
      *
-     * @param <S> the type of entity
      * @param entity the entity to delete
      * @throws LockingAndVersioningException if entity is not the latest
      * @throws LockOwnerException if the current principal is not the lock owner
      * @throws SecurityException if no authentication exists
      */
-    <S extends T> void delete(S entity);
+    void delete(T entity);
 
     /**
      * Returns whether the given entity is a private working copy, or not
