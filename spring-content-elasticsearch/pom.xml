@@ -46,10 +46,9 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Spring Content JPA Repository -->
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-jpa-boot-starter</artifactId>
+			<artifactId>spring-content-jpa</artifactId>
 			<version>1.0.0.M10-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
