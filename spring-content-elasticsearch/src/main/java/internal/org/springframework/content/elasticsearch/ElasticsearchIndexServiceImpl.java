@@ -48,17 +48,26 @@ public class ElasticsearchIndexServiceImpl<T> implements IndexService<T> {
     private final RenditionService renditionService;
     private final IndexManager manager;
 
-    public ElasticsearchIndexServiceImpl(RestHighLevelClient client, RenditionService renditionService, IndexManager manager)
-            throws IOException {
+    private boolean pipelinedInitialized = false;
+
+    public ElasticsearchIndexServiceImpl(RestHighLevelClient client, RenditionService renditionService, IndexManager manager) {
 
         this.client = client;
         this.renditionService = renditionService;
         this.manager = manager;
-        ensureAttachmentPipeline();
     }
 
     @Override
     public void index(T entity, InputStream stream) {
+
+        if (!pipelinedInitialized) {
+            try {
+                ensureAttachmentPipeline();
+            } catch (IOException ioe) {
+                throw new StoreAccessException("Unable to initialize attachment pipeline", ioe);
+            }
+        }
+
         String id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class).toString();
 
         if (renditionService != null) {
@@ -109,6 +118,15 @@ public class ElasticsearchIndexServiceImpl<T> implements IndexService<T> {
 
     @Override
     public void unindex(T entity) {
+
+        if (!pipelinedInitialized) {
+            try {
+                ensureAttachmentPipeline();
+            } catch (IOException ioe) {
+                throw new StoreAccessException("Unable to initialize attachment pipeline", ioe);
+            }
+        }
+
         Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
         if (id == null) {
             return;

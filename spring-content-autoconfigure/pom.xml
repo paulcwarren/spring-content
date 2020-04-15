@@ -89,6 +89,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-elasticsearch</artifactId>
+			<version>1.0.0.M10-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-versions-jpa</artifactId>
 			<version>1.0.0.M10-SNAPSHOT</version>
 			<optional>true</optional>

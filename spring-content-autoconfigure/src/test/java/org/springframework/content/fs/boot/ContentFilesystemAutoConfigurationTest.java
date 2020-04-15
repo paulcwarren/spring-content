@@ -2,6 +2,7 @@ package org.springframework.content.fs.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
 import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
@@ -109,7 +110,9 @@ public class ContentFilesystemAutoConfigurationTest {
 	}
 
 	@Configuration
-    @EnableAutoConfiguration(exclude= { MongoAutoConfiguration.class, 
+    @EnableAutoConfiguration(exclude= {
+            ElasticsearchAutoConfiguration.class,
+            MongoAutoConfiguration.class,
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
@@ -120,7 +123,9 @@ public class ContentFilesystemAutoConfigurationTest {
 	}
 
 	@Configuration
-    @EnableAutoConfiguration(exclude= { MongoAutoConfiguration.class, 
+    @EnableAutoConfiguration(exclude= {
+            ElasticsearchAutoConfiguration.class,
+            MongoAutoConfiguration.class,
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
@@ -137,13 +142,15 @@ public class ContentFilesystemAutoConfigurationTest {
 	}
 
 	@Configuration
-    @EnableAutoConfiguration(exclude= { MongoAutoConfiguration.class, 
-                                        JpaContentAutoConfiguration.class,
-                                        JpaVersionsAutoConfiguration.class,
-                                        MongoContentAutoConfiguration.class,
-                                        RenditionsContentAutoConfiguration.class,
-                                        S3ContentAutoConfiguration.class})
-	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+    @EnableAutoConfiguration(exclude= {
+            ElasticsearchAutoConfiguration.class,
+            MongoAutoConfiguration.class,
+            JpaContentAutoConfiguration.class,
+            JpaVersionsAutoConfiguration.class,
+            MongoContentAutoConfiguration.class,
+            RenditionsContentAutoConfiguration.class,
+            S3ContentAutoConfiguration.class})
+    @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	@EnableFilesystemStores
 	public static class ConfigWithExplicitEnableFilesystemStores {
 	}

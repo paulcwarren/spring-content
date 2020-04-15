@@ -15,27 +15,16 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan(basePackages = { "org.springframework.content.elasticsearch" })
 public class ElasticsearchFulltextIndexingConfig {
 
 	@Autowired
 	private RestHighLevelClient client;
 
-	@Autowired(required=false)
-	private RenditionService renditionService;
+	@Autowired
+	private IndexService elasticFulltextIndexService;
 
 	@Bean
 	public ElasticsearchIndexer elasticFulltextIndexerEventListener() throws IOException {
-		return new ElasticsearchIndexer(client, elasticFulltextIndexService());
-	}
-
-	@Bean
-	public IndexService elasticFulltextIndexService() throws IOException {
-		return new ElasticsearchIndexServiceImpl(client, renditionService, indexManager());
-	}
-
-	@Bean
-	public IndexManager indexManager() {
-		return new IndexManager(client);
+		return new ElasticsearchIndexer(client, elasticFulltextIndexService);
 	}
 }

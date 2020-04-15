@@ -9,6 +9,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 
+import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,11 +73,13 @@ public class JpaVersionsAutoConfigurationTest {
 
     @Configuration
     @PropertySource("classpath:default.properties")
-    @EnableAutoConfiguration(exclude= { MongoAutoConfiguration.class, 
-                                        FilesystemContentAutoConfiguration.class,
-                                        MongoContentAutoConfiguration.class,
-                                        RenditionsContentAutoConfiguration.class,
-                                        S3ContentAutoConfiguration.class})
+    @EnableAutoConfiguration(exclude= {
+            ElasticsearchAutoConfiguration.class,
+            MongoAutoConfiguration.class,
+            FilesystemContentAutoConfiguration.class,
+            MongoContentAutoConfiguration.class,
+            RenditionsContentAutoConfiguration.class,
+            S3ContentAutoConfiguration.class})
     @EntityScan(basePackages="org.springframework.support")
     public static class BaseConfig {}
     
