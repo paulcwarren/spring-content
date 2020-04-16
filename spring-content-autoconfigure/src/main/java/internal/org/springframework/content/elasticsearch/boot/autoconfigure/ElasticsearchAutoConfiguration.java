@@ -23,7 +23,6 @@ public class ElasticsearchAutoConfiguration {
 
 	// optional (based on properties)
 	@ConditionalOnProperty(prefix="spring.content.elasticsearch", name="autoindex", havingValue="true", matchIfMissing = true)
-
 	@Bean
 	public ElasticsearchIndexer elasticFulltextIndexerEventListener(RestHighLevelClient client, IndexService elasticFulltextIndexService) throws IOException {
 		return new ElasticsearchIndexer(client, elasticFulltextIndexService);
@@ -40,7 +39,10 @@ public class ElasticsearchAutoConfiguration {
 	@ConfigurationProperties(prefix = "spring.content.elasticsearch")
 	public static class ElasticsearchProperties {
 
-		boolean autoindex = true;
+        /**
+         * Whether or not to perform automatic indexing of content as it is added
+         */
+        boolean autoindex = true;
 
 		public boolean getAutoindex() {
 			return autoindex;
