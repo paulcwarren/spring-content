@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When enabled, the Elasticsearch integration will forward all content to an Elasticsearch cluster for fulltext indexing.</p>
+<p>When enabled, the Elasticsearch integration will, by default, forward all content to an Elasticsearch cluster for fulltext indexing.</p>
 </div>
 </div>
 </div>
@@ -447,11 +447,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to the Elasticsearch
-cluster that you wish to use for indexing.</p>
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to your Elasticsearch
+cluster.</p>
 </div>
 <div class="paragraph">
-<p>Elasticsearch is enabled with the following Java Config.</p>
+<p>Elasticsearch can be enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 1. Enabling Spring Content Elasticsearch with Java Config</div>
@@ -489,6 +489,39 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect1">
+<h2 id="_spring_boot_configuration">Spring Boot Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Alternatively, you can use the Spring Boot Starter <code>spring-content-elasticsearch-boot-starter</code>.</p>
+</div>
+<div class="paragraph">
+<p>When using this method of configuration the <code>@EnableElasticsearchFulltextIndexing</code> annotation can be omitted as it will
+be added for you.  As will a RestHighLevelClient client bean configured to connect to localhost.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix spring.content.elasticsearch) are supported.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">autoindex</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether, or not, to enable autoindexing to index content as it is added</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_making_stores_searchable">Making Stores Searchable</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -501,10 +534,14 @@ public static class ApplicationConfig {
 <h2 id="_custom_indexing">Custom Indexing</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content being added
-to a Store and sends that content to your Elasticsearch instance for full-text indexing.  This is usually all you need.
-However, sometimes you may need more control over when documents are indexed.  For these cases you can use the
-<code>IndexService</code> bean directly in your code to index (or unindex) content as required.</p>
+<p>By default when you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content
+being added to a Store and sends that content to your Elasticsearch cluster for full-text indexing.  This is usually
+all you need.  However, sometimes you may need more control over when documents are indexed.  For these cases you can
+use the <code>IndexService</code> bean directly in your code to index (or unindex) content as required.</p>
+</div>
+<div class="paragraph">
+<p>When performing custom indexing it is usual to turn of the auto-indexing feature but specifying
+<code>spring.content.elasticsearch.autoindex=false</code> in your application properties.</p>
 </div>
 </div>
 </div>
@@ -590,7 +627,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-04-16 03:54:39 UTC
+Last updated 2020-04-16 04:46:45 UTC
 </div>
 </div>
 </body>
