@@ -57,7 +57,7 @@ public class POIServiceTest {
 				});
 				Context("given an invalid inputstream", () -> {
 					BeforeEach(() -> {
-						stream = new ByteArrayInputStream("".getBytes());
+						stream = new ByteArrayInputStream("asdhg".getBytes());
 					});
 					It("should throw an exception", () -> {
 						try {
