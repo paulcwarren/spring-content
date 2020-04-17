@@ -103,8 +103,8 @@ The following describes typical store scenarios and how they are exported with S
 
 === Resources
 
-Spring Resources, managed by a Spring Content Store, are standard Spring Resources that, when exported using Spring
-Content REST, are accessible by REST endpoint.
+Spring Content Stores manage Spring Resources that, when exported using Spring Content REST, are accessible by REST
+endpoint.
 
 Consider the following Store interface:
 
@@ -118,17 +118,14 @@ Consider the following Store interface:
 In this example, the Store's Resources are exported to the URI `/dvds`.  The path is derived from the
 uncapitalized, pluralized, simple class name of the interface.  When interacting with this endpoint any additional path
 is deemed to be the Resource's location and will be used to fetch the Resource using the Store's `getResource` method.
-For example, a GET request to `/dvds/comedy/monty_pythons_flying_circus.mp4` assumes
-`/comedy/monty_pythons_flying_circus.mp4` is the location of the Resource.
-
-The HTTP methods are then mapped onto the relevant Resource methods; GET maps to `getInputStream`, PUT maps onto
-`getOutputStream` and so on.
+For example, a GET request to `/dvds/comedy/monty_pythons_flying_circus.mp4` will fetch from the `DvdStore` (`/dvds`),
+the Resource `/comedy/monty_pythons_flying_circus.mp4`.
 
 === Entity Resources
 
-Entity Resources are associated with Spring Data Entities.
+Entity Resources are Spring Resource associated with Spring Data Entities.
 
-Assume the following `Entity` class with associated `Repository` and `Store` interfaces:
+Assume the following `Entity` class, `Repository` and `Store` interfaces:
   
 ====
 [source, java]
@@ -136,9 +133,11 @@ Assume the following `Entity` class with associated `Repository` and `Store` int
   @Entity
   public class Dvd {
   	@Id
-  	@ContentId
-  	private UUID id;
-  	
+  	private Long id;
+
+    @ContentId
+    private UUID contentId;
+
   	@ContentLength
   	private Long contentLength;
   	
@@ -148,20 +147,20 @@ Assume the following `Entity` class with associated `Repository` and `Store` int
   	// getters and setters
   }
   
-  public interface DvdRepository extends CrudRepository<Dvd, UUID> {}
+  public interface DvdRepository extends CrudRepository<Dvd, Long> {}
 
   public interface DvdStore extends ContentStore<Dvd, UUID> {}
 ----
 ====
   
-In this example a single Resource (the DVD video stream) is associated with a Dvd Entity by annotating additional fields
-on the Entity using the `@ContentId` and `@MimeType` annotations.   In this example Spring Data REST exports a collection
-resource at `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class being
-managed.  `Dvd` in this case.  Item resources are also exported to the URI `/dvds/{id}`.  The HTTP methods used to
-request this endpoint map into the methods of  `CrudRepository`.
+In this example a single Spring Resource (the DVD's video stream) is associated with a Dvd Entity by annotating additional
+fields on the Entity using the `@ContentId`, `@ContentLength` and `@MimeType` annotations.   In this example Spring Data
+REST exports a collection  resource to `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class
+name of the domain class.  Item resources are also exported to the URI `/dvds/{id}`.  The HTTP methods used to request
+this endpoint map onto the methods of `CrudRepository`.
 
-Similarly, Spring Content REST also exports Entity Resources to the URI `/dvds/{id}`.  In this case the HTTP methods
-map onto the methods on `ContentStore` as follows:-
+Similarly, Spring Content REST also exports any associated Spring Resources to the URI `/dvds/{id}`.  In this case the
+HTTP methods map onto the methods of `ContentStore` as follows:-
 
 - GET -> getContent
 - POST/PUT -> setContent
@@ -169,10 +168,10 @@ map onto the methods on `ContentStore` as follows:-
 
 === Property Resources
 
-Property Resources are associated with the properties of Spring Data Entities.  This allows many Resources to be
-associated with a single Entity.
+Property Resources are associated with the properties of Spring Data Entities, that themselves maybe Spring Data Entities.
+This allows many Resources to be associated with a single Entity.
 
-Consider the following `Entity` model with `Repository` and `Store` interfaces:
+Consider the following `Entity` model, with `Repository` and `Store` interfaces:
 
 ====
 [source, java]
@@ -328,7 +327,7 @@ Resources links for both into the HAL responses created by Spring Data REST.
 
 == The Store Resource
 
-Spring Content REST exports Store Resources to `/{store}/**`.  The resource path can be customized using the
+Spring Content REST exports Store Resources to `/{store}/**`.  The resource path and linkrel can be customized using the
 `@StoreRestResource` annotation on the Store interface.
 
 === Supported HTTP Methods

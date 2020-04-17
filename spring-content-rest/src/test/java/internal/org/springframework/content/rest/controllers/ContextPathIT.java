@@ -140,6 +140,34 @@ public class ContextPathIT {
 				}
 			};
 		}
+
+		@Bean
+		public RenditionProvider htmlToHtml() {
+			return new RenditionProvider() {
+
+				@Override
+				public String consumes() {
+					return "text/html";
+				}
+
+				@Override
+				public String[] produces() {
+					return new String[] { "text/html" };
+				}
+
+				@Override
+				public InputStream convert(InputStream fromInputSource, String toMimeType) {
+					String input = null;
+					try {
+						input = IOUtils.toString(fromInputSource);
+					}
+					catch (IOException e) {
+					}
+					return new ByteArrayInputStream(
+							String.format("<html><body>Hello Spring Content World!</body></html>", input).getBytes());
+				}
+			};
+		}
 	}
 	
 	@Test

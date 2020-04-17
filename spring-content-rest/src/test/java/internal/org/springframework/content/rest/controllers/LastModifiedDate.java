@@ -76,11 +76,7 @@ public class LastModifiedDate {
 
                 assertThat(response, is(not(nullValue())));
                 assertThat(response.getContentAsString(), is(content));
-
-                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
-                format.setTimeZone(TimeZone.getTimeZone("GMT"));
-                String expected = format.format(lastModifiedDate);
-                assertThat(response.getHeader("last-modified"), is(expected));
+                assertThat(response.getHeader("last-modified"), isWithinASecond(lastModifiedDate));
             });
         });
         Context("a GET request to /{store}/{id} with an if-modified-since date before the entity's modified date", () -> {

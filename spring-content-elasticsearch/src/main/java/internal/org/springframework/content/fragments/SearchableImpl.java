@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
+import internal.org.springframework.content.elasticsearch.IndexManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -20,10 +22,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.data.domain.Pageable;
 
-import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
-
-import static internal.org.springframework.content.elasticsearch.ElasticsearchIndexer.INDEX_NAME;
 import static java.lang.String.format;
 
 public class SearchableImpl implements Searchable<Serializable> {
@@ -31,16 +31,20 @@ public class SearchableImpl implements Searchable<Serializable> {
     private static final Log LOGGER = LogFactory.getLog(ElasticsearchIndexer.class);
 
 	private final RestHighLevelClient client;
+	private final IndexManager manager;
+
 	private Class<?> domainClass;
 
 	public SearchableImpl() {
 		client = null;
+		manager = null;
 		domainClass = null;
 	}
 
 	@Autowired
-	public SearchableImpl(RestHighLevelClient client) {
+	public SearchableImpl(RestHighLevelClient client, IndexManager manager) {
 		this.client = client;
+		this.manager = manager;
 	}
 
 	public void setDomainClass(Class<?> domainClass) {
@@ -49,7 +53,7 @@ public class SearchableImpl implements Searchable<Serializable> {
 
 	@Override
 	public Iterable<Serializable> search(String queryStr) {
-		SearchRequest searchRequest = new SearchRequest(INDEX_NAME);
+		SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
 		searchRequest.types(domainClass.getName());
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -69,8 +73,31 @@ public class SearchableImpl implements Searchable<Serializable> {
 	}
 
 	@Override
+	public List<Serializable> search(String queryStr, Pageable pageable) {
+		SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
+		searchRequest.types(domainClass.getName());
+
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(QueryBuilders.simpleQueryStringQuery(queryStr));
+		sourceBuilder.from(pageable.getPageNumber() * pageable.getPageSize());
+		sourceBuilder.size(pageable.getPageSize());
+		searchRequest.source(sourceBuilder);
+
+		SearchResponse res = null;
+		try {
+			res = client.search(searchRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException | ElasticsearchStatusException e) {
+			LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
+			throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
+		}
+
+		return getIDs(res.getHits());
+	}
+
+	@Override
 	public Iterable<Serializable> findKeyword(String query) {
-		SearchRequest searchRequest = new SearchRequest(INDEX_NAME);
+		SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
 		searchRequest.types(domainClass.getName());
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();

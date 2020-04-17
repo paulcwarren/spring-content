@@ -57,11 +57,9 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 	@Override
 	public boolean canConvert(String fromMimeType, String toMimeType) {
 		for (RenditionProvider provider : providers) {
-			if (MimeType.valueOf(fromMimeType)
-					.includes(MimeType.valueOf(provider.consumes()))) {
+			if (MimeType.valueOf(fromMimeType).includes(MimeType.valueOf(provider.consumes()))) {
 				for (String produce : provider.produces()) {
-					if (MimeType.valueOf(toMimeType)
-							.includes(MimeType.valueOf(produce))) {
+					if (MimeType.valueOf(toMimeType).includes(MimeType.valueOf(produce))) {
 						return true;
 					}
 				}

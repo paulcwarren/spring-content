@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>1.0.0.M6-SNAPSHOT</version>
+		<version>1.0.0.M10-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>spring-content-elasticsearch</artifactId>
@@ -14,12 +14,13 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>1.0.0.M6-SNAPSHOT</version>
+			<version>1.0.0.M10-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -46,18 +47,17 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Spring Content JPA Repository -->
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-jpa-boot-starter</artifactId>
-			<version>1.0.0.M6-SNAPSHOT</version>
+			<artifactId>spring-content-jpa</artifactId>
+			<version>1.0.0.M10-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-renditions</artifactId>
-			<version>1.0.0.M6-SNAPSHOT</version>
+			<version>1.0.0.M10-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 

@@ -24,6 +24,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
@@ -58,7 +59,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	private ReflectionService reflectionService;
 
 	static {
-		searchMethods.put("search", ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class }));
+		searchMethods.put("search", ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class }));
 		searchMethods.put("findKeyword", ReflectionUtils.findMethod(Searchable.class,"findKeyword", new Class<?>[] { String.class }));
 	}
 
@@ -147,7 +148,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 			throw new BadRequestException();
 		}
 
-		List contentIds = (List) reflectionService.invokeMethod(method, store, keywords[0]);
+		List contentIds = (List) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable());
 
 		List<Object> results = new ArrayList<>();
 		if (contentIds != null && contentIds.size() > 0) {

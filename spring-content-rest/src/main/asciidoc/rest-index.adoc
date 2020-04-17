@@ -36,6 +36,8 @@ include::{spring-versions-jpa-docs}/jpaversions-rest.adoc[leveloffset=+1]
 include::rest-cors.adoc[leveloffset=+1]
 
 include::rest-baseuri.adoc[leveloffset=+1]
+include::rest-linkrel.adoc[leveloffset=+1]
+include::rest-fullyqualifiedlinks.adoc[leveloffset=+1]
 //[[appendix]]
 //= Appendix
 

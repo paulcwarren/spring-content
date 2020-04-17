@@ -1,8 +1,14 @@
 package internal.org.springframework.content.commons.repository.factory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -10,10 +16,13 @@ import java.util.Optional;
 import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
 import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
+import lombok.Getter;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import org.springframework.content.commons.fragments.ContentStoreAware;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -141,6 +150,9 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		StoreEvent before = null;
 		AfterStoreEvent after = null;
 
+		File tmpStreamFile = null;
+		TeeInputStream eventStream = null;
+
 		if (getContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
 				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
@@ -149,7 +161,9 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		}
 		else if (setContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0) {
-				before = new BeforeSetContentEvent(invocation.getArguments()[0], store);
+				tmpStreamFile = Files.createTempFile("sc", "bsce").toFile();
+				eventStream = new TeeInputStream((InputStream) invocation.getArguments()[1], new FileOutputStream(tmpStreamFile), true);
+				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, eventStream);
 				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
 		}
@@ -191,6 +205,16 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 
 		if (before != null) {
 			publisher.publishEvent(before);
+
+			if (before instanceof BeforeSetContentEvent) {
+
+				if (eventStream.isDirty()) {
+					while (eventStream.read(new byte[4096]) != -1) {}
+					eventStream.close();
+					invocation.getArguments()[1] = new ObservableInputStream(new FileInputStream(tmpStreamFile), new FileRemover(tmpStreamFile));
+				}
+			}
+
 		}
 		Object result;
 		try {
@@ -219,5 +243,33 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 			return true;
 		}
 		return false;
+	}
+
+	@Getter
+	private static class TeeInputStream extends org.apache.commons.io.input.TeeInputStream {
+
+		private boolean isDirty = false;
+
+		public TeeInputStream(InputStream input, OutputStream branch, boolean closeBranch) {
+			super(input, branch, closeBranch);
+		}
+
+		@Override
+		public int read() throws IOException {
+			isDirty = true;
+			return super.read();
+		}
+
+		@Override
+		public int read(byte[] bts, int st, int end) throws IOException {
+			isDirty = true;
+			return super.read(bts, st, end);
+		}
+
+		@Override
+		public int read(byte[] bts) throws IOException {
+			isDirty = true;
+			return super.read(bts);
+		}
 	}
 }

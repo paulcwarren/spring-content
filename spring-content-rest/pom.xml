@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.github.paulcwarren</groupId>
         <artifactId>spring-content</artifactId>
-        <version>1.0.0.M6-SNAPSHOT</version>
+        <version>1.0.0.M10-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -42,19 +42,19 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-commons</artifactId>
-            <version>1.0.0.M6-SNAPSHOT</version>
+            <version>1.0.0.M10-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.atteo</groupId>
             <artifactId>evo-inflector</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.2</version>
         </dependency>
 
         <!-- Locking and Versioning -->
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-versions-commons</artifactId>
-            <version>1.0.0.M6-SNAPSHOT</version>
+            <version>1.0.0.M10-SNAPSHOT</version>
         </dependency>
         <!-- Locking and Versioning -->
 
@@ -95,7 +95,7 @@
         <dependency>
             <groupId>com.jayway.restassured</groupId>
             <artifactId>rest-assured</artifactId>
-            <version>2.3.4</version>
+            <version>2.9.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -169,19 +169,19 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-fs</artifactId>
-            <version>1.0.0.M6-SNAPSHOT</version>
+            <version>1.0.0.M10-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-jpa</artifactId>
-            <version>1.0.0.M6-SNAPSHOT</version>
+            <version>1.0.0.M10-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-versions-jpa</artifactId>
-            <version>1.0.0.M6-SNAPSHOT</version>
+            <version>1.0.0.M10-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

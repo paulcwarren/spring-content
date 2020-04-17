@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>1.0.0.M6-SNAPSHOT</version>
+		<version>1.0.0.M10-SNAPSHOT</version>
 		<relativePath>../../spring-content</relativePath>
 	</parent>
 
 	<properties>
-		<powermock.version>1.7.4</powermock.version>
+		<powermock.version>2.0.7</powermock.version>
 	</properties>
 
 	<dependencies>
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>1.0.0.M6-SNAPSHOT</version>
+			<version>1.0.0.M10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -33,12 +33,12 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>ginkgo4j</artifactId>
-			<version>1.0.0</version>
+			<version>${ginkgo4j-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.2.4</version>
+			<version>3.3.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

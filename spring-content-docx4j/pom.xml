@@ -7,20 +7,20 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>1.0.0.M6-SNAPSHOT</version>
+		<version>1.0.0.M10-SNAPSHOT</version>
 	</parent>
 	
 	<dependencies>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>1.0.0.M6-SNAPSHOT</version>
+			<version>1.0.0.M10-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j</artifactId>
-			<version>3.2.2</version>
+			<version>6.1.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-codec</groupId>
@@ -32,6 +32,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
+		<dependency>
+			<groupId>org.docx4j</groupId>
+			<artifactId>docx4j-export-fo</artifactId>
+			<version>6.1.0</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>commons-codec</groupId>
@@ -42,7 +48,7 @@
 		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
-			<version>2.7.1</version>
+			<version>2.7.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>xml-apis</groupId>
@@ -62,6 +68,13 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>ginkgo4j</artifactId>
+			<version>${ginkgo4j-version}</version>
+			<scope>test</scope>
+		</dependency>
 		
 		<dependency>
 			<groupId>org.hamcrest</groupId>
@@ -73,7 +86,7 @@
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
-			<version>1.12.2</version>
+			<version>1.13.1</version>
 			<scope>test</scope>
 		</dependency>
 		

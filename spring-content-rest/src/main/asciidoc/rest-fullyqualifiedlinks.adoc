@@ -1,0 +1,104 @@
+== Fully Qualified Links
+By default, and where possible, Spring Content REST exports Spring Resources to shortened link URIs.  These will often
+match the Spring Data Rest Entity URI.
+
+Given the following example:
+
+====
+[source, java]
+----
+  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+  public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+
+As there is only a single associated Spring Resource, Spring Content REST will generate the following URI:
+
+====
+[source, java]
+----
+  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "dvds" : {
+      "href" : "http://localhost:8080/dvds/1"
+    }
+  }
+----
+====
+
+To generate fully qualified link URIs set the following property:
+
+====
+[source, java]
+----
+spring.content.rest.fullyQualifiedLinks=true
+----
+====
+
+Or if you are not using Spring Boot, you can do the following:
+
+====
+[source, java]
+----
+@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.setFullyQualifiedLinks(true);
+      }
+    };
+  }
+}
+----
+====
+
+Spring Content REST will now generate links as follows:
+
+====
+[source, java]
+----
+  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1/content"
+    }
+  }
+----
+====
+
+where `content` is the extracted property name taken from the field `contentId`.

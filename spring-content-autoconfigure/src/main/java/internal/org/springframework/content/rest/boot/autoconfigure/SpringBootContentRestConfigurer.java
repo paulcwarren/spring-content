@@ -23,9 +23,14 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
     @Override
     public void configure(RestConfiguration config) {
 
-        if (properties == null || properties.getBaseUri() == null)
+        if (properties == null) {
             return;
+        }
 
-        config.setBaseUri(properties.getBaseUri());
+        if (properties.getBaseUri() != null) {
+            config.setBaseUri(properties.getBaseUri());
+        }
+
+        config.setFullyQualifiedLinks(properties.fullyQualifiedLinks());
     }
 }
