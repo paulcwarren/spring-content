@@ -3,7 +3,7 @@ package org.springframework.content.renditions.renderers;
 import internal.org.springframework.renditions.poi.POIServiceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.POIXMLProperties;
+import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.renditions.RenditionException;
