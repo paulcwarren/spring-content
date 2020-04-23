@@ -23,6 +23,7 @@ public class ElasticsearchAutoConfiguration {
 
 	// optional (based on properties)
 	@ConditionalOnProperty(prefix="spring.content.elasticsearch", name="autoindex", havingValue="true", matchIfMissing = true)
+	@ConditionalOnMissingBean(ElasticsearchIndexer.class)
 	@Bean
 	public ElasticsearchIndexer elasticFulltextIndexerEventListener(RestHighLevelClient client, IndexService elasticFulltextIndexService) throws IOException {
 		return new ElasticsearchIndexer(client, elasticFulltextIndexService);
