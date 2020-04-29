@@ -13,10 +13,11 @@ This chapter explains the core concepts and interfaces for Spring Content. The e
 
 [[content-repositories.core-concepts]]
 == Core concepts
-The central interface in the Spring Content is the `ContentStore`.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a `@ContentId` field on that domain class.
+The central interfaces in the Spring Content are `Store`, `AssociativeStore` and `ContentStore`.  These interfaces
+provide access to content streams through the standard Spring Resource API either directly or through association with
+Spring Data entities.
 
 [[content-repositories.repository]]
-
 .ContentStore interface
 ====
 [source, java]
@@ -35,14 +36,15 @@ public interface ContentStore<E, CID extends Serializable> {
 <3> Deletes content and unassociates it from `entity`
 ====
 
-For example, given an Entity `User`, a `UserRepository` and a `ProfilePictureStore` it
-is possible to associate and store a profile picture for each user.
+For example, given an Entity `User`, a `UserRepository` and a `ProfilePictureStore` it is possible to associate and
+store a profile picture for each user.
 
 .ContentStore interface
 ====
 [source, java]
 ----
 @Entity
+@Data
 public class User {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -86,49 +88,13 @@ public class Application {
 ----
 ====
 
-=== Experimental API
+[[content-repositories.multimodule]]
+=== Using Stores with Multiple Spring Content Modules
 
-All Spring Content storage modules also now support an *experimental* Store API based on the
-Spring Resource API (i.e. `org.springframework.core.io.ResourceLoader` and `org.springframework.core.io.Resource`).
-
-The base interface in this API, `Store`, is a generic `org.springframework.core.io.ResourceLoader`.  Unlike
-the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
-of Identifer, not just string-based locators, and returns Spring Resource's implementing
-`org.springframework.content.commons.io.DeletableResource` providing a set of methods to control the entire lifecycle
-from creation through to deletion.
-
-.Store interface
-====
-[source, java]
-----
-public interface Store<SID extends Serializable> {
-
-	Resource getResource(SID id);
-}
-----
-====
-
-This interface *is* supported by Spring Content REST.
-
-Derived from the `Store` is a second interface `AssociativeStore` that allows Spring `Resource`s to also be associated
-with Spring Data Entities.
-
-.AssociativeStore interface
-====
-[source, java]
-----
-public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
-
-    Resource getResource(S entity);
-
-    void associate(S entity, SID id);
-
-    void unassociate(S entity);
-}
-----
-====
-
-This interface is *not* yet supported by Spring Content REST.
+Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
+the one Spring Content module.  Sometimes, applications require using more than one Spring Content
+module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
+module-specific ContentStore interfaces.
 
 [[content-repositories.events]]
 === Events
