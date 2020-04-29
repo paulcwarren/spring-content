@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.0.0.M11-SNAPSHOT,</span>
-<span id="revdate">2020-04-24</span>
+<span id="revdate">2020-04-29</span>
 </div>
 </div>
 <div id="content">
@@ -539,7 +539,9 @@ class-path dependencies, Spring Content is then able to inject storage-specific 
 <div class="sect2">
 <h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
 <div class="paragraph">
-<p>The central interface in the Spring Content is the <code>ContentStore</code>.  This interface provides CRUD functionality and entity association for content.  As such a ContentStore is typed to the Spring Data Entity to which content is associated, and to the type of a <code>@ContentId</code> field on that domain class.</p>
+<p>The central interfaces in the Spring Content are <code>Store</code>, <code>AssociativeStore</code> and <code>ContentStore</code>.  These interfaces
+provide access to content streams through the standard Spring Resource API either directly or through association with
+Spring Data entities.</p>
 </div>
 <div id="content-repositories.repository" class="exampleblock">
 <div class="title">Example 1. ContentStore interface</div>
@@ -572,8 +574,8 @@ class-path dependencies, Spring Content is then able to inject storage-specific 
 </div>
 </div>
 <div class="paragraph">
-<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it
-is possible to associate and store a profile picture for each user.</p>
+<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it is possible to associate and
+store a profile picture for each user.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 2. ContentStore interface</div>
@@ -581,6 +583,7 @@ is possible to associate and store a profile picture for each user.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
 public class User {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -626,57 +629,12 @@ public class Application {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_experimental_api">1.1.1. Experimental API</h4>
+<h4 id="content-repositories.multimodule">1.1.1. Using Stores with Multiple Spring Content Modules</h4>
 <div class="paragraph">
-<p>All Spring Content storage modules also now support an <strong>experimental</strong> Store API based on the
-Spring Resource API (i.e. <code>org.springframework.core.io.ResourceLoader</code> and <code>org.springframework.core.io.Resource</code>).</p>
-</div>
-<div class="paragraph">
-<p>The base interface in this API, <code>Store</code>, is a generic <code>org.springframework.core.io.ResourceLoader</code>.  Unlike
-the conventional Spring ResourceLoader this more generalized ResourceLoader can handle Resources with different types
-of Identifer, not just string-based locators, and returns Spring Resource&#8217;s implementing
-<code>org.springframework.content.commons.io.DeletableResource</code> providing a set of methods to control the entire lifecycle
-from creation through to deletion.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 3. Store interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface Store&lt;SID extends Serializable&gt; {
-
-	Resource getResource(SID id);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This interface <strong>is</strong> supported by Spring Content REST.</p>
-</div>
-<div class="paragraph">
-<p>Derived from the <code>Store</code> is a second interface <code>AssociativeStore</code> that allows Spring `Resource`s to also be associated
-with Spring Data Entities.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 4. AssociativeStore interface</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface AssociativeStore&lt;S, SID extends Serializable&gt; extends Store&lt;SID&gt; {
-
-    Resource getResource(S entity);
-
-    void associate(S entity, SID id);
-
-    void unassociate(S entity);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This interface is <strong>not</strong> yet supported by Spring Content REST.</p>
+<p>Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
+the one Spring Content module.  Sometimes, applications require using more than one Spring Content
+module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
+module-specific ContentStore interfaces.</p>
 </div>
 </div>
 <div class="sect3">
@@ -736,7 +694,7 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 3. Entity-based AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -812,7 +770,7 @@ event.  There are twelve handler annotations:</p>
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 6. Entity-based annotated event handler</div>
+<div class="title">Example 4. Entity-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -841,7 +799,7 @@ public class ExampleAnnotatedEventListener {
 methods returns results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Event-based annotated event handler</div>
+<div class="title">Example 5. Event-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -865,7 +823,7 @@ stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. 
 declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Handler registration</div>
+<div class="title">Example 6. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -893,7 +851,7 @@ found by looking inside of it for keywords or phrases, so called full-text searc
 <p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Searchable interface</div>
+<div class="title">Example 7. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -936,7 +894,7 @@ for more information on how to do this.</p>
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Renderable interface</div>
+<div class="title">Example 8. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1235,7 +1193,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <p>Spring Content MongoDB Stores are enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 11. Spring Content MongoDB Stores using Java Config</div>
+<div class="title">Example 9. Spring Content MongoDB Stores using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1414,7 +1372,7 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0.M11-SNAPSHOT<br>
-Last updated 2020-04-24 22:33:04 UTC
+Last updated 2020-04-29 05:32:04 UTC
 </div>
 </div>
 </body>
