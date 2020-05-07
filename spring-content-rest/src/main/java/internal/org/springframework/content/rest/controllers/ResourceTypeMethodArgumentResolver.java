@@ -1,10 +1,6 @@
 package internal.org.springframework.content.rest.controllers;
 
-import javax.activation.MimetypesFileTypeMap;
-import javax.servlet.http.HttpServletRequest;
-
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
-
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
@@ -21,6 +17,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.activation.MimetypesFileTypeMap;
+import javax.servlet.http.HttpServletRequest;
 
 public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -65,7 +64,7 @@ public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgume
 
             // property content
             } else {
-                return resolveProperty(HttpMethod.valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), this.getStores(), pathSegments, (s, e, p, propertyIsEmbedded) -> {
+                return resolveProperty(HttpMethod.valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), info, pathSegments, (s, e, p, propertyIsEmbedded) -> {
                     Object mimeType = BeanUtils.getFieldWithAnnotation(p, MimeType.class);
                     return MediaType.valueOf(mimeType != null ? mimeType.toString() : MediaType.ALL_VALUE);
                 });

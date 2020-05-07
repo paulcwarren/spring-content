@@ -84,7 +84,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
                 // property content
             } else {
-                return this.resolveProperty(HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), this.getStores(), pathSegments, (i, e, p, propertyIsEmbedded) -> {
+                return this.resolveProperty(HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), info, pathSegments, (i, e, p, propertyIsEmbedded) -> {
 
                     if (ContentStore.class.isAssignableFrom(info.getInterface())) {
                         if (propertyIsEmbedded) {

@@ -40,8 +40,8 @@ public class JpaInfrastructureConfig {
 		return factory;
 	}
 
-	protected String packagesToScan() {
-		return "internal.org.springframework.content.rest.support";
+	protected String[] packagesToScan() {
+		return new String[]{"internal.org.springframework.content.rest.support"};
 	}
 
 	@Bean
