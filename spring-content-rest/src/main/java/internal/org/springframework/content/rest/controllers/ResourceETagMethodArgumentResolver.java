@@ -1,10 +1,6 @@
 package internal.org.springframework.content.rest.controllers;
 
-import javax.persistence.Version;
-import javax.servlet.http.HttpServletRequest;
-
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
-
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.ContentStoreInfo;
 import org.springframework.content.commons.storeservice.ContentStoreService;
@@ -18,6 +14,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.persistence.Version;
+import javax.servlet.http.HttpServletRequest;
 
 public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -67,7 +66,7 @@ public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgume
             // property content
             } else {
                 return resolveProperty(HttpMethod
-                        .valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), this.getStores(), pathSegments, (s, e, p, propertyIsEmbedded) -> {
+                        .valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), info, pathSegments, (s, e, p, propertyIsEmbedded) -> {
                     Object version = BeanUtils.getFieldWithAnnotation(p, Version.class);
                     if (version == null) {
                         version = BeanUtils.getFieldWithAnnotation(e, Version.class);

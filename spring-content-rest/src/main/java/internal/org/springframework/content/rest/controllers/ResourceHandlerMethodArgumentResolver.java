@@ -1,12 +1,9 @@
 package internal.org.springframework.content.rest.controllers;
 
-import javax.servlet.http.HttpServletRequest;
-
 import internal.org.springframework.content.rest.io.AssociatedResource;
 import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
 import internal.org.springframework.content.rest.io.RenderableResourceImpl;
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
-
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
@@ -22,6 +19,8 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -74,7 +73,7 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
             // property content
             else {
                 HttpMethod method = HttpMethod.valueOf(nativeWebRequest.getNativeRequest(HttpServletRequest.class).getMethod());
-                r = (Resource) this.resolveProperty(method, this.getRepositories(), this.getStores(), pathSegments, (i, e, p, propertyIsEmbedded) -> {
+                r = (Resource) this.resolveProperty(method, this.getRepositories(), info, pathSegments, (i, e, p, propertyIsEmbedded) -> {
 
                     AssociativeStore s = i.getImplementation(AssociativeStore.class);
                     Resource resource = s.getResource(p);

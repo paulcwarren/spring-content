@@ -1,19 +1,8 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.servlet.http.HttpServletRequest;
-
 import internal.org.springframework.content.rest.utils.ContentStoreUtils;
 import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
-
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
@@ -39,6 +28,13 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.MethodNotAllowedException;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.persistence.Embeddable;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -119,7 +115,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         throw new IllegalArgumentException();
     }
 
-    protected <T> Object resolveProperty(HttpMethod method, Repositories repositories, ContentStoreService stores, String[] segments, PropertyResolver<T> resolver) {
+    protected <T> Object resolveProperty(HttpMethod method, Repositories repositories, ContentStoreInfo storeInfo, String[] segments, PropertyResolver<T> resolver) {
 
         String repository = segments[1];
         String id = segments[2];
@@ -131,7 +127,11 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
 
         Object domainObj = null;
         try {
-            domainObj = findOne(repoInvokerFactory, repositories, repository, id);
+            try {
+                domainObj = findOne(repoInvokerFactory, repositories, storeInfo.getDomainObjectClass(), id);
+            } catch (IllegalArgumentException iae) {
+                domainObj = findOne(repoInvokerFactory, repositories, repository, id);
+            }
         }
         catch (HttpRequestMethodNotSupportedException e) {
             throw new ResourceNotFoundException();
@@ -147,12 +147,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
 
         if (isPrimitiveProperty(propertyClass)) {
 
-            ContentStoreInfo info = ContentStoreUtils.findContentStore(stores, domainObj.getClass());
-            if (info == null) {
-                throw new IllegalStateException(String.format("Store for property %s not found", property.getName()));
-            }
-
-            return resolver.resolve(info, domainObj, domainObj, false);
+            return resolver.resolve(storeInfo, domainObj, domainObj, false);
         }
 
         // get or create property value

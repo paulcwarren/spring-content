@@ -1,17 +1,5 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.File;
-import java.io.StringReader;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
@@ -20,10 +8,8 @@ import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -39,7 +25,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
-import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -52,29 +37,25 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FDescribe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import java.io.File;
+import java.io.StringReader;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
-import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -456,9 +437,9 @@ public class ContentSearchRestControllerIT {
 	}
 
 	@Configuration
-	@EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.controllers", considerNestedRepositories = true)
+	@EnableJpaRepositories(considerNestedRepositories = true)
 	@EnableTransactionManagement
-	@EnableFilesystemStores(basePackages = "internal.org.springframework.content.rest.controllers")
+	@EnableFilesystemStores
 	@Profile("search")
 	public static class TestConfig extends JpaInfrastructureConfig {
 
@@ -476,8 +457,11 @@ public class ContentSearchRestControllerIT {
 			return filesystemRoot;
 		}
 
-		protected String packagesToScan() {
-			return "internal.org.springframework.content.rest.controllers";
+		protected String[] packagesToScan() {
+			return new String[]{
+					"internal.org.springframework.content.rest.controllers",
+					"internal.org.springframework.content.rest.support"
+			};
 		}
 	}
 
