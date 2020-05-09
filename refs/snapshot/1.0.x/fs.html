@@ -508,16 +508,45 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_storage_customization">Storage Customization</h3>
 <div class="paragraph">
-<p>By default Spring Content Filesystem will store all content at the root of the content store location.</p>
+<p>By default, the Filesystem Store Module will store all content at the root of the backing store.  Usually, this
+is sufficient.</p>
 </div>
 <div class="paragraph">
-<p>The Filesystem Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.  By configuring your application to contribute one (or more) <code>org.springframework.core.conmvert.converter.Converter</code> it is possible to configure the Store to use other more sophisticated storage models.</p>
+<p>However, for the cases where you need more control over the content in the backing store, the Module provides a placement
+service.  This service can be configured through a standard Spring converter in a couple of different ways, depending
+on requirements.</p>
 </div>
 <div class="paragraph">
-<p>For example Content IDs of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.</p>
+<p>Assume you have a Document entity like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>@Entity
+@Data
+public class Document {
+
+    @Id
+    @GeneratedValue(strategy=AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    private String contentPath;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first option is a converter that converts from the <code>@ContentId</code> type, in this case UUID, to String.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. Configuring the Filesystem Store</div>
+<div class="title">Example 2. Spring Content Filesystem Stores customizing storage customization by <code>@ContentId</code> type</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -546,6 +575,62 @@ public class FilesystemStoreConfiguration  {
 	}
 }</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>This example uses a converter to generate a random location on disk based on the contentId</p>
+</div>
+<div class="paragraph">
+<p>For example, a Document with a contentId of <code>ec39f99b-5de3-4dc5-9753-a97c26f809c2</code> would be stored in the
+backing store at <code>/ec39f99b/5de3/4dc5/9753/a97c26f809c2</code>.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The second option is a converter that converts from the Entity type to String.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Spring Content Filesystem Stores customizing storage customization by Entity type</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public static class StoreConfig {
+    @Bean
+    public FilesystemStoreConfigurer configurer() {
+        return new FilesystemStoreConfigurer() {
+
+            @Override
+            public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+                registry.addConverter(new Converter&lt;Document, String&gt;() {
+
+                    @Override
+                    public String convert(Document document) {
+                        return document.getContentPath();
+                    }
+                });
+            }
+        };
+    }
+
+	@Bean
+	public FilesystemStoreConfigurer configurer() {
+		return new FilesystemStoreConfigurer() {
+
+			@Override
+			public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This example allows the application to control the location in the backing store with a field on the entity.</p>
+</div>
+<div class="paragraph">
+<p>For example, if you created a Document and set its contentPath to <code>/path/to/my-file</code> the content will be stored in the
+backing store at <code>/path/to/my-file</code>.</p>
 </div>
 </div>
 </div>
@@ -582,7 +667,7 @@ public class FilesystemStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-07 05:40:28 UTC
+Last updated 2020-05-09 05:40:48 UTC
 </div>
 </div>
 </body>
