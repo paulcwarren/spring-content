@@ -47,13 +47,40 @@ The following configuration properties (prefix `spring.content.fs`) are supporte
 
 === Storage Customization
 
-By default Spring Content Filesystem will store all content at the root of the content store location.  
+By default, the Filesystem Store Module will store all content at the root of the backing store.  Usually, this
+is sufficient.
 
-The Filesystem Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  By configuring your application to contribute one (or more) `org.springframework.core.conmvert.converter.Converter` it is possible to configure the Store to use other more sophisticated storage models.  
+However, for the cases where you need more control over the content in the backing store, the Module provides a placement
+service.  This service can be configured through a standard Spring converter in a couple of different ways, depending
+on requirements.
 
-For example Content IDs of type `java.util.UUID` or `java.net.URI` can both be mapped to a nested resource path that will have the effect of distributing content evenly over the Store.       
- 
-.Configuring the Filesystem Store  
+Assume you have a Document entity like this:
+
+```
+@Entity
+@Data
+public class Document {
+
+    @Id
+    @GeneratedValue(strategy=AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    private String contentPath;
+}
+```
+
+The first option is a converter that converts from the `@ContentId` type, in this case UUID, to String.
+
+.Spring Content Filesystem Stores customizing storage customization by `@ContentId` type
 ====
 [source, java]
 ----
@@ -69,7 +96,7 @@ public class FilesystemStoreConfiguration  {
 			}
 		};
 	}
-	
+
 	@Bean
 	public FilesystemStoreConfigurer configurer() {
 		return new FilesystemStoreConfigurer() {
@@ -82,7 +109,54 @@ public class FilesystemStoreConfiguration  {
 	}
 }
 ----
-====   
+This example uses a converter to generate a random location on disk based on the contentId
+
+For example, a Document with a contentId of `ec39f99b-5de3-4dc5-9753-a97c26f809c2` would be stored in the
+backing store at `/ec39f99b/5de3/4dc5/9753/a97c26f809c2`.
+====
+
+The second option is a converter that converts from the Entity type to String.
+
+.Spring Content Filesystem Stores customizing storage customization by Entity type
+====
+[source, java]
+----
+@Configuration
+public static class StoreConfig {
+    @Bean
+    public FilesystemStoreConfigurer configurer() {
+        return new FilesystemStoreConfigurer() {
+
+            @Override
+            public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+                registry.addConverter(new Converter<Document, String>() {
+
+                    @Override
+                    public String convert(Document document) {
+                        return document.getContentPath();
+                    }
+                });
+            }
+        };
+    }
+
+	@Bean
+	public FilesystemStoreConfigurer configurer() {
+		return new FilesystemStoreConfigurer() {
+
+			@Override
+			public void configureFilesystemStoreConverters(ConverterRegistry registry) {
+				registry.addConverter(converter());
+			}
+		};
+	}
+}
+----
+This example allows the application to control the location in the backing store with a field on the entity.
+
+For example, if you created a Document and set its contentPath to `/path/to/my-file` the content will be stored in the
+backing store at `/path/to/my-file`.
+====
 
 === Setting Content
 
