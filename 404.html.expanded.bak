@@ -52,9 +52,11 @@
                 <a href="#" role="button" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="nav-dropdown-Guides">Guides <b class="caret"></b></a>
                 <div class="dropdown-menu" aria-labelledby="nav-dropdown-Guides">
                   
-<a href="/spring-content-fs-docs/" class="dropdown-item">Basics</a>
+<a href="/spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
-<a href="/spring-content-rest-docs/" class="dropdown-item">REST</a>
+<a href="/spring-content-rest-docs/" class="dropdown-item">REST API</a>
+                  
+<a href="/spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                 </div>
               </li>
             </ul>

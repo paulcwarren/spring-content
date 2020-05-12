@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>REST API - Spring Content</title>
+        <title>Versions - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -56,9 +56,9 @@
                   
 <a href="../spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
-<a href="./" class="dropdown-item active">REST API</a>
+<a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
+<a href="./" class="dropdown-item active">Versions</a>
                 </div>
               </li>
             </ul>
@@ -86,15 +86,14 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">REST API</li>
+    <li class="breadcrumb-item active" aria-current="page">Versions</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-with-spring-content-rest">Getting Started with Spring Content REST</h1>
+<h1 id="getting-started-spring-content-with-versions">Getting Started Spring Content with Versions</h1>
 <h2 id="what-youll-build">What you'll build</h2>
-<p>You'll remove redundant code from the document list web application that
-we produced in our first <a href="../spring-content-fs-docs/">Getting Started Guide</a>.</p>
+<p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
 <ul>
 <li>
@@ -118,127 +117,118 @@ we produced in our first <a href="../spring-content-fs-docs/">Getting Started Gu
 using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></p>
 </li>
 <li>
-<p>We are going to start form where we left of in the last Getting Started
-Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/complete</code></p>
-</li>
-<li>
-<p>Move ahead to <code>Update dependencies</code>.</p>
+<p>We are going to start where Getting Started with Spring Content REST API leaves off so
+ <code>cd</code> into <code>spring-content-gettingstarted/spring-content-rest/complete</code></p>
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-rest/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-versions/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
+<p>Add the <code>com.github.paulcwarren:spring-versions-boot-starter</code> and <code>org.springframework.boot:spring-boot-starter-security</code> dependencies.</p>
 <p><code>pom.xml</code></p>
 <pre><code>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-  
-  &lt;artifactId&gt;gettingstarted-spring-content-rest&lt;/artifactId&gt;
-  
- 	&lt;parent&gt;
-		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;2.2.6.RELEASE&lt;/version&gt;
-	&lt;/parent&gt;
- 
-	&lt;properties&gt;
-		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
-		&lt;java.version&gt;1.8&lt;/java.version&gt;
-		&lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
-	&lt;/properties&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.2.6.RELEASE&lt;/version&gt;
+    &lt;/parent&gt;
 
-	&lt;dependencies&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
-			&lt;artifactId&gt;h2&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;1.0.0.M10&lt;/version&gt;
-		&lt;/dependency&gt;
- 		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;1.0.0.M10&lt;/version&gt;
-		&lt;/dependency&gt;
-		
-		&lt;!-- Test dependencies --&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-			&lt;version&gt;2.9.0&lt;/version&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
-			&lt;version&gt;${ginkgo-version}&lt;/version&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;	
- 	&lt;/dependencies&gt;
+    &lt;artifactId&gt;spring-content-with-versions&lt;/artifactId&gt;
 
-	&lt;build&gt;
-		&lt;plugins&gt;
-			&lt;plugin&gt;
-				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-			&lt;/plugin&gt;
-		&lt;/plugins&gt;
-	&lt;/build&gt;
+    &lt;properties&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+        &lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
+    &lt;/properties&gt;
 
-	&lt;repositories&gt;
-		&lt;repository&gt;
-			&lt;id&gt;snapshots&lt;/id&gt;
-			&lt;name&gt;nexus&lt;/name&gt;
-			&lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
-			&lt;snapshots&gt;
-				&lt;enabled&gt;true&lt;/enabled&gt;
-			&lt;/snapshots&gt;
-		&lt;/repository&gt;
-	&lt;/repositories&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.h2database&lt;/groupId&gt;
+            &lt;artifactId&gt;h2&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.0.0.M10&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.0.0.M10&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.0.0.M10&lt;/version&gt;
+        &lt;/dependency&gt;
 
+        &lt;!-- Test dependencies --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
+            &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
+            &lt;version&gt;2.9.0&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
+            &lt;version&gt;${ginkgo-version}&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
 &lt;/project&gt;
 </code></pre>
 
 <h2 id="update-file-entity">Update File Entity</h2>
-<p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
+<p>Add the following annotations to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>
 package gettingstarted;
 
-import java.util.Date;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.versions.*;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.MimeType;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -255,53 +245,137 @@ public class File {
 
 	@ContentId private String contentId;
 	@ContentLength private long contentLength;
-	@MimeType private String mimeType = "text/plain";
+	private String mimeType = "text/plain";
+
+	@LockOwner
+	private String lockOwner;
+
+	@AncestorId
+	private Long ancestorId;
+
+	@AncestorRootId
+	private Long ancestralRootId;
+
+	@SuccessorId
+	private Long successorId;
+
+	@VersionNumber
+	private String version;
+
+	@VersionLabel private String label;
+
+	public File(File f) {
+		this.name = f.getName();
+		this.summary = f.getSummary();
+	}
 }
 </code></pre>
 
-<p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
-annotation so that Spring Content REST will update its value on our behalf.</p>
-<h2 id="update-filecontentstore">Update FileContentStore</h2>
-<p>So that we can perform simple CRUD operations, over a hypermedia-based
-API, update our <code>FileContentStore</code> by annotating it with the
-<code>@StoreRestResource</code> Spring Content REST annotation.</p>
-<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
+<p><code>@LockOwner</code>; tracks the current lock owner.  Optional
+<code>@AncestorId</code>; references the entity that came immediately before in the version series 
+<code>@AncestorRootId</code>; references the entity that came first in the version series
+<code>@SuccessorId</code>; references the entity that came after in the version series 
+<code>@VersionNumber</code>; version designation 
+<code>@VersionLabel</code>; description of the version </p>
+<p>Also note the copy constructor.  An Entity can be complex.  It is impossible for Spring Content to know exactly how to stamp out a new version when it needs to.  This is where the copy constructor comes in.  The copy constructor tells Spring Content how to create a new version.   There is no need to copy the version attributes as they will be managed as part of the version creation process.  Other than that, it is up to you.</p>
+<h2 id="update-filerepository">Update FileRepository</h2>
+<p>So that we can perform version operations on an Entity make your FileRepository extend <code>LockingAndVersioningRepository</code>.  </p>
+<p><code>src/main/java/gettingstarted/FileRepository.java</code></p>
 <pre><code>
 package gettingstarted;
 
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.versions.LockingAndVersioningRepository;
 
-import org.springframework.content.rest.StoreRestResource;
+public interface FileRepository extends JpaRepository&lt;File, Long&gt;, LockingAndVersioningRepository&lt;File, Long&gt; {
 
-@StoreRestResource
-public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 }
 </code></pre>
 
-<h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
-<p>Having made the above updates we can remove our <code>FileContentController</code>
-as it is now surplus to requirements.   Spring Content REST will provide
-these endpoints for us.</p>
+<h2 id="update-configuratoin">Update Configuratoin</h2>
+<p>Add a Store configuration to tell Spring Data JPA to look in the package <code>org.springframework.versions</code> for the implementation of the <code>LockingAndVersioningRepository</code>.  Because of this you will also need to tell Spring Data to find <code>FileRepository</code> in the <code>gettingstarted</code> package. </p>
+<pre><code>
+@Configuration
+@EnableJpaRepositories(basePackages = {"gettingstarted", "org.springframework.versions"})
+public static class StoreConfig {
+}
+</code></pre>
+
+<p>Enable web security and add an anonymous user principal.</p>
+<pre><code>
+    @Configuration
+    @EnableWebSecurity
+    public static class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+
+        protected static String REALM = "SPRING_CONTENT";
+
+        @Bean
+        public AuthenticationEntryPoint getBasicAuthEntryPoint() {
+            return new AuthenticationEntryPoint();
+        }
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+
+            http.csrf().disable()
+                    .authorizeRequests()
+                    .antMatchers("/admin/**").hasRole("ADMIN")
+                    .and().httpBasic().realmName(REALM).authenticationEntryPoint(getBasicAuthEntryPoint())
+                    .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        }
+
+        @Override
+        public void configure(WebSecurity web) throws Exception {
+            web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
+        }
+    }
+
+    public static class AuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
+
+        @Override
+        public void commence(final HttpServletRequest request, final HttpServletResponse response,
+                             final AuthenticationException authException) throws IOException {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.addHeader("WWW-Authenticate", "Basic realm=" + getRealmName() + "");
+
+            PrintWriter writer = response.getWriter();
+            writer.println("HTTP Status 401 : " + authException.getMessage());
+        }
+
+        @Override
+        public void afterPropertiesSet() {
+            setRealmName(SpringContentApplication.SpringSecurityConfig.REALM);
+            super.afterPropertiesSet();
+        }
+    }
+</code></pre>
+
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-rest-0.0.1.jar</code></p>
-<p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code></p>
-<p>and you should see something like this:-</p>
-<p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
-<p>As you did in the previous tutorial, exercise the application by uploading
-a range of new files and viewing them.  You should see viewed files open
-as they did before.</p>
+<p><code>java -jar target/gettingstarted-spring-content-with-versions-0.0.1.jar</code></p>
+<h2 id="create-an-entity-and-version-it">Create an Entity and version it</h2>
+<p>Create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content with Versions World!' http://localhost:8080/files/1</code></p>
+<p>Lock the Entity to prevent others from editing it:</p>
+<p><code>curl -X PUT -H 'Content-Type:application/hal+json' http://localhost:8080/files/1/lock</code> </p>
+<p>Create a new version of the entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:application/hal+json' -d '{"number":"1.1","label":"some minor changes"}' http://localhost:8080/files/1/version</code></p>
+<p>Unlock the new version of the Entity: </p>
+<p><code>curl -X DELETE -H 'Accept:application/hal+json' http://localhost:8080/files/2/lock</code></p>
+<p>Fetch the version series:</p>
+<p><code>curl -H 'Accept:application/hal+json' http://localhost:8080/files/</code>   </p>
+<p>Verify you now see two entities that are in a version series with each other.</p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations!  You've written a simple application that uses Spring
-Content and Spring Content REST to save objects with content to the
-file-system and to fetch them again using a hypermedia-based REST API -
-all without writing any implementation code to handle file access.</p>
+Content with Versions to create a version series of entities with associated content.</p>
 <p>Don't forget you can simply change the type of the spring-content bootstarter
 project on the classpath to switch from file storage to a different
-storage medium.  Spring Content REST works seamlessly with all of the storage modules.</p>
+storage technology.  The REST and Version Modules works seamlessly with all of the storage modules.</p>
 <p>Spring Content supports the following implementations:-</p>
 <ul>
 <li>
@@ -344,7 +418,7 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-rest">Getting Started with Spring Content REST</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-versions">Getting Started Spring Content with Versions</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -358,13 +432,16 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
                     <a href="#update-file-entity" class="nav-link">Update File Entity</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#update-filecontentstore" class="nav-link">Update FileContentStore</a>
+                    <a href="#update-filerepository" class="nav-link">Update FileRepository</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#remove-filecontentcontroller" class="nav-link">Remove FileContentController</a>
+                    <a href="#update-configuratoin" class="nav-link">Update Configuratoin</a>
                 </li>
                 <li class="nav-item">
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-an-entity-and-version-it" class="nav-link">Create an Entity and version it</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>

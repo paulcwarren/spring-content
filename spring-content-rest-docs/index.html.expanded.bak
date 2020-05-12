@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>REST - Spring Content</title>
+        <title>REST API - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -54,9 +54,11 @@
                 <a href="#" role="button" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="nav-dropdown-Guides">Guides <b class="caret"></b></a>
                 <div class="dropdown-menu" aria-labelledby="nav-dropdown-Guides">
                   
-<a href="../spring-content-fs-docs/" class="dropdown-item">Basics</a>
+<a href="../spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
-<a href="./" class="dropdown-item active">REST</a>
+<a href="./" class="dropdown-item active">REST API</a>
+                  
+<a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                 </div>
               </li>
             </ul>
@@ -84,7 +86,7 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">REST</li>
+    <li class="breadcrumb-item active" aria-current="page">REST API</li>
   </ol>
 </nav>
 
@@ -126,7 +128,7 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 <p>When you’re finished, you can check your results against the code in
 <code>spring-content-gettingstarted/spring-content-rest/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.emc.spring.content:spring-content-rest-boot-starter</code> dependency.</p>
+<p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/pom.xml 1-}
 </code></pre>
