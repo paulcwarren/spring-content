@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>REST API - Spring Content</title>
+        <title>Fulltext - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -56,9 +56,9 @@
                   
 <a href="../spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
-<a href="./" class="dropdown-item active">REST API</a>
+<a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="../spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
+<a href="./" class="dropdown-item active">Fulltext</a>
                   
 <a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                 </div>
@@ -88,15 +88,14 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">REST API</li>
+    <li class="breadcrumb-item active" aria-current="page">Fulltext</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-with-spring-content-rest">Getting Started with Spring Content REST</h1>
+<h1 id="getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</h1>
 <h2 id="what-youll-build">What you'll build</h2>
-<p>You'll remove redundant code from the document list web application that
-we produced in our first <a href="../spring-content-fs-docs/">Getting Started Guide</a>.</p>
+<p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
 <ul>
 <li>
@@ -120,77 +119,84 @@ we produced in our first <a href="../spring-content-fs-docs/">Getting Started Gu
 using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></p>
 </li>
 <li>
-<p>We are going to start form where we left of in the last Getting Started
-Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/complete</code></p>
-</li>
-<li>
-<p>Move ahead to <code>Update dependencies</code>.</p>
+<p>We are going to start where Getting Started with Spring Content REST API leaves off so
+ <code>cd</code> into <code>spring-content-gettingstarted/spring-content-rest/complete</code></p>
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-rest/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
+<p>Add the <code>com.github.paulcwarren:spring-content-elasticsearch-boot-starter</code> and <code>org.elasticsearch.client:elasticsearch-rest-high-level-client</code> dependencies.</p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-fulltext/complete/pom.xml 1-}
 </code></pre>
 
-<h2 id="update-file-entity">Update File Entity</h2>
-<p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
-<p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
-</code></pre>
-
-<p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
-annotation so that Spring Content REST will update its value on our behalf.</p>
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
-<p>So that we can perform simple CRUD operations, over a hypermedia-based
-API, update our <code>FileContentStore</code> by annotating it with the
-<code>@StoreRestResource</code> Spring Content REST annotation.</p>
+<p>So that we can perform full-text searches make your FileContentStore extend <code>Searchable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-fulltext/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
-<h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
-<p>Having made the above updates we can remove our <code>FileContentController</code>
-as it is now surplus to requirements.   Spring Content REST will provide
-these endpoints for us.</p>
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-rest-0.0.1.jar</code></p>
-<p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code></p>
-<p>and you should see something like this:-</p>
-<p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
-<p>As you did in the previous tutorial, exercise the application by uploading
-a range of new files and viewing them.  You should see viewed files open
-as they did before.</p>
+<p><code>java -jar target/gettingstarted-spring-content-with-versions-0.0.1.jar</code></p>
+<h2 id="start-an-elasticsearch-server">Start an Elasticsearch Server</h2>
+<p>Using docker, start an elasticsearch server:</p>
+<p><code>docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" paulcwarren/elasticsearch:latest</code></p>
+<h2 id="create-an-entity">Create an Entity</h2>
+<p>Create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with that entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring World!' http://localhost:8080/files/1</code></p>
+<p>Create a second entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with the second entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/2</code></p>
+<p>Perform a fulltext search using the /searchContent endpoint:</p>
+<p><code>curl -H 'Accept:application/hal+json' http://localhost:8080/files/searchContent?queryString=Content</code>   </p>
+<p>And you should see a response like this:</p>
+<pre><code>{
+  &quot;_embedded&quot; : {
+    &quot;files&quot; : [ {
+      &quot;name&quot; : null,
+      &quot;created&quot; : &quot;2020-05-14T06:05:07.633+0000&quot;,
+      &quot;summary&quot; : null,
+      &quot;contentId&quot; : &quot;527638d0-4f08-469d-a7d7-b271316af3da&quot;,
+      &quot;contentLength&quot; : 27,
+      &quot;mimeType&quot; : &quot;text/plain&quot;,
+      &quot;_links&quot; : {
+        &quot;self&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        },
+        &quot;file&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        },
+        &quot;files&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        }
+      }
+    } ]
+  },
+  &quot;_links&quot; : {
+    &quot;self&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/searchContent?queryString=Content&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>Spring Content found the second document that we added because its content
+included the keyword "Content" that we searched for.  </p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've written a simple application that uses Spring
-Content and Spring Content REST to save objects with content to the
-file-system and to fetch them again using a hypermedia-based REST API -
-all without writing any implementation code to handle file access.</p>
-<p>Don't forget you can simply change the type of the spring-content bootstarter
-project on the classpath to switch from file storage to a different
-storage medium.  Spring Content REST works seamlessly with all of the storage modules.</p>
-<p>Spring Content supports the following implementations:-</p>
-<ul>
-<li>
-<p>Spring Content Filesystem; stores content as Files on the Filesystem
-(as used in this tutorial)</p>
-</li>
-<li>
-<p>Spring Content S3; stores content as Objects in Amazon S3</p>
-</li>
-<li>
-<p>Spring Content JPA; stores content as BLOBs in the database</p>
-</li>
-<li>
-<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
-</li>
-</ul>
+<p>Congratulations!  You've just written a simple application that uses Spring
+Content with Elasticsearch to index content so that searches can be performed
+against that content.</p>
+<p>This guide demonstrates the Spring Content Elasticsearch Module.  Spring Content
+also supports Solr with the Spring Content Solr Module.  To use Solr, simply
+update the <code>spring-content-elasticsearch-boot-starter</code> dependency for
+<code>spring-content-solr-boot-starter</code>.</p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -217,7 +223,7 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-rest">Getting Started with Spring Content REST</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -228,16 +234,16 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#update-file-entity" class="nav-link">Update File Entity</a>
-                </li>
-                <li class="nav-item">
                     <a href="#update-filecontentstore" class="nav-link">Update FileContentStore</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#remove-filecontentcontroller" class="nav-link">Remove FileContentController</a>
+                    <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
+                    <a href="#start-an-elasticsearch-server" class="nav-link">Start an Elasticsearch Server</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-an-entity" class="nav-link">Create an Entity</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>

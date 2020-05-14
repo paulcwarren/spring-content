@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Versions - Spring Content</title>
+        <title>Fulltext - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -58,9 +58,9 @@
                   
 <a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="../spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
+<a href="./" class="dropdown-item active">Fulltext</a>
                   
-<a href="./" class="dropdown-item active">Versions</a>
+<a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                 </div>
               </li>
             </ul>
@@ -88,12 +88,12 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">Versions</li>
+    <li class="breadcrumb-item active" aria-current="page">Fulltext</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-spring-content-with-versions">Getting Started Spring Content with Versions</h1>
+<h1 id="getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</h1>
 <h2 id="what-youll-build">What you'll build</h2>
 <p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
@@ -124,13 +124,15 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-with-versions/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.github.paulcwarren:spring-versions-boot-starter</code> and <code>org.springframework.boot:spring-boot-starter-security</code> dependencies.</p>
+<p>Add the <code>com.github.paulcwarren:spring-content-elasticsearch-boot-starter</code> and <code>org.elasticsearch.client:elasticsearch-rest-high-level-client</code> dependencies.</p>
 <p><code>pom.xml</code></p>
 <pre><code>
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
@@ -138,7 +140,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;version&gt;2.2.6.RELEASE&lt;/version&gt;
     &lt;/parent&gt;
 
-    &lt;artifactId&gt;spring-content-with-versions&lt;/artifactId&gt;
+    &lt;artifactId&gt;spring-content-with-fulltext&lt;/artifactId&gt;
 
     &lt;properties&gt;
         &lt;java.version&gt;1.8&lt;/java.version&gt;
@@ -149,10 +151,6 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
             &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
@@ -178,8 +176,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
+            &lt;artifactId&gt;spring-content-elasticsearch-boot-starter&lt;/artifactId&gt;
             &lt;version&gt;1.0.0.M10&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.elasticsearch.client&lt;/groupId&gt;
+            &lt;artifactId&gt;elasticsearch-rest-high-level-client&lt;/artifactId&gt;
         &lt;/dependency&gt;
 
         &lt;!-- Test dependencies --&gt;
@@ -213,147 +215,19 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 &lt;/project&gt;
 </code></pre>
 
-<h2 id="update-file-entity">Update File Entity</h2>
-<p>Add the following annotations to our Entity.</p>
-<p><code>src/main/java/gettingstarted/File.java</code></p>
+<h2 id="update-filecontentstore">Update FileContentStore</h2>
+<p>So that we can perform full-text searches make your FileContentStore extend <code>Searchable</code>.  </p>
+<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
 <pre><code>
 package gettingstarted;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.versions.*;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.search.Searchable;
+import org.springframework.stereotype.Component;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.util.Date;
-
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-public class File {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
-	private String name;
-	private Date created = new Date();
-	private String summary;
-
-	@ContentId private String contentId;
-	@ContentLength private long contentLength;
-	private String mimeType = "text/plain";
-
-	@LockOwner
-	private String lockOwner;
-
-	@AncestorId
-	private Long ancestorId;
-
-	@AncestorRootId
-	private Long ancestralRootId;
-
-	@SuccessorId
-	private Long successorId;
-
-	@VersionNumber
-	private String version;
-
-	@VersionLabel private String label;
-
-	public File(File f) {
-		this.name = f.getName();
-		this.summary = f.getSummary();
-		this.contentId = f.getContentId();
-		this.contentLength = f.getContentLength();
-		this.mimeType = f.getMimeType();
-	}
+@Component  // just to keep the ide happy!
+public interface FileContentStore extends ContentStore&lt;File, String&gt;, Searchable&lt;String&gt; {
 }
-</code></pre>
-
-<p><code>@LockOwner</code>; tracks the current lock owner.  Optional
-<code>@AncestorId</code>; references the entity that came immediately before in the version series 
-<code>@AncestorRootId</code>; references the entity that came first in the version series
-<code>@SuccessorId</code>; references the entity that came after in the version series 
-<code>@VersionNumber</code>; version designation 
-<code>@VersionLabel</code>; description of the version </p>
-<p>Also note the copy constructor.  An Entity can be complex.  It is impossible for Spring Content to know exactly how to stamp out a new version when it needs to.  This is where the copy constructor comes in.  The copy constructor tells Spring Content how to create a new version.   There is no need to copy the version attributes as they will be managed as part of the version creation process.  Other than that, it is up to you.</p>
-<h2 id="update-filerepository">Update FileRepository</h2>
-<p>So that we can perform version operations on an Entity make your FileRepository extend <code>LockingAndVersioningRepository</code>.  </p>
-<p><code>src/main/java/gettingstarted/FileRepository.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.versions.LockingAndVersioningRepository;
-
-public interface FileRepository extends JpaRepository&lt;File, Long&gt;, LockingAndVersioningRepository&lt;File, Long&gt; {
-
-}
-</code></pre>
-
-<h2 id="update-configuratoin">Update Configuratoin</h2>
-<p>Add a Store configuration to tell Spring Data JPA to look in the package <code>org.springframework.versions</code> for the implementation of the <code>LockingAndVersioningRepository</code>.  Because of this you will also need to tell Spring Data to find <code>FileRepository</code> in the <code>gettingstarted</code> package. </p>
-<pre><code>
-@Configuration
-@EnableJpaRepositories(basePackages = {"gettingstarted", "org.springframework.versions"})
-public static class StoreConfig {
-}
-</code></pre>
-
-<p>Enable web security and add an anonymous user principal.</p>
-<pre><code>
-    @Configuration
-    @EnableWebSecurity
-    public static class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
-
-        protected static String REALM = "SPRING_CONTENT";
-
-        @Bean
-        public AuthenticationEntryPoint getBasicAuthEntryPoint() {
-            return new AuthenticationEntryPoint();
-        }
-
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-
-            http.csrf().disable()
-                    .authorizeRequests()
-                    .antMatchers("/admin/**").hasRole("ADMIN")
-                    .and().httpBasic().realmName(REALM).authenticationEntryPoint(getBasicAuthEntryPoint())
-                    .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-        }
-
-        @Override
-        public void configure(WebSecurity web) throws Exception {
-            web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
-        }
-    }
-
-    public static class AuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
-
-        @Override
-        public void commence(final HttpServletRequest request, final HttpServletResponse response,
-                             final AuthenticationException authException) throws IOException {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.addHeader("WWW-Authenticate", "Basic realm=" + getRealmName() + "");
-
-            PrintWriter writer = response.getWriter();
-            writer.println("HTTP Status 401 : " + authException.getMessage());
-        }
-
-        @Override
-        public void afterPropertiesSet() {
-            setRealmName(SpringContentApplication.SpringSecurityConfig.REALM);
-            super.afterPropertiesSet();
-        }
-    }
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
@@ -361,42 +235,61 @@ public static class StoreConfig {
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-with-versions-0.0.1.jar</code></p>
-<h2 id="create-an-entity-and-version-it">Create an Entity and version it</h2>
+<h2 id="start-an-elasticsearch-server">Start an Elasticsearch Server</h2>
+<p>Using docker, start an elasticsearch server:</p>
+<p><code>docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" paulcwarren/elasticsearch:latest</code></p>
+<h2 id="create-an-entity">Create an Entity</h2>
 <p>Create an entity:</p>
 <p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
-<p>Associate content:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content with Versions World!' http://localhost:8080/files/1</code></p>
-<p>Lock the Entity to prevent others from editing it:</p>
-<p><code>curl -X PUT -H 'Content-Type:application/hal+json' http://localhost:8080/files/1/lock</code> </p>
-<p>Create a new version of the entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:application/hal+json' -d '{"number":"1.1","label":"some minor changes"}' http://localhost:8080/files/1/version</code></p>
-<p>Unlock the new version of the Entity: </p>
-<p><code>curl -X DELETE -H 'Accept:application/hal+json' http://localhost:8080/files/2/lock</code></p>
-<p>Fetch the version series:</p>
-<p><code>curl -H 'Accept:application/hal+json' http://localhost:8080/files/</code>   </p>
-<p>Verify you now see two entities that are in a version series with each other.</p>
+<p>Associate content with that entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring World!' http://localhost:8080/files/1</code></p>
+<p>Create a second entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with the second entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/2</code></p>
+<p>Perform a fulltext search using the /searchContent endpoint:</p>
+<p><code>curl -H 'Accept:application/hal+json' http://localhost:8080/files/searchContent?queryString=Content</code>   </p>
+<p>And you should see a response like this:</p>
+<pre><code>{
+  &quot;_embedded&quot; : {
+    &quot;files&quot; : [ {
+      &quot;name&quot; : null,
+      &quot;created&quot; : &quot;2020-05-14T06:05:07.633+0000&quot;,
+      &quot;summary&quot; : null,
+      &quot;contentId&quot; : &quot;527638d0-4f08-469d-a7d7-b271316af3da&quot;,
+      &quot;contentLength&quot; : 27,
+      &quot;mimeType&quot; : &quot;text/plain&quot;,
+      &quot;_links&quot; : {
+        &quot;self&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        },
+        &quot;file&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        },
+        &quot;files&quot; : {
+          &quot;href&quot; : &quot;http://localhost:8080/files/2&quot;
+        }
+      }
+    } ]
+  },
+  &quot;_links&quot; : {
+    &quot;self&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/searchContent?queryString=Content&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>Spring Content found the second document that we added because its content
+included the keyword "Content" that we searched for.  </p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've written a simple application that uses Spring
-Content with Versions to create a version series of entities with associated content.</p>
-<p>Don't forget you can simply change the type of the spring-content bootstarter
-project on the classpath to switch from file storage to a different
-storage technology.  The REST and Version Modules works seamlessly with all of the storage modules.</p>
-<p>Spring Content supports the following implementations:-</p>
-<ul>
-<li>
-<p>Spring Content Filesystem; stores content as Files on the Filesystem
-(as used in this tutorial)</p>
-</li>
-<li>
-<p>Spring Content S3; stores content as Objects in Amazon S3</p>
-</li>
-<li>
-<p>Spring Content JPA; stores content as BLOBs in the database</p>
-</li>
-<li>
-<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
-</li>
-</ul>
+<p>Congratulations!  You've just written a simple application that uses Spring
+Content with Elasticsearch to index content so that searches can be performed
+against that content.</p>
+<p>This guide demonstrates the Spring Content Elasticsearch Module.  Spring Content
+also supports Solr with the Spring Content Solr Module.  To use Solr, simply
+update the <code>spring-content-elasticsearch-boot-starter</code> dependency for
+<code>spring-content-solr-boot-starter</code>.</p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -423,7 +316,7 @@ storage technology.  The REST and Version Modules works seamlessly with all of t
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-versions">Getting Started Spring Content with Versions</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -434,19 +327,16 @@ storage technology.  The REST and Version Modules works seamlessly with all of t
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#update-file-entity" class="nav-link">Update File Entity</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#update-filerepository" class="nav-link">Update FileRepository</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#update-configuratoin" class="nav-link">Update Configuratoin</a>
+                    <a href="#update-filecontentstore" class="nav-link">Update FileContentStore</a>
                 </li>
                 <li class="nav-item">
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#create-an-entity-and-version-it" class="nav-link">Create an Entity and version it</a>
+                    <a href="#start-an-elasticsearch-server" class="nav-link">Start an Elasticsearch Server</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-an-entity" class="nav-link">Create an Entity</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>
