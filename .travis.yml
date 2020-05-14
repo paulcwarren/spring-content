@@ -11,7 +11,7 @@ env:
 - BUILD_TYPE=snapshot/$TRAVIS_BRANCH
 
 script:
- - mvn install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+ - mvn -DrepoToken=$COVERALLS_REPO_TOKEN install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
 deploy:
   - provider: script
