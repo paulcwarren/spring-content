@@ -1,17 +1,7 @@
 package internal.org.springframework.content.commons.storeservice;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -20,28 +10,34 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.storeservice.StoreFilter;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class ContentStoreServiceImplTest {
+public class StoresImplTest {
 
-	private ContentStoreServiceImpl contentRepoService;
+	private StoresImpl contentRepoService;
 	private StoreFactory mockFactory;
 	{
-		Describe("ContentStoreServiceImpl", () -> {
+		Describe("StoresImpl", () -> {
 			BeforeEach(() -> {
-				contentRepoService = new ContentStoreServiceImpl();
+				contentRepoService = new StoresImpl();
 			});
 			Context("given no factories", () -> {
 				It("should always return empty", () -> {
-					assertThat(contentRepoService.getContentStores(),
-							is(new ContentStoreInfo[] {}));
+					assertThat(contentRepoService.getStores(Store.class),
+							is(new StoreInfo[] {}));
 				});
 			});
 			Context("given a ContentStore factory", () -> {
@@ -61,16 +57,16 @@ public class ContentStoreServiceImplTest {
 					contentRepoService.setFactories(factories);
 				});
 				It("should return no store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					StoreInfo[] infos = contentRepoService.getStores(Store.class);
 					assertThat(infos.length, is(1));
 				});
 				It("should return no associativestore info", () -> {
-					ContentStoreInfo[] infos = contentRepoService
+					StoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class);
 					assertThat(infos.length, is(1));
 				});
 				It("should return content store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					StoreInfo[] infos = contentRepoService.getStores(ContentStore.class);
 					assertThat(infos.length, is(1));
 				});
 			});
@@ -91,16 +87,16 @@ public class ContentStoreServiceImplTest {
 					contentRepoService.setFactories(factories);
 				});
 				It("should return store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					StoreInfo[] infos = contentRepoService.getStores(Store.class);
 					assertThat(infos.length, is(1));
 				});
 				It("should return associativestore info", () -> {
-					ContentStoreInfo[] infos = contentRepoService
+					StoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class);
 					assertThat(infos.length, is(0));
 				});
 				It("should return no content store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					StoreInfo[] infos = contentRepoService.getStores(ContentStore.class);
 					assertThat(infos.length, is(0));
 				});
 			});
@@ -121,15 +117,15 @@ public class ContentStoreServiceImplTest {
 					contentRepoService.setFactories(factories);
 				});
 				It("should return no content store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getContentStores();
+					StoreInfo[] infos = contentRepoService.getStores(ContentStore.class);
 					assertThat(infos.length, is(0));
 				});
 				It("should return store info", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getStores(Store.class);
+					StoreInfo[] infos = contentRepoService.getStores(Store.class);
 					assertThat(infos.length, is(1));
 				});
 				It("should return associativestore info", () -> {
-					ContentStoreInfo[] infos = contentRepoService
+					StoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class);
 					assertThat(infos.length, is(1));
 				});
@@ -165,19 +161,55 @@ public class ContentStoreServiceImplTest {
 					contentRepoService.setFactories(factories);
 				});
 				It("should return stores that match the filter", () -> {
-					ContentStoreInfo[] infos = contentRepoService.getStores(
-							AssociativeStore.class, ContentStoreService.MATCH_ALL);
+					StoreInfo[] infos = contentRepoService.getStores(
+							AssociativeStore.class, Stores.MATCH_ALL);
 					assertThat(infos.length, is(2));
 				});
 				It("should not return stores that dont match the filter", () -> {
-					ContentStoreInfo[] infos = contentRepoService
+					StoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class, new StoreFilter() {
 								@Override
-								public boolean matches(ContentStoreInfo info) {
+								public boolean matches(StoreInfo info) {
 									return false;
 								}
 							});
 					assertThat(infos.length, is(0));
+				});
+			});
+			Context("given multiple stores for the same Entity", () -> {
+				BeforeEach(() -> {
+					List<StoreFactory> factories = new ArrayList<>();
+					mockFactory = mock(StoreFactory.class);
+					when(mockFactory.getStore()).thenReturn(mock(ContentStore.class));
+					when(mockFactory.getStoreInterface())
+							.thenAnswer(new Answer<Object>() {
+								@Override
+								public Object answer(InvocationOnMock invocation)
+										throws Throwable {
+									return FsEntityStoreInterface.class;
+								}
+							});
+					factories.add(mockFactory);
+
+					StoreFactory mockFactory2 = mock(StoreFactory.class);
+					when(mockFactory2.getStore())
+							.thenReturn(mock(ContentStore.class));
+					when(mockFactory2.getStoreInterface())
+							.thenAnswer(new Answer<Object>() {
+								@Override
+								public Object answer(InvocationOnMock invocation)
+										throws Throwable {
+									return JpaEntityStoreInterface.class;
+								}
+							});
+					factories.add(mockFactory2);
+
+					contentRepoService.setFactories(factories);
+				});
+
+				It("should return stores that match the filter", () -> {
+					StoreInfo[] infos = contentRepoService.getStores(ContentStore.class, Stores.MATCH_ALL);
+					assertThat(infos.length, is(2));
 				});
 			});
 		});
@@ -207,5 +239,11 @@ public class ContentStoreServiceImplTest {
 
 	public interface OtherEntityStoreInterface
 			extends AssociativeStore<OtherEntity, String> {
+	}
+
+	public interface FsEntityStoreInterface extends ContentStore<Entity, String> {
+	}
+
+	public interface JpaEntityStoreInterface extends ContentStore<Entity, String> {
 	}
 }

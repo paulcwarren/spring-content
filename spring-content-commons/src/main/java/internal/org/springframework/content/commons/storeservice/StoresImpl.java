@@ -3,6 +3,7 @@ package internal.org.springframework.content.commons.storeservice;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,16 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
-import org.springframework.content.commons.storeservice.StoreFilter;
+import org.springframework.content.commons.storeservice.*;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.util.Assert;
 
-public class ContentStoreServiceImpl implements ContentStoreService {
+public class StoresImpl implements Stores {
 
-	private Set<ContentStoreInfo> contentStoreInfos = new HashSet<>();
+	private Set<StoreInfo> storeInfos = new HashSet<>();
+	private StoreResolver resolver;
 
-	public ContentStoreServiceImpl() {
+	public StoresImpl() {
 	}
 
 	@SuppressWarnings("unchecked")
@@ -28,18 +29,18 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 	public void setFactories(List<StoreFactory> factories) {
 		for (StoreFactory factory : factories) {
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
-				ContentStoreInfo info = new ContentStoreInfoImpl(
+				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
 						ClassTypeInformation.from(factory.getStoreInterface()).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments().get(0).getType(),
 						(ContentStore<Object, Serializable>) factory.getStore());
-				contentStoreInfos.add(info);
+				storeInfos.add(info);
 			}
 			else {
-				ContentStoreInfo info = new ContentStoreInfoImpl(
+				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
 						getDomainObjectClass(factory.getStoreInterface()),
 						(Store<Serializable>) factory.getStore());
-				contentStoreInfos.add(info);
+				storeInfos.add(info);
 			}
 		}
 	}
@@ -59,31 +60,57 @@ public class ContentStoreServiceImpl implements ContentStoreService {
 		return null;
 	}
 
-	public Set<ContentStoreInfo> getContentStoreInfos() {
-		return contentStoreInfos;
-	}
+//	public Set<ContentStoreInfo> getContentStoreInfos() {
+//		return storeInfos;
+//	}
+//
+//	public void setContentStoreInfos(Set<ContentStoreInfo> contentStoreInfos) {
+//		this.storeInfos = contentStoreInfos;
+//	}
 
-	public void setContentStoreInfos(Set<ContentStoreInfo> contentStoreInfos) {
-		this.contentStoreInfos = contentStoreInfos;
-	}
+//	public ContentStoreInfo[] getContentStores() {
+//		return (ContentStoreInfo[]) getStores(ContentStore.class);
+//	}
 
-	public ContentStoreInfo[] getContentStores() {
-		return getStores(ContentStore.class);
+	@Override
+	public StoreInfo getStore(Class<?> storeType, StoreFilter filter) {
+		Assert.notNull(storeType);
+		Assert.notNull(filter);
+
+		List<StoreInfo> candidates = new ArrayList<>();
+		for (StoreInfo info : storeInfos) {
+			if (info.getImplementation(storeType) != null && filter.matches(info)) {
+				candidates.add(info);
+			}
+		}
+
+		if (candidates.size() == 1) {
+			return candidates.get(0);
+		}
+
+		if (candidates.size() > 1) {
+			if (resolver == null) {
+				throw new IllegalStateException("unable to resolve store.  Consider adding a StoreResolver");
+			}
+			return resolver.resolve(candidates.toArray(new StoreInfo[]{}));
+		}
+
+		return null;
 	}
 
 	@Override
-	public ContentStoreInfo[] getStores(Class<?> storeType) {
+	public StoreInfo[] getStores(Class<?> storeType) {
 		return this.getStores(storeType, MATCH_ALL);
 	}
 
 	@Override
-	public ContentStoreInfo[] getStores(Class<?> storeType, StoreFilter filter) {
-		Set<ContentStoreInfo> storeInfos = new HashSet<>();
-		for (ContentStoreInfo info : contentStoreInfos) {
+	public StoreInfo[] getStores(Class<?> storeType, StoreFilter filter) {
+		Set<StoreInfo> storeInfos = new HashSet<>();
+		for (StoreInfo info : this.storeInfos) {
 			if (info.getImplementation(storeType) != null && filter.matches(info)) {
 				storeInfos.add(info);
 			}
 		}
-		return storeInfos.toArray(new ContentStoreInfo[] {});
+		return storeInfos.toArray(new StoreInfo[] {});
 	}
 }

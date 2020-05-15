@@ -1,29 +1,24 @@
 package internal.org.springframework.content.rest.mappings;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.List;
@@ -33,9 +28,9 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	private static MediaType hal = MediaType.parseMediaType("application/hal+json");
 	private static MediaType json = MediaType.parseMediaType("application/json");
 
-	private ContentStoreService contentStores;
+	private Stores contentStores;
 
-	public ContentHandlerMapping(ContentStoreService contentStores, RestConfiguration config) {
+	public ContentHandlerMapping(Stores contentStores, RestConfiguration config) {
 		super(config);
 		this.contentStores = contentStores;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
@@ -63,7 +58,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	protected HandlerMethod lookupHandlerMethod(String lookupPath, HttpServletRequest request)
 			throws Exception {
 
-		String storeLookupPath = ContentStoreUtils.storeLookupPath(lookupPath, this.getConfiguration().getBaseUri());
+		String storeLookupPath = StoreUtils.storeLookupPath(lookupPath, this.getConfiguration().getBaseUri());
 
 		if (storeLookupPath != null) {
 			// is a content property, if so look up a handler method?
@@ -71,7 +66,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 			if (path.length < 3)
 				return null;
 
-			ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
+			StoreInfo info2 = contentStores.getStore(Store.class, StoreUtils.withStorePath(path[1]));
 			if (info2 != null && isHalOrJsonRequest(request) == false) {
 				return super.lookupHandlerMethod(lookupPath, request);
 			}
@@ -87,7 +82,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	@Override
 	protected CorsConfiguration getCorsConfiguration(Object handler, HttpServletRequest request) {
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
-		String storeLookupPath = ContentStoreUtils.storeLookupPath(lookupPath, this.getConfiguration().getBaseUri());
+		String storeLookupPath = StoreUtils.storeLookupPath(lookupPath, this.getConfiguration().getBaseUri());
 		CorsConfiguration corsConfiguration = super.getCorsConfiguration(handler, request);
 
 		if (storeLookupPath == null) {
@@ -98,7 +93,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		if (path.length < 3)
 			return corsConfiguration;
 
-		ContentStoreInfo info2 = ContentStoreUtils.findStore(contentStores, path[1]);
+		StoreInfo info2 = contentStores.getStore(Store.class, StoreUtils.withStorePath(path[1]));
 		if (info2 == null) {
 			return corsConfiguration;
 		}
@@ -176,12 +171,11 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	public static class StoreCondition implements RequestCondition<StoreCondition> {
 
 		private String storeType = "store";
-		private ContentStoreService stores;
+		private Stores stores;
 		private Method method;
 		private URI baseUri;
 
-		public StoreCondition(StoreType typeAnnotation, ContentStoreService stores,
-				Method method, URI baseUri) {
+		public StoreCondition(StoreType typeAnnotation, Stores stores, Method method, URI baseUri) {
 			storeType = typeAnnotation.value();
 			this.stores = stores;
 			this.method = method;
@@ -197,13 +191,13 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		public StoreCondition getMatchingCondition(HttpServletRequest request) {
 			String path = new UrlPathHelper().getPathWithinApplication(request);
 
-			String storeLookupPath = ContentStoreUtils.storeLookupPath(path, baseUri);
+			String storeLookupPath = StoreUtils.storeLookupPath(path, baseUri);
 
 			String[] segments = storeLookupPath.split("/");
 			if (segments.length < 3) {
 				return null;
 			}
-			ContentStoreInfo info = ContentStoreUtils.findStore(stores, segments[1]);
+			StoreInfo info = stores.getStore(Store.class, StoreUtils.withStorePath(segments[1]));
 			if (info != null
 					&& ((Store.class.isAssignableFrom(info.getInterface())
 							&& "store".equals(storeType))
@@ -226,7 +220,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 				return -1;
 			else {
 				String path = new UrlPathHelper().getPathWithinApplication(request);
-				String storeLookupPath = ContentStoreUtils.storeLookupPath(path, baseUri);
+				String storeLookupPath = StoreUtils.storeLookupPath(path, baseUri);
 
 				String filename = FilenameUtils.getName(storeLookupPath);
 				String extension = FilenameUtils.getExtension(filename);
@@ -242,13 +236,13 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 		public boolean isMappingForRequest(HttpServletRequest request) {
 			String path = new UrlPathHelper().getPathWithinApplication(request);
-			String storeLookupPath = ContentStoreUtils.storeLookupPath(path, baseUri);
+			String storeLookupPath = StoreUtils.storeLookupPath(path, baseUri);
 
 			String[] segments = storeLookupPath.split("/");
 			if (segments.length < 3) {
 				return false;
 			}
-			ContentStoreInfo info = ContentStoreUtils.findStore(stores, segments[1]);
+			StoreInfo info = stores.getStore(Store.class, StoreUtils.withStorePath(segments[1]));
 			if (info != null
 					&& (Store.class.isAssignableFrom(info.getInterface())
 							&& "store".equals(storeType))

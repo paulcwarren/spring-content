@@ -3,12 +3,12 @@ package internal.org.springframework.content.rest.controllers;
 import internal.org.springframework.content.rest.io.AssociatedResource;
 import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
 import internal.org.springframework.content.rest.io.RenderableResourceImpl;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ResourceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, ContentStoreService stores) {
+    public ResourceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
         super(config, repositories, repoInvokerFactory, stores);
     }
 
@@ -40,7 +40,7 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
 
         String pathInfo = nativeWebRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
         pathInfo = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-        pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
@@ -49,7 +49,7 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
 
         String store = pathSegments[1];
 
-        ContentStoreInfo info = ContentStoreUtils.findStore(this.getStores(), store);
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
         if (info == null) {
             throw new IllegalArgumentException(String.format("Store for path %s not found", store));
         }
@@ -87,9 +87,9 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
         // do store resource resolution
         } else if (Store.class.isAssignableFrom(info.getInterface())) {
             String path = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-            String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
+            String pathToUse = path.substring(StoreUtils.storePath(info).length() + 1);
 
-            r = ((Store) info.getImpementation()).getResource(pathToUse);
+            r = info.getImplementation(Store.class).getResource(pathToUse);
         }
 
         return r;

@@ -1,25 +1,15 @@
 package org.springframework.data.rest.extensions.contentsearch;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.utils.ControllerUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
 import org.springframework.content.commons.storeservice.StoreFilter;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -37,23 +27,23 @@ import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
 
 @RepositoryRestController
-public class ContentSearchRestController /* extends AbstractRepositoryRestController */ {
+public class ContentSearchRestController {
 
 	private static final String ENTITY_CONTENTSEARCH_MAPPING = "/{repository}/searchContent";
 	private static final String ENTITY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/findKeyword";
-	private static final String PROPERTY_SEARCHMETHOD_MAPPING = "/{repository}/searchContent/{contentProperty}/{searchMethod}";
 
 	private static Map<String, Method> searchMethods = new HashMap<>();
 
 	private Repositories repositories;
-	private ContentStoreService stores;
+	private Stores stores;
 	private PagedResourcesAssembler<Object> pagedResourcesAssembler;
 
 	private ReflectionService reflectionService;
@@ -64,7 +54,7 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 	}
 
 	@Autowired
-	public ContentSearchRestController(Repositories repositories, ContentStoreService stores, PagedResourcesAssembler<Object> assembler) {
+	public ContentSearchRestController(Repositories repositories, Stores stores, PagedResourcesAssembler<Object> assembler) {
 
 		this.repositories = repositories;
 		this.stores = stores;
@@ -112,10 +102,10 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 			String searchMethod,
 			String[] keywords) {
 
-		ContentStoreInfo[] infos = stores.getStores(ContentStore.class,
+		StoreInfo[] infos = stores.getStores(ContentStore.class,
 				new StoreFilter() {
 					@Override
-					public boolean matches(ContentStoreInfo info) {
+					public boolean matches(StoreInfo info) {
 						return repoInfo.getDomainType()
 								.equals(info.getDomainObjectClass());
 					}
@@ -131,9 +121,9 @@ public class ContentSearchRestController /* extends AbstractRepositoryRestContro
 							repoInfo.getDomainType().getCanonicalName()));
 		}
 
-		ContentStoreInfo info = infos[0];
+		StoreInfo info = infos[0];
 
-		ContentStore<Object, Serializable> store = info.getImpementation();
+		ContentStore<Object, Serializable> store = info.getImplementation(ContentStore.class);
 		if (store instanceof Searchable == false) {
 			throw new ResourceNotFoundException("Entity content is not searchable");
 		}

@@ -3,69 +3,40 @@ package internal.org.springframework.content.rest.utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import internal.org.springframework.content.rest.annotations.ContentStoreRestResource;
-import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
-import internal.org.springframework.content.rest.io.RenderedResource;
 import org.atteo.evo.inflector.English;
 
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
-import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.storeservice.*;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
-public final class ContentStoreUtils {
+public final class StoreUtils {
 
-	private ContentStoreUtils() {
+	private StoreUtils() {
 	}
 
-	public static ContentStoreInfo findContentStore(ContentStoreService stores,
-			Class<?> contentEntityClass) {
-
-		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
-			if (contentEntityClass.equals(info.getDomainObjectClass()))
-				return info;
-		}
-		return null;
-	}
-
-	public static ContentStoreInfo findContentStore(ContentStoreService stores,
-			String store) {
-
-		for (ContentStoreInfo info : stores.getStores(ContentStore.class)) {
-			if (store.equals(storePath(info))) {
-				return info;
+	public static StoreFilter withStorePath(String storePath) {
+		return new StoreFilter() {
+			@Override
+			public boolean matches(StoreInfo info) {
+				return storePath.equals(storePath(info));
 			}
-		}
-		return null;
+		};
 	}
 
-	public static ContentStoreInfo findStore(ContentStoreService stores, String store) {
-		for (ContentStoreInfo info : stores.getStores(Store.class)) {
-			if (store.equals(storePath(info))) {
-				return info;
-			}
-		}
-		return null;
-	}
-
-	public static String storePath(ContentStoreInfo info) {
+	public static String storePath(StoreInfo info) {
 		Class<?> clazz = info.getInterface();
 		String path = null;
 
@@ -84,7 +55,7 @@ public final class ContentStoreUtils {
 		return path;
 	}
 
-	public static String getSimpleName(ContentStoreInfo info) {
+	public static String getSimpleName(StoreInfo info) {
 		Class<?> clazz = info.getDomainObjectClass();
 		return clazz != null ? clazz.getSimpleName()
 				: stripStoreName(info.getInterface());

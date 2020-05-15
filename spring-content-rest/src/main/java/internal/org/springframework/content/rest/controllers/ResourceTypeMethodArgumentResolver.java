@@ -1,11 +1,11 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.MethodParameter;
@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ResourceTypeMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, ContentStoreService stores) {
+    public ResourceTypeMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
         super(config, repositories, repoInvokerFactory, stores);
     }
 
@@ -37,7 +37,7 @@ public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgume
 
         String pathInfo = nativeWebRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
         pathInfo = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-        pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
@@ -46,7 +46,7 @@ public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgume
 
         String store = pathSegments[1];
 
-        ContentStoreInfo info = ContentStoreUtils.findStore(this.getStores(), store);
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
         if (info == null) {
             throw new IllegalArgumentException(String.format("Store for path %s not found", store));
         }
@@ -72,7 +72,7 @@ public class ResourceTypeMethodArgumentResolver extends StoreHandlerMethodArgume
         } else if (Store.class.isAssignableFrom(info.getInterface())) {
 
             String path = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-            String pathToUse = path.substring(ContentStoreUtils.storePath(info).length() + 1);
+            String pathToUse = path.substring(StoreUtils.storePath(info).length() + 1);
             String mimeType = new MimetypesFileTypeMap().getContentType(pathToUse);
             return MediaType.valueOf(mimeType != null ? mimeType : "");
         }

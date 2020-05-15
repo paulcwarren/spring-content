@@ -14,7 +14,7 @@ import internal.org.springframework.content.commons.config.StoreFragmentDefiniti
 import internal.org.springframework.content.commons.config.StoreFragmentDetector;
 import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
 import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
-import internal.org.springframework.content.commons.storeservice.ContentStoreServiceImpl;
+import internal.org.springframework.content.commons.storeservice.StoresImpl;
 import internal.org.springframework.content.commons.utils.StoreUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -118,9 +118,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR,repositoryInterfacePostProcessor);
 		}
 
-		BeanDefinition storeServiceBeanDef = createBeanDefinition(ContentStoreServiceImpl.class);
-		if (registry.containsBeanDefinition("contentStoreService") == false) {
-			registry.registerBeanDefinition("contentStoreService", storeServiceBeanDef);
+		BeanDefinition storeServiceBeanDef = createBeanDefinition(StoresImpl.class);
+		if (registry.containsBeanDefinition("stores") == false) {
+			registry.registerBeanDefinition("stores", storeServiceBeanDef);
 		}
 
 		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(AnnotatedStoreEventInvoker.class);
