@@ -1,13 +1,14 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
+import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.MethodParameter;
@@ -36,14 +37,16 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.content.commons.storeservice.Stores.withDomainClass;
+
 public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final RestConfiguration config;
     private final Repositories repositories;
     private final RepositoryInvokerFactory repoInvokerFactory;
-    private final ContentStoreService stores;
+    private final Stores stores;
 
-    public StoreHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, ContentStoreService stores) {
+    public StoreHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
         this.config = config;
         this.repositories = repositories;
         this.repoInvokerFactory = repoInvokerFactory;
@@ -62,7 +65,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         return repoInvokerFactory;
     }
 
-    protected ContentStoreService getStores() {
+    protected Stores getStores() {
         return stores;
     }
 
@@ -82,7 +85,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
 
         String store = pathSegments[1];
 
-        ContentStoreInfo info = ContentStoreUtils.findStore(stores, store);
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
         if (info == null) {
             throw new IllegalArgumentException(String.format("Store for path %s not found", store));
         }
@@ -115,7 +118,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         throw new IllegalArgumentException();
     }
 
-    protected <T> Object resolveProperty(HttpMethod method, Repositories repositories, ContentStoreInfo storeInfo, String[] segments, PropertyResolver<T> resolver) {
+    protected <T> Object resolveProperty(HttpMethod method, Repositories repositories, StoreInfo storeInfo, String[] segments, PropertyResolver<T> resolver) {
 
         String repository = segments[1];
         String id = segments[2];
@@ -236,7 +239,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         }
 
         // get property store
-        ContentStoreInfo info = ContentStoreUtils.findContentStore(stores, propertyClass);
+        StoreInfo info = stores.getStore(ContentStore.class, withDomainClass(propertyClass));
         if (info == null) {
             throw new IllegalStateException(String.format("Store for property %s not found", property.getName()));
         }
@@ -345,6 +348,6 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
 
     @FunctionalInterface
     public interface PropertyResolver<S> {
-        S resolve(ContentStoreInfo store, Object parent, Object property, boolean embedded);
+        S resolve(StoreInfo store, Object parent, Object property, boolean embedded);
     }
 }

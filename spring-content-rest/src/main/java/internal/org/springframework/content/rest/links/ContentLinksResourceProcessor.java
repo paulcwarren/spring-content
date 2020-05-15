@@ -1,24 +1,15 @@
 package internal.org.springframework.content.rest.links;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import internal.org.springframework.content.rest.controllers.StoreRestController;
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import internal.org.springframework.content.rest.utils.DomainObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.repository.AssociativeStore;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.content.rest.config.RestConfiguration;
@@ -34,6 +25,14 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 
 import static java.lang.String.format;
 
@@ -53,11 +52,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");
 	}
 
-
-	private ContentStoreService stores;
+	private Stores stores;
 	private RestConfiguration config;
 
-	public ContentLinksResourceProcessor(ContentStoreService stores, RestConfiguration config) {
+	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config) {
 		this.stores = stores;
 		this.config = config;
 	}
@@ -74,7 +72,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 		Object entityId = DomainObjectUtils.getId(object);
 
-		ContentStoreInfo store = ContentStoreUtils.findContentStore(stores, object.getClass());
+		StoreInfo store = stores.getStore(AssociativeStore.class, Stores.withDomainClass(object.getClass()));
 
 		Field[] fields = BeanUtils.findFieldsWithAnnotation(object.getClass(), ContentId.class, new BeanWrapperImpl(object));
 		if (fields.length == 1) {
@@ -89,7 +87,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 					originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> addLink(resource, l));
 
 					addLink(resource, shortcutLink(config.getBaseUri(), store, entityId, StringUtils
-							.uncapitalize(ContentStoreUtils.getSimpleName(store))));
+							.uncapitalize(StoreUtils.getSimpleName(store))));
 				}
 			}
 		} else if (fields.length > 1) {
@@ -114,8 +112,8 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		resource.add(l);
 	}
 
-	private String propertyLinkRel(ContentStoreInfo storeInfo, String name) {
-		String contentRel = StringUtils.uncapitalize(ContentStoreUtils.propertyName(name));
+	private String propertyLinkRel(StoreInfo storeInfo, String name) {
+		String contentRel = StringUtils.uncapitalize(StoreUtils.propertyName(name));
 		Class<?> storeIface = storeInfo.getInterface();
 		StoreRestResource exportSpec = storeIface.getAnnotation(StoreRestResource.class);
 		if (exportSpec != null && !StringUtils.isEmpty(exportSpec.linkRel())) {
@@ -124,7 +122,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return contentRel;
 	}
 
-	private String entityRel(ContentStoreInfo storeInfo, String defaultLinkRel) {
+	private String entityRel(StoreInfo storeInfo, String defaultLinkRel) {
 		String entityLinkRel = defaultLinkRel;
 		Class<?> storeIface = storeInfo.getInterface();
 		StoreRestResource exportSpec = storeIface.getAnnotation(StoreRestResource.class);
@@ -134,16 +132,16 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return entityLinkRel;
 	}
 
-	private Optional<Link> originalLink(URI baseUri, ContentStoreInfo store, Object id) {
+	private Optional<Link> originalLink(URI baseUri, StoreInfo store, Object id) {
 
 		if (id == null) {
 			return Optional.empty();
 		}
 
-		return Optional.of(shortcutLink(baseUri, store, id, ContentStoreUtils.storePath(store)));
+		return Optional.of(shortcutLink(baseUri, store, id, StoreUtils.storePath(store)));
 	}
 
-	private Link shortcutLink(URI baseUri, ContentStoreInfo store, Object id, String defaultLinkRel) {
+	private Link shortcutLink(URI baseUri, StoreInfo store, Object id, String defaultLinkRel) {
 
 		LinkBuilder builder = null;
 		builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
@@ -153,12 +151,12 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return builder.withRel(entityRel(store, defaultLinkRel));
 	}
 
-	private Link fullyQualifiedLink(URI baseUri, ContentStoreInfo store, Object id, String fieldName) {
+	private Link fullyQualifiedLink(URI baseUri, StoreInfo store, Object id, String fieldName) {
 		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
 		builder = builder.slash(id);
 
-		String property = StringUtils.uncapitalize(ContentStoreUtils.propertyName(fieldName));
+		String property = StringUtils.uncapitalize(StoreUtils.propertyName(fieldName));
 		builder = builder.slash(property);
 
 		return builder.withRel(propertyLinkRel(store, fieldName));
@@ -166,7 +164,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	public static class StoreLinkBuilder extends LinkBuilderSupport<StoreLinkBuilder> {
 
-		public StoreLinkBuilder(BaseUri baseUri, ContentStoreInfo store) {
+		public StoreLinkBuilder(BaseUri baseUri, StoreInfo store) {
 			super(baseUri.getUriComponentsBuilder().path(storePath(store)).build());
 		}
 
@@ -180,16 +178,16 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 			return new StoreLinkBuilder(new BaseUri(builder.toUriString()), null);
 		}
 
-		public static StoreLinkBuilder linkTo(BaseUri baseUri, ContentStoreInfo store) {
+		public static StoreLinkBuilder linkTo(BaseUri baseUri, StoreInfo store) {
 			return new StoreLinkBuilder(baseUri, store);
 		}
 
-		private static String storePath(ContentStoreInfo store) {
+		private static String storePath(StoreInfo store) {
 			if (store == null) {
 				return "";
 			}
 			
-			return format("/%s", ContentStoreUtils.storePath(store));
+			return format("/%s", StoreUtils.storePath(store));
 		}
 	}
 }

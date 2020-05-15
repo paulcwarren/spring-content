@@ -1,22 +1,15 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.servlet.http.HttpServletRequest;
-
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import org.apache.commons.io.IOUtils;
-
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.controllers.ContentService;
@@ -35,11 +28,16 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import static java.lang.String.format;
 
 public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, ContentStoreService stores) {
+    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
         super(config, repositories, repoInvokerFactory, stores);
     }
 
@@ -53,7 +51,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
         String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
         pathInfo = new UrlPathHelper().getPathWithinApplication(webRequest.getNativeRequest(HttpServletRequest.class));
-        pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
@@ -62,7 +60,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
         String store = pathSegments[1];
 
-        ContentStoreInfo info = ContentStoreUtils.findStore(this.getStores(), store);
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
         if (info == null) {
             throw new IllegalArgumentException(format("Store for path %s not found", store));
         }

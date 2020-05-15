@@ -1,9 +1,10 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.utils.ContentStoreUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.storeservice.ContentStoreInfo;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.MethodParameter;
@@ -20,7 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ResourceETagMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, ContentStoreService stores) {
+    public ResourceETagMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
         super(config, repositories, repoInvokerFactory, stores);
     }
 
@@ -34,7 +35,7 @@ public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgume
 
         String pathInfo = nativeWebRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
         pathInfo = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-        pathInfo = ContentStoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
 
         String[] pathSegments = pathInfo.split("/");
         if (pathSegments.length < 2) {
@@ -43,7 +44,7 @@ public class ResourceETagMethodArgumentResolver extends StoreHandlerMethodArgume
 
         String store = pathSegments[1];
 
-        ContentStoreInfo info = ContentStoreUtils.findStore(this.getStores(), store);
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
         if (info == null) {
             throw new IllegalArgumentException(String.format("Store for path %s not found", store));
         }

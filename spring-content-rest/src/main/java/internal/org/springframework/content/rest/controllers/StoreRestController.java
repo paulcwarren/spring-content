@@ -1,16 +1,5 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.io.RenderableResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
@@ -19,11 +8,10 @@ import internal.org.springframework.content.rest.utils.HeaderUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.storeservice.ContentStoreService;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -34,23 +22,27 @@ import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.util.MimeType;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import static java.lang.String.format;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+import static java.lang.String.format;
 
 @ContentRestController
 public class StoreRestController implements InitializingBean  {
@@ -64,7 +56,7 @@ public class StoreRestController implements InitializingBean  {
     @Autowired(required=false)
     private Repositories repositories;
     @Autowired
-    private ContentStoreService storeService;
+    private Stores stores;
     @Autowired
     private StoreByteRangeHttpRequestHandler handler;
     @Autowired(required=false)
