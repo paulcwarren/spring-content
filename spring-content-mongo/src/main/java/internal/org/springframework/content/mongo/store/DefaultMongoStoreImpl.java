@@ -1,4 +1,4 @@
-package internal.org.springframework.content.mongo.repository;
+package internal.org.springframework.content.mongo.store;
 
 import internal.org.springframework.content.mongo.io.GridFsStoreResource;
 import org.apache.commons.logging.Log;

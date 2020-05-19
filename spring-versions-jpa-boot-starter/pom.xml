@@ -5,7 +5,7 @@
     <parent>
         <artifactId>spring-content</artifactId>
         <groupId>com.github.paulcwarren</groupId>
-        <version>1.0.0.M11-SNAPSHOT</version>
+        <version>1.1.0.M1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,12 +15,12 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-versions-jpa</artifactId>
-            <version>1.0.0.M11-SNAPSHOT</version>
+            <version>1.1.0.M1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-autoconfigure</artifactId>
-            <version>1.0.0.M11-SNAPSHOT</version>
+            <version>1.1.0.M1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>1.0.0.M11-SNAPSHOT</version>
+		<version>1.1.0.M1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<dependencies>
@@ -21,43 +21,53 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-jpa</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-mongo</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-core</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-sync</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-renditions</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 	      	<groupId>com.github.paulcwarren</groupId>
 	  		<artifactId>spring-content-rest</artifactId>
-	  		<version>1.0.0.M11-SNAPSHOT</version>
+	  		<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
   		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-s3</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 			<exclusions>
 				<exclusion>
@@ -69,7 +79,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-solr</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -90,7 +100,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-elasticsearch</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -101,7 +111,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-versions-jpa</artifactId>
-			<version>1.0.0.M11-SNAPSHOT</version>
+			<version>1.1.0.M1-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 

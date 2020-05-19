@@ -1,6 +1,6 @@
 package internal.org.springframework.content.mongo.config;
 
-import internal.org.springframework.content.mongo.repository.DefaultMongoStoreImpl;
+import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
