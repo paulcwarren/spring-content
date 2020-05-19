@@ -10,12 +10,7 @@ import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.util.Assert;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
@@ -72,14 +67,6 @@ public class GridFsStoreResource
 			return null;
 		}
 		return file.getId();
-	}
-
-	public String getContentType() {
-		GridFSFile file = gridfs.findOne(query(whereFilename().is(location)));
-		if (file == null) {
-			return null;
-		}
-		return file.getContentType();
 	}
 
 	public boolean exists() {

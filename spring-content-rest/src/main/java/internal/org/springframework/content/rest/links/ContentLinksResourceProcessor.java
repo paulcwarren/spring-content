@@ -16,6 +16,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
+import org.springframework.hateoas.Affordance;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -174,8 +176,8 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		}
 
 		@Override
-		protected StoreLinkBuilder createNewInstance(UriComponentsBuilder builder, List list) {
-			return new StoreLinkBuilder(new BaseUri(builder.toUriString()), null);
+		protected StoreLinkBuilder createNewInstance(UriComponents components, List<Affordance> affordances) {
+			return new StoreLinkBuilder(new BaseUri(components.toUriString()), null);
 		}
 
 		public static StoreLinkBuilder linkTo(BaseUri baseUri, StoreInfo store) {

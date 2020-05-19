@@ -148,7 +148,7 @@ public class SearchableImpl implements Searchable<Serializable> {
 	private List<Serializable> getIDs(SearchHits result) {
 		List<Serializable> contents = new ArrayList<>();
 
-		if (result == null || result.getTotalHits() == 0) {
+		if (result == null || result.getTotalHits().value == 0) {
 			return contents;
 		}
 

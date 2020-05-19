@@ -1,18 +1,8 @@
 package internal.org.springframework.content.mongo.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.util.UUID;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -28,13 +18,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
+import java.util.UUID;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jRunner.class)
 public class EnableMongoStoresTest {
@@ -174,24 +172,26 @@ public class EnableMongoStoresTest {
 	}
 
 	@Configuration
-	public static class InfrastructureConfig extends AbstractMongoConfiguration {
-		@Bean
-		public GridFsTemplate gridFsTemplate() throws Exception {
-			return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
-		}
+	public static class InfrastructureConfig extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
 			return "spring-content";
 		}
 
-		@Override
-		public MongoDbFactory mongoDbFactory() {
-			return super.mongoDbFactory();
+		@Bean
+		public MongoClient mongoClient() {
+			return MongoClients.create("mongodb://localhost:27017");
 		}
 
-		public MongoClient mongoClient() {
-			return new MongoClient();
+		@Bean
+		public GridFsTemplate gridFsTemplate(MappingMongoConverter mongoConverter) throws Exception {
+			return new GridFsTemplate(mongoDbFactory(), mongoConverter);
+		}
+
+		@Bean
+		public MongoDatabaseFactory mongoDbFactory() {
+			return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
 		}
 	}
 

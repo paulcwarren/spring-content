@@ -203,4 +203,7 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 .flattened-pom.xml
 
+# docx
+*.fo
+
 # End of https://www.gitignore.io/api/macos,maven,eclipse,intellij

@@ -17,13 +17,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CloseIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.junit.runner.RunWith;
@@ -153,7 +153,7 @@ public class ElasticsearchIT {
                   IndexService indexer = ((IndexService)context.getBean(IndexService.class));
                   indexer.index(doc1, new ByteArrayInputStream("customized index".getBytes()));
 
-                  AcknowledgedResponse resp = client.indices().close(new CloseIndexRequest(indexName));
+                  AcknowledgedResponse resp = client.indices().close(new CloseIndexRequest(indexName), RequestOptions.DEFAULT);
                   assertThat(resp.isAcknowledged(), is(true));
 
                   String command = format("curl -X GET http://localhost:9200/_cat/indices/%s?h=status", indexName);
