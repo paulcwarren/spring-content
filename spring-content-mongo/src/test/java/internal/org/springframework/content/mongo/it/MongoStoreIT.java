@@ -343,7 +343,7 @@ public class MongoStoreIT {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return MongoClients.create(mongoDbUrl);
 		}
 
 		@Bean
