@@ -1,25 +1,25 @@
 package internal.org.springframework.content.commons.storeservice;
 
-import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
-import org.springframework.content.commons.storeservice.*;
+import org.springframework.content.commons.storeservice.StoreFilter;
+import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.storeservice.StoreResolver;
+import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
+
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 public class StoresImpl implements Stores {
 
 	private Set<StoreInfo> storeInfos = new HashSet<>();
-	private StoreResolver resolver;
+	private Map<String, StoreResolver> resolvers = new HashMap<>();
 
 	public StoresImpl() {
 	}
@@ -73,6 +73,11 @@ public class StoresImpl implements Stores {
 //	}
 
 	@Override
+	public void addStoreResolver(String name, StoreResolver resolver) {
+		resolvers.put(name, resolver);
+	}
+
+	@Override
 	public StoreInfo getStore(Class<?> storeType, StoreFilter filter) {
 		Assert.notNull(storeType);
 		Assert.notNull(filter);
@@ -89,6 +94,7 @@ public class StoresImpl implements Stores {
 		}
 
 		if (candidates.size() > 1) {
+			StoreResolver resolver = resolvers.get(filter.name());
 			if (resolver == null) {
 				throw new IllegalStateException("unable to resolve store.  Consider adding a StoreResolver");
 			}

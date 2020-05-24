@@ -30,6 +30,10 @@ public final class StoreUtils {
 	public static StoreFilter withStorePath(String storePath) {
 		return new StoreFilter() {
 			@Override
+			public String name() {
+				return storePath;
+			}
+			@Override
 			public boolean matches(StoreInfo info) {
 				return storePath.equals(storePath(info));
 			}

@@ -169,6 +169,11 @@ public class StoresImplTest {
 					StoreInfo[] infos = contentRepoService
 							.getStores(AssociativeStore.class, new StoreFilter() {
 								@Override
+								public String name() {
+									return "test";
+								}
+
+								@Override
 								public boolean matches(StoreInfo info) {
 									return false;
 								}

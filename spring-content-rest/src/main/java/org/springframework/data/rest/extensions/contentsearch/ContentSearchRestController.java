@@ -105,6 +105,11 @@ public class ContentSearchRestController {
 		StoreInfo[] infos = stores.getStores(ContentStore.class,
 				new StoreFilter() {
 					@Override
+					public String name() {
+						return "test";
+					}
+
+					@Override
 					public boolean matches(StoreInfo info) {
 						return repoInfo.getDomainType()
 								.equals(info.getDomainObjectClass());
