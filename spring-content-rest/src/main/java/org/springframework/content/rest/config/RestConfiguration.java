@@ -8,6 +8,7 @@ import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -62,6 +63,10 @@ public class RestConfiguration implements InitializingBean {
 
 	public StoreCorsRegistry getCorsRegistry() {
 		return corsRegistry;
+	}
+
+	public void addStoreResolver(String name, StoreResolver resolver) {
+		stores.addStoreResolver(name, resolver);
 	}
 
 	@Bean
