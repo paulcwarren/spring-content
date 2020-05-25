@@ -60,18 +60,6 @@ public class StoresImpl implements Stores {
 		return null;
 	}
 
-//	public Set<ContentStoreInfo> getContentStoreInfos() {
-//		return storeInfos;
-//	}
-//
-//	public void setContentStoreInfos(Set<ContentStoreInfo> contentStoreInfos) {
-//		this.storeInfos = contentStoreInfos;
-//	}
-
-//	public ContentStoreInfo[] getContentStores() {
-//		return (ContentStoreInfo[]) getStores(ContentStore.class);
-//	}
-
 	@Override
 	public void addStoreResolver(String name, StoreResolver resolver) {
 		resolvers.put(name, resolver);
