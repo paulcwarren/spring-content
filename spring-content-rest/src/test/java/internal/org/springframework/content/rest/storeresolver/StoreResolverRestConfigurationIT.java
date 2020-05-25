@@ -1,9 +1,8 @@
-package internal.org.springframework.content.rest.multistore;
+package internal.org.springframework.content.rest.storeresolver;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import com.jayway.restassured.RestAssured;
-import internal.org.springframework.content.rest.it.AbstractRestIT;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
@@ -24,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 @SpringBootTest(classes = Application.class, webEnvironment=WebEnvironment.RANDOM_PORT)
-public class MultiStoreRestIT {
+public class StoreResolverRestConfigurationIT {
 
     @Autowired
     private Application.TEntityRepository repo;

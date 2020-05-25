@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.multistore;
+package internal.org.springframework.content.rest.storeresolver;
 
 import internal.org.springframework.content.rest.it.SecurityConfiguration;
 import lombok.Data;
@@ -30,7 +30,6 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -38,10 +37,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.sql.DataSource;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.UUID;
 
 
 @SpringBootApplication
@@ -59,10 +56,10 @@ public class Application {
    
    @Configuration
    @Import({RestConfiguration.class, SecurityConfiguration.class})
-   @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.multistore", considerNestedRepositories = true)
+   @EnableJpaRepositories(basePackages= "internal.org.springframework.content.rest.storeresolver", considerNestedRepositories = true)
    @EnableTransactionManagement
-   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.multistore")
-   @EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.multistore")
+   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.storeresolver")
+   @EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.storeresolver")
    public static class AppConfig {
 
        @Value("/org/springframework/content/jpa/schema-drop-h2.sql")
@@ -100,7 +97,7 @@ public class Application {
 
            LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
            factory.setJpaVendorAdapter(vendorAdapter);
-           factory.setPackagesToScan("internal.org.springframework.content.rest.multistore");
+           factory.setPackagesToScan("internal.org.springframework.content.rest.storeresolver");
            factory.setDataSource(dataSource());
 
            return factory;
