@@ -7,8 +7,10 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3ObjectIdResolver;
 import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
+import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.StoreAccessException;
@@ -18,39 +20,23 @@ import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 import org.springframework.util.Assert;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.endsWith;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.content.s3.S3ObjectIdResolver.createS3ObjectIdResolver;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -92,17 +78,35 @@ public class DefaultS3StoreImplTest {
 				Context("#getResource", () -> {
 					Context("given the store's ID is an S3ObjectId type", () -> {
 						BeforeEach(() -> {
+							placementService = new PlacementServiceImpl();
+							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+							placementService.addConverter(new Converter<String, String>() {
+								@Override
+								public String convert(String source) {
+									return "/some/object/id";
+								}
+							});
+
+							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+							s3Protocol.afterPropertiesSet();
+							loader = new DefaultResourceLoader();
+							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
+
 							s3ObjectIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ObjectId>(
 									loader, placementService, client);
-							when(placementService.convert(eq("some-object-id"),
-									eq(String.class))).thenReturn("/some/object/id");
-							when(loader.getResource(anyString())).thenReturn(resource);
 						});
 						JustBeforeEach(() -> {
-							s3ObjectIdBasedStore.getResource(new S3ObjectId("some-defaultBucket", "some-object-id"));
+							try {
+								r = s3ObjectIdBasedStore.getResource(new S3ObjectId("some-defaultBucket", "some-object-id"));
+							} catch (Exception e) {
+								this.e = e;
+							}
 						});
-						It("should fetch the resource", () -> {
-							verify(loader).getResource(eq("s3://some-defaultBucket/some/object/id"));
+						It("should return the resource", () -> {
+							assertThat(e, is(nullValue()));
+							assertThat(r, is(instanceOf(S3StoreResource.class)));
+							assertThat(((S3StoreResource)r).getClient(), is(client));
+							assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-defaultBucket", "some/object/id")));
 						});
 					});
 					Context("given the store's ID is a custom ID type", () -> {
@@ -111,7 +115,7 @@ public class DefaultS3StoreImplTest {
 									loader, placementService, client/*, resolver, defaultBucket*/);
 
 							try {
-								customS3ContentIdBasedStore.getResource(customId);
+								r = customS3ContentIdBasedStore.getResource(customId);
 							}
 							catch (Exception e) {
 								this.e = e;
@@ -132,6 +136,11 @@ public class DefaultS3StoreImplTest {
 													null,
 													CustomContentId.class);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
 								Context("given an ID", () -> {
 									BeforeEach(() -> {
@@ -140,7 +149,10 @@ public class DefaultS3StoreImplTest {
 												"some-object-id");
 									});
 									It("should fetch the resource", () -> {
-										verify(loader).getResource(eq("s3://some-customer/some-object-id"));
+										assertThat(e, is(nullValue()));
+										assertThat(r, is(instanceOf(S3StoreResource.class)));
+										assertThat(((S3StoreResource)r).getClient(), is(client));
+										assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-customer", "some-object-id")));
 									});
 								});
 							});
@@ -163,14 +175,21 @@ public class DefaultS3StoreImplTest {
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
 								Context("given an ID", () -> {
 									BeforeEach(() -> {
-										customId = new CustomContentId("some-customer",
-												"some-object-id");
+										customId = new CustomContentId("some-customer","some-object-id");
 									});
 									It("should fetch the resource", () -> {
-										verify(loader).getResource(eq("s3://some-customer/some-object-id"));
+										assertThat(e, is(nullValue()));
+										assertThat(r, is(instanceOf(S3StoreResource.class)));
+										assertThat(((S3StoreResource)r).getClient(), is(client));
+										assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-customer", "some-object-id")));
 									});
 								});
 							});
@@ -188,8 +207,7 @@ public class DefaultS3StoreImplTest {
 								});
 								Context("given an invalid ID", () -> {
 									BeforeEach(() -> {
-										customId = new CustomContentId(
-												"some-bucket", "some-object-id");
+										customId = new CustomContentId("some-bucket", "some-object-id");
 									});
 									It("should throw an error", () -> {
                                         assertThat(e, is(instanceOf(ConversionFailedException.class)));
@@ -225,10 +243,10 @@ public class DefaultS3StoreImplTest {
 					});
 				});
 			});
+
 			Describe("AssociativeStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,
-							placementService, client/*, resolver, defaultBucket*/);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client/*, resolver, defaultBucket*/);
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
@@ -259,9 +277,17 @@ public class DefaultS3StoreImplTest {
                                             return "/" + source.getKey().replaceAll("-", "/");
                                         }
                                     });
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
                                 });
 								It("should fetch the resource", () -> {
-									verify(loader).getResource(matches("^s3://default-defaultBucket/12345/67890"));
+									assertThat(e, is(nullValue()));
+									assertThat(r, is(instanceOf(S3StoreResource.class)));
+									assertThat(((S3StoreResource)r).getClient(), is(client));
+									assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","default-defaultBucket", "12345/67890")));
 								});
 							});
 							Context("when called with an entity that has an @Bucket value", () -> {
@@ -272,9 +298,17 @@ public class DefaultS3StoreImplTest {
 
                                     placementService = new PlacementServiceImpl();
                                     S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
 								It("should fetch the correct resource", () -> {
-									verify(loader).getResource(matches("^s3://some-other-bucket/12345-67890"));
+									assertThat(e, is(nullValue()));
+									assertThat(r, is(instanceOf(S3StoreResource.class)));
+									assertThat(((S3StoreResource)r).getClient(), is(client));
+									assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-other-bucket", "12345-67890")));
 								});
 							});
 							Context("when called with an entity that has no associated resource", () -> {
@@ -290,9 +324,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given a custom id resolver", () -> {
 						BeforeEach(() -> {
-							resolver = createS3ObjectIdResolver(
-									id -> "custom-bucket", id -> "custom-object-id",
-									null);
+							resolver = createS3ObjectIdResolver(id -> "custom-bucket", id -> "custom-object-id",null);
 						});
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
@@ -304,16 +336,23 @@ public class DefaultS3StoreImplTest {
 
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-
                                     placementService.addConverter(new Converter<TestEntity, S3ObjectId>() {
                                         @Override
                                         public S3ObjectId convert(TestEntity source) {
                                             return new S3ObjectId( "custom-bucket", "custom-object-id");
                                         }
                                     });
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
 								It("should fetch the resource", () -> {
-									verify(loader).getResource(matches("^s3://custom-bucket/custom-object-id$"));
+									assertThat(e, is(nullValue()));
+									assertThat(r, is(instanceOf(S3StoreResource.class)));
+									assertThat(((S3StoreResource)r).getClient(), is(client));
+									assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","custom-bucket", "custom-object-id")));
 								});
 							});
 						});
@@ -374,10 +413,10 @@ public class DefaultS3StoreImplTest {
 					});
 				});
 			});
+
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,
-							placementService, client);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client);
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {
