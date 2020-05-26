@@ -29,6 +29,10 @@ public class S3StoreResource implements WritableResource, DeletableResource {
 		this.delegate = delegate;
 	}
 
+	public AmazonS3 getClient() {
+		return client;
+	}
+
 	@Override
 	public boolean exists() {
 		return delegate.exists();
