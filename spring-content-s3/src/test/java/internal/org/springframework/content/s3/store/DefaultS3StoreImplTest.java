@@ -18,6 +18,8 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
+import org.springframework.content.s3.config.CurrentTenantIdentifierResolver;
+import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -49,7 +51,11 @@ public class DefaultS3StoreImplTest {
 
 	private ResourceLoader loader;
 	private PlacementService placementService;
-	private AmazonS3 client;
+	private AmazonS3 client, client2;
+
+	private CurrentTenantIdentifierResolver tenantIdResolver;
+	private MultiTenantAmazonS3Provider clientProvider;
+
 	private S3ObjectIdResolver resolver;
 	private String defaultBucket;
 
@@ -64,6 +70,7 @@ public class DefaultS3StoreImplTest {
 	private File parent;
 	private InputStream result;
 	private Exception e;
+
 
 	{
 		Describe("DefaultS3StoreImpl", () -> {
@@ -92,8 +99,7 @@ public class DefaultS3StoreImplTest {
 							loader = new DefaultResourceLoader();
 							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<ContentProperty, S3ObjectId>(
-									loader, placementService, client);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client, null, null);
 						});
 						JustBeforeEach(() -> {
 							try {
@@ -111,8 +117,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given the store's ID is a custom ID type", () -> {
 						JustBeforeEach(() -> {
-							customS3ContentIdBasedStore = new DefaultS3StoreImpl<ContentProperty, CustomContentId>(
-									loader, placementService, client/*, resolver, defaultBucket*/);
+							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client, null, null);
 
 							try {
 								r = customS3ContentIdBasedStore.getResource(customId);
@@ -241,12 +246,54 @@ public class DefaultS3StoreImplTest {
 							});
 						});
 					});
+					Context("given a multi tenant configuration", () -> {
+						JustBeforeEach(() -> {
+							placementService = new PlacementServiceImpl();
+							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client, tenantIdResolver, clientProvider);
+
+							try {
+								r = s3ObjectIdBasedStore.getResource(new S3ObjectId("some-bucket", "some-object-id"));
+							}
+							catch (Exception e) {
+								this.e = e;
+							}
+						});
+
+						BeforeEach(() -> {
+							client2 = mock(AmazonS3.class);
+							tenantIdResolver = new CurrentTenantIdentifierResolver() {
+								@Override
+								public String resolveCurrentTenantIdentifier() {
+									return "client2";
+								}
+							};
+							clientProvider = new MultiTenantAmazonS3Provider(){
+								@Override
+								public AmazonS3 getAmazonS3(String tenantId) {
+									if ("client1".equals(tenantId)) {
+										return client;
+									} else if ("client2".equals(tenantId)) {
+										return client2;
+									}
+									throw new IllegalArgumentException("not a valid tenant id");
+								};
+							};
+						});
+
+						It("should fetch the resource using the correct client", () -> {
+							assertThat(e, is(nullValue()));
+							assertThat(r, is(instanceOf(S3StoreResource.class)));
+							assertThat(((S3StoreResource)r).getClient(), is(client2));
+							assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-bucket", "some-object-id")));
+						});
+					});
 				});
 			});
 
 			Describe("AssociativeStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client/*, resolver, defaultBucket*/);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null,null);
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
@@ -416,7 +463,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null,null);
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {
