@@ -10,6 +10,7 @@ import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectIdResolver;
+import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
 
@@ -25,6 +26,9 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private PlacementService s3StorePlacementService;
+
+	@Autowired(required=false)
+	private MultiTenantAmazonS3Provider s3Provider = null;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
@@ -59,6 +63,6 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(s3Protocol);
 
-		return new DefaultS3StoreImpl(loader, s3StorePlacementService, client, null);
+		return new DefaultS3StoreImpl(loader, s3StorePlacementService, client, s3Provider);
 	}
 }
