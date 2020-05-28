@@ -17,7 +17,6 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.s3.config.CurrentTenantIdentifierResolver;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -46,17 +45,15 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private AmazonS3 client;
-	private CurrentTenantIdentifierResolver tenantIdResolver;
 	private MultiTenantAmazonS3Provider clientProvider;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, PlacementService placementService, AmazonS3 client, CurrentTenantIdentifierResolver tenantIdResolver, MultiTenantAmazonS3Provider provider) {
+	public DefaultS3StoreImpl(ResourceLoader loader, PlacementService placementService, AmazonS3 client, MultiTenantAmazonS3Provider provider) {
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
 		Assert.notNull(client, "client must be specified");
 		this.loader = loader;
 		this.placementService = placementService;
 		this.client = client;
-		this.tenantIdResolver = tenantIdResolver;
 		this.clientProvider = provider;
 	}
 
@@ -111,21 +108,17 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
         AmazonS3 clientToUse = client;
         ResourceLoader loaderToUse = loader;
-        if (tenantIdResolver != null && clientProvider != null) {
-			String tenantId = tenantIdResolver.resolveCurrentTenantIdentifier();
-			if (tenantId != null) {
-				AmazonS3 client = clientProvider.getAmazonS3(tenantId);
+        if (clientProvider != null) {
+			AmazonS3 client = clientProvider.getAmazonS3();
+			if (client != null) {
+				SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+				s3Protocol.afterPropertiesSet();
 
-				if (client != null) {
-					SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
-					s3Protocol.afterPropertiesSet();
+				DefaultResourceLoader loader = new DefaultResourceLoader();
+				loader.addProtocolResolver(s3Protocol);
 
-					DefaultResourceLoader loader = new DefaultResourceLoader();
-					loader.addProtocolResolver(s3Protocol);
-
-					clientToUse = client;
-					loaderToUse = loader;
-				}
+				clientToUse = client;
+				loaderToUse = loader;
 			}
 		}
 

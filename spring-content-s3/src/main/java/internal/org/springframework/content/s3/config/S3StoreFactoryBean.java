@@ -59,6 +59,6 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(s3Protocol);
 
-		return new DefaultS3StoreImpl(loader, s3StorePlacementService, client, null, null);
+		return new DefaultS3StoreImpl(loader, s3StorePlacementService, client, null);
 	}
 }
