@@ -6,32 +6,25 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.s3.io.S3StoreResource;
+import lombok.Data;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.content.s3.config.EnableS3ContentRepositories;
-import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.content.s3.config.S3ObjectIdResolvers;
-import org.springframework.content.s3.config.S3StoreConfigurer;
+import org.springframework.content.s3.config.*;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.io.Resource;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyObject;
@@ -45,6 +38,8 @@ public class EnableS3StoresTest {
 
 	// mocks
 	static S3StoreConfigurer configurer;
+	static AmazonS3 client;
+
 	{
 		Describe("EnableS3Stores", () -> {
 			Context("given a context and a configuration with an S3 content repository bean",
@@ -103,6 +98,27 @@ public class EnableS3StoresTest {
 					}
 				});
 			});
+
+			Context("given a context with a multi-tenant configuration", () -> {
+				BeforeEach(() -> {
+					client = mock(AmazonS3.class);
+
+					context = new AnnotationConfigApplicationContext();
+					context.register(MultiTenantConfig.class);
+					context.refresh();
+				});
+				AfterEach(() -> {
+					context.close();
+				});
+				It("should use the correct client", () -> {
+					TestEntityContentRepository repo = context.getBean(TestEntityContentRepository.class);
+					TestEntity tentity = new TestEntity();
+					tentity.setContentId("12345");
+					Resource r = repo.getResource(tentity);
+					assertThat(((S3StoreResource)r).getClient(), is(client));
+				});
+			});
+
 		});
 
 		Describe("EnableS3ContentRepositories", () -> {
@@ -195,6 +211,21 @@ public class EnableS3StoresTest {
 	}
 
 	@Configuration
+	@EnableS3Stores
+	@Import(InfrastructureConfig.class)
+	public static class MultiTenantConfig {
+		@Bean
+		public MultiTenantAmazonS3Provider s3Provider() {
+			return new MultiTenantAmazonS3Provider() {
+				@Override
+				public AmazonS3 getAmazonS3() {
+					return client;
+				}
+			};
+		}
+	}
+
+	@Configuration
 	public static class InfrastructureConfig {
 
 		public Region region() {
@@ -209,7 +240,7 @@ public class EnableS3StoresTest {
 		}
 	}
 
-	@Content
+	@Data
 	public class TestEntity {
 		@ContentId
 		private String contentId;
