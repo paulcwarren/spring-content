@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.1.0.M1-SNAPSHOT,</span>
-<span id="revdate">2020-05-27</span>
+<span id="revdate">2020-05-28</span>
 </div>
 </div>
 <div id="content">
@@ -1254,7 +1254,42 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_accessing_content">2.3. Accessing Content</h3>
 <div class="sect3">
-<h4 id="_storage_model">2.3.1. Storage Model</h4>
+<h4 id="_multi_tenancy">2.3.1. Multi-tenancy</h4>
+<div class="paragraph">
+<p>Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
+sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
+runtime context you can contribute a <code>MultiTenantAmazonS3Provider</code> bean, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 10. Enabling Spring Content S3 using Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+	@Bean
+	public MultiTenantAmazonS3Provider s3Provider() {
+		return new MultiTenantAmazonS3Provider() {
+            @Override
+            public AmazonS3 getAmazonS3() {
+                /*your implementation*/
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
+load.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_storage_model">2.3.2. Storage Model</h4>
 <div class="paragraph">
 <p>In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
 flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
@@ -1263,7 +1298,7 @@ the folder concept as a means of grouping objects. Amazon S3 does this by using 
 </div>
 </div>
 <div class="sect3">
-<h4 id="_s3objectid_resolution">2.3.2. S3ObjectId Resolution</h4>
+<h4 id="_s3objectid_resolution">2.3.3. S3ObjectId Resolution</h4>
 <div class="paragraph">
 <p>Before content is stored or retrieved the store uses the following rules to determine the bucket and
 key to create an <code>S3ObjectId</code>.</p>
@@ -1311,7 +1346,7 @@ key and bucket respectively to create a new <code>S3ObjectId</code></p>
 instance of S3ObjectId the following approach can be used:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Configuring Spring Content S3 with a custom Spring Converter</div>
+<div class="title">Example 11. Configuring Spring Content S3 with a custom Spring Converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1361,7 +1396,7 @@ it is possible to configure the Store to take advantage of S3&#8217;s console fo
 that will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 11. Configuring the S3 Store with a custom converter</div>
+<div class="title">Example 12. Configuring the S3 Store with a custom converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1397,7 +1432,7 @@ public class S3StoreConfiguration  {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content">2.3.3. Setting Content</h4>
+<h4 id="_setting_content">2.3.4. Setting Content</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -1413,13 +1448,13 @@ based in <code>java.util.UUID</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content">2.3.4. Getting Content</h4>
+<h4 id="_getting_content">2.3.5. Getting Content</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content">2.3.5. Unsetting Content</h4>
+<h4 id="_unsetting_content">2.3.6. Unsetting Content</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
@@ -1526,7 +1561,7 @@ based in <code>java.util.UUID</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M1-SNAPSHOT<br>
-Last updated 2020-05-27 05:39:40 UTC
+Last updated 2020-05-28 05:22:05 UTC
 </div>
 </div>
 </body>

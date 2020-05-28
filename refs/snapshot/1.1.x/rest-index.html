@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.1.0.M1-SNAPSHOT,</span>
-<span id="revdate">2020-05-27</span>
+<span id="revdate">2020-05-28</span>
 </div>
 </div>
 <div id="content">
@@ -537,6 +537,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_changing_the_base_uri">5.2. Changing the Base URI</a></li>
 <li><a href="#_changing_the_link_relation">5.3. Changing the link relation</a></li>
 <li><a href="#_fully_qualified_links">5.4. Fully Qualified Links</a></li>
+<li><a href="#_store_resolver">5.5. Store Resolver</a></li>
 </ul>
 </li>
 </ul>
@@ -1738,13 +1739,58 @@ class CustomContentRestMvcConfiguration {
 <p>where <code>content</code> is the extracted property name taken from the field <code>contentId</code>.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_store_resolver">5.5. Store Resolver</h3>
+<div class="paragraph">
+<p>Every REST request must map to one store and one store only.  However, it is entirely possible to define an application
+with multiple stores that make this impossible.</p>
+</div>
+<div class="paragraph">
+<p>For these situations you need to provide a <code>StoreResolver</code> that, based on runtime context, can resolve these conflicts.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Configuring a StoreResolver</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+    @Bean
+    public ContentRestConfigurer contentRestConfigurer() {
+        return new ContentRestConfigurer() {
+            @Override
+            public void configure(RestConfiguration config) {
+                config.addStoreResolver("examples", new StoreResolver() {           <b class="conum">(1)</b>
+                    @Override
+                    public StoreInfo resolve(StoreInfo... stores) {
+                        /* your resolver implementation */
+                    }
+                });
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>This store resolver resolves conflicts for stores exported through the path "examples"</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M1-SNAPSHOT<br>
-Last updated 2020-05-27 05:39:40 UTC
+Last updated 2020-05-28 05:22:05 UTC
 </div>
 </div>
 </body>

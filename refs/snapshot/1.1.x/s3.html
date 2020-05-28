@@ -506,6 +506,41 @@ public static class ApplicationConfig {
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="_multi_tenancy">Multi-tenancy</h3>
+<div class="paragraph">
+<p>Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
+sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
+runtime context you can contribute a <code>MultiTenantAmazonS3Provider</code> bean, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Enabling Spring Content S3 using Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+	@Bean
+	public MultiTenantAmazonS3Provider s3Provider() {
+		return new MultiTenantAmazonS3Provider() {
+            @Override
+            public AmazonS3 getAmazonS3() {
+                /*your implementation*/
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
+load.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_storage_model">Storage Model</h3>
 <div class="paragraph">
 <p>In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
@@ -563,7 +598,7 @@ key and bucket respectively to create a new <code>S3ObjectId</code></p>
 instance of S3ObjectId the following approach can be used:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. Configuring Spring Content S3 with a custom Spring Converter</div>
+<div class="title">Example 3. Configuring Spring Content S3 with a custom Spring Converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -613,7 +648,7 @@ it is possible to configure the Store to take advantage of S3&#8217;s console fo
 that will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 3. Configuring the S3 Store with a custom converter</div>
+<div class="title">Example 4. Configuring the S3 Store with a custom converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -681,7 +716,7 @@ based in <code>java.util.UUID</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-27 05:39:40 UTC
+Last updated 2020-05-28 05:22:05 UTC
 </div>
 </div>
 </body>
