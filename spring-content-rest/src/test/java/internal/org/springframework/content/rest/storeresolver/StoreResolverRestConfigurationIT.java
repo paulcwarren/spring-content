@@ -53,7 +53,7 @@ public class StoreResolverRestConfigurationIT {
                     tEntity = new Application.TEntity();
                     tEntity = repo.save(tEntity);
                 });
-                It("should return the content with 200 OK", () -> {
+                It("should return the content from the correct store", () -> {
 
                     assertThat(jpaStore, is(not(nullValue())));
                     assertThat(fsStore, is(not(nullValue())));
