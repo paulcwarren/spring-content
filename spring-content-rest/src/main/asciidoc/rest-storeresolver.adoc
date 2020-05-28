@@ -1,0 +1,33 @@
+== Store Resolver
+Every REST request must map to one store and one store only.  However, it is entirely possible to define an application
+with multiple stores that make this impossible.
+
+For these situations you need to provide a `StoreResolver` that, based on runtime context, can resolve these conflicts.
+
+.Configuring a StoreResolver
+====
+[source, java]
+----
+@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+    @Bean
+    public ContentRestConfigurer contentRestConfigurer() {
+        return new ContentRestConfigurer() {
+            @Override
+            public void configure(RestConfiguration config) {
+                config.addStoreResolver("examples", new StoreResolver() {           <1>
+                    @Override
+                    public StoreInfo resolve(StoreInfo... stores) {
+                        /* your resolver implementation */
+                    }
+                });
+            }
+        };
+    }
+}
+----
+<1> This store resolver resolves conflicts for stores exported through the path "examples"
+====
+

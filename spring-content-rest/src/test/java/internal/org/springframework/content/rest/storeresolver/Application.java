@@ -115,8 +115,8 @@ public class Application {
            return new FileSystemResourceLoader(Files.createTempDirectory("").toFile().getAbsolutePath());
        }
 
-		@Bean
-		public ContentRestConfigurer contentRestConfigurer() {
+       @Bean
+       public ContentRestConfigurer contentRestConfigurer() {
            return new ContentRestConfigurer() {
                @Override
                public void configure(RestConfiguration config) {
