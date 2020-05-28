@@ -36,6 +36,36 @@ The following configuration properties (prefix `spring.content.s3`) are supporte
 
 == Accessing Content
 
+=== Multi-tenancy
+
+Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
+sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
+runtime context you can contribute a `MultiTenantAmazonS3Provider` bean, as follows:
+
+.Enabling Spring Content S3 using Java Config
+====
+[source,java]
+----
+import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
+@EnableS3Stores
+public static class ApplicationConfig {
+
+	@Bean
+	public MultiTenantAmazonS3Provider s3Provider() {
+		return new MultiTenantAmazonS3Provider() {
+            @Override
+            public AmazonS3 getAmazonS3() {
+                /*your implementation*/
+            }
+        };
+    }
+}
+----
+====
+
+The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
+load.
+
 === Storage Model
 
 In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
