@@ -11,13 +11,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.content.commons.search.IndexService;
+import org.springframework.content.elasticsearch.EnableElasticsearchFulltextIndexing;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 @Configuration
-@ConditionalOnClass(RestHighLevelClient.class)
+@ConditionalOnClass({RestHighLevelClient.class, EnableElasticsearchFulltextIndexing.class})
 @Import(ElasticsearchConfig.class)
 public class ElasticsearchAutoConfiguration {
 
