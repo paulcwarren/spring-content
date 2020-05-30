@@ -160,19 +160,20 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
         @Override
         public void setContent(InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException {
-            Object updatedDomainObj = store.setContent(embeddedProperty == null ? domainObj : embeddedProperty, content);
 
-            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class, mimeType.toString());
+            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class)) {
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, mimeType.toString());
             }
 
             if (originalFilename != null && StringUtils.hasText(originalFilename)) {
-                if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class)) {
-                    BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class, originalFilename);
+                if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class)) {
+                    BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class, originalFilename);
                 }
             }
 
-            updatedDomainObj = repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
+            Object updatedDomainObj = store.setContent(embeddedProperty == null ? domainObj : embeddedProperty, content);
+
+            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
         }
 
         @Override
