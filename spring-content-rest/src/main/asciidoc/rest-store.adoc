@@ -284,7 +284,7 @@ This Resource supports both POST and PUT HTTP methods.
 
 === Search
 
-Exported content stores may be marked as `Searchable`.  Assume the following content store interface:
+Exported content stores may be marked as `Searchable`.  Assuming the following content store interface:
 
 ====
 [source, java]
@@ -293,13 +293,13 @@ Exported content stores may be marked as `Searchable`.  Assume the following con
 ----
 ====
 
-When exported Spring Content REST exposes a fulltext query resource for each `Searchable` method.  These resources are
- exported under the URI `/dvds/searchContent/<findMethod>`.  Method parameters are supplied as query parameters:
+When the store is exported, Spring Content REST exposes a fulltext query resource for the `Searchable.search` methods.
+These resources are exported to the URI `/dvds/searchContent`.  Method parameters can be supplied as query parameters:
 
 ====
 [source, sh]
 ----
-  curl http://localhost:8080/dvds/searchContent/findKeywords?keyword=one&keyword=two
+  curl http://localhost:8080/dvds/searchContent?queryString=foo
 ----
 ====
 

@@ -3,13 +3,13 @@
 
 == The SearchContent Resource
 
-When a repository extending `Searchable` is exported a `findKeyword` endpoint will be
-available at the `/{repository}/searchContent/findKeyword` URI.
+When a Store extending `Searchable` is exported, a `searchContent` endpoint will be
+available at the `/{store}/searchContent` URI.
 
 ====
 [source, sh]
 ----
-  curl http://localhost:8080/searchContent/findKeyword?keyword=foo
+  curl http://localhost:8080/searchContent?queryString=foo
 ----
 ====
 
