@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.1.0.M1-SNAPSHOT,</span>
-<span id="revdate">2020-05-30</span>
+<span id="revdate">2020-05-31</span>
 </div>
 </div>
 <div id="content">
@@ -956,7 +956,7 @@ This Resource supports both POST and PUT HTTP methods.</p>
 <div class="sect3">
 <h4 id="_search">3.1.5. Search</h4>
 <div class="paragraph">
-<p>Exported content stores may be marked as <code>Searchable</code>.  Assume the following content store interface:</p>
+<p>Exported content stores may be marked as <code>Searchable</code>.  Assuming the following content store interface:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -968,14 +968,14 @@ This Resource supports both POST and PUT HTTP methods.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>When exported Spring Content REST exposes a fulltext query resource for each <code>Searchable</code> method.  These resources are
- exported under the URI <code>/dvds/searchContent/&lt;findMethod&gt;</code>.  Method parameters are supplied as query parameters:</p>
+<p>When the store is exported, Spring Content REST exposes a fulltext query resource for the <code>Searchable.search</code> methods.
+These resources are exported to the URI <code>/dvds/searchContent</code>.  Method parameters can be supplied as query parameters:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent/findKeywords?keyword=one&amp;keyword=two</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1200,14 +1200,14 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 <div class="sect3">
 <h4 id="_the_searchcontent_resource">4.1.1. The SearchContent Resource</h4>
 <div class="paragraph">
-<p>When a repository extending <code>Searchable</code> is exported a <code>findKeyword</code> endpoint will be
-available at the <code>/{repository}/searchContent/findKeyword</code> URI.</p>
+<p>When a Store extending <code>Searchable</code> is exported, a <code>searchContent</code> endpoint will be
+available at the <code>/{store}/searchContent</code> URI.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent/findKeyword?keyword=foo</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1790,7 +1790,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M1-SNAPSHOT<br>
-Last updated 2020-05-30 06:22:04 UTC
+Last updated 2020-05-31 04:00:05 UTC
 </div>
 </div>
 </body>

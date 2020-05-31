@@ -827,7 +827,7 @@ This Resource supports both POST and PUT HTTP methods.</p>
 <div class="sect2">
 <h3 id="_search">Search</h3>
 <div class="paragraph">
-<p>Exported content stores may be marked as <code>Searchable</code>.  Assume the following content store interface:</p>
+<p>Exported content stores may be marked as <code>Searchable</code>.  Assuming the following content store interface:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -839,14 +839,14 @@ This Resource supports both POST and PUT HTTP methods.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>When exported Spring Content REST exposes a fulltext query resource for each <code>Searchable</code> method.  These resources are
- exported under the URI <code>/dvds/searchContent/&lt;findMethod&gt;</code>.  Method parameters are supplied as query parameters:</p>
+<p>When the store is exported, Spring Content REST exposes a fulltext query resource for the <code>Searchable.search</code> methods.
+These resources are exported to the URI <code>/dvds/searchContent</code>.  Method parameters can be supplied as query parameters:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent/findKeywords?keyword=one&amp;keyword=two</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1073,7 +1073,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-30 06:22:04 UTC
+Last updated 2020-05-31 04:00:05 UTC
 </div>
 </div>
 </body>

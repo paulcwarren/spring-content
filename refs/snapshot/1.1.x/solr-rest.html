@@ -439,14 +439,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_the_searchcontent_resource">The SearchContent Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a repository extending <code>Searchable</code> is exported a <code>findKeyword</code> endpoint will be
-available at the <code>/{repository}/searchContent/findKeyword</code> URI.</p>
+<p>When a Store extending <code>Searchable</code> is exported, a <code>searchContent</code> endpoint will be
+available at the <code>/{store}/searchContent</code> URI.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent/findKeyword?keyword=foo</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -476,7 +476,7 @@ cause a <code>405 Method Not Allowed</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-30 06:22:04 UTC
+Last updated 2020-05-31 04:00:05 UTC
 </div>
 </div>
 </body>
