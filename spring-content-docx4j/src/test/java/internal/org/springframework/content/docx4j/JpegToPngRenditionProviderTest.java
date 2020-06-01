@@ -1,7 +1,6 @@
 package internal.org.springframework.content.docx4j;
 
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 
@@ -11,6 +10,8 @@ import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
 
 import internal.org.springframework.content.docx4j.JpegToPngRenditionProvider;
@@ -36,8 +37,8 @@ public class JpegToPngRenditionProviderTest {
 				this.getClass().getResourceAsStream("/sample.jpeg"), "image/png");
 
 		assertThat(converted.available(), is(greaterThan(0)));
-		assertThat(IOUtils.contentEquals(converted,
-				this.getClass().getResourceAsStream("/sample.png")), is(true));
+		assertThat(((ObservableInputStream)converted).getObservers(), hasItem(is(instanceOf(FileRemover.class))));
+		assertThat(IOUtils.contentEquals(converted, this.getClass().getResourceAsStream("/sample.png")), is(true));
 	}
 
 }

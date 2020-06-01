@@ -1,11 +1,8 @@
 package internal.org.springframework.content.docx4j;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.docx4j.Docx4J;
 import org.docx4j.Docx4jProperties;
 import org.docx4j.convert.out.HTMLSettings;
@@ -13,11 +10,21 @@ import org.docx4j.convert.out.html.AbstractHtmlExporter;
 import org.docx4j.convert.out.html.HtmlExporterNG2;
 import org.docx4j.model.fields.FieldUpdater;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
+
+import static java.lang.String.format;
+
 @Service
 public class WordToHtmlRenditionProvider implements RenditionProvider {
+
+	private static final Log logger = LogFactory.getLog(WordToHtmlRenditionProvider.class);
 
 	@Override
 	public String consumes() {
@@ -34,34 +41,32 @@ public class WordToHtmlRenditionProvider implements RenditionProvider {
 		try {
 			WordprocessingMLPackage pkg = WordprocessingMLPackage.load(fromInputSource);
 
-			// Refresh the values of DOCPROPERTY fields
 			FieldUpdater updater = new FieldUpdater(pkg);
 			updater.update(true);
 
 			AbstractHtmlExporter exporter = new HtmlExporterNG2();
 			HTMLSettings htmlSettings = Docx4J.createHTMLSettings();
-			htmlSettings.setImageDirPath("/tmp/sample-docx.html_files");
-			htmlSettings.setImageTargetUri("/tmp/_files");
 			htmlSettings.setWmlPackage(pkg);
 
 			Docx4jProperties.setProperty("docx4j.Convert.Out.HTML.OutputMethodXML", true);
 
-			OutputStream os = new FileOutputStream("/tmp/temp.html");
+			File tmpFile = Files.createTempFile(null, null, new FileAttribute<?>[]{}).toFile();
+			OutputStream os = new FileOutputStream(tmpFile);
+
 			Docx4J.toHTML(htmlSettings, os, Docx4J.FLAG_EXPORT_PREFER_XSL);
 			IOUtils.closeQuietly(os);
 
 			if (pkg.getMainDocumentPart().getFontTablePart() != null) {
-				pkg.getMainDocumentPart().getFontTablePart()
-						.deleteEmbeddedFontTempFiles();
+				pkg.getMainDocumentPart().getFontTablePart().deleteEmbeddedFontTempFiles();
 			}
-			// This would also do it, via finalize() methods
+
 			htmlSettings = null;
 			pkg = null;
 
-			return new FileInputStream("/tmp/temp.html");
+			return new ObservableInputStream(new FileInputStream(tmpFile), new FileRemover(tmpFile));
 		}
 		catch (Exception e) {
-
+			logger.warn(format("%s rendition failed", toMimeType), e);
 		}
 
 		return null;

@@ -1,16 +1,27 @@
 package internal.org.springframework.content.docx4j;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
+import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.stereotype.Service;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 
-import javax.imageio.ImageIO;
+import static java.lang.String.format;
 
-import org.apache.commons.io.IOUtils;
-import org.springframework.content.commons.renditions.RenditionProvider;
-
+@Service
 public class JpegToPngRenditionProvider implements RenditionProvider {
+
+	private static final Log logger = LogFactory.getLog(JpegToPngRenditionProvider.class);
 
 	@Override
 	public String consumes() {
@@ -25,16 +36,13 @@ public class JpegToPngRenditionProvider implements RenditionProvider {
 	@Override
 	public InputStream convert(InputStream fromInputSource, String toMimeType) {
 		try {
-			// read a jpeg from a inputFile
+			File tmpFile = Files.createTempFile(null, null, new FileAttribute<?>[]{}).toFile();
 			BufferedImage bufferedImage = ImageIO.read(fromInputSource);
-
-			// write the bufferedImage back to outputFile
-			ImageIO.write(bufferedImage, "png", new File("/tmp/temp.png"));
-
-			return new FileInputStream("/tmp/temp.png");
+			ImageIO.write(bufferedImage, "png", tmpFile);
+			return new ObservableInputStream(new FileInputStream(tmpFile), new FileRemover(tmpFile));
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.warn(format("%s rendition failed", toMimeType), e);
 		}
 		finally {
 			IOUtils.closeQuietly(fromInputSource);
