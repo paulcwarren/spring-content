@@ -1,20 +1,25 @@
 package internal.org.springframework.content.docx4j;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.stereotype.Service;
 
+import static java.lang.String.format;
+
 @Service
 public class WordToTextRenditionProvider implements RenditionProvider {
+
+	private static final Log logger = LogFactory.getLog(WordToTextRenditionProvider.class);
 
 	@Override
 	public String consumes() {
@@ -33,27 +38,25 @@ public class WordToTextRenditionProvider implements RenditionProvider {
 
 			MainDocumentPart documentPart = pkg.getMainDocumentPart();
 
-			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document) documentPart
-					.getJaxbElement();
+			org.docx4j.wml.Document wmlDocumentEl = (org.docx4j.wml.Document) documentPart.getJaxbElement();
 
-			OutputStream os = new FileOutputStream("/tmp/temp.txt");
+			File tmpFile = Files.createTempFile(null, null, new FileAttribute<?>[]{}).toFile();
+			OutputStream os = new FileOutputStream(tmpFile);
 			Writer out = new OutputStreamWriter(os);
 
 			TextUtils.extractText(wmlDocumentEl, out);
 			out.close();
 
 			if (pkg.getMainDocumentPart().getFontTablePart() != null) {
-				pkg.getMainDocumentPart().getFontTablePart()
-						.deleteEmbeddedFontTempFiles();
+				pkg.getMainDocumentPart().getFontTablePart().deleteEmbeddedFontTempFiles();
 			}
-			// This would also do it, via finalize() methods
+
 			pkg = null;
 
-			return new FileInputStream("/tmp/temp.txt");
-
+			return new ObservableInputStream(new FileInputStream(tmpFile), new FileRemover(tmpFile));
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.warn(format("%s rendition failed", toMimeType), e);
 		}
 
 		return null;

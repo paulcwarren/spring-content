@@ -17,6 +17,11 @@ public class ObservableInputStream extends InputStream {
     }
 
     @Override
+    public int available() throws IOException {
+        return this.is.available();
+    }
+
+    @Override
     public int read() throws IOException {
         return this.is.read();
     }

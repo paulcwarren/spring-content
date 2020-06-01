@@ -10,11 +10,13 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.content.commons.io.FileRemover;
+import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
 
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 
 public class WordToPdfRenditionProviderTest {
 
@@ -34,13 +36,13 @@ public class WordToPdfRenditionProviderTest {
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(
-				this.getClass().getResourceAsStream("/sample-docx2.docx"),
-				"application/pdf");
+		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample-docx2.docx"),"application/pdf");
+
+		assertThat(converted.available(), is(greaterThan(0)));
+		assertThat(((ObservableInputStream)converted).getObservers(), hasItem(is(instanceOf(FileRemover.class))));
 
 		String content = pdfToText(converted);
-		assertThat(content, is(
-				"This is the Document Title\n \nand this is the document body.\n \n \n"));
+		assertThat(content, is("This is the Document Title\n \nand this is the document body.\n \n \n"));
 	}
 
 	private String pdfToText(InputStream in) {
