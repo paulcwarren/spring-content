@@ -1,0 +1,94 @@
+[[renditions]]
+= Renditions
+
+== Overview
+
+When enabled, renditions give stores the ability to transform content from one format to another by providing a small
+set of renderers out-of-the-box.
+
+It also provides an extension point for providing your own renderers.
+
+To enable renditions add the `spring-content-renditions` or `spring-content-renditions-boot-starter` dependency to your
+project.  This enables the renditions capability and a small set of renderers that can convert documents of various
+types to jpeg images based on the apache poi and pdfbox libraries
+
+You can also add the `spring-content-docx4j` dependency to your project for an additional small set of renderers that
+can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.
+
+== Annotation-based Configuration
+
+.Enabling Spring Content Renditions with Java Config
+====
+[source, java]
+----
+@Configuration
+@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <1>
+@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <2>
+public static class ApplicationConfig {
+}
+----
+1. Not required when using `spring-content-renditions-boot-starter`
+2. Not required when using `spring-content-renditions-boot-starter`
+====
+
+== Making Stores Renderable
+
+With renditions enabled, Store interfaces can be made `Renderable`.  See
+<<content-repositories.renditions,Renderable Stores>> for more information on how to do this.
+
+== Renderers
+
+The `spring-content-rendition` dependency contributes the following renderer:
+
+- Pdf To Jpeg
+- Text To Jpeg
+- Word To Jpeg
+- Jpeg To Png
+
+The `spring-content-docx4j` dependency contributes the following renderer:
+
+- Word To Html
+- Word To PDF
+- Word To Text
+
+== RenditionProvider Extension Point
+
+Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
+renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
+to implement the `RenditionProvider` interface, mark this implementation as a `@Service` and ensure that it is
+contributed as a bean to your application context at runtime.
+
+.Implementing the RenditionProvider Extension Point
+====
+[source, java]
+----
+package my.custom.rendition.provider;
+
+@Service    <2>
+public class CustomRenditionProvider implements RenditionProvider { <1>
+
+	@Override
+	public String consumes() {
+		return "my/type";
+	}
+
+	@Override
+	public String[] produces() {
+		return new String[] { "your/type" };
+	}
+
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.rendition.provider")         <3>
+public static class ApplicationConfig {
+}
+----
+1. Implementation of `RenditionProvider`
+2. Marked as an `@Service`
+3. Ensure the service is scanned by Spring and offered as a bean
+====
