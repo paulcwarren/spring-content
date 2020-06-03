@@ -287,8 +287,9 @@ For `search` to return actual results full-text indexing must be enabled.  See <
 for more information on how to do this.
 
 [[content-repositories.renditions]]
-=== Renditions
-Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.
+=== Renderable Stores
+Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
+from one format to another.
 
 Content stores can therefore optionally also be given rendition capabilities by extending the `Renderable<E>` interface.
 
@@ -303,6 +304,9 @@ public interface Renderable<E> {
 ----
 Returns a `mimeType` rendition of the content associated with `entity`.
 ====
+
+Renditions must be enabled and renderers provided.  See <<renditions,Renditions>> for more
+information on how to do this.
 
 [[content-repositories.creation]]
 == Creating Content Store Instances
