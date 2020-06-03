@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
+@ConditionalOnClass(RenditionsConfiguration.class)
 @Import(RenditionsConfiguration.class)
 public class RenditionsContentAutoConfiguration {
 
