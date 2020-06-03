@@ -59,6 +59,12 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-docx4j</artifactId>
+			<version>1.1.0.M2-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 	      	<groupId>com.github.paulcwarren</groupId>
 	  		<artifactId>spring-content-rest</artifactId>
 	  		<version>1.1.0.M2-SNAPSHOT</version>
