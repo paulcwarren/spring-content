@@ -2,11 +2,17 @@ package org.springframework.content.renditions.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.docx4j.JpegToPngRenditionProvider;
+import internal.org.springframework.content.docx4j.WordToHtmlRenditionProvider;
+import internal.org.springframework.content.docx4j.WordToPdfRenditionProvider;
+import internal.org.springframework.content.docx4j.WordToTextRenditionProvider;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.renditions.renderers.PdfToJpegRenderer;
+import org.springframework.content.renditions.renderers.TextplainToJpegRenderer;
 import org.springframework.content.renditions.renderers.WordToJpegRenderer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -28,14 +34,23 @@ public class ContentRenditionsAutoConfigurationTest {
 
 	{
 		Describe("ContentRenditionsAutoConfiguration", () -> {
+
 			Context("given a default configuration", () -> {
-				It("should load the context and have a WordToJpeg rendered", () -> {
+
+				It("should load the all renderers", () -> {
+
 					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 					context.register(TestConfig.class);
 					context.refresh();
 
-					assertThat(context.getBean(WordToJpegRenderer.class),
-							is(not(nullValue())));
+					assertThat(context.getBean(PdfToJpegRenderer.class),is(not(nullValue())));
+					assertThat(context.getBean(TextplainToJpegRenderer.class),is(not(nullValue())));
+					assertThat(context.getBean(WordToJpegRenderer.class),is(not(nullValue())));
+
+					assertThat(context.getBean(JpegToPngRenditionProvider.class),is(not(nullValue())));
+					assertThat(context.getBean(WordToHtmlRenditionProvider.class),is(not(nullValue())));
+					assertThat(context.getBean(WordToPdfRenditionProvider.class),is(not(nullValue())));
+					assertThat(context.getBean(WordToTextRenditionProvider.class),is(not(nullValue())));
 
 					context.close();
 				});

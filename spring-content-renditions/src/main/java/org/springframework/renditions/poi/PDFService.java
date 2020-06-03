@@ -2,7 +2,6 @@ package org.springframework.renditions.poi;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
