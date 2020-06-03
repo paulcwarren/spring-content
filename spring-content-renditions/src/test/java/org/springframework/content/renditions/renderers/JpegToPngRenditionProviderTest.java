@@ -1,4 +1,4 @@
-package internal.org.springframework.content.docx4j;
+package org.springframework.content.renditions.renderers;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -13,8 +13,6 @@ import org.junit.Test;
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
 import org.springframework.content.commons.renditions.RenditionProvider;
-
-import internal.org.springframework.content.docx4j.JpegToPngRenditionProvider;
 
 public class JpegToPngRenditionProviderTest {
 
@@ -33,8 +31,7 @@ public class JpegToPngRenditionProviderTest {
 
 	@Test
 	public void testConvert() throws Exception {
-		InputStream converted = service.convert(
-				this.getClass().getResourceAsStream("/sample.jpeg"), "image/png");
+		InputStream converted = service.convert(this.getClass().getResourceAsStream("/sample.jpeg"), "image/png");
 
 		assertThat(converted.available(), is(greaterThan(0)));
 		assertThat(((ObservableInputStream)converted).getObservers(), hasItem(is(instanceOf(FileRemover.class))));

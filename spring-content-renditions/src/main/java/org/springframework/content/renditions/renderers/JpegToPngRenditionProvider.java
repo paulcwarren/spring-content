@@ -1,4 +1,4 @@
-package internal.org.springframework.content.docx4j;
+package org.springframework.content.renditions.renderers;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;

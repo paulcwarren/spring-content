@@ -2,7 +2,7 @@ package org.springframework.content.renditions.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.docx4j.JpegToPngRenditionProvider;
+import org.springframework.content.renditions.renderers.JpegToPngRenditionProvider;
 import internal.org.springframework.content.docx4j.WordToHtmlRenditionProvider;
 import internal.org.springframework.content.docx4j.WordToPdfRenditionProvider;
 import internal.org.springframework.content.docx4j.WordToTextRenditionProvider;
