@@ -5,8 +5,8 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
-<title>Spring Content S3 - Reference Documentation</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Content Renditions - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -433,9 +433,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Spring Content S3 - Reference Documentation</h1>
+<h1>Spring Content Renditions - Reference Documentation</h1>
 <div class="details">
-<span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
+<span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 1.1.0.M2-SNAPSHOT,</span>
 <span id="revdate">2020-06-03</span>
 </div>
@@ -444,7 +444,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2008-2017 The original authors.</p>
+<p>&#169; 2019-present The original authors.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -471,19 +471,13 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
 </ul>
 </li>
-<li><a href="#_s3_content_stores">2. S3 Content Stores</a>
+<li><a href="#renditions">2. Renditions</a>
 <ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">2.1. Annotation based configuration</a></li>
-<li><a href="#_configuring">2.2. Configuring</a></li>
-<li><a href="#_accessing_content">2.3. Accessing Content</a></li>
-</ul>
-</li>
-<li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
-<ul class="sectlevel2">
-<li><a href="#_overview">3.1. Overview</a></li>
-<li><a href="#_dependencies">3.2. Dependencies</a></li>
-<li><a href="#_enabling">3.3. Enabling</a></li>
-<li><a href="#_configuring_2">3.4. Configuring</a></li>
+<li><a href="#_overview">2.1. Overview</a></li>
+<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
+<li><a href="#_making_stores_renderable">2.3. Making Stores Renderable</a></li>
+<li><a href="#_renderers">2.4. Renderers</a></li>
+<li><a href="#_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</a></li>
 </ul>
 </li>
 </ul>
@@ -1191,38 +1185,48 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_s3_content_stores">2. S3 Content Stores</h2>
+<h2 id="renditions">2. Renditions</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_annotation_based_configuration">2.1. Annotation based configuration</h3>
+<h3 id="_overview">2.1. Overview</h3>
 <div class="paragraph">
-<p>Spring Content S3 is enabled with the following Java Config.</p>
+<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
+set of renderers out-of-the-box.</p>
 </div>
+<div class="paragraph">
+<p>It also provides an extension point for providing your own renderers.</p>
+</div>
+<div class="paragraph">
+<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
+project.  This enables the renditions capability and a small set of renderers that can convert documents of various
+types to jpeg images based on the apache poi and pdfbox libraries</p>
+</div>
+<div class="paragraph">
+<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
+can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
 <div class="exampleblock">
-<div class="title">Example 9. Enabling Spring Content S3 using Java Config</div>
+<div class="title">Example 9. Enabling Spring Content Renditions with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableS3Stores
+@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
+@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
 public static class ApplicationConfig {
-
-	@Bean
-	public AmazonS3 client() {	<b class="conum">(1)</b>
-		BasicAWSCredentials creds = new BasicAWSCredentials(...)
-		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
-		return amazonS3Client;
-	}
 }</code></pre>
 </div>
 </div>
-<div class="colist arabic">
-<ol>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>The Amazon S3 client used by the S3 ResourceLoader</p>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
 </li>
 <li>
-<p>A default bucket also needs to be set (see Configuring below)</p>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
 </li>
 </ol>
 </div>
@@ -1230,335 +1234,105 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring">2.2. Configuring</h3>
+<h3 id="_making_stores_renderable">2.3. Making Stores Renderable</h3>
 <div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.s3</code>) are supported.</p>
+<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
+<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Required</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content S3 will look for  the environment variable AWS_BUCKET</p></td>
-</tr>
-</tbody>
-</table>
 </div>
 <div class="sect2">
-<h3 id="_accessing_content">2.3. Accessing Content</h3>
-<div class="sect3">
-<h4 id="_multi_tenancy">2.3.1. Multi-tenancy</h4>
+<h3 id="_renderers">2.4. Renderers</h3>
 <div class="paragraph">
-<p>Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
-sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
-runtime context you can contribute a <code>MultiTenantAmazonS3Provider</code> bean, as follows:</p>
+<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Pdf To Jpeg</p>
+</li>
+<li>
+<p>Text To Jpeg</p>
+</li>
+<li>
+<p>Word To Jpeg</p>
+</li>
+<li>
+<p>Jpeg To Png</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Word To Html</p>
+</li>
+<li>
+<p>Word To PDF</p>
+</li>
+<li>
+<p>Word To Text</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</h3>
+<div class="paragraph">
+<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
+renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
+to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
+contributed as a bean to your application context at runtime.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Enabling Spring Content S3 using Java Config</div>
+<div class="title">Example 10. Implementing the RenditionProvider Extension Point</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
-@EnableS3Stores
+<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
+
+@Service    <b class="conum">(2)</b>
+public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
+
+	@Override
+	public String consumes() {
+		return "my/type";
+	}
+
+	@Override
+	public String[] produces() {
+		return new String[] { "your/type" };
+	}
+
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
 public static class ApplicationConfig {
-
-	@Bean
-	public MultiTenantAmazonS3Provider s3Provider() {
-		return new MultiTenantAmazonS3Provider() {
-            @Override
-            public AmazonS3 getAmazonS3() {
-                /*your implementation*/
-            }
-        };
-    }
 }</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="paragraph">
-<p>The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
-load.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_storage_model">2.3.2. Storage Model</h4>
-<div class="paragraph">
-<p>In Amazon S3, buckets and objects are the two main primitives, where objects are stored in buckets.  Amazon S3 has a
-flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
-of buckets or objects in buckets.  However, for the sake of organizational simplicity, the Amazon S3 console supports
-the folder concept as a means of grouping objects. Amazon S3 does this by using key name prefixes for objects.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_s3objectid_resolution">2.3.3. S3ObjectId Resolution</h4>
-<div class="paragraph">
-<p>Before content is stored or retrieved the store uses the following rules to determine the bucket and
-key to create an <code>S3ObjectId</code>.</p>
-</div>
-<div class="paragraph">
-<p>For <code>Store</code>:</p>
-</div>
-<div class="ulist">
-<ul>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>if the ID is already an <code>S3ObjectId</code> this will be used as-is</p>
+<p>Implementation of <code>RenditionProvider</code></p>
 </li>
 <li>
-<p>otherwise, if a registered Spring Converter exists that converts the ID to an <code>S3ObjectId</code> this will be used to create
-an <code>S3ObjectId</code></p>
+<p>Marked as an <code>@Service</code></p>
 </li>
 <li>
-<p>otherwise, the <code>@ContentId</code> field and default bucket will be used as key and bucket respectively to create an
-<code>S3Object</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>For <code>AssociativeStore</code> or <code>ContentStore</code>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>if a registered Spring Converter exists that converts the entity to an <code>S3ObjectId</code> this will be used</p>
-</li>
-<li>
-<p>otherwise, if one of the Entity&#8217;s field is annotated with <code>@Bucket</code>, the <code>@ContentId</code> and the <code>@Bucket</code> will be used as
-key and bucket respectively to create a new <code>S3ObjectId</code></p>
-</li>
-<li>
-<p>otherwise, the <code>@ContentId</code> field and default bucket will be used as key and bucket respectively to create an
-<code>S3Object</code></p>
-</li>
-</ul>
-</div>
-<div class="sect5">
-<h6 id="_configuring_a_spring_converter">Configuring a Spring Converter</h6>
-<div class="paragraph">
-<p>To configure Spring Content S3 with one or more Spring Converters that convert your Entities, or IDs, to an
-instance of S3ObjectId the following approach can be used:</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 11. Configuring Spring Content S3 with a custom Spring Converter</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class S3StoreConfiguration  {
-
-	@Bean
-	public S3StoreConfigurer configurer() {
-        return new S3StoreConfigurer() {
-
-            @Override
-            public void configureS3StoreConverters(ConverterRegistry registry) {
-                registry.addConverter(new Converter&lt;TestEntity, S3ObjectId&gt;() {
-                    @Override
-                    public S3ObjectId convert(TestEntity entity) {
-                        return new S3ObjectId(entity.getCustomBucketField(), entity.getCustomContentIdField());
-                    }
-                });
-            }
-
-
-            @Override
-            public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
-                // deprecated
-            }
-        }
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect4">
-<h5 id="_key_resolution">Key Resolution</h5>
-<div class="paragraph">
-<p>By default, Spring Content S3 will store all content using simple keys.  This maps well onto primitive datatypes and
-<code>java.util.UUID</code>.</p>
-</div>
-<div class="paragraph">
-<p>The S3 Store uses a <code>PlacementService</code> to convert the Entity&#8217;s <code>@ContentId</code> into a resource path string.  By
-configuring your application to contribute one (or more) Spring Converters that convert from your Entity&#8217;s ID to String
-it is possible to configure the Store to take advantage of S3&#8217;s console folder concepts.</p>
-</div>
-<div class="paragraph">
-<p>For example, <code>@ContentId</code> fields of type <code>java.util.UUID</code> or <code>java.net.URI</code> can both be mapped to a nested resource path
-that will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 12. Configuring the S3 Store with a custom converter</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class S3StoreConfiguration  {
-
-	@Bean
-	public S3StoreConfigurer configurer() {
-        return new S3StoreConfigurer() {
-
-            @Override
-            public void configureS3StoreConverters(ConverterRegistry registry) {
-
-                registry.addConverter(new Converter&lt;UUID,String&gt;() {
-                    @Override
-                    public String convert(UUID source) {
-                        return String.format("/%s", source.toString().replaceAll("-", "/"));
-                    }
-                });
-            }
-
-            @Override
-            public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
-                // deprecated
-            }
-        }
-	}
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_setting_content">2.3.4. Setting Content</h4>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>If content has not yet been stored with this entity and an Id has not been assigned one will be generated
-based in <code>java.util.UUID</code>.</p>
-</div>
-<div class="paragraph">
-<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_getting_content">2.3.5. Getting Content</h4>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_unsetting_content">2.3.6. Unsetting Content</h4>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="solr-search">3. Indexing &amp; Searching with Solr</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_overview">3.1. Overview</h3>
-<div class="paragraph">
-<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_dependencies">3.2. Dependencies</h3>
-<div class="paragraph">
-<p>Add the solrj to the classpath.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
-		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
-		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
-		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
-		&lt;exclusions&gt;
-			&lt;exclusion&gt;
-				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
-				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
-			&lt;/exclusion&gt;
-			&lt;exclusion&gt;
-				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
-				&lt;groupId&gt;log4j&lt;/groupId&gt;
-			&lt;/exclusion&gt;
-		&lt;/exclusions&gt;
-	&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>If using Spring Boot the version may be omitted</p>
+<p>Ensure the service is scanned by Spring and offered as a bean</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_enabling">3.3. Enabling</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
-</li>
-<li>
-<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring_2">3.4. Configuring</h3>
-<div class="paragraph">
-<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
-</div>
-<div class="paragraph">
-<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 </div>

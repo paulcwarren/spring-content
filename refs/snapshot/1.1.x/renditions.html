@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<title>The Lock Resource</title>
+<title>Renditions</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -430,160 +430,163 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body class="book">
+<body id="renditions" class="book">
 <div id="header">
+<h1>Renditions</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_the_lock_resource">The Lock Resource</h2>
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
-will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
+<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
+set of renderers out-of-the-box.</p>
 </div>
+<div class="paragraph">
+<p>It also provides an extension point for providing your own renderers.</p>
+</div>
+<div class="paragraph">
+<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
+project.  This enables the renditions capability and a small set of renderers that can convert documents of various
+types to jpeg images based on the apache poi and pdfbox libraries</p>
+</div>
+<div class="paragraph">
+<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
+can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
+<div class="sectionbody">
 <div class="exampleblock">
+<div class="title">Example 1. Enabling Spring Content Renditions with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
-  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
+@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
+public static class ApplicationConfig {
+}</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
-<code>405 Method Not Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_put">PUT</h4>
-<div class="paragraph">
-<p>Acquires a pessimistic lock on the resource.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_delete">DELETE</h4>
-<div class="paragraph">
-<p>If held, releases the pessimistic lock on the resource.</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types">Supported media types</h5>
-<div class="paragraph">
-<p>Not applicable.</p>
-</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+</ol>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_version_resource">The Version Resource</h2>
+<h2 id="_making_stores_renderable">Making Stores Renderable</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
-endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"number": "1.1", "label": "a minor change"}'</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
-Not Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_put_2">PUT</h4>
-<div class="paragraph">
-<p>Creates a new version of the entity.</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_2">Supported media types</h5>
-<div class="paragraph">
-<p>application/json</p>
-</div>
-</div>
-</div>
+<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
+<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_findallversionslatest_resource">The FindAllVersionsLatest Resource</h2>
+<h2 id="_renderers">Renderers</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
-endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
+<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
 </div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+<div class="ulist">
+<ul>
+<li>
+<p>Pdf To Jpeg</p>
+</li>
+<li>
+<p>Text To Jpeg</p>
+</li>
+<li>
+<p>Word To Jpeg</p>
+</li>
+<li>
+<p>Jpeg To Png</p>
+</li>
+</ul>
 </div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
-Not Allowed</code>.</p>
+<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
 </div>
-<div class="sect3">
-<h4 id="_get">GET</h4>
-<div class="paragraph">
-<p>Returns the latest version of all entities.</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_3">Supported media types</h5>
-<div class="paragraph">
-<p>Not applicable.</p>
-</div>
-</div>
-</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Word To Html</p>
+</li>
+<li>
+<p>Word To PDF</p>
+</li>
+<li>
+<p>Word To Text</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_the_findallversions_resource">The FindAllVersions Resource</h2>
+<h2 id="_renditionprovider_extension_point">RenditionProvider Extension Point</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
-endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
+renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
+to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
+contributed as a bean to your application context at runtime.</p>
 </div>
 <div class="exampleblock">
+<div class="title">Example 2. Implementing the RenditionProvider Extension Point</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
+
+@Service    <b class="conum">(2)</b>
+public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
+
+	@Override
+	public String consumes() {
+		return "my/type";
+	}
+
+	@Override
+	public String[] produces() {
+		return new String[] { "your/type" };
+	}
+
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
+public static class ApplicationConfig {
+}</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
-Not Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_get_2">GET</h4>
-<div class="paragraph">
-<p>Returns all versions of the given entity.</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_4">Supported media types</h5>
-<div class="paragraph">
-<p>Not applicable.</p>
-</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Implementation of <code>RenditionProvider</code></p>
+</li>
+<li>
+<p>Marked as an <code>@Service</code></p>
+</li>
+<li>
+<p>Ensure the service is scanned by Spring and offered as a bean</p>
+</li>
+</ol>
 </div>
 </div>
 </div>

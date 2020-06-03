@@ -810,9 +810,10 @@ for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="content-repositories.renditions">Renditions</h3>
+<h3 id="content-repositories.renditions">Renderable Stores</h3>
 <div class="paragraph">
-<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed from one format to another.</p>
+<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
+from one format to another.</p>
 </div>
 <div class="paragraph">
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
@@ -832,6 +833,10 @@ for more information on how to do this.</p>
 <p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
 </div>
 </div>
+</div>
+<div class="paragraph">
+<p>Renditions must be enabled and renderers provided.  See <a href="#renditions">Renditions</a> for more
+information on how to do this.</p>
 </div>
 </div>
 </div>
@@ -1114,7 +1119,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-03 04:07:06 UTC
+Last updated 2020-06-03 05:54:33 UTC
 </div>
 </div>
 </body>
