@@ -171,10 +171,9 @@ to a file:</p>
 <p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations!  You've just written a simple application that uses Spring
-Content with Renditions to fetch .</p>
-<p>This guide demonstrates the Spring Content Renditions Module.  Spring Content
-Renditions supports several renderers out-of-the-box satisfying most use cases.  You may also
-add your own renderers too using the RenditionProvider extension point.  For more details
+Content and Spring Content Renditions to be able to transform contnet from one format to another.</p>
+<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also
+add your own renderers using the RenditionProvider extension point.  For more details
 see the Spring Content Renditions reference guide.  </p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
