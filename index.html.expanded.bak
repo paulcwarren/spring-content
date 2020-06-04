@@ -58,6 +58,8 @@
                   
 <a href="spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
+<a href="spring-content-with-renditions-docs/" class="dropdown-item">Renditions</a>
+                  
 <a href="spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
                   
 <a href="spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
@@ -255,6 +257,17 @@
             <td><a href="refs/release/1.1.0.M1/jpa-index.html">1.1.0.M1</a></td>
         </tr>
         <tr>
+            <th colspan=7>Renditions</th>
+        </tr>
+        <tr>
+            <td>Spring Content Renditions</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td><a href="refs/snapshot/1.1.x/renditions-index.html">1.1.0.M2-SNAPSHOT</a></td>
+            <td>-</td>
+        </tr>
+        <tr>
             <th colspan=7>Versioning</th>
         </tr>
         <tr>
@@ -426,5 +439,5 @@
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2020-06-01 05:54:13
+Build Date UTC : 2020-06-04 04:58:44
 -->

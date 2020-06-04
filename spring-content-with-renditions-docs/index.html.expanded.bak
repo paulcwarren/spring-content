@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>REST API - Spring Content</title>
+        <title>Renditions - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -56,9 +56,9 @@
                   
 <a href="../spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
-<a href="./" class="dropdown-item active">REST API</a>
+<a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="../spring-content-with-renditions-docs/" class="dropdown-item">Renditions</a>
+<a href="./" class="dropdown-item active">Renditions</a>
                   
 <a href="../spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
                   
@@ -90,15 +90,14 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">REST API</li>
+    <li class="breadcrumb-item active" aria-current="page">Renditions</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-with-spring-content-rest">Getting Started with Spring Content REST</h1>
+<h1 id="getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</h1>
 <h2 id="what-youll-build">What you'll build</h2>
-<p>You'll remove redundant code from the document list web application that
-we produced in our first <a href="../spring-content-fs-docs/">Getting Started Guide</a>.</p>
+<p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
 <ul>
 <li>
@@ -122,206 +121,61 @@ we produced in our first <a href="../spring-content-fs-docs/">Getting Started Gu
 using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></p>
 </li>
 <li>
-<p>We are going to start form where we left of in the last Getting Started
-Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/complete</code></p>
-</li>
-<li>
-<p>Move ahead to <code>Update dependencies</code>.</p>
+<p>We are going to start where Getting Started with Spring Content REST API leaves off so
+ <code>cd</code> into <code>spring-content-gettingstarted/spring-content-rest/complete</code></p>
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-rest/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
+<p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
-<pre><code>
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-  
-  &lt;artifactId&gt;gettingstarted-spring-content-rest&lt;/artifactId&gt;
-  
- 	&lt;parent&gt;
-		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;2.3.0.RELEASE&lt;/version&gt;
-	&lt;/parent&gt;
- 
-	&lt;properties&gt;
-		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
-		&lt;java.version&gt;1.8&lt;/java.version&gt;
-		&lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
-	&lt;/properties&gt;
-
-	&lt;dependencies&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
-			&lt;artifactId&gt;h2&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;1.1.0.M1-SNAPSHOT&lt;/version&gt;
-		&lt;/dependency&gt;
- 		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;1.1.0.M1&lt;/version&gt;
-		&lt;/dependency&gt;
-		
-		&lt;!-- Test dependencies --&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-			&lt;version&gt;2.9.0&lt;/version&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-			&lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
-			&lt;version&gt;${ginkgo-version}&lt;/version&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;	
- 	&lt;/dependencies&gt;
-
-	&lt;build&gt;
-		&lt;plugins&gt;
-			&lt;plugin&gt;
-				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-			&lt;/plugin&gt;
-		&lt;/plugins&gt;
-	&lt;/build&gt;
-
-	&lt;repositories&gt;
-		&lt;repository&gt;
-			&lt;id&gt;snapshots&lt;/id&gt;
-			&lt;name&gt;nexus&lt;/name&gt;
-			&lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
-			&lt;snapshots&gt;
-				&lt;enabled&gt;true&lt;/enabled&gt;
-			&lt;/snapshots&gt;
-		&lt;/repository&gt;
-	&lt;/repositories&gt;
-
-&lt;/project&gt;
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/pom.xml 1-}
 </code></pre>
 
-<h2 id="update-file-entity">Update File Entity</h2>
-<p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
-<p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import java.util.Date;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.MimeType;
-
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-public class File {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
-	private String name;
-	private Date created = new Date();
-	private String summary;
-
-	@ContentId private String contentId;
-	@ContentLength private long contentLength;
-	@MimeType private String mimeType = "text/plain";
-}
-</code></pre>
-
-<p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
-annotation so that Spring Content REST will update its value on our behalf.</p>
-<h2 id="update-filecontentstore">Update FileContentStore</h2>
-<p>So that we can perform simple CRUD operations, over a hypermedia-based
-API, update our <code>FileContentStore</code> by annotating it with the
-<code>@StoreRestResource</code> Spring Content REST annotation.</p>
+<h2 id="update-file">Update File</h2>
+<p>To be able to return renditions we need to know the mime-type of the existing
+content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
+will be by Spring Content REST.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import org.springframework.content.commons.repository.ContentStore;
-
-import org.springframework.content.rest.StoreRestResource;
-
-@StoreRestResource
-public interface FileContentStore extends ContentStore&lt;File, String&gt; {
-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
-<h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
-<p>Having made the above updates we can remove our <code>FileContentController</code>
-as it is now surplus to requirements.   Spring Content REST will provide
-these endpoints for us.</p>
+<h2 id="update-filecontentstore">Update FileContentStore</h2>
+<p>So that we can fetch renditions make your FileContentStore extend <code>Renderable</code>.  </p>
+<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+</code></pre>
+
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-rest-0.0.1.jar</code></p>
-<p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code></p>
-<p>and you should see something like this:-</p>
-<p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
-<p>As you did in the previous tutorial, exercise the application by uploading
-a range of new files and viewing them.  You should see viewed files open
-as they did before.</p>
+<p><code>java -jar target/gettingstarted-spring-content-with-renditions-0.0.1.jar</code></p>
+<h2 id="test-renditions">Test renditions</h2>
+<p>Create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with that entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1</code></p>
+<p>Fetch the content:</p>
+<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1</code>   </p>
+<p>And you should see a response like this:</p>
+<pre><code>Hello Spring Content World!
+</code></pre>
+
+<p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
+the mime-type <code>image/jpeg</code> as the accept header.  As it is an image let's save it
+to a file:</p>
+<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1 --output /tmp/file-1.jpg</code>   </p>
+<p>Open <code>/tmp/file-1.jpg</code> and you should see a response like this:</p>
+<p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've written a simple application that uses Spring
-Content and Spring Content REST to save objects with content to the
-file-system and to fetch them again using a hypermedia-based REST API -
-all without writing any implementation code to handle file access.</p>
-<p>Don't forget you can simply change the type of the spring-content bootstarter
-project on the classpath to switch from file storage to a different
-storage medium.  Spring Content REST works seamlessly with all of the storage modules.</p>
-<p>Spring Content supports the following implementations:-</p>
-<ul>
-<li>
-<p>Spring Content Filesystem; stores content as Files on the Filesystem
-(as used in this tutorial)</p>
-</li>
-<li>
-<p>Spring Content S3; stores content as Objects in Amazon S3</p>
-</li>
-<li>
-<p>Spring Content JPA; stores content as BLOBs in the database</p>
-</li>
-<li>
-<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
-</li>
-</ul>
+<p>Congratulations!  You've just written a simple application that uses Spring
+Content with Renditions to fetch .</p>
+<p>This guide demonstrates the Spring Content Renditions Module.  Spring Content
+Renditions supports several renderers out-of-the-box satisfying most use cases.  You may also
+add your own renderers too using the RenditionProvider extension point.  For more details
+see the Spring Content Renditions reference guide.  </p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -348,7 +202,7 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-rest">Getting Started with Spring Content REST</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -359,16 +213,16 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#update-file-entity" class="nav-link">Update File Entity</a>
+                    <a href="#update-file" class="nav-link">Update File</a>
                 </li>
                 <li class="nav-item">
                     <a href="#update-filecontentstore" class="nav-link">Update FileContentStore</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#remove-filecontentcontroller" class="nav-link">Remove FileContentController</a>
+                    <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
+                    <a href="#test-renditions" class="nav-link">Test renditions</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>
