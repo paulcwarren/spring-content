@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
-			<version>8.2.0</version>
+			<version>11.1.7</version>
 		</dependency>
 
 		<dependency>
