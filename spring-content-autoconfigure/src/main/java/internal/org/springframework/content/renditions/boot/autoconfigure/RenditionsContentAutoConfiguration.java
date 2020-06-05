@@ -17,5 +17,4 @@ public class RenditionsContentAutoConfiguration {
     public static class Docx4jAutoConfiguration {
         //
     }
-
 }
