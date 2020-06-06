@@ -9,7 +9,7 @@ available at the `/{store}/searchContent` URI.
 ====
 [source, sh]
 ----
-  curl http://localhost:8080/searchContent?queryString=foo
+  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo
 ----
 ====
 

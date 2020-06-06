@@ -299,7 +299,7 @@ These resources are exported to the URI `/dvds/searchContent`.  Method parameter
 ====
 [source, sh]
 ----
-  curl http://localhost:8080/dvds/searchContent?queryString=foo
+  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo
 ----
 ====
 
