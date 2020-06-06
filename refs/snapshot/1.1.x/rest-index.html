@@ -437,7 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.1.0.M2-SNAPSHOT,</span>
-<span id="revdate">2020-06-05</span>
+<span id="revdate">2020-06-06</span>
 </div>
 </div>
 <div id="content">
@@ -975,7 +975,7 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent?queryString=foo</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1207,7 +1207,7 @@ available at the <code>/{store}/searchContent</code> URI.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent?queryString=foo</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1790,7 +1790,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M2-SNAPSHOT<br>
-Last updated 2020-06-05 05:12:49 UTC
+Last updated 2020-06-06 04:31:18 UTC
 </div>
 </div>
 </body>

@@ -846,7 +846,7 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/dvds/searchContent?queryString=foo</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo</code></pre>
 </div>
 </div>
 </div>
@@ -1073,7 +1073,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-05 05:12:49 UTC
+Last updated 2020-06-06 04:31:18 UTC
 </div>
 </div>
 </body>
