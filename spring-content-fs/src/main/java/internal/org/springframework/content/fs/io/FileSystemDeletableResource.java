@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -80,7 +83,8 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 
 	public OutputStream getOutputStream() throws IOException {
 		if (!exists()) {
-			FileUtils.touch(this.getFile());
+			Files.createDirectories(Paths.get(this.getFile().getParent()));
+			Files.createFile(this.getFile().toPath());
 		}
 		return resource.getOutputStream();
 	}
