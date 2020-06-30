@@ -265,7 +265,7 @@
             <td>-</td>
             <td>-</td>
             <td><a href="refs/snapshot/1.1.x/renditions-index.html">1.1.0.M3-SNAPSHOT</a></td>
-            <td>-</td>
+            <td><a href="refs/release/1.1.0.M2/renditions-index.html">1.1.0.M2</a></td>
         </tr>
         <tr>
             <th colspan=7>Versioning</th>
@@ -439,5 +439,5 @@
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2020-06-30 05:57:19
+Build Date UTC : 2020-06-30 06:00:38
 -->
