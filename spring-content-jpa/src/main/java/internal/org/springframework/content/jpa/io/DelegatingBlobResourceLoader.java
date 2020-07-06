@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.jpa.io.BlobResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.util.ClassUtils;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -38,11 +40,14 @@ public class DelegatingBlobResourceLoader implements ResourceLoader {
 	@Override
 	public Resource getResource(String location) {
 		if (database == null) {
+			Connection conn = DataSourceUtils.getConnection(ds);
 			try {
-				database = ds.getConnection().getMetaData().getDatabaseProductName();
+				database = conn.getMetaData().getDatabaseProductName();
 			}
 			catch (SQLException e) {
 				logger.error("Error fetching database name", e);
+			} finally {
+				DataSourceUtils.releaseConnection(conn, ds);
 			}
 		}
 		BlobResourceLoader loader = loaders.get(database);
