@@ -8,8 +8,12 @@ For these situations you need to provide a `StoreResolver` that, based on runtim
 ====
 [source, java]
 ----
+public interface S3ExampleStore extends S3ContentStore<Example, UUID>{}
+public interface FSExampleStore extends FilesystemContentStore<Example, UUID>{}     <1>
+
 @Configuration
 @EnableS3Stores
+@EnableFilesystemStores
 public static class ApplicationConfig {
 
     @Bean
@@ -17,7 +21,7 @@ public static class ApplicationConfig {
         return new ContentRestConfigurer() {
             @Override
             public void configure(RestConfiguration config) {
-                config.addStoreResolver("examples", new StoreResolver() {           <1>
+                config.addStoreResolver("examples", new StoreResolver() {           <2>
                     @Override
                     public StoreInfo resolve(StoreInfo... stores) {
                         /* your resolver implementation */
@@ -28,6 +32,8 @@ public static class ApplicationConfig {
     }
 }
 ----
-<1> This store resolver resolves conflicts for stores exported through the path "examples"
+<1> Both stores are typed to the domain type `Example` and will therefore be exported to the URI `/examples`
+<2> Store resolver resolves requests to `/examples/...` to either S3ExamplesStore or FSExampleStore, depending
+on request context.
 ====
 
