@@ -455,8 +455,12 @@ with multiple stores that make this impossible.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+<pre class="highlight"><code class="language-java" data-lang="java">public interface S3ExampleStore extends S3ContentStore&lt;Example, UUID&gt;{}
+public interface FSExampleStore extends FilesystemContentStore&lt;Example, UUID&gt;{}     <b class="conum">(1)</b>
+
+@Configuration
 @EnableS3Stores
+@EnableFilesystemStores
 public static class ApplicationConfig {
 
     @Bean
@@ -464,7 +468,7 @@ public static class ApplicationConfig {
         return new ContentRestConfigurer() {
             @Override
             public void configure(RestConfiguration config) {
-                config.addStoreResolver("examples", new StoreResolver() {           <b class="conum">(1)</b>
+                config.addStoreResolver("examples", new StoreResolver() {           <b class="conum">(2)</b>
                     @Override
                     public StoreInfo resolve(StoreInfo... stores) {
                         /* your resolver implementation */
@@ -479,7 +483,11 @@ public static class ApplicationConfig {
 <div class="colist arabic">
 <ol>
 <li>
-<p>This store resolver resolves conflicts for stores exported through the path "examples"</p>
+<p>Both stores are typed to the domain type <code>Example</code> and will therefore be exported to the URI <code>/examples</code></p>
+</li>
+<li>
+<p>Store resolver resolves requests to <code>/examples/&#8230;&#8203;</code> to either S3ExamplesStore or FSExampleStore, depending
+on request context.</p>
 </li>
 </ol>
 </div>
@@ -490,7 +498,7 @@ public static class ApplicationConfig {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-07-07 05:51:40 UTC
+Last updated 2020-07-07 06:30:52 UTC
 </div>
 </div>
 </body>
