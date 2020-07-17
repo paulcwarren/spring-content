@@ -28,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static java.lang.String.format;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -56,7 +57,6 @@ public class BaseUriContentLinksIT {
 
 	private MockMvc mvc;
 
-	private TestEntity testEntity;
 	private TestEntity3 testEntity3;
 
 	private ContentLinkTests contentLinkTests;
@@ -76,8 +76,8 @@ public class BaseUriContentLinksIT {
 					contentLinkTests.setStore(contentRepository3);
 					contentLinkTests.setTestEntity(testEntity3);
 					contentLinkTests.setUrl("/api/testEntity3s/" + testEntity3.getId());
-					contentLinkTests.setLinkRel("testEntity3");
-					contentLinkTests.setExpectedLinkRegex("http://localhost/contentApi/testEntity3s/" + testEntity3.getId() );
+					contentLinkTests.setLinkRel("content");
+					contentLinkTests.setExpectedLinkRegex(format("http://localhost/contentApi/testEntity3s/%s/content", testEntity3.getId()));
 				});
 				contentLinkTests = new ContentLinkTests();
 			});

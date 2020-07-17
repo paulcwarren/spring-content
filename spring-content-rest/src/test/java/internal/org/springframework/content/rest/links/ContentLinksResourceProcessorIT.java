@@ -94,21 +94,21 @@ public class ContentLinksResourceProcessorIT {
 				});
 
 				It("should add an entity content links", () -> {
-					assertThat(resource.getLinks("testEntity3"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
-					assertThat(resource.getLinks("testEntity3s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+					assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999/content"))));
 				});
 
 				Context("when fully qualified links property is true", () -> {
 					BeforeEach(() -> {
-						processor.getRestConfiguration().setFullyQualifiedLinks(true);
-					});
-
-					AfterEach(() -> {
 						processor.getRestConfiguration().setFullyQualifiedLinks(false);
 					});
 
+					AfterEach(() -> {
+						processor.getRestConfiguration().setFullyQualifiedLinks(true);
+					});
+
 					It("should add an entity content link against a 'content' linkrel", () -> {
-						assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999/content"))));
+						assertThat(resource.getLinks("testEntity3s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+						assertThat(resource.getLinks("testEntity3"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
 					});
 				});
 			});
