@@ -80,8 +80,8 @@ public class EntityContentLinksIT {
 					contentLinkTests.setStore(contentRepository3);
 					contentLinkTests.setTestEntity(testEntity3);
 					contentLinkTests.setUrl("/testEntity3s/" + testEntity3.getId());
-					contentLinkTests.setLinkRel("testEntity3s");
-					contentLinkTests.setExpectedLinkRegex("http://localhost/testEntity3s/" + testEntity3.getId());
+					contentLinkTests.setLinkRel("content");
+					contentLinkTests.setExpectedLinkRegex(String.format("http://localhost/testEntity3s/%s/content", testEntity3.getId()));
 				});
 				contentLinkTests = new ContentLinkTests();
 			});
