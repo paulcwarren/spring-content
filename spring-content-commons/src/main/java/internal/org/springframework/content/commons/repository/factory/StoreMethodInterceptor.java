@@ -1,50 +1,27 @@
 package internal.org.springframework.content.commons.repository.factory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-
 import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
 import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
 import lombok.Getter;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
-import org.springframework.content.commons.repository.AfterStoreEvent;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.content.commons.repository.StoreEvent;
-import org.springframework.content.commons.repository.StoreExtension;
-import org.springframework.content.commons.repository.events.AfterAssociateEvent;
-import org.springframework.content.commons.repository.events.AfterGetContentEvent;
-import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
-import org.springframework.content.commons.repository.events.AfterSetContentEvent;
-import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
-import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
-import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
-import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
-import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.repository.*;
+import org.springframework.content.commons.repository.events.*;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+
+import java.io.*;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.String.format;
 
@@ -58,6 +35,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	// Store methods
 	private static Method getContentMethod;
 	private static Method setContentMethod;
+	private static Method setContentFromResourceMethod;
 	private static Method unsetContentMethod;
 	private static Method getResourceMethod;
 	private static Method associativeGetResourceMethod;
@@ -78,6 +56,9 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 		setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent",
 				Object.class, InputStream.class);
 		Assert.notNull(setContentMethod);
+		setContentFromResourceMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent",
+				Object.class, Resource.class);
+		Assert.notNull(setContentFromResourceMethod);
 		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,
 				"unsetContent", Object.class);
 		Assert.notNull(unsetContentMethod);
@@ -167,6 +148,12 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
 			}
 		}
+		else if (setContentFromResourceMethod.equals(invocation.getMethod())) {
+			if (invocation.getArguments().length > 0) {
+				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, (Resource)invocation.getArguments()[1]);
+				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
+			}
+		}
 		else if (unsetContentMethod.equals(invocation.getMethod())) {
 			if (invocation.getArguments().length > 0
 					&& invocation.getArguments()[0] != null) {
@@ -208,7 +195,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 
 			if (before instanceof BeforeSetContentEvent) {
 
-				if (eventStream.isDirty()) {
+				if (eventStream != null && eventStream.isDirty()) {
 					while (eventStream.read(new byte[4096]) != -1) {}
 					eventStream.close();
 					invocation.getArguments()[1] = new ObservableInputStream(new FileInputStream(tmpStreamFile), new FileRemover(tmpStreamFile));
@@ -234,6 +221,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	private boolean isStoreMethod(MethodInvocation invocation) {
 		if (getContentMethod.equals(invocation.getMethod())
 		 || setContentMethod.equals(invocation.getMethod())
+		 || setContentFromResourceMethod.equals(invocation.getMethod())
 		 || unsetContentMethod.equals(invocation.getMethod())
 		 || getResourceMethod.equals(invocation.getMethod())
 		 || associativeGetResourceMethod.equals(invocation.getMethod())

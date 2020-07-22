@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
+import java.io.InputStream;
 import java.io.Serializable;
 
 import org.junit.Test;
@@ -200,7 +201,7 @@ public class AbstractStoreEventListenerTest {
 				});
 				Context("given a before set content event", () -> {
 					BeforeEach(() -> {
-						event = new BeforeSetContentEvent(new EventSource(), store, null);
+						event = new BeforeSetContentEvent(new EventSource(), store, (InputStream)null);
 					});
 					It("should call the event consumer", () -> {
 						ArgumentCaptor<BeforeSetContentEvent> argumentCaptor = ArgumentCaptor

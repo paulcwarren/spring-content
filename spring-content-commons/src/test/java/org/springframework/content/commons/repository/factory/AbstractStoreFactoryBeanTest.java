@@ -67,6 +67,11 @@ public class AbstractStoreFactoryBeanTest {
 		}
 
 		@Override
+		public Object setContent(Object property, Resource resourceContent) {
+			return null;
+		}
+
+		@Override
 		public Object unsetContent(Object property) {
 			return null;
 		}
