@@ -193,6 +193,11 @@ public class EnableJpaStoresTest {
 		}
 
 		@Override
+		public TestEntity setContent(TestEntity property, Resource resourceContent) {
+			return null;
+		}
+
+		@Override
 		public TestEntity unsetContent(TestEntity property) {
 			return null;
 		}

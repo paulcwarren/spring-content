@@ -206,6 +206,11 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+	@Override
+	public S setContent(S property, Resource resourceContent) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
 	@Transactional
 	@Override
 	public InputStream getContent(S entity) {
