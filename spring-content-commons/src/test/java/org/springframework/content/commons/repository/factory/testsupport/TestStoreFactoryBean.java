@@ -21,6 +21,11 @@ public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
 		}
 
 		@Override
+		public Object setContent(Object property, Resource resourceContent) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public Object unsetContent(Object property) {
 			throw new UnsupportedOperationException();
 		}
