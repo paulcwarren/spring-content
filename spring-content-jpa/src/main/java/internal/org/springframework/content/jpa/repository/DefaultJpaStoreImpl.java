@@ -133,6 +133,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+	@Override
+	public S setContent(S property, Resource resourceContent) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
 	private void waitForCommit(BlobResource resource) {
 		synchronized (resource) {
 			return;

@@ -144,6 +144,11 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+	public S setContent(S property, Resource resourceContent) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
 	@Transactional
 	public InputStream getContent(S entity) {
 		if (entity == null)
