@@ -129,7 +129,12 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public S setContent(S property, Resource resourceContent) {
-		throw new UnsupportedOperationException("not implemented");
+		try {
+			return setContent(property, resourceContent.getInputStream());
+		} catch (IOException e) {
+			logger.error(format("Unexpected error setting content for entity  %s", property), e);
+			throw new StoreAccessException(format("Setting content for entity %s", property), e);
+		}
 	}
 
 	@Override

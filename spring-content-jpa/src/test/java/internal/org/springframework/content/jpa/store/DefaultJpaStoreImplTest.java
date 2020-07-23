@@ -10,6 +10,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.jpa.io.BlobResource;
 import org.springframework.content.jpa.io.BlobResourceLoader;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
 import java.io.ByteArrayInputStream;
@@ -23,21 +24,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.matches;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultJpaStoreImplTest {
@@ -49,6 +43,7 @@ public class DefaultJpaStoreImplTest {
 	private TestEntity entity;
 	private InputStream stream;
 	private InputStream inputStream;
+	private Resource inputResource;
 	private OutputStream outputStream;
 	private Resource resource;
 	private BlobResource blobResource;
@@ -58,7 +53,7 @@ public class DefaultJpaStoreImplTest {
 	{
 		Describe("DefaultJpaStoreImpl", () -> {
 			JustBeforeEach(() -> {
-				store = new DefaultJpaStoreImpl(blobResourceLoader);
+				store = spy(new DefaultJpaStoreImpl(blobResourceLoader));
 			});
 
 			Describe("Store", () -> {
@@ -237,6 +232,39 @@ public class DefaultJpaStoreImplTest {
 						});
 					});
 				});
+
+				Context("#setContent from Resource", () -> {
+
+					BeforeEach(() -> {
+						entity = new TestEntity();
+						stream = new ByteArrayInputStream("Hello content world!".getBytes());
+						inputResource = new InputStreamResource(stream);
+					});
+
+					JustBeforeEach(() -> {
+						try {
+							store.setContent(entity, inputResource);
+						} catch (Exception e) {
+							this.e = e;
+						}
+					});
+
+					It("should delegate", () -> {
+						verify(store).setContent(eq(entity), eq(stream));
+					});
+
+					Context("when the resource throws an IOException", () -> {
+						BeforeEach(() -> {
+							inputResource = mock(Resource.class);
+							when(inputResource.getInputStream()).thenThrow(new IOException("setContent badness"));
+						});
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, CoreMatchers.is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getMessage(), containsString("setContent badness"));
+						});
+					});
+				});
+
 				Context("#unsetContent", () -> {
 					JustBeforeEach(() -> {
 						try {
