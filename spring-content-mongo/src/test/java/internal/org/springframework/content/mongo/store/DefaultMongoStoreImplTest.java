@@ -12,16 +12,17 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -38,7 +39,7 @@ public class DefaultMongoStoreImplTest {
     private ObjectId gridFSId;
     private ContentProperty property;
     private GridFsResource resource;
-    private Resource genericResource;
+    private Resource inputResource;
     private PlacementService placer;
 
     private InputStream content;
@@ -93,7 +94,7 @@ public class DefaultMongoStoreImplTest {
                     gridFsTemplate = mock(GridFsTemplate.class);
                     gridFSFile = mock(GridFSFile.class);
                     resource = mock(GridFsResource.class);
-                    mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(gridFsTemplate, placer);
+                    mongoContentRepoImpl = spy(new DefaultMongoStoreImpl<Object, String>(gridFsTemplate, placer));
                 });
 
                 Context("#setContent", () -> {
@@ -129,6 +130,38 @@ public class DefaultMongoStoreImplTest {
                                 assertThat(e, is(instanceOf(StoreAccessException.class)));
                                 assertThat(e.getCause().getMessage(), is("set-exception"));
                             });
+                        });
+                    });
+                });
+
+                Context("#setContent from Resource", () -> {
+
+                    BeforeEach(() -> {
+                        property = new TestEntity();
+                        content = new ByteArrayInputStream("Hello content world!".getBytes());
+                        inputResource = new InputStreamResource(content);
+                    });
+
+                    JustBeforeEach(() -> {
+                        try {
+                            mongoContentRepoImpl.setContent(property, inputResource);
+                        } catch (Exception e) {
+                            this.e = e;
+                        }
+                    });
+
+                    It("should delegate", () -> {
+                        verify(mongoContentRepoImpl).setContent(eq(property), eq(content));
+                    });
+
+                    Context("when the resource throws an IOException", () -> {
+                        BeforeEach(() -> {
+                            inputResource = mock(Resource.class);
+                            when(inputResource.getInputStream()).thenThrow(new IOException("setContent badness"));
+                        });
+                        It("should throw a StoreAccessException", () -> {
+                            assertThat(e, is(instanceOf(StoreAccessException.class)));
+                            assertThat(e.getMessage(), containsString("setContent badness"));
                         });
                     });
                 });

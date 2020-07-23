@@ -14,6 +14,7 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
@@ -23,16 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FContext;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.matches;
@@ -54,7 +47,7 @@ public class DefaultFilesystemStoresImplTest {
 	private PlacementService placer;
 	private ContentProperty entity;
 
-	private Resource resource;
+	private Resource resource, inputResource;
 	private WritableResource writeableResource;
 	private DeletableResource deletableResource;
 	private DeletableResource nonExistentResource;
@@ -79,8 +72,8 @@ public class DefaultFilesystemStoresImplTest {
 				placer = mock(PlacementService.class);
 				fileService = mock(FileService.class);
 
-				filesystemContentRepoImpl = new DefaultFilesystemStoreImpl<ContentProperty, String>(
-						loader, placer, fileService);
+				filesystemContentRepoImpl = spy(new DefaultFilesystemStoreImpl<ContentProperty, String>(
+						loader, placer, fileService));
 			});
 
 			Describe("Store", () -> {
@@ -355,6 +348,38 @@ public class DefaultFilesystemStoresImplTest {
 								assertThat(e, is(instanceOf(StoreAccessException.class)));
 								assertThat(e.getCause(), is(instanceOf(IOException.class)));
 							});
+						});
+					});
+				});
+
+				Context("#setContent from Resource", () -> {
+
+					BeforeEach(() -> {
+						entity = new TestEntity();
+						content = new ByteArrayInputStream("Hello content world!".getBytes());
+						inputResource = new InputStreamResource(content);
+					});
+
+					JustBeforeEach(() -> {
+						try {
+							filesystemContentRepoImpl.setContent(entity, inputResource);
+						} catch (Exception e) {
+							this.e = e;
+						}
+					});
+
+					It("should delegate to setContent from InputStream", () -> {
+						verify(filesystemContentRepoImpl).setContent(eq(entity), eq(content));
+					});
+
+					Context("when the resource throws an IOException", () -> {
+						BeforeEach(() -> {
+							inputResource = mock(Resource.class);
+							when(inputResource.getInputStream()).thenThrow(new IOException("setContent badness"));
+						});
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getMessage(), containsString("setContent badness"));
 						});
 					});
 				});

@@ -133,14 +133,14 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+	@Transactional
 	@Override
-	public S setContent(S property, Resource resourceContent) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	private void waitForCommit(BlobResource resource) {
-		synchronized (resource) {
-			return;
+	public S setContent(S entity, Resource resourceContent) {
+		try {
+			return this.setContent(entity, resourceContent.getInputStream());
+		} catch (IOException e) {
+			logger.error(format("Unexpected error setting content for entity %s", entity), e);
+			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 	}
 

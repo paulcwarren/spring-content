@@ -143,9 +143,15 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+	@Transactional
 	@Override
 	public S setContent(S property, Resource resourceContent) {
-		throw new UnsupportedOperationException("not implemented");
+		try {
+			return this.setContent(property, resourceContent.getInputStream());
+		} catch (IOException e) {
+			logger.error(format("Unexpected error setting content for entity %s", property), e);
+			throw new StoreAccessException(format("Setting content for entity %s", property), e);
+		}
 	}
 
 	@Override

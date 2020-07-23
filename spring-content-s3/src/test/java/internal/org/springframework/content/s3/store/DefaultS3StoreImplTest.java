@@ -21,10 +21,7 @@ import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.WritableResource;
+import org.springframework.core.io.*;
 import org.springframework.util.Assert;
 
 import java.io.*;
@@ -450,7 +447,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null);
+					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null));
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {
@@ -543,6 +540,39 @@ public class DefaultS3StoreImplTest {
 						});
 					});
 				});
+
+				Context("#setContent from Resource", () -> {
+
+					BeforeEach(() -> {
+						entity = new TestEntity();
+						content = new ByteArrayInputStream("Hello content world!".getBytes());
+						r = new InputStreamResource(content);
+					});
+
+					JustBeforeEach(() -> {
+						try {
+							s3StoreImpl.setContent(entity, r);
+						} catch (Exception e) {
+							this.e = e;
+						}
+					});
+
+					It("should delegate", () -> {
+						verify(s3StoreImpl).setContent(eq(entity), eq(content));
+					});
+
+					Context("when the resource throws an IOException", () -> {
+						BeforeEach(() -> {
+							r = mock(Resource.class);
+							when(r.getInputStream()).thenThrow(new IOException("setContent badness"));
+						});
+						It("should throw a StoreAccessException", () -> {
+							assertThat(e, is(instanceOf(StoreAccessException.class)));
+							assertThat(e.getMessage(), containsString("setContent badness"));
+						});
+					});
+				});
+
 				Context("#getContent", () -> {
 					JustBeforeEach(() -> {
 						try {
