@@ -2,7 +2,11 @@ package internal.org.springframework.content.commons.repository.factory;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragments;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
@@ -28,12 +32,11 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
@@ -92,8 +95,9 @@ public class StoreMethodInterceptorTest {
 			});
 
 			JustBeforeEach(() -> {
-				interceptor = new StoreMethodInterceptor(store, Object.class,
-						String.class, extensions, publisher);
+				interceptor = new StoreMethodInterceptor();
+				StoreFragments fragments = new StoreFragments(Collections.singletonList(new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher))));
+				interceptor.setStoreFragments(fragments);
 				try {
 					interceptor.invoke(invocation);
 				}
@@ -357,9 +361,9 @@ public class StoreMethodInterceptorTest {
 						result = mock(Resource.class);
 
 						store = mock(ContentStore.class);
-						when(store.getResource(anyObject())).thenReturn((Resource)result);
+						when(store.getResource(any(Serializable.class))).thenReturn((Resource)result);
 
-						invocation = new TestMethodInvocation(store, getResourceMethod, new Object[]{""});
+						invocation = new TestMethodInvocation(store, getResourceMethod, new Serializable(){});
 					});
 
 					It("should proceed", () -> {
@@ -369,7 +373,7 @@ public class StoreMethodInterceptorTest {
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeGetResourceEvent.class)));
-						verify(store).getResource(anyObject());
+						verify(store).getResource(any(Serializable.class));
 						inOrder.verify(publisher).publishEvent(captor.capture());
 						assertThat(captor.getValue().getResult(), is(result));
 					});
@@ -464,41 +468,38 @@ public class StoreMethodInterceptorTest {
 					});
 				});
 			});
+		});
 
+		Describe("#findMethod", () -> {
 
-			Context("when an extension method is invoked", () -> {
-				BeforeEach(() -> {
-					invocation = mock(MethodInvocation.class);
-					extension = mock(StoreExtension.class);
+			It("should resolve the method when not overridden", () -> {
+				store = mock(ContentStore.class);
+				publisher = mock(ApplicationEventPublisher.class);
+				interceptor = new StoreMethodInterceptor();
+				try {
+					Method m = ReflectionUtils.findMethod(TestContentStore.class, "unsetContent", Object.class);
+					assertThat(m, is(not(nullValue())));
+					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher)));
+					assertThat(actual, is(ReflectionUtils.findMethod(StoreImpl.class, "unsetContent", Object.class)));
+				}
+				catch (Exception invokeException) {
+					e = invokeException;
+				}
+			});
 
-					extensions = Collections
-							.singletonMap(AContentRepositoryExtension.class.getMethod(
-									"getCustomContent", Object.class), extension);
-
-					final Method getCustomMethod = AContentRepositoryExtension.class
-							.getMethod("getCustomContent", Object.class);
-					when(invocation.getMethod()).thenReturn(getCustomMethod);
-					when(invocation.getArguments()).thenReturn(
-							new Object[] { new ContentObject("application/pdf") });
-				});
-				Context("when an extension implementation is provided", () -> {
-					It("should invoke the extension's implementation", () -> {
-						verify(extension).invoke(eq(invocation), anyObject());
-					});
-					It("should never proceed with the real invocation", () -> {
-						verify(invocation, never()).proceed();
-						verify(publisher, never()).publishEvent(anyObject());
-					});
-				});
-				Context("when the extension implementation is not provided", () -> {
-					BeforeEach(() -> {
-						extensions = new HashMap<>();
-					});
-					It("should throw a Missing Extension error", () -> {
-						assertThat(e.getMessage(),
-								startsWith("No implementation found for"));
-					});
-				});
+			It("should resolve the method when it is overridden in the interface", () -> {
+				store = mock(ContentStore.class);
+				publisher = mock(ApplicationEventPublisher.class);
+				interceptor = new StoreMethodInterceptor();
+				try {
+					Method m = ReflectionUtils.findMethod(TestContentStore.class, "setContent", TEntity.class, InputStream.class);
+					assertThat(m, is(not(nullValue())));
+					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher)));
+					assertThat(actual, is(ReflectionUtils.findMethod(StoreImpl.class, "setContent", Object.class, InputStream.class)));
+				}
+				catch (Exception invokeException) {
+					e = invokeException;
+				}
 			});
 		});
 	}
@@ -540,5 +541,17 @@ public class StoreMethodInterceptorTest {
 
 	public interface AContentRepositoryExtension<S> {
 		void getCustomContent(S property);
+	}
+
+	@Getter
+	@Setter
+	public class TEntity {
+
+		private UUID contentId;
+	}
+
+	public interface TestContentStore extends ContentStore<TEntity, UUID> {
+		@Override
+		TEntity setContent(TEntity property, InputStream content);
 	}
 }

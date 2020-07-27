@@ -1,19 +1,11 @@
 package org.springframework.content.commons.repository.factory;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
+import internal.org.springframework.content.commons.repository.factory.StoreImpl;
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -29,6 +21,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 public abstract class AbstractStoreFactoryBean
 		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
 		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
@@ -43,7 +44,7 @@ public abstract class AbstractStoreFactoryBean
 
 	@Autowired(required = false)
 	private Set<StoreExtension> extensions = Collections.emptySet();
-	private StoreFragments storeFragments;
+	private StoreFragments storeFragments = new StoreFragments(Collections.EMPTY_LIST);
 
 	private BeanFactory beanFactory;
 
@@ -172,11 +173,9 @@ public abstract class AbstractStoreFactoryBean
 
 		this.addProxyAdvice(result, beanFactory);
 
-		StoreMethodInterceptor intercepter = new StoreMethodInterceptor(
-				(ContentStore<Object, Serializable>) target,
-				getDomainClass(storeInterface), getContentIdClass(storeInterface),
-				extensionsMap, publisher);
+		StoreMethodInterceptor intercepter = new StoreMethodInterceptor();
 
+		storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher)));
 		intercepter.setStoreFragments(storeFragments);
 
 		result.addAdvice(intercepter);

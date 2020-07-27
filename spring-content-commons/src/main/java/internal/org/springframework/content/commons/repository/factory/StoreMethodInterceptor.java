@@ -2,24 +2,18 @@ package internal.org.springframework.content.commons.repository.factory;
 
 import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
-import internal.org.springframework.content.commons.repository.StoreInvokerImpl;
-import lombok.Getter;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.fragments.ContentStoreAware;
-import org.springframework.content.commons.io.FileRemover;
-import org.springframework.content.commons.io.ObservableInputStream;
-import org.springframework.content.commons.repository.*;
-import org.springframework.content.commons.repository.events.*;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.io.Resource;
+import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 
-import java.io.*;
+import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,71 +21,20 @@ import static java.lang.String.format;
 
 public class StoreMethodInterceptor implements MethodInterceptor {
 
-	private Map<Method, StoreExtension> extensions;
-	private ContentStore<Object, Serializable> store = null;
-	private ApplicationEventPublisher publisher;
-	private StoreFragments storeFragments;
+	private static final Log LOGGER = LogFactory.getLog(StoreMethodInterceptor.class);
 
-	// Store methods
-	private static Method getContentMethod;
-	private static Method setContentMethod;
-	private static Method setContentFromResourceMethod;
-	private static Method unsetContentMethod;
-	private static Method getResourceMethod;
-	private static Method associativeGetResourceMethod;
-	private static Method associateResourceMethod;
-	private static Method unassociateResourceMethod;
-	private static Method toStringMethod;
+	private StoreFragments storeFragments;
+	private Map<Method, Method> methodCache = new ConcurrentReferenceHashMap<>();
 
 	// ContentStoreAware methods
 	private static Method setContentStoreMethod;
 
-	private Class<?> domainClass = null;
-	private Class<? extends Serializable> contentIdClass = null;
-
 	static {
-		getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent",
-				Object.class);
-		Assert.notNull(getContentMethod);
-		setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent",
-				Object.class, InputStream.class);
-		Assert.notNull(setContentMethod);
-		setContentFromResourceMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent",
-				Object.class, Resource.class);
-		Assert.notNull(setContentFromResourceMethod);
-		unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,
-				"unsetContent", Object.class);
-		Assert.notNull(unsetContentMethod);
-		getResourceMethod = ReflectionUtils.findMethod(Store.class, "getResource",
-				Serializable.class);
-		Assert.notNull(getResourceMethod);
-		associativeGetResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
-				"getResource", Object.class);
-		Assert.notNull(associativeGetResourceMethod);
-		associateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
-				"associate", Object.class, Serializable.class);
-		Assert.notNull(getResourceMethod);
-		unassociateResourceMethod = ReflectionUtils.findMethod(AssociativeStore.class,
-				"unassociate", Object.class);
-		Assert.notNull(getResourceMethod);
-		toStringMethod = ReflectionUtils.findMethod(Object.class, "toString");
-		Assert.notNull(toStringMethod);
-
 		setContentStoreMethod = ReflectionUtils.findMethod(ContentStoreAware.class, "setContentStore", ContentStore.class);
 		Assert.notNull(setContentStoreMethod);
 	}
 
-	public StoreMethodInterceptor(ContentStore<Object, Serializable> store,
-			Class<?> domainClass, Class<? extends Serializable> contentIdClass,
-			Map<Method, StoreExtension> extensions, ApplicationEventPublisher publisher) {
-		if (extensions == null) {
-			extensions = Collections.<Method, StoreExtension>emptyMap();
-		}
-		this.store = store;
-		this.domainClass = domainClass;
-		this.contentIdClass = contentIdClass;
-		this.extensions = extensions;
-		this.publisher = publisher;
+	public StoreMethodInterceptor() {
 	}
 
 	public void setStoreFragments(StoreFragments storeFragments) {
@@ -101,7 +44,7 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 
-		if (!isStoreMethod(invocation) && storeFragments != null) {
+		if (storeFragments != null) {
 			Optional<StoreFragment> fragment = storeFragments.stream()
 					.filter(it -> it.hasMethod(invocation.getMethod()))
 					.findFirst();
@@ -113,151 +56,52 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 				ReflectionUtils.invokeMethod(setContentStoreMethod, f.getImplementation(), invocation.getThis());
 			}
 
-			return invocation.getMethod().invoke(fragment.get().getImplementation(), invocation.getArguments());
-		} else {
-			Method method = invocation.getMethod();
-			StoreExtension extension = extensions.get(method);
-			if (extension != null) {
-				return extension.invoke(invocation,
-						new StoreInvokerImpl(domainClass, contentIdClass, invocation));
-			}
-			else {
-				if (!isStoreMethod(invocation)) {
-					throw new StoreAccessException(format("No implementation found for %s", method.getName()));
-				}
-			}
+			return getMethod(invocation.getMethod(), f).invoke(fragment.get().getImplementation(), invocation.getArguments());
 		}
 
-		StoreEvent before = null;
-		AfterStoreEvent after = null;
-
-		File tmpStreamFile = null;
-		TeeInputStream eventStream = null;
-
-		if (getContentMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0) {
-				before = new BeforeGetContentEvent(invocation.getArguments()[0], store);
-				after = new AfterGetContentEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (setContentMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0) {
-				tmpStreamFile = Files.createTempFile("sc", "bsce").toFile();
-				eventStream = new TeeInputStream((InputStream) invocation.getArguments()[1], new FileOutputStream(tmpStreamFile), true);
-				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, eventStream);
-				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (setContentFromResourceMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0) {
-				before = new BeforeSetContentEvent(invocation.getArguments()[0], store, (Resource)invocation.getArguments()[1]);
-				after = new AfterSetContentEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (unsetContentMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0
-					&& invocation.getArguments()[0] != null) {
-				before = new BeforeUnsetContentEvent(invocation.getArguments()[0], store);
-				after = new AfterUnsetContentEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (getResourceMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0
-					&& invocation.getArguments()[0] != null) {
-				before = new BeforeGetResourceEvent(invocation.getArguments()[0], store);
-				after = new AfterGetResourceEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (associativeGetResourceMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0
-					&& invocation.getArguments()[0] != null) {
-				before = new BeforeGetResourceEvent(invocation.getArguments()[0], store);
-				after = new AfterGetResourceEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (associateResourceMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0
-					&& invocation.getArguments()[0] != null) {
-				before = new BeforeAssociateEvent(invocation.getArguments()[0], store);
-				after = new AfterAssociateEvent(invocation.getArguments()[0], store);
-			}
-		}
-		else if (unassociateResourceMethod.equals(invocation.getMethod())) {
-			if (invocation.getArguments().length > 0
-					&& invocation.getArguments()[0] != null) {
-				before = new BeforeUnassociateEvent(invocation.getArguments()[0], store);
-				after = new AfterUnassociateEvent(invocation.getArguments()[0], store);
-			}
-		}
-
-		if (before != null) {
-			publisher.publishEvent(before);
-
-			if (before instanceof BeforeSetContentEvent) {
-
-				if (eventStream != null && eventStream.isDirty()) {
-					while (eventStream.read(new byte[4096]) != -1) {}
-					eventStream.close();
-					invocation.getArguments()[1] = new ObservableInputStream(new FileInputStream(tmpStreamFile), new FileRemover(tmpStreamFile));
-				}
-			}
-
-		}
-		Object result;
-		try {
-			result = invocation.proceed();
-		}
-		catch (Exception e) {
-			throw e;
-		}
-
-		if (after != null) {
-			after.setResult(result);
-			publisher.publishEvent(after);
-		}
-		return result;
+		String msg = format("No fragment implementation found for invoked method %s", invocation);
+		LOGGER.error(msg, new UnsupportedOperationException(msg));
+		return null;
 	}
 
-	private boolean isStoreMethod(MethodInvocation invocation) {
-		if (getContentMethod.equals(invocation.getMethod())
-		 || setContentMethod.equals(invocation.getMethod())
-		 || setContentFromResourceMethod.equals(invocation.getMethod())
-		 || unsetContentMethod.equals(invocation.getMethod())
-		 || getResourceMethod.equals(invocation.getMethod())
-		 || associativeGetResourceMethod.equals(invocation.getMethod())
-		 || associateResourceMethod.equals(invocation.getMethod())
-		 || unassociateResourceMethod.equals(invocation.getMethod())
-		 || toStringMethod.equals(invocation.getMethod())) {
-			return true;
-		}
-		return false;
+	/* package */ Method getMethod(Method invokedMethod, StoreFragment fragment) {
+		return methodCache.computeIfAbsent(invokedMethod,
+				key -> resolveImplementationMethod(invokedMethod, fragment));
 	}
 
-	@Getter
-	private static class TeeInputStream extends org.apache.commons.io.input.TeeInputStream {
+	private Method resolveImplementationMethod(Method invokedMethod, StoreFragment fragment) {
 
-		private boolean isDirty = false;
-
-		public TeeInputStream(InputStream input, OutputStream branch, boolean closeBranch) {
-			super(input, branch, closeBranch);
+		if (invokedMethod.getName().equals("getResource") && Serializable.class.isAssignableFrom(invokedMethod.getParameterTypes()[0])) {
+			return ReflectionUtils.findMethod(fragment.getImplementation().getClass(), "getResource", Serializable.class);
 		}
 
-		@Override
-		public int read() throws IOException {
-			isDirty = true;
-			return super.read();
+		for (Method candidate : fragment.getImplementation().getClass().getMethods()) {
+
+			if (invokedMethod.getName().equals(candidate.getName()) &&
+				parametersMatch(invokedMethod, candidate)
+			) {
+				return candidate;
+			}
 		}
 
-		@Override
-		public int read(byte[] bts, int st, int end) throws IOException {
-			isDirty = true;
-			return super.read(bts, st, end);
+		return null;
+	}
+
+	private boolean parametersMatch(Method invokedMethod, Method candidate) {
+
+		if (invokedMethod.getParameterCount() != candidate.getParameterCount()) {
+			return false;
 		}
 
-		@Override
-		public int read(byte[] bts) throws IOException {
-			isDirty = true;
-			return super.read(bts);
+		Class<?>[] invokedMethodTypes = invokedMethod.getParameterTypes();
+		Class<?>[] candidateMethodTypes = candidate.getParameterTypes();
+
+		for (int i=0; i < invokedMethod.getParameterCount(); i++) {
+			if (!candidateMethodTypes[i].isAssignableFrom(invokedMethodTypes[i])) {
+				return false;
+			}
 		}
+
+		return true;
 	}
 }
