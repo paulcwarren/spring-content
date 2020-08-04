@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
@@ -21,9 +22,14 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 @Configuration
 @ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions, org.springframework.data.rest.versioning")
@@ -40,6 +46,8 @@ public class RestConfiguration implements InitializingBean {
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
 	private boolean fullyQualifiedLinks = true;
+
+	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
 
 	public RestConfiguration() {
 		this.corsRegistry = new StoreCorsRegistry();
@@ -67,6 +75,15 @@ public class RestConfiguration implements InitializingBean {
 
 	public void addStoreResolver(String name, StoreResolver resolver) {
 		stores.addStoreResolver(name, resolver);
+	}
+
+	public DomainTypeConfig forDomainType(Class<?> type) {
+		DomainTypeConfig config = domainTypeConfigMap.get(type);
+		if (config  == null) {
+			config = new DomainTypeConfig();
+			domainTypeConfigMap.put(type, config);
+		}
+		return config;
 	}
 
 	@Bean
@@ -125,6 +142,35 @@ public class RestConfiguration implements InitializingBean {
 			if (repoInvokerFactory == null) {
 				repoInvokerFactory = new DefaultRepositoryInvokerFactory(repositories);
 			}
+		}
+	}
+
+	public class DomainTypeConfig {
+
+		private Predicate<Method> setContentResolver = this::preferInputStream;
+
+		public DomainTypeConfig(){}
+
+		public Predicate<Method> getSetContentResolver() {
+			return setContentResolver;
+		}
+
+		public void putAndPostPreferResource() {
+			setContentResolver = this::preferResource;
+		}
+
+		/* package */ boolean preferResource(Method method) {
+			if (Resource.class.equals(method.getParameterTypes()[1])) {
+				return true;
+			}
+			return false;
+		}
+
+		/* package */ boolean preferInputStream(Method method) {
+			if (InputStream.class.equals(method.getParameterTypes()[1])) {
+				return true;
+			}
+			return false;
 		}
 	}
 }

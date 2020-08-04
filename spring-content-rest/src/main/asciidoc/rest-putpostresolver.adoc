@@ -1,0 +1,40 @@
+== Put/Post Content Handling
+
+A `ContentStore` provides two methods for setting content.  Spring Content REST prefers to use 
+`setContent(S entity, InputStream)` over `setContent(S entity, Resource)`.
+
+However, under some circumstances this can be inconvenient for event handlers and store customizations who 
+must handle the stream in order to process the content as it moves through the application.  This also becomes
+inefficient when the content is large and/or when the content needs to be processed several times.
+
+Therefore, it is possible to configure Spring Content REST to call `setContent(S entity, Resource)` as 
+follows:
+
+.Configuring PUT/POST Handling
+====
+[source, java]
+----
+public interface ExampleStore extends ContentStore<Example, UUID>{}
+
+@Configuration
+public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config.forDomainType(Example.class).putAndPostPreferResource();
+           }
+       };
+   }
+}
+----
+====
+
+NOTE: if preferred, it is also possible to configure your `ContentStore` to hide the `setContent(S entity, InputStream)`
+method by annotating this method with the `RestResource(export=false)` annotation.
+
+When configured in this way, Spring Content REST will create a file backed Resource allowing event handlers and store
+customizations to use `File`, `RandomAccessFile` and `Channel` Java io/nio APIs to process the content stream.
+ 

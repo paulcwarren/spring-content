@@ -86,7 +86,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 Object domainObj = findOne(this.getRepoInvokerFactory(), this.getRepositories(), info.getDomainObjectClass(), id);
 
                 if (ContentStore.class.isAssignableFrom(info.getInterface())) {
-                    return new ContentStoreContentService(info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj);
+                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj);
                 } else if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
                     throw new UnsupportedOperationException("AssociativeStoreContentService not implemented");
                 }
@@ -97,9 +97,9 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
                     if (ContentStore.class.isAssignableFrom(info.getInterface())) {
                         if (propertyIsEmbedded) {
-                            return new ContentStoreContentService(info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p);
+                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p);
                         } else {
-                            return new ContentStoreContentService(info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p);
+                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p);
                         }
                     }
                     throw new UnsupportedOperationException(format("ContentService for interface '%s' not implemented", info.getInterface()));
@@ -150,19 +150,22 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
     public static class ContentStoreContentService implements ContentService {
 
+        private final RestConfiguration config;
         private final StoreInfo store;
         private final RepositoryInvoker repoInvoker;
         private final Object domainObj;
         private final Object embeddedProperty;
 
-        public ContentStoreContentService(StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj) {
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj) {
+            this.config = config;
             this.store = store;
             this.repoInvoker = repoInvoker;
             this.domainObj = domainObj;
             this.embeddedProperty = null;
         }
 
-        public ContentStoreContentService(StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty) {
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty) {
+            this.config = config;
             this.store = store;
             this.repoInvoker = repoInvoker;
             this.domainObj = domainObj;
@@ -190,7 +193,8 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             // 2: call resolver.  default resolver prefers InputStream.  can be overridden via config.  needs to take headers
 
             if (methodsToUse.length > 1) {
-                methodsToUse = filterMethods(methodsToUse, this::preferInputStream);
+                RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(store.getDomainObjectClass());
+                methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver());
             }
 
             if (methodsToUse.length > 1) {
@@ -204,11 +208,13 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             Method methodToUse = methodsToUse[0];
             Object contentArg = convertContentArg(content, methodToUse.getParameterTypes()[1]);
 
-            Object targetObj = store.getImplementation(ContentStore.class);
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, (embeddedProperty == null ? domainObj : embeddedProperty), contentArg);
-            cleanup(contentArg);
-
-            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
+            try {
+	            Object targetObj = store.getImplementation(ContentStore.class);
+	            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, (embeddedProperty == null ? domainObj : embeddedProperty), contentArg);
+	            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
+            } finally {
+				cleanup(contentArg);
+            }
         }
 
         private boolean withSetContentName(Method method) {
@@ -223,14 +229,11 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             return false;
         }
 
-        private boolean preferInputStream(Method method) {
-            if (InputStream.class.equals(method.getParameterTypes()[1])) {
-                return true;
-            }
-            return false;
-        }
-
         private void cleanup(Object contentArg) {
+
+            if (contentArg == null) {
+                return;
+            }
 
             if (FileSystemResource.class.isAssignableFrom(contentArg.getClass())) {
                 ((FileSystemResource)contentArg).getFile().delete();
