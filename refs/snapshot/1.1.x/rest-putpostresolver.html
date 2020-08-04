@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>Renditions</title>
+<title>Put/Post Content Handling</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -436,165 +436,66 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body id="renditions" class="book">
+<body class="book">
 <div id="header">
-<h1>Renditions</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_overview">Overview</h2>
+<h2 id="_putpost_content_handling">Put/Post Content Handling</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
-set of renderers out-of-the-box.</p>
+<p>A <code>ContentStore</code> provides two methods for setting content.  Spring Content REST prefers to use
+<code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code>.</p>
 </div>
 <div class="paragraph">
-<p>It also provides an extension point for providing your own renderers.</p>
+<p>However, under some circumstances this can be inconvenient for event handlers and store customizations who
+must handle the stream in order to process the content as it moves through the application.  This also becomes
+inefficient when the content is large and/or when the content needs to be processed several times.</p>
 </div>
 <div class="paragraph">
-<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
-project.  This enables the renditions capability and a small set of renderers that can convert documents of various
-types to jpeg images based on the apache poi and pdfbox libraries</p>
+<p>Therefore, it is possible to configure Spring Content REST to call <code>setContent(S entity, Resource)</code> as
+follows:</p>
 </div>
-<div class="paragraph">
-<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
-can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
-<div class="sectionbody">
 <div class="exampleblock">
-<div class="title">Example 1. Enabling Spring Content Renditions with Java Config</div>
+<div class="title">Example 1. Configuring PUT/POST Handling</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
-@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
-public static class ApplicationConfig {
-}</code></pre>
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
-</li>
-<li>
-<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_making_stores_renderable">Making Stores Renderable</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
-<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_renderers">Renderers</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Pdf To Jpeg</p>
-</li>
-<li>
-<p>Text To Jpeg</p>
-</li>
-<li>
-<p>Word To Jpeg</p>
-</li>
-<li>
-<p>Jpeg To Png</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Word To Html</p>
-</li>
-<li>
-<p>Word To PDF</p>
-</li>
-<li>
-<p>Word To Text</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_renditionprovider_extension_point">RenditionProvider Extension Point</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
-renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
-to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
-contributed as a bean to your application context at runtime.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. Implementing the RenditionProvider Extension Point</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
-
-@Service    <b class="conum">(2)</b>
-public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
-
-	@Override
-	public String consumes() {
-		return "my/type";
-	}
-
-	@Override
-	public String[] produces() {
-		return new String[] { "your/type" };
-	}
-
-	@Override
-	public InputStream convert(InputStream fromInputSource, String toMimeType) {
-}
-
-...
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ExampleStore extends ContentStore&lt;Example, UUID&gt;{}
 
 @Configuration
-@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
 public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config.forDomainType(Example.class).putAndPostPreferResource();
+           }
+       };
+   }
 }</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Implementation of <code>RenditionProvider</code></p>
-</li>
-<li>
-<p>Marked as an <code>@Service</code></p>
-</li>
-<li>
-<p>Ensure the service is scanned by Spring and offered as a bean</p>
-</li>
-</ol>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+if preferred, it is also possible to configure your <code>ContentStore</code> to hide the <code>setContent(S entity, InputStream)</code>
+method by annotating this method with the <code>RestResource(export=false)</code> annotation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When configured in this way, Spring Content REST will create a file backed Resource allowing event handlers and store
+customizations to use <code>File</code>, <code>RandomAccessFile</code> and <code>Channel</code> Java io/nio APIs to process the content stream.</p>
 </div>
 </div>
 </div>

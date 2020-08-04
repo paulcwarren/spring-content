@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.1.0.M3-SNAPSHOT,</span>
-<span id="revdate">2020-07-27</span>
+<span id="revdate">2020-08-04</span>
 </div>
 </div>
 <div id="content">
@@ -544,6 +544,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_changing_the_link_relation">5.3. Changing the link relation</a></li>
 <li><a href="#_fully_qualified_links">5.4. Fully Qualified Links</a></li>
 <li><a href="#_store_resolver">5.5. Store Resolver</a></li>
+<li><a href="#_putpost_content_handling">5.6. Put/Post Content Handling</a></li>
 </ul>
 </li>
 </ul>
@@ -1798,13 +1799,70 @@ on request context.</p>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_putpost_content_handling">5.6. Put/Post Content Handling</h3>
+<div class="paragraph">
+<p>A <code>ContentStore</code> provides two methods for setting content.  Spring Content REST prefers to use
+<code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code>.</p>
+</div>
+<div class="paragraph">
+<p>However, under some circumstances this can be inconvenient for event handlers and store customizations who
+must handle the stream in order to process the content as it moves through the application.  This also becomes
+inefficient when the content is large and/or when the content needs to be processed several times.</p>
+</div>
+<div class="paragraph">
+<p>Therefore, it is possible to configure Spring Content REST to call <code>setContent(S entity, Resource)</code> as
+follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Configuring PUT/POST Handling</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ExampleStore extends ContentStore&lt;Example, UUID&gt;{}
+
+@Configuration
+public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config.forDomainType(Example.class).putAndPostPreferResource();
+           }
+       };
+   }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+if preferred, it is also possible to configure your <code>ContentStore</code> to hide the <code>setContent(S entity, InputStream)</code>
+method by annotating this method with the <code>RestResource(export=false)</code> annotation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When configured in this way, Spring Content REST will create a file backed Resource allowing event handlers and store
+customizations to use <code>File</code>, <code>RandomAccessFile</code> and <code>Channel</code> Java io/nio APIs to process the content stream.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M3-SNAPSHOT<br>
-Last updated 2020-07-27 05:44:57 UTC
+Last updated 2020-08-04 06:39:16 UTC
 </div>
 </div>
 </body>
