@@ -270,7 +270,7 @@ public class StoreRestController implements InitializingBean  {
             isNew = true;
         }
 
-        contentService.setContent(content, mimeType, originalFilename, resource);
+        contentService.setContent(headers, content, mimeType, originalFilename, resource);
 
         if (isNew) {
             response.setStatus(HttpStatus.CREATED.value());

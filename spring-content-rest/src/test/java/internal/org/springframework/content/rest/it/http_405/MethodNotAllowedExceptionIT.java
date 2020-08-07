@@ -134,8 +134,8 @@ public class MethodNotAllowedExceptionIT {
         }
        
         @Import({RestConfiguration.class, SecurityConfiguration.class})
-        @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.it.config2", considerNestedRepositories = true)
-        @EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.it.config2")
+        @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.it.http_405", considerNestedRepositories = true)
+        @EnableFilesystemStores(basePackages="internal.org.springframework.content.rest.it.http_405")
         public class TestConfig {
     
             @Value("/org/springframework/content/jpa/schema-drop-h2.sql")
@@ -173,7 +173,7 @@ public class MethodNotAllowedExceptionIT {
     
                 LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
                 factory.setJpaVendorAdapter(vendorAdapter);
-                factory.setPackagesToScan("internal.org.springframework.content.rest.it.config2");
+                factory.setPackagesToScan("internal.org.springframework.content.rest.it.http_405");
                 factory.setDataSource(dataSource());
     
                 return factory;

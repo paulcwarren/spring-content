@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -147,16 +148,32 @@ public class RestConfiguration implements InitializingBean {
 
 	public class DomainTypeConfig {
 
-		private Predicate<Method> setContentResolver = this::preferInputStream;
+        private Resolver<Method, HttpHeaders> setContentResolver = new Resolver<Method, HttpHeaders>(){
+
+            @Override
+            public boolean resolve(Method method, HttpHeaders context) {
+                return preferInputStream(method);
+            }
+        };
 
 		public DomainTypeConfig(){}
 
-		public Predicate<Method> getSetContentResolver() {
+		public Resolver<Method, HttpHeaders> getSetContentResolver() {
 			return setContentResolver;
 		}
 
-		public void putAndPostPreferResource() {
-			setContentResolver = this::preferResource;
+        public void setSetContentResolver(Resolver<Method, HttpHeaders> resolver) {
+            this.setContentResolver = resolver;
+        }
+
+        public void putAndPostPreferResource() {
+			setContentResolver = new Resolver<Method, HttpHeaders>(){
+
+	            @Override
+	            public boolean resolve(Method method, HttpHeaders context) {
+	                return preferResource(method);
+	            }
+	        };
 		}
 
 		/* package */ boolean preferResource(Method method) {
@@ -172,5 +189,10 @@ public class RestConfiguration implements InitializingBean {
 			}
 			return false;
 		}
+	}
+
+	public interface Resolver<S, C> {
+
+	    boolean resolve(S subject, C context);
 	}
 }
