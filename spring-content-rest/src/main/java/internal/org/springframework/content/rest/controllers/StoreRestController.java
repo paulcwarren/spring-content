@@ -166,7 +166,7 @@ public class StoreRestController implements InitializingBean  {
             Resource resource,
             Object resourceETag,
             ContentService contentService)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         handleMultipart(response,
                 headers,
@@ -185,7 +185,7 @@ public class StoreRestController implements InitializingBean  {
             Resource resource,
             Object resourceETag,
             ContentService contentService)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         handleMultipart(response,
                 headers,
@@ -204,7 +204,7 @@ public class StoreRestController implements InitializingBean  {
             Resource resource,
             Object resourceETag,
             ContentService contentService)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         handleMultipart(response,
                 headers,
@@ -222,7 +222,7 @@ public class StoreRestController implements InitializingBean  {
             Resource resource,
             Object resourceETag,
             ContentService contentService)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         handleMultipart(response,
                 headers,
@@ -260,7 +260,7 @@ public class StoreRestController implements InitializingBean  {
             InputStream content,
             MediaType mimeType,
             String originalFilename)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         boolean isNew = false;
 
