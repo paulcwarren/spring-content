@@ -1,6 +1,22 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.utils.StoreUtils;
+import static java.lang.String.format;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.content.commons.annotations.MimeType;
@@ -14,6 +30,7 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.content.rest.config.RestConfiguration.Resolver;
 import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.FileSystemResource;
@@ -22,6 +39,7 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
@@ -32,19 +50,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.lang.String.format;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -124,7 +130,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void setContent(InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException {
+        public void setContent(HttpHeaders headers, InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException {
 
             InputStream in = content;
             OutputStream out = ((WritableResource) target).getOutputStream();
@@ -173,7 +179,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void setContent(InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException, MethodNotAllowedException {
+        public void setContent(HttpHeaders headers, InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException, MethodNotAllowedException {
 
             if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class)) {
                 BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, mimeType.toString());
@@ -189,7 +195,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
             if (methodsToUse.length > 1) {
                 RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(store.getDomainObjectClass());
-                methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver());
+                methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver(), headers);
             }
 
             if (methodsToUse.length > 1) {
@@ -267,6 +273,18 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                     .filter(Arrays.stream(filters).reduce(Predicate::and).orElse(t->true))
                     .collect(Collectors.toList())
                     .toArray(new Method[]{});
+        }
+
+        private Method[] filterMethods(Method[] methods, Resolver<Method, HttpHeaders> resolver, HttpHeaders headers) {
+
+            List<Method> resolved = new ArrayList<>();
+            for (Method method : methods) {
+                if (resolver.resolve(method, headers)) {
+                    resolved.add(method);
+                }
+            }
+
+            return resolved.toArray(new Method[]{});
         }
 
         @Override
