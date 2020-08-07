@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PessimisticLockException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @ControllerAdvice(basePackageClasses = StoreRestExceptionHandler.class)
 public class StoreRestExceptionHandler {
@@ -35,6 +37,11 @@ public class StoreRestExceptionHandler {
                         PessimisticLockingFailureException.class})
     ResponseEntity<ExceptionMessage> handleConflict(Exception e) {
         return errorResponse(HttpStatus.CONFLICT, new HttpHeaders(), e);
+    }
+
+    @ExceptionHandler(MethodNotAllowedException.class)
+    public ResponseEntity<Object> handle(Exception ex, HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
     private static ResponseEntity<ExceptionMessage> errorResponse(HttpStatus status, HttpHeaders headers, Exception exception) {

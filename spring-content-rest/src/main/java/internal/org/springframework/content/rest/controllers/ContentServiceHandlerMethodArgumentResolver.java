@@ -173,7 +173,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void setContent(InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException {
+        public void setContent(InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException, MethodNotAllowedException {
 
             if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class)) {
                 BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, mimeType.toString());
@@ -185,12 +185,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 }
             }
 
-            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withSetContentName, this::isExported);
-
-            // exported
-            // 0: 405 Method Not Allowed
-            // 1: convert arg if necessary and invoke
-            // 2: call resolver.  default resolver prefers InputStream.  can be overridden via config.  needs to take headers
+            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withSetContentName, this::isOveridden, this::isExported);
 
             if (methodsToUse.length > 1) {
                 RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(store.getDomainObjectClass());
@@ -202,7 +197,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
 
             if (methodsToUse.length == 0) {
-                // respond with 405 method not allowed
+                throw new MethodNotAllowedException();
             }
 
             Method methodToUse = methodsToUse[0];
@@ -210,15 +205,22 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
             try {
 	            Object targetObj = store.getImplementation(ContentStore.class);
+
+	            ReflectionUtils.makeAccessible(methodToUse);
+
 	            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, (embeddedProperty == null ? domainObj : embeddedProperty), contentArg);
 	            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
             } finally {
-				cleanup(contentArg);
+                cleanup(contentArg);
             }
         }
 
         private boolean withSetContentName(Method method) {
             return method.getName().equals("setContent");
+        }
+
+        private boolean isOveridden(Method method) {
+            return !method.isBridge();
         }
 
         private boolean isExported(Method method) {
