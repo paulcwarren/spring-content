@@ -1803,15 +1803,16 @@ on request context.</p>
 <h3 id="_putpost_content_handling">5.6. Put/Post Content Handling</h3>
 <div class="paragraph">
 <p>A <code>ContentStore</code> provides two methods for setting content.  Spring Content REST prefers to use
-<code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code>.</p>
+<code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code> so that content is streamed through
+the application.  This is usually the best approach.</p>
 </div>
 <div class="paragraph">
-<p>However, under some circumstances this can be inconvenient for event handlers and store customizations who
-must handle the stream in order to process the content as it moves through the application.  This also becomes
-inefficient when the content is large and/or when the content needs to be processed several times.</p>
+<p>However, under some circumstances this can be inconvenient when event handlers and store customizations
+must handle the content as it moves through the application.  This also becomes inefficient when the
+content is large and the content needs to be processed several times.</p>
 </div>
 <div class="paragraph">
-<p>Therefore, it is possible to configure Spring Content REST to call <code>setContent(S entity, Resource)</code> as
+<p>For these situations, it is possible to configure Spring Content REST to call <code>setContent(S entity, Resource)</code> as
 follows:</p>
 </div>
 <div class="exampleblock">
@@ -1852,8 +1853,43 @@ method by annotating this method with the <code>RestResource(export=false)</code
 </table>
 </div>
 <div class="paragraph">
-<p>When configured in this way, Spring Content REST will create a file backed Resource allowing event handlers and store
+<p>When configured this way, Spring Content REST will create a file backed Resource allowing event handlers and store
 customizations to use <code>File</code>, <code>RandomAccessFile</code> and <code>Channel</code> Java io/nio APIs to process the content stream.</p>
+</div>
+<div class="paragraph">
+<p>If you would like to defer until runtime so that a decision can be based on the request, you can instead provide
+a <code>Resource&lt;Method, HttpHeaders&gt;</code>, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Deferring PUT/POST Handling until runtime</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ExampleStore extends ContentStore&lt;Example, UUID&gt;{}
+
+@Configuration
+public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+
+               config.forDomainType(TestEntity.class).setSetContentResolver(new Resolver&lt;Method, HttpHeaders&gt;(){
+
+                @Override
+                public boolean resolve(Method method, HttpHeaders context) {
+
+                    return // your logic here
+               }});
+           }
+       };
+   }
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1862,7 +1898,7 @@ customizations to use <code>File</code>, <code>RandomAccessFile</code> and <code
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M3-SNAPSHOT<br>
-Last updated 2020-08-07 05:37:51 UTC
+Last updated 2020-08-07 06:09:27 UTC
 </div>
 </div>
 </body>
