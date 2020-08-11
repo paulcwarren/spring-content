@@ -130,152 +130,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <h3 id="update-dependencies">Update dependencies</h3>
 <p>Add the <code>com.github.paulcwarren:spring-versions-boot-starter</code> and <code>org.springframework.boot:spring-boot-starter-security</code> dependencies.</p>
 <p><code>pom.xml</code></p>
-<pre><code>
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-    &lt;parent&gt;
-        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.3.1.RELEASE&lt;/version&gt;
-    &lt;/parent&gt;
-
-    &lt;artifactId&gt;spring-content-with-versions&lt;/artifactId&gt;
-
-    &lt;properties&gt;
-        &lt;java.version&gt;1.8&lt;/java.version&gt;
-        &lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
-    &lt;/properties&gt;
-
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.h2database&lt;/groupId&gt;
-            &lt;artifactId&gt;h2&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-
-        &lt;!-- Test dependencies --&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-            &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-            &lt;version&gt;2.9.0&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
-            &lt;version&gt;${ginkgo-version}&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-
-    &lt;build&gt;
-        &lt;plugins&gt;
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-            &lt;/plugin&gt;
-        &lt;/plugins&gt;
-    &lt;/build&gt;
-&lt;/project&gt;
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/pom.xml 1-}
 </code></pre>
 
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the following annotations to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.versions.*;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.util.Date;
-
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-public class File {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long id;
-	private String name;
-	private Date created = new Date();
-	private String summary;
-
-	@ContentId private String contentId;
-	@ContentLength private long contentLength;
-	private String mimeType = "text/plain";
-
-	@LockOwner
-	private String lockOwner;
-
-	@AncestorId
-	private Long ancestorId;
-
-	@AncestorRootId
-	private Long ancestralRootId;
-
-	@SuccessorId
-	private Long successorId;
-
-	@VersionNumber
-	private String version;
-
-	@VersionLabel private String label;
-
-	public File(File f) {
-		this.name = f.getName();
-		this.summary = f.getSummary();
-		this.contentId = f.getContentId();
-		this.contentLength = f.getContentLength();
-		this.mimeType = f.getMimeType();
-	}
-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
 <p><code>@LockOwner</code>; tracks the current lock owner.  Optional
@@ -288,74 +149,16 @@ public class File {
 <h2 id="update-filerepository">Update FileRepository</h2>
 <p>So that we can perform version operations on an Entity make your FileRepository extend <code>LockingAndVersioningRepository</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileRepository.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.versions.LockingAndVersioningRepository;
-
-public interface FileRepository extends JpaRepository&lt;File, Long&gt;, LockingAndVersioningRepository&lt;File, Long&gt; {
-
-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/FileRepository.java 1-}
 </code></pre>
 
 <h2 id="update-configuratoin">Update Configuratoin</h2>
 <p>Add a Store configuration to tell Spring Data JPA to look in the package <code>org.springframework.versions</code> for the implementation of the <code>LockingAndVersioningRepository</code>.  Because of this you will also need to tell Spring Data to find <code>FileRepository</code> in the <code>gettingstarted</code> package. </p>
-<pre><code>
-@Configuration
-@EnableJpaRepositories(basePackages = {"gettingstarted", "org.springframework.versions"})
-public static class StoreConfig {
-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/SpringContentApplication.java 29-32}
 </code></pre>
 
 <p>Enable web security and add an anonymous user principal.</p>
-<pre><code>
-    @Configuration
-    @EnableWebSecurity
-    public static class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
-
-        protected static String REALM = "SPRING_CONTENT";
-
-        @Bean
-        public AuthenticationEntryPoint getBasicAuthEntryPoint() {
-            return new AuthenticationEntryPoint();
-        }
-
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-
-            http.csrf().disable()
-                    .authorizeRequests()
-                    .antMatchers("/admin/**").hasRole("ADMIN")
-                    .and().httpBasic().realmName(REALM).authenticationEntryPoint(getBasicAuthEntryPoint())
-                    .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-        }
-
-        @Override
-        public void configure(WebSecurity web) throws Exception {
-            web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
-        }
-    }
-
-    public static class AuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
-
-        @Override
-        public void commence(final HttpServletRequest request, final HttpServletResponse response,
-                             final AuthenticationException authException) throws IOException {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.addHeader("WWW-Authenticate", "Basic realm=" + getRealmName() + "");
-
-            PrintWriter writer = response.getWriter();
-            writer.println("HTTP Status 401 : " + authException.getMessage());
-        }
-
-        @Override
-        public void afterPropertiesSet() {
-            setRealmName(SpringContentApplication.SpringSecurityConfig.REALM);
-            super.afterPropertiesSet();
-        }
-    }
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/SpringContentApplication.java 34-79}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
@@ -466,7 +269,7 @@ storage technology.  The REST and Version Modules works seamlessly with all of t
       </footer>
       <script>
 	var base_url = "..",
-            shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+            shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
       </script>
       <script src="../js/base.js" defer></script>
       <script src="../search/main.js" defer></script>

@@ -130,106 +130,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <h3 id="update-dependencies">Update dependencies</h3>
 <p>Add the <code>com.github.paulcwarren:spring-content-elasticsearch-boot-starter</code> and <code>org.elasticsearch.client:elasticsearch-rest-high-level-client</code> dependencies.</p>
 <p><code>pom.xml</code></p>
-<pre><code>
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-    &lt;parent&gt;
-        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.3.1.RELEASE&lt;/version&gt;
-    &lt;/parent&gt;
-
-    &lt;artifactId&gt;spring-content-with-fulltext&lt;/artifactId&gt;
-
-    &lt;properties&gt;
-        &lt;java.version&gt;1.8&lt;/java.version&gt;
-        &lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
-    &lt;/properties&gt;
-
-    &lt;dependencies&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.h2database&lt;/groupId&gt;
-            &lt;artifactId&gt;h2&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-content-elasticsearch-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M2&lt;/version&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.elasticsearch.client&lt;/groupId&gt;
-            &lt;artifactId&gt;elasticsearch-rest-high-level-client&lt;/artifactId&gt;
-        &lt;/dependency&gt;
-
-        &lt;!-- Test dependencies --&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-            &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-            &lt;version&gt;2.9.0&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-        &lt;dependency&gt;
-            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-            &lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
-            &lt;version&gt;${ginkgo-version}&lt;/version&gt;
-            &lt;scope&gt;test&lt;/scope&gt;
-        &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-
-    &lt;build&gt;
-        &lt;plugins&gt;
-            &lt;plugin&gt;
-                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-            &lt;/plugin&gt;
-        &lt;/plugins&gt;
-    &lt;/build&gt;
-&lt;/project&gt;
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-fulltext/complete/pom.xml 1-}
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can perform full-text searches make your FileContentStore extend <code>Searchable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>
-package gettingstarted;
-
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.search.Searchable;
-import org.springframework.stereotype.Component;
-
-@Component  // just to keep the ide happy!
-public interface FileContentStore extends ContentStore&lt;File, String&gt;, Searchable&lt;String&gt; {
-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-fulltext/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
@@ -356,7 +263,7 @@ update the <code>spring-content-elasticsearch-boot-starter</code> dependency for
       </footer>
       <script>
 	var base_url = "..",
-            shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+            shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
       </script>
       <script src="../js/base.js" defer></script>
       <script src="../search/main.js" defer></script>
