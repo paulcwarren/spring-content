@@ -134,13 +134,133 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 <h3 id="update-dependencies">Update dependencies</h3>
 <p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/pom.xml 1-}
+<pre><code>
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  
+  &lt;artifactId&gt;gettingstarted-spring-content-rest&lt;/artifactId&gt;
+  
+ 	&lt;parent&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+		&lt;version&gt;2.3.1.RELEASE&lt;/version&gt;
+	&lt;/parent&gt;
+ 
+	&lt;properties&gt;
+		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+		&lt;java.version&gt;1.8&lt;/java.version&gt;
+		&lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
+	&lt;/properties&gt;
+
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
+			&lt;artifactId&gt;h2&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;1.1.0.M2&lt;/version&gt;
+		&lt;/dependency&gt;
+ 		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;1.1.0.M2&lt;/version&gt;
+		&lt;/dependency&gt;
+		
+		&lt;!-- Test dependencies --&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
+			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
+			&lt;version&gt;2.9.0&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
+			&lt;version&gt;${ginkgo-version}&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;	
+ 	&lt;/dependencies&gt;
+
+	&lt;build&gt;
+		&lt;plugins&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;/plugin&gt;
+		&lt;/plugins&gt;
+	&lt;/build&gt;
+
+	&lt;repositories&gt;
+		&lt;repository&gt;
+			&lt;id&gt;snapshots&lt;/id&gt;
+			&lt;name&gt;nexus&lt;/name&gt;
+			&lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
+			&lt;snapshots&gt;
+				&lt;enabled&gt;true&lt;/enabled&gt;
+			&lt;/snapshots&gt;
+		&lt;/repository&gt;
+	&lt;/repositories&gt;
+
+&lt;/project&gt;
 </code></pre>
 
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
+<pre><code>
+package gettingstarted;
+
+import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class File {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private String name;
+	private Date created = new Date();
+	private String summary;
+
+	@ContentId private String contentId;
+	@ContentLength private long contentLength;
+	@MimeType private String mimeType = "text/plain";
+}
 </code></pre>
 
 <p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
@@ -150,7 +270,16 @@ annotation so that Spring Content REST will update its value on our behalf.</p>
 API, update our <code>FileContentStore</code> by annotating it with the
 <code>@StoreRestResource</code> Spring Content REST annotation.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>
+package gettingstarted;
+
+import org.springframework.content.commons.repository.ContentStore;
+
+import org.springframework.content.rest.StoreRestResource;
+
+@StoreRestResource
+public interface FileContentStore extends ContentStore&lt;File, String&gt; {
+}
 </code></pre>
 
 <h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
