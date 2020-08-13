@@ -14,6 +14,7 @@ import org.apache.solr.common.util.NamedList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.content.solr.FilterQueryProvider;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
@@ -25,6 +26,7 @@ public class SearchableImpl implements Searchable<Object> {
    private SolrClient solr;
    private SolrProperties solrProperties;
    private Class<?> domainClass;
+   private FilterQueryProvider filterProvider;
 
    @Autowired
    public SearchableImpl(SolrClient solr, SolrProperties solrProperties) {
@@ -32,6 +34,11 @@ public class SearchableImpl implements Searchable<Object> {
       this.solrProperties = solrProperties;
    }
 
+   @Autowired(required=false)
+   public void setFilterQueryProvider(FilterQueryProvider provider) {
+       this.filterProvider = provider;
+   }
+   
    public void setDomainClass(Class<?> domainClass) {
       this.domainClass = domainClass;
    }
@@ -148,6 +155,11 @@ public class SearchableImpl implements Searchable<Object> {
    /* package */ NamedList<Object> executeQuery(Class<?> domainClass, String queryString, Pageable pageable) {
       SolrQuery query = new SolrQuery();
       query.setQuery("(" + queryString + ") AND id:" + domainClass.getCanonicalName() + "\\:*");
+      
+      if (this.filterProvider != null) {
+          query.setFilterQueries(this.filterProvider.filterQueries(domainClass));
+      }
+      
       query.setFields(field);
 
       if (pageable != null) {
