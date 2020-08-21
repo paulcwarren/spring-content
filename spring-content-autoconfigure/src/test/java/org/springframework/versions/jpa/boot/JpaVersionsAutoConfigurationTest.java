@@ -3,30 +3,27 @@ package org.springframework.versions.jpa.boot;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 
-import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.support.TestEntityVersioned;
 import org.springframework.versions.LockingAndVersioningRepository;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
 import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
@@ -80,7 +77,6 @@ public class JpaVersionsAutoConfigurationTest {
             MongoContentAutoConfiguration.class,
             RenditionsContentAutoConfiguration.class,
             S3ContentAutoConfiguration.class})
-    @EntityScan(basePackages="org.springframework.support")
     public static class BaseConfig {}
     
     @Configuration

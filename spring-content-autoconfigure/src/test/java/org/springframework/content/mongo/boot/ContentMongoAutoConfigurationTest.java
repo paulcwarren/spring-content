@@ -3,10 +3,8 @@ package org.springframework.content.mongo.boot;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.mongo.store.MongoContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -39,7 +37,6 @@ public class ContentMongoAutoConfigurationTest {
 	}
 
 	@Document
-	@Content
 	public class TestEntity {
 		@Id
 		private String id;
