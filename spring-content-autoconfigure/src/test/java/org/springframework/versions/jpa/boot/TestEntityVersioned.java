@@ -1,4 +1,4 @@
-package org.springframework.support;
+package org.springframework.versions.jpa.boot;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

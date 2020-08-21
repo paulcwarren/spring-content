@@ -3,12 +3,9 @@ package internal.org.springframework.content.fs.boot.autoconfigure;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
-import internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean;
-import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,7 +15,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
+import internal.org.springframework.content.fs.config.FilesystemStoreConfiguration;
+import internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean;
+import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
+
 @Configuration
+@AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
 @ConditionalOnClass(FilesystemStoreRegistrar.class)
 public class FilesystemContentAutoConfiguration {
 
