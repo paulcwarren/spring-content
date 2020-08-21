@@ -1,11 +1,13 @@
 # This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
 # For more information see: https://github.com/actions/setup-java#apache-maven-with-a-settings-path
 
-name: Maven Package
+name: Build and Publish to Maven Central
 
 on:
-  release:
-    types: [created]
+  push:
+    branches: 
+      - 1.0.x
+      - 1.1.x
 
 jobs:
   build:
