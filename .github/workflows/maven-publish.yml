@@ -36,14 +36,14 @@ jobs:
         GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
         GITHUB_TOKEN: ${{ github.token }}
         
-      services:
-        sqlserver:
-          image: exoplatform/sqlserver:2017-CU8
-          ports:
-            1433/tcp
-          env:
-            SA_PASSWORD=5F4Dt9ky9dU$
-            SQLSERVER_DATABASE=sc
-            SQLSERVER_USER=user
-            SQLSERVER_PASSWORD=5F4Dt9ky9dU$
+    services:
+      sqlserver:
+        image: exoplatform/sqlserver:2017-CU8
+        ports:
+          - 1433/tcp
+        env:
+          SA_PASSWORD: 5F4Dt9ky9dU$
+          SQLSERVER_DATABASE: sc
+          SQLSERVER_USER: user
+          SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
             
