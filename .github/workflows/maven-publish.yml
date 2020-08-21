@@ -46,4 +46,27 @@ jobs:
           SQLSERVER_DATABASE: sc
           SQLSERVER_USER: user
           SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
-            
+      postgres:
+        image: postgres:12.1
+        env:
+          POSTGRES_PASSWORD: 5F4Dt9ky9dU
+        ports:
+          - 5432/tcp
+      mysql:
+        image: mysql:8.0.19
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_ROOT_PASSWORD: 5F4Dt9ky9dU
+          MYSQL_DATABASE: sc
+      elasticsearch:
+        image: paulcwarren/elasticsearch:7.6.2
+        ports:
+          - 9200/tcp
+          - 9300/tcp
+        env:
+          discovery.type: single-node
+      solr:
+        image: paulcwarren/solr
+        ports:
+          - 8983/tcp
