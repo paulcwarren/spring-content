@@ -6,28 +6,30 @@ import org.springframework.data.domain.Pageable;
 
 public interface Searchable<T> {
 
-	Iterable<T> search(String queryString);
+    Iterable<T> search(String queryString);
 
-	List<T> search(String queryString, Pageable pageable);
+    List<T> search(String queryString, Pageable pageable);
 
-	@Deprecated
-	Iterable<T> findKeyword(String query);
+    List<T> search(String queryString, Pageable pageable, Class<? extends T> searchType);
 
-	@Deprecated
-	Iterable<T> findAllKeywords(String... terms);
+    @Deprecated
+    Iterable<T> findKeyword(String query);
 
-	@Deprecated
-	Iterable<T> findAnyKeywords(String... terms);
+    @Deprecated
+    Iterable<T> findAllKeywords(String... terms);
 
-	@Deprecated
-	Iterable<T> findKeywordsNear(int proximity, String... terms);
+    @Deprecated
+    Iterable<T> findAnyKeywords(String... terms);
 
-	@Deprecated
-	Iterable<T> findKeywordStartsWith(String term);
+    @Deprecated
+    Iterable<T> findKeywordsNear(int proximity, String... terms);
 
-	@Deprecated
-	Iterable<T> findKeywordStartsWithAndEndsWith(String a, String b);
+    @Deprecated
+    Iterable<T> findKeywordStartsWith(String term);
 
-	@Deprecated
-	Iterable<T> findAllKeywordsWithWeights(String[] terms, double[] weights);
+    @Deprecated
+    Iterable<T> findKeywordStartsWithAndEndsWith(String a, String b);
+
+    @Deprecated
+    Iterable<T> findAllKeywordsWithWeights(String[] terms, double[] weights);
 }
