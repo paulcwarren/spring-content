@@ -7,15 +7,12 @@ import javax.sql.DataSource;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -31,12 +28,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class SolrITConfig {
 
     @Autowired
-    SolrProperties solrProperties;
+    SolrProperties properties;
 
-//    @Bean
-//    public ConversionService conversionService() {
-//        return new DefaultFormattingConversionService();
-//    }
+    //    @Bean
+    //    public ConversionService conversionService() {
+    //        return new DefaultFormattingConversionService();
+    //    }
 
     @Bean
     public DataSource dataSource() {
@@ -71,8 +68,9 @@ public class SolrITConfig {
     }
 
     @Bean
-    public SolrClient solrClient() {
-        return new HttpSolrClient.Builder(solrProperties.getUrl())
-                .build();
+    public SolrClient solrClient(
+            SolrProperties props) {
+
+        return new HttpSolrClient.Builder(props.getUrl()).build();
     }
 }
