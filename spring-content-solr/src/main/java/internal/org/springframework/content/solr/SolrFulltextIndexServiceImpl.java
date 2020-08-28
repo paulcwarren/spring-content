@@ -1,5 +1,8 @@
 package internal.org.springframework.content.solr;
 
+import static java.lang.String.format;
+import static org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -10,23 +13,19 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.util.ContentStreamBase;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.content.solr.AttributeSyncer;
+import org.springframework.content.solr.AttributeProvider;
 import org.springframework.content.solr.SolrProperties;
-
-import static java.lang.String.format;
-import static org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.COMMIT;
 
 public class SolrFulltextIndexServiceImpl implements IndexService {
 
     private final SolrClient solrClient;
     private final SolrProperties properties;
-    private AttributeSyncer<Object> syncer;
+    private AttributeProvider<Object> syncer;
 
     @Autowired
     public SolrFulltextIndexServiceImpl(SolrClient solrClient, SolrProperties properties) {
@@ -35,10 +34,10 @@ public class SolrFulltextIndexServiceImpl implements IndexService {
     }
 
     @Autowired(required=false)
-    public void setAttributeSyncer(AttributeSyncer syncer) {
+    public void setAttributeSyncer(AttributeProvider syncer) {
         this.syncer = syncer;
     }
-    
+
     @Override
     public void index(Object entity, InputStream content) {
 
