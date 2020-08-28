@@ -1,4 +1,4 @@
-package org.springframework.content.solr;
+package org.springframework.content.fulltext;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

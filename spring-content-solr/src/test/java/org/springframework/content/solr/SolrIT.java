@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.content.fulltext.Highlight;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -69,43 +70,6 @@ public class SolrIT {
     private String id = null;
 
     {
-        Describe("Customization", () -> {
-            BeforeEach(() -> {
-                solrProperties.setUser(System.getenv("SOLR_USER"));
-                solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
-
-                doc = new Document();
-                doc.setTitle("title of document 1");
-                doc.setAuthor("author@email.com");
-                store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
-                doc = docRepo.save(doc);
-            });
-
-            AfterEach(() -> {
-                if (docContentRepo != null) {
-                    docContentRepo.unsetContent(doc);
-                }
-                if (docRepo != null) {
-                    docRepo.delete(doc);
-                }
-                if (solr != null) {
-                    UpdateRequest req = new UpdateRequest();
-                    req.deleteByQuery("*");
-                    req.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
-                    req.process(solr, null);
-                    req.commit(solr, null);
-                }
-            });
-
-            It("should return the searched content", () -> {
-                List<FulltextInfo> results = store.search("one", null, FulltextInfo.class);
-                assertThat(results, is(not(nullValue())));
-                assertThat(results.size(), is(greaterThanOrEqualTo(1)));
-                assertThat(results.get(0), hasProperty("contentId", is(doc.getContentId())));
-                assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
-            });
-        });
-
         Describe("Index", () -> {
             BeforeEach(() -> {
                 solrProperties.setUser(System.getenv("SOLR_USER"));
@@ -286,6 +250,43 @@ public class SolrIT {
                     MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(3, 3)),
                             eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
                 });
+            });
+        });
+
+        Describe("Custom Return Types", () -> {
+            BeforeEach(() -> {
+                solrProperties.setUser(System.getenv("SOLR_USER"));
+                solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
+
+                doc = new Document();
+                doc.setTitle("title of document 1");
+                doc.setAuthor("author@email.com");
+                store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
+                doc = docRepo.save(doc);
+            });
+
+            AfterEach(() -> {
+                if (docContentRepo != null) {
+                    docContentRepo.unsetContent(doc);
+                }
+                if (docRepo != null) {
+                    docRepo.delete(doc);
+                }
+                if (solr != null) {
+                    UpdateRequest req = new UpdateRequest();
+                    req.deleteByQuery("*");
+                    req.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
+                    req.process(solr, null);
+                    req.commit(solr, null);
+                }
+            });
+
+            It("should return the searched content", () -> {
+                List<FulltextInfo> results = store.search("one", null, FulltextInfo.class);
+                assertThat(results, is(not(nullValue())));
+                assertThat(results.size(), is(greaterThanOrEqualTo(1)));
+                assertThat(results.get(0), hasProperty("contentId", is(doc.getContentId())));
+                assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
             });
         });
     }
