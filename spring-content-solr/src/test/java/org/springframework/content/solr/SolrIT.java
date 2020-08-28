@@ -8,6 +8,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -18,6 +19,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.fail;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -77,7 +79,7 @@ public class SolrIT {
 
                 doc = new Document();
                 doc.setTitle("title of document 1");
-                doc.setAuthor("author@email.com");
+                doc.setEmail("author@email.com");
                 docContentRepo.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
                 try {
                     doc = docRepo.save(doc);
@@ -87,7 +89,7 @@ public class SolrIT {
 
                 doc2 = new Document();
                 doc2.setTitle("title of document 2");
-                doc2.setAuthor("author@email.com");
+                doc2.setEmail("author@email.com");
                 docContentRepo.setContent(doc2, this.getClass().getResourceAsStream("/two.rtf"));
                 try {
                     doc2 = docRepo.save(doc2);
@@ -97,7 +99,7 @@ public class SolrIT {
 
                 doc3 = new Document();
                 doc3.setTitle("title of document 2");
-                doc3.setAuthor("author@email.com");
+                doc3.setEmail("author@email.com");
                 docContentRepo.setContent(doc3, this.getClass().getResourceAsStream("/sample-docx.docx"));
                 try {
                     doc3 = docRepo.save(doc3);
@@ -209,6 +211,7 @@ public class SolrIT {
                     for (int i=0; i < 10; i++) {
                         Document doc = new Document();
                         doc.setTitle(format("doc %s", i));
+                        doc.setEmail("author@email.com");
                         doc = docContentRepo.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
                         docRepo.save(doc);
                     }
@@ -253,6 +256,52 @@ public class SolrIT {
             });
         });
 
+        Describe("Custom Attributes", () -> {
+            BeforeEach(() -> {
+                solrProperties.setUser(System.getenv("SOLR_USER"));
+                solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
+
+                doc = new Document();
+                doc.setTitle("title of document 1");
+                doc.setEmail("author@email.com");
+                store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
+                doc = docRepo.save(doc);
+
+                doc2 = new Document();
+                doc2.setTitle("title of document 2");
+                doc2.setEmail("author@abc.com");
+                store.setContent(doc2, this.getClass().getResourceAsStream("/one.docx"));
+                doc2 = docRepo.save(doc2);
+            });
+
+            AfterEach(() -> {
+                if (docContentRepo != null) {
+                    docContentRepo.unsetContent(doc);
+                }
+                if (docRepo != null) {
+                    docRepo.delete(doc);
+                }
+                if (solr != null) {
+                    UpdateRequest req = new UpdateRequest();
+                    req.deleteByQuery("*");
+                    req.setBasicAuthCredentials(solrProperties.getUser(), solrProperties.getPassword());
+                    req.process(solr, null);
+                    req.commit(solr, null);
+                }
+            });
+
+            It("should apply the provided attributes and filter query", () -> {
+                Iterable<String> tmp = docContentRepo.search("one");
+                assertThat(tmp, is(not(nullValue())));
+
+                List<String> results = new ArrayList<String>();
+                tmp.forEach(results::add);
+
+                assertThat(results, hasItem(is(doc.getContentId())));
+                assertThat(results, not(hasItem(is(doc2.getContentId()))));
+            });
+        });
+
         Describe("Custom Return Types", () -> {
             BeforeEach(() -> {
                 solrProperties.setUser(System.getenv("SOLR_USER"));
@@ -260,7 +309,7 @@ public class SolrIT {
 
                 doc = new Document();
                 doc.setTitle("title of document 1");
-                doc.setAuthor("author@email.com");
+                doc.setEmail("author@email.com");
                 store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
                 doc = docRepo.save(doc);
             });
@@ -306,7 +355,7 @@ public class SolrIT {
         private Long id;
 
         private String title;
-        private String author;
+        private String email;
 
         @ContentId
         private String contentId;

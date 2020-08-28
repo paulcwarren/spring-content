@@ -2,6 +2,8 @@ package org.springframework.content.solr;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.solr.SolrIT.Document;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -29,11 +32,6 @@ public class SolrITConfig {
 
     @Autowired
     SolrProperties properties;
-
-    //    @Bean
-    //    public ConversionService conversionService() {
-    //        return new DefaultFormattingConversionService();
-    //    }
 
     @Bean
     public DataSource dataSource() {
@@ -72,5 +70,29 @@ public class SolrITConfig {
             SolrProperties props) {
 
         return new HttpSolrClient.Builder(props.getUrl()).build();
+    }
+
+    @Bean
+    public AttributeProvider<Document> attributeProvider() {
+        return new AttributeProvider<Document>() {
+
+            @Override
+            public Map synchronize(Document entity) {
+                Map<String, String> attrs = new HashMap<>();
+                attrs.put("email", entity.getEmail());
+                return attrs;
+            }
+        };
+    }
+
+    @Bean
+    public FilterQueryProvider filterQueryProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class<?> entity) {
+                return new String[] { "email:\"author@email.com\"" };
+            }
+        };
     }
 }
