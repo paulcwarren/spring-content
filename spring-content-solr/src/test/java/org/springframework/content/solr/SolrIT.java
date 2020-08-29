@@ -86,36 +86,12 @@ public class SolrIT {
                 } catch (Exception e) {
                     int i=0;
                 }
-
-                doc2 = new Document();
-                doc2.setTitle("title of document 2");
-                doc2.setEmail("author@email.com");
-                docContentRepo.setContent(doc2, this.getClass().getResourceAsStream("/two.rtf"));
-                try {
-                    doc2 = docRepo.save(doc2);
-                } catch (Exception e) {
-                    int i = 0;
-                }
-
-                doc3 = new Document();
-                doc3.setTitle("title of document 2");
-                doc3.setEmail("author@email.com");
-                docContentRepo.setContent(doc3, this.getClass().getResourceAsStream("/sample-docx.docx"));
-                try {
-                    doc3 = docRepo.save(doc3);
-                } catch (Exception e) {
-                    int i = 0;
-                }
             });
             AfterEach(() -> {
                 if (docContentRepo != null) {
-                    docContentRepo.unsetContent(doc3);
-                    docContentRepo.unsetContent(doc2);
                     docContentRepo.unsetContent(doc);
                 }
                 if (docRepo != null) {
-                    docRepo.delete(doc3);
-                    docRepo.delete(doc2);
                     docRepo.delete(doc);
                 }
                 if (solr != null) {
