@@ -41,7 +41,7 @@ greatest, Spring Content can be easily built with the
 [maven wrapper](https://github.com/takari/maven-wrapper). You also need JDK 1.8.
 
 ```
-$ BUILD_TYPE=dev ./mvnw clean install
+$ ./mvnw clean install
 ```
 
 If you want to build with the regular `mvn` command, you will need
@@ -55,7 +55,7 @@ and in particular please fill out the [Contributor's License Agreement](https://
 The reference documentation can be included in the build by specifying the `docs` profile.
 
 ```
-$ BUILD_TYPE=dev ./mvnw -P docs clean install 
+$ ./mvnw -P docs clean install 
 ```
 
 TIP: The generated documentation is available from `spring-content/target/generated-docs/refs/dev/`
