@@ -11,6 +11,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.fragments.ContentStoreAware;
@@ -18,6 +19,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.fulltext.Attribute;
 import org.springframework.content.fulltext.Highlight;
 import org.springframework.content.solr.FilterQueryProvider;
 import org.springframework.content.solr.SolrProperties;
@@ -163,13 +165,17 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
 
         query.setFields(field);
 
+        for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
+            Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
+            query.addField(fieldAnnotation.name());
+        }
+
         if (BeanUtils.findFieldWithAnnotation(resultType, Highlight.class) != null) {
             query.setHighlight(true);
         }
 
         if (pageable != null) {
-            query.setStart(pageable.getPageNumber()
-                    * pageable.getPageSize());
+            query.setStart(pageable.getPageNumber() * pageable.getPageSize());
             query.setRows(pageable.getPageSize());
         }
 
@@ -218,6 +224,16 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
                     List<String> highlight = highlights.get(id).get("_text_");
                     BeanUtils.setFieldWithAnnotation(result, Highlight.class, highlight.get(0));
                 }
+
+                for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(searchType, Attribute.class, new BeanWrapperImpl(searchType))) {
+                    Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
+                    if (field.getType().isPrimitive() || field.getType().equals(String.class)) {
+                        new BeanWrapperImpl(result).setPropertyValue(field.getName(), list.get(j).getFirstValue(fieldAnnotation.name()));
+                    } else {
+                        new BeanWrapperImpl(result).setPropertyValue(field.getName(), list.get(j).getFieldValues(fieldAnnotation.name()));
+                    }
+                }
+
                 results.add(result);
             }
         }
