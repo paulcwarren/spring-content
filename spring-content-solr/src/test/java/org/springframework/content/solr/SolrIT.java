@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.search.Searchable;
+import org.springframework.content.fulltext.Attribute;
 import org.springframework.content.fulltext.Highlight;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.CrudRepository;
@@ -312,6 +313,7 @@ public class SolrIT {
                 assertThat(results.size(), is(greaterThanOrEqualTo(1)));
                 assertThat(results.get(0), hasProperty("contentId", is(doc.getContentId())));
                 assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
+                assertThat(results.get(0), hasProperty("email", containsString("author@email.com")));
             });
         });
     }
@@ -355,5 +357,8 @@ public class SolrIT {
 
         @Highlight
         private String highlight;
+
+        @Attribute(name = "email")
+        private String email;
     }
 }
