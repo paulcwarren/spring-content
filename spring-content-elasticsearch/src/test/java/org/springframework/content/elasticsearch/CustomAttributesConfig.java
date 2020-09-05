@@ -2,6 +2,9 @@ package org.springframework.content.elasticsearch;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -10,6 +13,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.renditions.RenditionProvider;
+import org.springframework.content.elasticsearch.ElasticsearchIT.Document;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +35,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableElasticsearchFulltextIndexing
 @EnableJpaRepositories(considerNestedRepositories = true)
 @EnableJpaStores
-public class ElasticsearchConfig {
+public class CustomAttributesConfig {
 
     @Bean
     public ConversionService conversionService() {
@@ -41,6 +45,32 @@ public class ElasticsearchConfig {
     @Bean
     public RestHighLevelClient client() {
         return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+    @Bean
+    public AttributeProvider<Document> attributeProvider() {
+        return new AttributeProvider<Document>() {
+
+            @Override
+            public Map<String, String> synchronize(Document entity) {
+
+                Map<String, String> attrs = new HashMap<>();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }
+
+    @Bean
+    public FilterQueryProvider filterQueryProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public Map<String, Object> filterQueries(Class<?> entity) {
+                return Collections.singletonMap("author", "Buck Rogers");
+            }
+        };
     }
 
     @Bean
