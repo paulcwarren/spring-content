@@ -1,4 +1,4 @@
-package org.springframework.content.fulltext;
+package org.springframework.content.commons.fulltext;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Highlight {
+public @interface Attribute {
 
+    String name();
 }
