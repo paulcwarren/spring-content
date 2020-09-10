@@ -32,7 +32,7 @@
 		<dependency>
 		    <groupId>com.amazonaws</groupId>
 		    <artifactId>aws-java-sdk</artifactId>
-		    <version>1.11.845</version>
+		    <version>1.11.858</version>
 		</dependency>
 
 		<!-- Test Dependencies -->
