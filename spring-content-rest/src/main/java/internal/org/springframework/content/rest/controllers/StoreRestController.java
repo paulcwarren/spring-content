@@ -1,11 +1,18 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.io.RenderableResource;
-import internal.org.springframework.content.rest.io.RenderedResource;
-import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
-import internal.org.springframework.content.rest.utils.HeaderUtils;
-import internal.org.springframework.content.rest.utils.RepositoryUtils;
+import static java.lang.String.format;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -23,26 +30,23 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import static java.lang.String.format;
+import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.io.RenderableResource;
+import internal.org.springframework.content.rest.io.RenderedResource;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
+import internal.org.springframework.content.rest.utils.HeaderUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 @ContentRestController
 public class StoreRestController implements InitializingBean  {
@@ -87,13 +91,7 @@ public class StoreRestController implements InitializingBean  {
             return;
         }
 
-
-        TransactionStatus status = null;
         try {
-            if (ptm != null) {
-                status = ptm.getTransaction(new DefaultTransactionDefinition());
-            }
-
             MediaType producedResourceType = null;
             List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
             if (acceptedMimeTypes.size() > 0) {
@@ -121,39 +119,19 @@ public class StoreRestController implements InitializingBean  {
 
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
             request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
-
-            if (status != null && status.isCompleted() == false) {
-                ptm.commit(status);
-            }
         } catch (Exception e) {
-            
+
             logger.error("Unable to retrieve content", e);
-            
-            if (status != null) {
-                ptm.rollback(status);
-            }
 
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
         }
 
         try {
-            if (ptm != null) {
-                status = ptm.getTransaction(new DefaultTransactionDefinition());
-            }
-
             handler.handleRequest(request, response);
-
-            if (status != null && status.isCompleted() == false) {
-                ptm.commit(status);
-            }
         }
         catch (Exception e) {
 
             logger.error("Unable to handle request", e);
-            
-            if (status != null && status.isCompleted() == false) {
-                ptm.rollback(status);
-            }
 
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
         }

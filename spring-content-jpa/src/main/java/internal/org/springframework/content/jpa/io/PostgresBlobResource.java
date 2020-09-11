@@ -21,6 +21,8 @@ import org.springframework.content.jpa.io.AbstractBlobResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 public class PostgresBlobResource extends AbstractBlobResource {
 
@@ -35,6 +37,11 @@ public class PostgresBlobResource extends AbstractBlobResource {
 		final Object id = this.getId();
 
 		String sql = getSelectBlobSQL(id);
+
+		TransactionStatus status = null;
+		if (getTransactionManager() != null) {
+		    status = getTransactionManager().getTransaction(new DefaultTransactionDefinition());
+		}
 
 		DataSource ds = this.getTemplate().getDataSource();
 		Connection conn = DataSourceUtils.getConnection(ds);
@@ -53,9 +60,9 @@ public class PostgresBlobResource extends AbstractBlobResource {
 					return null;
 				} catch (SQLException sqle) {
 					logger.debug(format("failed to release database connection while fetching content %s", id), sqle);
-				} 
+				}
 			}
-			
+
 			LargeObjectManager lobj = conn.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
 			long oid = rs.getLong(2);
 			LargeObject obj = lobj.open(oid, LargeObjectManager.READ);
@@ -65,10 +72,10 @@ public class PostgresBlobResource extends AbstractBlobResource {
 			logger.error(format("getting content %s", id), e);
 			return null;
 		}
-		
-		return new ClosingInputStream(id, is, rs, stmt, conn, ds);
+
+		return new ClosingInputStream(id, is, rs, stmt, status, getTransactionManager(), conn, ds);
 	}
-	
+
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return new BufferedOutputStream(new PostgresBlobResourceOutputStream(this, this.getTemplate()), 10);
