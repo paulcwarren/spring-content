@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.renditions.Renderable;
@@ -43,7 +42,8 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 		this.idClass = idClass;
 	}
 
-	public void setContentStore(ContentStore store) {
+	@Override
+    public void setContentStore(ContentStore store) {
 		this.contentStore = store;
 	}
 
@@ -118,4 +118,16 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 		}
 		return null;
 	}
+
+    @Override
+    public boolean hasRendition(Object entity, String mimeType) {
+
+        String fromMimeType = null;
+        fromMimeType = (String) BeanUtils.getFieldWithAnnotation(entity, org.springframework.content.commons.annotations.MimeType.class);
+        if (fromMimeType == null) {
+            return false;
+        }
+
+        return this.canConvert(fromMimeType, mimeType);
+    }
 }
