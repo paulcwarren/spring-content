@@ -13,5 +13,5 @@ public interface ContentService {
 
     void setContent(HttpHeaders headers, InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException, MethodNotAllowedException;
 
-    void unsetContent(Resource resource);
+    void unsetContent(Resource resource) throws MethodNotAllowedException;
 }

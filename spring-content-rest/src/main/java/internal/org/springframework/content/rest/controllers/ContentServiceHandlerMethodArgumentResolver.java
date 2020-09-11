@@ -225,6 +225,10 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             return method.getName().equals("setContent");
         }
 
+        private boolean withUnsetContentName(Method method) {
+            return method.getName().equals("unsetContent");
+        }
+
         private boolean isOveridden(Method method) {
             return !method.isBridge();
         }
@@ -288,8 +292,23 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void unsetContent(Resource resource) {
-            Object updatedDomainObj = store.getImplementation(ContentStore.class).unsetContent(embeddedProperty == null ? domainObj : embeddedProperty);
+        public void unsetContent(Resource resource) throws MethodNotAllowedException {
+
+            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withUnsetContentName, this::isOveridden, this::isExported);
+
+            if (methodsToUse.length == 0) {
+                throw new MethodNotAllowedException();
+            }
+
+            if (methodsToUse.length > 1) {
+                throw new IllegalStateException("Too many unsetContent methods");
+            }
+
+            Object targetObj = store.getImplementation(ContentStore.class);
+
+            ReflectionUtils.makeAccessible(methodsToUse[0]);
+
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, (embeddedProperty == null ? domainObj : embeddedProperty));
 
             if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class)) {
                 BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class, null);

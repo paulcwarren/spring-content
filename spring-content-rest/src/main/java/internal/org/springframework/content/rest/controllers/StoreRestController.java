@@ -217,7 +217,7 @@ public class StoreRestController implements InitializingBean  {
             Resource resource,
             Object resourceETag,
             ContentService contentService)
-                    throws IOException {
+                    throws IOException, MethodNotAllowedException {
 
         if (!resource.exists()) {
             throw new ResourceNotFoundException();
