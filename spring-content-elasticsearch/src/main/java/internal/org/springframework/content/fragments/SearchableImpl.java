@@ -181,7 +181,7 @@ public class SearchableImpl implements Searchable<Object> {
             throw new StoreAccessException(format("Error searching indexed content for '%s'", queryString), e);
         }
 
-        return getIDs(res.getHits(), searchType);
+        return getResults(res.getHits(), searchType);
     }
 
     @Override
@@ -248,7 +248,7 @@ public class SearchableImpl implements Searchable<Object> {
         return contents;
     }
 
-    private List<Object> getIDs(SearchHits result, Class<?> searchType) {
+    private List<Object> getResults(SearchHits result, Class<?> resultType) {
 
         List<Object> contents = new ArrayList<>();
 
@@ -259,22 +259,22 @@ public class SearchableImpl implements Searchable<Object> {
         for (SearchHit hit : result.getHits()) {
 
             try {
-                Object row = searchType.newInstance();
+                Object row = resultType.newInstance();
                 BeanWrapper wrapper = new BeanWrapperImpl(row);
 
                 String id = hit.getId();
 
-                Field contentIdField = BeanUtils.findFieldWithAnnotation(searchType, ContentId.class);
+                Field contentIdField = BeanUtils.findFieldWithAnnotation(resultType, ContentId.class);
                 if (contentIdField != null) {
                     wrapper.setPropertyValue(contentIdField.getName(), id);
                 }
 
-                Field highlightField = BeanUtils.findFieldWithAnnotation(searchType, Highlight.class);
+                Field highlightField = BeanUtils.findFieldWithAnnotation(resultType, Highlight.class);
                 if (highlightField != null) {
                     wrapper.setPropertyValue(highlightField.getName(), hit.getHighlightFields().get("attachment.content").getFragments()[0].string());
                 }
 
-                for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(searchType, Attribute.class, new BeanWrapperImpl(searchType))) {
+                for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
                     Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
                     wrapper.setPropertyValue(field.getName(), hit.getSourceAsMap().get(fieldAnnotation.name()));
                 }

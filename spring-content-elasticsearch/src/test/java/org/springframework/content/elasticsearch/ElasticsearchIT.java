@@ -5,7 +5,6 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -370,7 +369,7 @@ public class ElasticsearchIT {
                 }
             });
 
-            FIt("should return results in pages", () -> {
+            It("should return results in pages", () -> {
                 assertThat(() -> searchableStore.search("one", null),
                         eventuallyEval(
                                 hasSize(1),
