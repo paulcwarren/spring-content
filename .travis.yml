@@ -24,8 +24,11 @@ install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
- - mvn -P tests install jacoco:report coveralls:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+ - mvn -P tests install jacoco:report -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+   
 deploy:
   - provider: script
     script: scripts/deploy.sh
