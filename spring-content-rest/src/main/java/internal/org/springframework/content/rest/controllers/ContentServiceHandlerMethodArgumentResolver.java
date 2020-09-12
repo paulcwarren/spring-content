@@ -16,9 +16,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.io.DeletableResource;
@@ -41,6 +44,7 @@ import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -48,14 +52,23 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UrlPathHelper;
 
+import internal.org.springframework.content.rest.io.RenderableResource;
+import internal.org.springframework.content.rest.io.RenderedResource;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
+    private static final Logger logger = LoggerFactory.getLogger(ContentServiceHandlerMethodArgumentResolver.class);
+
+    private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+
+    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
         super(config, repositories, repoInvokerFactory, stores);
+        this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
     }
 
     @Override
@@ -92,7 +105,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 Object domainObj = findOne(this.getRepoInvokerFactory(), this.getRepositories(), info.getDomainObjectClass(), id);
 
                 if (ContentStore.class.isAssignableFrom(info.getInterface())) {
-                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj);
+                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, byteRangeRestRequestHandler);
                 } else if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
                     throw new UnsupportedOperationException("AssociativeStoreContentService not implemented");
                 }
@@ -103,9 +116,9 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
                     if (ContentStore.class.isAssignableFrom(info.getInterface())) {
                         if (propertyIsEmbedded) {
-                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p);
+                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p, byteRangeRestRequestHandler);
                         } else {
-                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p);
+                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p, byteRangeRestRequestHandler);
                         }
                     }
                     throw new UnsupportedOperationException(format("ContentService for interface '%s' not implemented", info.getInterface()));
@@ -115,7 +128,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             // do store resource resolution
         } else if (Store.class.isAssignableFrom(info.getInterface())) {
 
-            return new StoreContentService(info.getImplementation(Store.class));
+            return new StoreContentService(info.getImplementation(Store.class), byteRangeRestRequestHandler);
         }
 
         throw new IllegalArgumentException();
@@ -124,9 +137,60 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
     public static class StoreContentService implements ContentService {
 
         private final Store store;
+        private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-        public StoreContentService(Store store) {
+        public StoreContentService(Store store, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
             this.store = store;
+            this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        }
+
+        @Override
+        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, String requestedMimeTypes, Resource resource, MediaType resourceType)
+                throws ResponseStatusException {
+            try {
+                MediaType producedResourceType = null;
+                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                if (acceptedMimeTypes.size() > 0) {
+
+                    MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
+                    for (MediaType acceptedMimeType : acceptedMimeTypes) {
+                        if (resource instanceof RenderableResource && ((RenderableResource) resource)
+                                .isRenderableAs(acceptedMimeType)) {
+                            resource = new RenderedResource(((RenderableResource) resource)
+                                    .renderAs(acceptedMimeType), resource);
+                            producedResourceType = acceptedMimeType;
+                            break;
+                        }
+                        else if (acceptedMimeType.includes(resourceType)) {
+                            producedResourceType = resourceType;
+                            break;
+                        }
+                    }
+
+                    if (producedResourceType == null) {
+                        response.setStatus(HttpStatus.NOT_FOUND.value());
+                        return;
+                    }
+                }
+
+                request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
+                request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
+            } catch (Exception e) {
+
+                logger.error("Unable to retrieve content", e);
+
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+            }
+
+            try {
+                byteRangeRestRequestHandler.handleRequest(request, response);
+            }
+            catch (Exception e) {
+
+                logger.error("Unable to handle request", e);
+
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+            }
         }
 
         @Override
@@ -161,21 +225,84 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         private final RepositoryInvoker repoInvoker;
         private final Object domainObj;
         private final Object embeddedProperty;
+        private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj) {
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
             this.config = config;
             this.store = store;
             this.repoInvoker = repoInvoker;
             this.domainObj = domainObj;
             this.embeddedProperty = null;
+            this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
         }
 
-        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty) {
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
             this.config = config;
             this.store = store;
             this.repoInvoker = repoInvoker;
             this.domainObj = domainObj;
             this.embeddedProperty = embeddedProperty;
+            this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        }
+
+        @Override
+        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, String requestedMimeTypes, Resource resource, MediaType resourceType)
+                throws ResponseStatusException, MethodNotAllowedException {
+
+            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withGetContentName, this::isOveridden, this::isExported);
+
+            if (methodsToUse.length > 1) {
+                throw new IllegalStateException("Too many getContent methods");
+            }
+
+            if (methodsToUse.length == 0) {
+                throw new MethodNotAllowedException();
+            }
+
+            try {
+                MediaType producedResourceType = null;
+                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                if (acceptedMimeTypes.size() > 0) {
+
+                    MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
+                    for (MediaType acceptedMimeType : acceptedMimeTypes) {
+                        if (resource instanceof RenderableResource && ((RenderableResource) resource)
+                                .isRenderableAs(acceptedMimeType)) {
+                            resource = new RenderedResource(((RenderableResource) resource)
+                                    .renderAs(acceptedMimeType), resource);
+                            producedResourceType = acceptedMimeType;
+                            break;
+                        }
+                        else if (acceptedMimeType.includes(resourceType)) {
+                            producedResourceType = resourceType;
+                            break;
+                        }
+                    }
+
+                    if (producedResourceType == null) {
+                        response.setStatus(HttpStatus.NOT_FOUND.value());
+                        return;
+                    }
+                }
+
+                request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
+                request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
+            } catch (Exception e) {
+
+                logger.error("Unable to retrieve content", e);
+
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+            }
+
+            try {
+                byteRangeRestRequestHandler.handleRequest(request, response);
+            }
+            catch (Exception e) {
+
+                logger.error("Unable to handle request", e);
+
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+            }
         }
 
         @Override
@@ -219,6 +346,40 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             } finally {
                 cleanup(contentArg);
             }
+        }
+
+        @Override
+        public void unsetContent(Resource resource) throws MethodNotAllowedException {
+
+            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withUnsetContentName, this::isOveridden, this::isExported);
+
+            if (methodsToUse.length == 0) {
+                throw new MethodNotAllowedException();
+            }
+
+            if (methodsToUse.length > 1) {
+                throw new IllegalStateException("Too many unsetContent methods");
+            }
+
+            Object targetObj = store.getImplementation(ContentStore.class);
+
+            ReflectionUtils.makeAccessible(methodsToUse[0]);
+
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, (embeddedProperty == null ? domainObj : embeddedProperty));
+
+            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class)) {
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class, null);
+            }
+
+            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class)) {
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class, null);
+            }
+
+            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
+        }
+
+        private boolean withGetContentName(Method method) {
+            return method.getName().equals("getContent");
         }
 
         private boolean withSetContentName(Method method) {
@@ -289,36 +450,6 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
 
             return resolved.toArray(new Method[]{});
-        }
-
-        @Override
-        public void unsetContent(Resource resource) throws MethodNotAllowedException {
-
-            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withUnsetContentName, this::isOveridden, this::isExported);
-
-            if (methodsToUse.length == 0) {
-                throw new MethodNotAllowedException();
-            }
-
-            if (methodsToUse.length > 1) {
-                throw new IllegalStateException("Too many unsetContent methods");
-            }
-
-            Object targetObj = store.getImplementation(ContentStore.class);
-
-            ReflectionUtils.makeAccessible(methodsToUse[0]);
-
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, (embeddedProperty == null ? domainObj : embeddedProperty));
-
-            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, MimeType.class, null);
-            }
-
-            if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? updatedDomainObj : embeddedProperty, OriginalFileName.class, null);
-            }
-
-            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
         }
     }
 }

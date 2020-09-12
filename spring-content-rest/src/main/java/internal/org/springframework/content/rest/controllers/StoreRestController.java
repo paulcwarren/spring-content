@@ -1,13 +1,9 @@
 package internal.org.springframework.content.rest.controllers;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,12 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.io.RenderableResource;
-import internal.org.springframework.content.rest.io.RenderedResource;
-import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
@@ -61,8 +53,6 @@ public class StoreRestController implements InitializingBean  {
     private Repositories repositories;
     @Autowired
     private Stores stores;
-    @Autowired
-    private StoreByteRangeHttpRequestHandler handler;
     @Autowired(required=false)
     private RepositoryInvokerFactory repoInvokerFactory;
     @Autowired(required=false)
@@ -74,10 +64,13 @@ public class StoreRestController implements InitializingBean  {
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
     public void getContent(HttpServletRequest request,
             HttpServletResponse response,
+            @RequestHeader HttpHeaders headers,
             @RequestHeader(value = "Accept", required = false) String requestedMimeTypes,
             Resource resource,
             MediaType resourceType,
-            Object resourceETag) {
+            Object resourceETag,
+            ContentService contentService)
+                    throws MethodNotAllowedException {
 
         if (resource == null || resource.exists() == false) {
             throw new ResourceNotFoundException();
@@ -91,50 +84,7 @@ public class StoreRestController implements InitializingBean  {
             return;
         }
 
-        try {
-            MediaType producedResourceType = null;
-            List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
-            if (acceptedMimeTypes.size() > 0) {
-
-                MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
-                for (MediaType acceptedMimeType : acceptedMimeTypes) {
-                    if (resource instanceof RenderableResource && ((RenderableResource) resource)
-                            .isRenderableAs(acceptedMimeType)) {
-                        resource = new RenderedResource(((RenderableResource) resource)
-                                .renderAs(acceptedMimeType), resource);
-                        producedResourceType = acceptedMimeType;
-                        break;
-                    }
-                    else if (acceptedMimeType.includes(resourceType)) {
-                        producedResourceType = resourceType;
-                        break;
-                    }
-                }
-
-                if (producedResourceType == null) {
-                    response.setStatus(HttpStatus.NOT_FOUND.value());
-                    return;
-                }
-            }
-
-            request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
-            request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
-        } catch (Exception e) {
-
-            logger.error("Unable to retrieve content", e);
-
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
-        }
-
-        try {
-            handler.handleRequest(request, response);
-        }
-        catch (Exception e) {
-
-            logger.error("Unable to handle request", e);
-
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
-        }
+        contentService.getContent(request, response, headers, requestedMimeTypes, resource, resourceType);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {

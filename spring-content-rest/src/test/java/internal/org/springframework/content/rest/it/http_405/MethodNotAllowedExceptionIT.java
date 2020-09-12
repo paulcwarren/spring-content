@@ -76,27 +76,26 @@ public class MethodNotAllowedExceptionIT {
     int port;
 
     {
-// TODO
-//        Describe("when getContent method is not exported", () -> {
-//
-//            BeforeEach(() -> {
-//                RestAssured.port = port;
-//            });
-//
-//            It("should throw a 405 Not Allowed", () -> {
-//
-//                TEntity tentity = new TEntity();
-//                tentity = store.setContent(tentity, new ByteArrayInputStream("some content".getBytes()));
-//                tentity = repo.save(tentity);
-//
-//                given()
-//                    .accept("text/plain")
-//                .when()
-//                    .get("/tEntities/" + tentity.getId())
-//                .then()
-//                    .statusCode(405);
-//            });
-//        });
+        Describe("when getContent method is not exported", () -> {
+
+            BeforeEach(() -> {
+                RestAssured.port = port;
+            });
+
+            It("should throw a 405 Not Allowed", () -> {
+
+                TEntity tentity = new TEntity();
+                tentity = store.setContent(tentity, new ByteArrayInputStream("some content".getBytes()));
+                tentity = repo.save(tentity);
+
+                given()
+                    .accept("text/plain")
+                .when()
+                    .get("/tEntities/" + tentity.getId())
+                .then()
+                    .statusCode(405);
+            });
+        });
 
         Describe("when no setContent methods are exported", () -> {
 
@@ -145,6 +144,10 @@ public class MethodNotAllowedExceptionIT {
     }
 
     public interface UnexportedContentStore extends FilesystemContentStore<TEntity, UUID> {
+
+        @RestResource(exported=false)
+        @Override
+        public InputStream getContent(TEntity property);
 
         @RestResource(exported=false)
         @Override
