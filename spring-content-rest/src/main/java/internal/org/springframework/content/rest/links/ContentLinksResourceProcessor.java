@@ -1,8 +1,16 @@
 package internal.org.springframework.content.rest.links;
 
-import internal.org.springframework.content.rest.controllers.StoreRestController;
-import internal.org.springframework.content.rest.utils.StoreUtils;
-import internal.org.springframework.content.rest.utils.DomainObjectUtils;
+import static java.lang.String.format;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanWrapperImpl;
@@ -13,6 +21,7 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
@@ -21,22 +30,16 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.hateoas.server.core.LinkBuilderSupport;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-
-import static java.lang.String.format;
+import internal.org.springframework.content.rest.controllers.StoreRestController;
+import internal.org.springframework.content.rest.utils.DomainObjectUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 
 /**
  * Adds content and content collection links to Spring Data REST Entity Resources.
@@ -48,7 +51,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
-	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, String.class, Resource.class, MediaType.class, Object.class);
+	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, String.class, Resource.class, MediaType.class, Object.class, ContentService.class);
 
 	static {
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");
@@ -66,7 +69,8 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return config;
 	}
 
-	public PersistentEntityResource process(final PersistentEntityResource resource) {
+	@Override
+    public PersistentEntityResource process(final PersistentEntityResource resource) {
 
 		Object object = resource.getContent();
 		if (object == null)
@@ -188,7 +192,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 			if (store == null) {
 				return "";
 			}
-			
+
 			return format("/%s", StoreUtils.storePath(store));
 		}
 	}
