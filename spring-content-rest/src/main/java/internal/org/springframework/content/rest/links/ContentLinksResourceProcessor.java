@@ -51,7 +51,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
-	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, String.class, Resource.class, MediaType.class, Object.class, ContentService.class);
+	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, Resource.class, MediaType.class, Object.class, ContentService.class);
 
 	static {
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");

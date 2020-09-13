@@ -145,11 +145,11 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, String requestedMimeTypes, Resource resource, MediaType resourceType)
+        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource resource, MediaType resourceType)
                 throws ResponseStatusException {
             try {
                 MediaType producedResourceType = null;
-                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                List<MediaType> acceptedMimeTypes = headers.getAccept();
                 if (acceptedMimeTypes.size() > 0) {
 
                     MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
@@ -194,13 +194,15 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void setContent(HttpHeaders headers, InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException {
+        public void setContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource source, MediaType sourceMimeType, Resource target)
+                throws IOException, MethodNotAllowedException {
 
-            InputStream in = content;
+            InputStream in = source.getInputStream();
             OutputStream out = ((WritableResource) target).getOutputStream();
             IOUtils.copy(in, out);
             IOUtils.closeQuietly(out);
             IOUtils.closeQuietly(in);
+
         }
 
         @Override
@@ -246,7 +248,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, String requestedMimeTypes, Resource resource, MediaType resourceType)
+        public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource resource, MediaType resourceType)
                 throws ResponseStatusException, MethodNotAllowedException {
 
             Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withGetContentName, this::isOveridden, this::isExported);
@@ -261,7 +263,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
             try {
                 MediaType producedResourceType = null;
-                List<MediaType> acceptedMimeTypes = new ArrayList<>(MediaType.parseMediaTypes(requestedMimeTypes));
+                List<MediaType> acceptedMimeTypes = headers.getAccept();
                 if (acceptedMimeTypes.size() > 0) {
 
                     MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
@@ -306,13 +308,14 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
 
         @Override
-        public void setContent(HttpHeaders headers, InputStream content, MediaType mimeType, String originalFilename, Resource target) throws IOException, MethodNotAllowedException {
+        public void setContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource source, MediaType sourceMimeType, Resource target) throws IOException, MethodNotAllowedException {
 
             if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class)) {
-                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, mimeType.toString());
+                BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, MimeType.class, sourceMimeType.toString());
             }
 
-            if (originalFilename != null && StringUtils.hasText(originalFilename)) {
+            String originalFilename = source.getFilename();
+            if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
                 if (BeanUtils.hasFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class)) {
                     BeanUtils.setFieldWithAnnotation(embeddedProperty == null ? domainObj : embeddedProperty, OriginalFileName.class, originalFilename);
                 }
@@ -334,19 +337,20 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
 
             Method methodToUse = methodsToUse[0];
-            Object contentArg = convertContentArg(content, methodToUse.getParameterTypes()[1]);
+            Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[1]);
 
             try {
-	            Object targetObj = store.getImplementation(ContentStore.class);
+                Object targetObj = store.getImplementation(ContentStore.class);
 
-	            ReflectionUtils.makeAccessible(methodToUse);
+                ReflectionUtils.makeAccessible(methodToUse);
 
-	            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, (embeddedProperty == null ? domainObj : embeddedProperty), contentArg);
-	            repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
+                Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, (embeddedProperty == null ? domainObj : embeddedProperty), contentArg);
+                repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
             } finally {
                 cleanup(contentArg);
             }
         }
+
 
         @Override
         public void unsetContent(Resource resource) throws MethodNotAllowedException {
@@ -413,23 +417,25 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
         }
 
-        private Object convertContentArg(InputStream content, Class<?> parameterType) {
+        private Object convertContentArg(Resource resource, Class<?> parameterType) {
 
             if (InputStream.class.equals(parameterType)) {
-                return content;
+                try {
+                    return resource.getInputStream();
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(format("Unable to get inputstream from resource %s", resource.getFilename()));
+                }
             } else if (Resource.class.equals(parameterType)) {
                 try {
                     File f = Files.createTempFile("", "").toFile();
-                    FileUtils.copyInputStreamToFile(content, f);
+                    FileUtils.copyInputStreamToFile(resource.getInputStream(), f);
                     return new FileSystemResource(f);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new IllegalArgumentException(format("Unable to re-purpose resource %s", resource.getFilename()));
                 }
             } else {
                 throw new IllegalArgumentException(format("Unsupported content type %s", parameterType.getCanonicalName()));
             }
-
-            return null;
         }
 
         private Method[] filterMethods(Method[] methods, Predicate<Method>...filters) {

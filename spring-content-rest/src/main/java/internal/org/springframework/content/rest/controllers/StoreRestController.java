@@ -1,7 +1,6 @@
 package internal.org.springframework.content.rest.controllers;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.Optional;
@@ -37,6 +36,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.io.InputStreamResource;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
@@ -65,7 +65,6 @@ public class StoreRestController implements InitializingBean  {
     public void getContent(HttpServletRequest request,
             HttpServletResponse response,
             @RequestHeader HttpHeaders headers,
-            @RequestHeader(value = "Accept", required = false) String requestedMimeTypes,
             Resource resource,
             MediaType resourceType,
             Object resourceETag,
@@ -84,7 +83,7 @@ public class StoreRestController implements InitializingBean  {
             return;
         }
 
-        contentService.getContent(request, response, headers, requestedMimeTypes, resource, resourceType);
+        contentService.getContent(request, response, headers, resource, resourceType);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {
@@ -96,14 +95,12 @@ public class StoreRestController implements InitializingBean  {
             ContentService contentService)
                     throws IOException, MethodNotAllowedException {
 
-        handleMultipart(response,
-                headers,
+        handleMultipart(request, response, headers,
                 contentService,
+                new InputStreamResource(request.getInputStream(), null),
+                headers.getContentType(),
                 resource,
-                resourceETag != null ? resourceETag.toString() : null,
-                        request.getInputStream(),
-                        headers.getContentType(),
-                        null);
+                resourceETag);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
@@ -115,14 +112,12 @@ public class StoreRestController implements InitializingBean  {
             ContentService contentService)
                     throws IOException, MethodNotAllowedException {
 
-        handleMultipart(response,
-                headers,
+        handleMultipart(request, response, headers,
                 contentService,
+                multiPart.getResource(),
+                MediaType.parseMediaType(multiPart.getContentType()),
                 resource,
-                resourceETag != null ? resourceETag.toString() : null,
-                        multiPart.getInputStream(),
-                        MediaType.parseMediaType(multiPart.getContentType()),
-                        multiPart.getOriginalFilename());
+                resourceETag);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
@@ -134,14 +129,13 @@ public class StoreRestController implements InitializingBean  {
             ContentService contentService)
                     throws IOException, MethodNotAllowedException {
 
-        handleMultipart(response,
-                headers,
+        handleMultipart(request, response, headers,
                 contentService,
+                new InputStreamResource(multiPart.getInputStream(), multiPart.getOriginalFilename()),
+                MediaType.parseMediaType(multiPart.getContentType()),
                 resource,
-                resourceETag != null ? resourceETag.toString() : null,
-                        multiPart.getInputStream(),
-                        MediaType.parseMediaType(multiPart.getContentType()),
-                        multiPart.getOriginalFilename());
+                resourceETag);
+
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = {"content-type!=multipart/form-data"})
@@ -152,14 +146,12 @@ public class StoreRestController implements InitializingBean  {
             ContentService contentService)
                     throws IOException, MethodNotAllowedException {
 
-        handleMultipart(response,
-                headers,
+        handleMultipart(request, response, headers,
                 contentService,
+                new InputStreamResource(request.getInputStream(), null),
+                headers.getContentType(),
                 resource,
-                resourceETag != null ? resourceETag.toString() : null,
-                        request.getInputStream(),
-                        headers.getContentType(),
-                        null);
+                resourceETag);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
@@ -180,25 +172,24 @@ public class StoreRestController implements InitializingBean  {
         response.setStatus(HttpStatus.NO_CONTENT.value());
     }
 
-    protected void handleMultipart(HttpServletResponse response,
+    protected void handleMultipart(HttpServletRequest request, HttpServletResponse response,
             HttpHeaders headers,
             ContentService contentService,
-            Resource resource,
-            Object resourceETag,
-            InputStream content,
-            MediaType mimeType,
-            String originalFilename)
+            Resource source,
+            MediaType sourceMimeType,
+            Resource target,
+            Object targetETag)
                     throws IOException, MethodNotAllowedException {
 
         boolean isNew = false;
 
-        if (resource.exists()) {
-            HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
+        if (target.exists()) {
+            HeaderUtils.evaluateHeaderConditions(headers, targetETag != null ? targetETag.toString() : null, new Date(target.lastModified()));
         } else {
             isNew = true;
         }
 
-        contentService.setContent(headers, content, mimeType, originalFilename, resource);
+        contentService.setContent(request, response, headers, source, sourceMimeType, target);
 
         if (isNew) {
             response.setStatus(HttpStatus.CREATED.value());
