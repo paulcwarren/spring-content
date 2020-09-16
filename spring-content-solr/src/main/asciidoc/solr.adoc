@@ -80,3 +80,65 @@ When you `@EnableFullTextSolrIndexing` a store event handler is registered that 
 Store and sends that content to your Solr instance for full-text indexing.  This is usually all you need.  However,
 sometimes you may need more control over when documents are indexed.  For these cases you can use the `IndexService`
 bean directly in your code to index (or unindex) content as required.
+
+== Custom Attributes and Filtering Queries
+
+By default Spring Content Solr indexes content only.  However, it is common to synchronize additional 
+attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating 
+search results (removing the need to perform subsequent queries against the primary domain model).
+
+To synchronize additional attributes when content is indexed add a bean that implements `AttributeProvider` to your 
+application's configuration:
+
+====
+[source, java]
+----
+    @Bean
+    public AttributeProvider<Document> attributeProvider() {
+        return new AttributeProvider<Document>() {
+
+            @Override
+            public Map<String, String> synchronize(Document entity) {
+
+                Map<String, String> attrs = new HashMap<>();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }
+====
+
+To customize the query that gets executed when a Store's Searchable method is invoked add a `FilterQueryProvider` bean to your 
+application's configuration:
+
+====
+[source, java]
+----
+    @Bean
+    public FilterQueryProvider fqProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class<?> entity) {
+
+                return new String[] {"author:foo@bar.com"};
+            }
+        };
+    }
+----
+NOTE: this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return 
+filter queries based on the current execution context. 
+====
+
+== Search Return Types
+
+`Searchable` is a generic type allowing you to specify the return type of the result set.  The simplest option is to 
+type this interface to String in which case result sets will be collections of content IDs.
+
+You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
+results to your specific needs:
+
+- @ContentId; extracts the content ID of the content from your search results
+- @Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are
+- Attribute; extracts the specified attribute from your search results (must be synchronized using an `AttributeProvider`)
