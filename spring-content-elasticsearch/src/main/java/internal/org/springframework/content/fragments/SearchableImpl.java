@@ -72,59 +72,12 @@ public class SearchableImpl implements Searchable<Object> {
 
     @Override
     public Iterable<Object> search(String queryStr) {
-        SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
-        searchRequest.types(domainClass.getName());
-
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(QueryBuilders.simpleQueryStringQuery(queryStr));
-        searchRequest.source(sourceBuilder);
-
-        SearchResponse res = null;
-        try {
-            res = client.search(searchRequest, RequestOptions.DEFAULT);
-        }
-        catch (IOException | ElasticsearchStatusException e) {
-            LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
-            throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
-        }
-
-        return getIDs(res.getHits());
+        return search(queryStr, null, String.class);
     }
 
     @Override
     public List<Object> search(String queryStr, Pageable pageable) {
-        SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
-        searchRequest.types(domainClass.getName());
-
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-
-        BoolQueryBuilder b = QueryBuilders.boolQuery();
-        b.must(QueryBuilders.simpleQueryStringQuery(queryStr));
-
-        if (filterProvider != null) {
-            Map<String,Object> filters = filterProvider.filterQueries(domainClass);
-            for (String attr : filters.keySet()) {
-                b.filter(QueryBuilders.matchQuery(attr, filters.get(attr)));
-            }
-        }
-
-        sourceBuilder.query(b);
-        if (pageable != null) {
-            sourceBuilder.from(pageable.getPageNumber() * pageable.getPageSize());
-            sourceBuilder.size(pageable.getPageSize());
-        }
-        searchRequest.source(sourceBuilder);
-
-        SearchResponse res = null;
-        try {
-            res = client.search(searchRequest, RequestOptions.DEFAULT);
-        }
-        catch (IOException | ElasticsearchStatusException e) {
-            LOGGER.error(format("Error searching indexed content for '%s'", queryStr), e);
-            throw new StoreAccessException(format("Error searching indexed content for '%s'", queryStr), e);
-        }
-
-        return getIDs(res.getHits());
+        return search(queryStr, pageable, String.class);
     }
 
     @Override
@@ -134,7 +87,6 @@ public class SearchableImpl implements Searchable<Object> {
         searchRequest.types(domainClass.getName());
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        //        sourceBuilder.fetchSource(new String[] {"author"}, null);
 
         List<String> attributesToFetch = new ArrayList<>();
         for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(searchType, Attribute.class, new BeanWrapperImpl(searchType))) {
@@ -259,27 +211,32 @@ public class SearchableImpl implements Searchable<Object> {
         for (SearchHit hit : result.getHits()) {
 
             try {
-                Object row = resultType.newInstance();
-                BeanWrapper wrapper = new BeanWrapperImpl(row);
+                if (resultType.isPrimitive() || String.class.equals(resultType)) {
+                    contents.add(hit.getId());
+                } else {
+                    Object row = resultType.newInstance();
+                    BeanWrapper wrapper = new BeanWrapperImpl(row);
 
-                String id = hit.getId();
 
-                Field contentIdField = BeanUtils.findFieldWithAnnotation(resultType, ContentId.class);
-                if (contentIdField != null) {
-                    wrapper.setPropertyValue(contentIdField.getName(), id);
+                    String id = hit.getId();
+
+                    Field contentIdField = BeanUtils.findFieldWithAnnotation(resultType, ContentId.class);
+                    if (contentIdField != null) {
+                        wrapper.setPropertyValue(contentIdField.getName(), id);
+                    }
+
+                    Field highlightField = BeanUtils.findFieldWithAnnotation(resultType, Highlight.class);
+                    if (highlightField != null) {
+                        wrapper.setPropertyValue(highlightField.getName(), hit.getHighlightFields().get("attachment.content").getFragments()[0].string());
+                    }
+
+                    for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
+                        Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
+                        wrapper.setPropertyValue(field.getName(), hit.getSourceAsMap().get(fieldAnnotation.name()));
+                    }
+
+                    contents.add(row);
                 }
-
-                Field highlightField = BeanUtils.findFieldWithAnnotation(resultType, Highlight.class);
-                if (highlightField != null) {
-                    wrapper.setPropertyValue(highlightField.getName(), hit.getHighlightFields().get("attachment.content").getFragments()[0].string());
-                }
-
-                for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
-                    Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
-                    wrapper.setPropertyValue(field.getName(), hit.getSourceAsMap().get(fieldAnnotation.name()));
-                }
-
-                contents.add(row);
             } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }
