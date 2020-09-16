@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 1.1.0.M4-SNAPSHOT,</span>
-<span id="revdate">2020-09-13</span>
+<span id="revdate">2020-09-16</span>
 </div>
 </div>
 <div id="content">
@@ -485,6 +485,8 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_making_stores_searchable">2.4. Making Stores Searchable</a></li>
 <li><a href="#_custom_indexing">2.5. Custom Indexing</a></li>
 <li><a href="#_text_extraction">2.6. Text Extraction</a></li>
+<li><a href="#_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</a></li>
+<li><a href="#_search_return_types">2.8. Search Return Types</a></li>
 </ul>
 </li>
 </ul>
@@ -1307,9 +1309,9 @@ send that instead of the image content to Elasticsearch.</p>
 <ol class="arabic">
 <li>
 <p>Add one or more renderers to the application context.  These renderers are used to perform the text extraction.  To be
-used for text extraction a renderer <strong>must</strong> produce <code>text/plain</code> content but can consume any suitable mimetype.   When
-content matching its <code>consume</code> mime type is added to a Store the renderer will invoked to extract text and this text
-will be sent to the Elasticsearch for fulltext indexing in place of the original content.</p>
+used for text extraction a renderer <strong>must</strong> produce <code>text/plain</code> content but can consume any suitable mime type.   When
+content matching its <code>consume</code> mime type is added to a Store the renderer will be invoked to extract text and this extracted text
+will then be sent to the Elasticsearch for fulltext indexing in place of the original content.</p>
 </li>
 </ol>
 </div>
@@ -1355,7 +1357,7 @@ public static class ApplicationConfig {
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Make the Store Renderable</p>
+<p>Make the Store Renderable as this will be used internally to extract the text</p>
 </li>
 </ol>
 </div>
@@ -1371,13 +1373,108 @@ public static class ApplicationConfig {
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</h3>
+<div class="paragraph">
+<p>By default Spring Content Elasticsearch indexes content only.  However, it is common to synchronize additional
+attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
+search results (removing the need to perform subsequent queries against the primary domain model).</p>
+</div>
+<div class="paragraph">
+<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
+application&#8217;s configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public AttributeProvider&lt;Document&gt; attributeProvider() {
+        return new AttributeProvider&lt;Document&gt;() {
+
+            @Override
+            public Map&lt;String, String&gt; synchronize(Document entity) {
+
+                Map&lt;String, String&gt; attrs = new HashMap&lt;&gt;();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
+application&#8217;s configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public FilterQueryProvider fqProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class&lt;?&gt; entity) {
+
+                return new String[] {"author:foo@bar.com"};
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return
+filter queries based on the current execution context.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_search_return_types">2.8. Search Return Types</h3>
+<div class="paragraph">
+<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
+type this interface to String in which case result sets will be collections of content IDs.</p>
+</div>
+<div class="paragraph">
+<p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
+results to your specific needs:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>@ContentId; extracts the content ID of the content from your search results</p>
+</li>
+<li>
+<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
+</li>
+<li>
+<p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)
+:leveloffset: -1</p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 1.1.0.M4-SNAPSHOT<br>
-Last updated 2020-09-13 07:27:26 UTC
+Last updated 2020-09-16 05:59:42 UTC
 </div>
 </div>
 </body>

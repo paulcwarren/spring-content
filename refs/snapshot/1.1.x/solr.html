@@ -578,10 +578,108 @@ bean directly in your code to index (or unindex) content as required.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_custom_attributes_and_filtering_queries">Custom Attributes and Filtering Queries</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default Spring Content Solr indexes content only.  However, it is common to synchronize additional
+attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
+search results (removing the need to perform subsequent queries against the primary domain model).</p>
+</div>
+<div class="paragraph">
+<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
+application&#8217;s configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public AttributeProvider&lt;Document&gt; attributeProvider() {
+        return new AttributeProvider&lt;Document&gt;() {
+
+            @Override
+            public Map&lt;String, String&gt; synchronize(Document entity) {
+
+                Map&lt;String, String&gt; attrs = new HashMap&lt;&gt;();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
+application&#8217;s configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public FilterQueryProvider fqProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class&lt;?&gt; entity) {
+
+                return new String[] {"author:foo@bar.com"};
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return
+filter queries based on the current execution context.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_search_return_types">Search Return Types</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
+type this interface to String in which case result sets will be collections of content IDs.</p>
+</div>
+<div class="paragraph">
+<p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
+results to your specific needs:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>@ContentId; extracts the content ID of the content from your search results</p>
+</li>
+<li>
+<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
+</li>
+<li>
+<p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-13 07:27:26 UTC
+Last updated 2020-09-16 05:59:42 UTC
 </div>
 </div>
 </body>
