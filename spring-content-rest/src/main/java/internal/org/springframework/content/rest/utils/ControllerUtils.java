@@ -1,5 +1,7 @@
 package internal.org.springframework.content.rest.utils;
 
+import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +16,6 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.core.EmbeddedWrappers;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
 
 public final class ControllerUtils {
 
@@ -51,7 +51,13 @@ public final class ControllerUtils {
         List<EntityModel<Object>> resources = new ArrayList<EntityModel<Object>>();
 
         for (Object obj : entities) {
-            resources.add(obj == null ? null : assembler.toModel(obj));
+            if (assembler != null) {
+                resources.add(obj == null ? null : assembler.toModel(obj));
+            } else {
+
+                EntityModel m = EntityModel.of(obj);
+                resources.add(m);
+            }
         }
 
         return new CollectionModel<EntityModel<Object>>(resources, getDefaultSelfLink());
