@@ -1,8 +1,15 @@
 package org.springframework.data.rest.extensions.contentsearch;
 
-import internal.org.springframework.content.rest.controllers.BadRequestException;
-import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
-import internal.org.springframework.content.rest.utils.ControllerUtils;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -27,12 +34,15 @@ import org.springframework.data.rest.webmvc.support.DefaultedPageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.*;
+import internal.org.springframework.content.rest.controllers.BadRequestException;
+import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
+import internal.org.springframework.content.rest.utils.ControllerUtils;
 
 @RepositoryRestController
 public class ContentSearchRestController {
@@ -148,44 +158,53 @@ public class ContentSearchRestController {
 		List<Object> results = new ArrayList<>();
 		if (contentIds != null && contentIds.size() > 0) {
 
-			Class<?> entityType = repoInfo.getDomainType();
+		    if (contentIds.get(0).getClass().isPrimitive() || contentIds.get(0).getClass().equals(String.class) || contentIds.get(0).getClass().equals(UUID.class)) {
 
-			Field idField = BeanUtils.findFieldWithAnnotation(entityType, Id.class);
-			if (idField == null) {
-				idField = BeanUtils.findFieldWithAnnotation(entityType,
-						javax.persistence.Id.class);
-			}
+    			Class<?> entityType = repoInfo.getDomainType();
 
-			Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType,
-					ContentId.class);
+    			Field idField = BeanUtils.findFieldWithAnnotation(entityType, Id.class);
+    			if (idField == null) {
+    				idField = BeanUtils.findFieldWithAnnotation(entityType,
+    						javax.persistence.Id.class);
+    			}
 
-			if (idField.equals(contentIdField)) {
-				for (Object contentId : contentIds) {
-					Optional<Object> entity = repoInfo.getInvoker()
-							.invokeFindById(contentId.toString());
-					if (entity.isPresent()) {
-						results.add(entity.get());
-					}
-				}
-			}
-			else {
-				RepositoryInvoker invoker = repoInfo.getInvoker();
-				Iterable<?> entities = pageable.getPageable() != null ? invoker.invokeFindAll(pageable.getPageable()) : invoker.invokeFindAll(sort);
+    			Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType,
+    					ContentId.class);
 
-				for (Object entity : entities) {
-					for (Object contentId : contentIds) {
+    			if (idField.equals(contentIdField)) {
+    				for (Object contentId : contentIds) {
+    					Optional<Object> entity = repoInfo.getInvoker()
+    							.invokeFindById(contentId.toString());
+    					if (entity.isPresent()) {
+    						results.add(entity.get());
+    					}
+    				}
+    			}
+    			else {
+    				RepositoryInvoker invoker = repoInfo.getInvoker();
+    				Iterable<?> entities = pageable.getPageable() != null ? invoker.invokeFindAll(pageable.getPageable()) : invoker.invokeFindAll(sort);
 
-						Object candidate = BeanUtils.getFieldWithAnnotation(entity,
-								ContentId.class);
-						if (contentId.equals(candidate)) {
-							results.add(entity);
-						}
-					}
-				}
-			}
+    				for (Object entity : entities) {
+    					for (Object contentId : contentIds) {
+
+    						Object candidate = BeanUtils.getFieldWithAnnotation(entity,
+    								ContentId.class);
+    						if (contentId.equals(candidate)) {
+    							results.add(entity);
+    						}
+    					}
+    				}
+    			}
+
+    			ResourceMetadata metadata = repoInfo.getResourceMetadata();
+    			return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+		    } else {
+		        results = contentIds;
+
+                ResourceMetadata metadata = repoInfo.getResourceMetadata();
+                return ControllerUtils.toCollectionModel(results, null, null, contentIds.get(0).getClass(), Optional.empty());
+		    }
 		}
-
-		ResourceMetadata metadata = repoInfo.getResourceMetadata();
-		return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+		return CollectionModel.empty();
 	}
 }

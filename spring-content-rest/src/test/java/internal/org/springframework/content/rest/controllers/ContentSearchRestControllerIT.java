@@ -35,6 +35,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.fulltext.Attribute;
+import org.springframework.content.commons.fulltext.Highlight;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -69,6 +71,9 @@ import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // because the controller bean is shared and we need to instruct the reflection service
@@ -318,7 +323,7 @@ public class ContentSearchRestControllerIT {
                         });
                     });
 
-                    Context("given results are found", () -> {
+                    Context("given String results are found", () -> {
 
                         BeforeEach(() -> {
                             entity3 = new TestEntityWithSeparateId();
@@ -392,6 +397,52 @@ public class ContentSearchRestControllerIT {
                                     .getValue("contentId").toString();
                             assertThat(contentIds, hasItem(UUID.fromString(id1)));
                         });
+                    });
+                });
+
+                Context("given Custom Type results are found", () -> {
+
+                    BeforeEach(() -> {
+                        List<CustomResult> results = new ArrayList<>();
+
+                        results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
+                        results.add(new CustomResult("67890", "<em>else altogether</em>", "foo2", "bar2"));
+
+                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                                eq("else"), any())).thenReturn(results);
+                    });
+
+                    It("should return a response entity with the entity", () -> {
+                        MvcResult result = mvc.perform(get(
+                                "/testEntityWithSeparateIds/searchContent?queryString=else")
+                                .accept("application/hal+json"))
+                                .andExpect(status().isOk()).andReturn();
+
+                        ReadableRepresentation halResponse = representationFactory
+                                .readRepresentation("application/hal+json",
+                                        new StringReader(result.getResponse()
+                                                .getContentAsString()));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").size(),
+                                is(2));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("highlight").toString(), is("<em>something else</em>"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("foo").toString(), is("foo1"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("bar").toString(), is("bar1"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(1)
+                                .getValue("highlight").toString(), is("<em>else altogether</em>"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(1)
+                                .getValue("foo").toString(), is("foo2"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(1)
+                                .getValue("bar").toString(), is("bar2"));
                     });
                 });
             });
@@ -618,5 +669,23 @@ public class ContentSearchRestControllerIT {
 
     public interface TestEntityWithSeparateIdsSearchableStore
     extends FilesystemContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public class CustomResult {
+
+        @ContentId
+        private String contentId;
+
+        @Highlight
+        private String highlight;
+
+        @Attribute(name="foo")
+        private String foo;
+
+        @Attribute(name="bar")
+        private String bar;
     }
 }
