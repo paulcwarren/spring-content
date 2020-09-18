@@ -197,12 +197,10 @@ public class ContentSearchRestController {
     			}
 
     			ResourceMetadata metadata = repoInfo.getResourceMetadata();
-    			return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+    			return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType());
 		    } else {
 		        results = contentIds;
-
-                ResourceMetadata metadata = repoInfo.getResourceMetadata();
-                return ControllerUtils.toCollectionModel(results, null, null, contentIds.get(0).getClass(), Optional.empty());
+                return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, null, contentIds.get(0).getClass());
 		    }
 		}
 		return CollectionModel.empty();
