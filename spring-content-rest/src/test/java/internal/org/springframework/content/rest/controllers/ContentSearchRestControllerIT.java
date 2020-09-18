@@ -7,9 +7,8 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
@@ -249,7 +248,7 @@ public class ContentSearchRestControllerIT {
 
                     });
 
-                    Context("given results contain invalid IDs", () -> {
+                    Context("given results contain orphaned fulltext documents", () -> {
 
                         BeforeEach(() -> {
                             entity2 = new TestEntityWithSharedId();
@@ -282,22 +281,6 @@ public class ContentSearchRestControllerIT {
                             assertThat(contentIds, hasItem(UUID.fromString(id1)));
                         });
                     });
-
-                    Context("given a request to /searchContent endpoint", () -> {
-
-                        It("should invoke the Searchable.search", () -> {
-                            mvc.perform(get(
-                                    "/testEntityWithSharedIds/searchContent?queryString=something")
-                                    .accept("application/hal+json"))
-                            .andExpect(status().isOk());
-
-                            Method method = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
-                            assertThat(method, is(not(nullValue())));
-
-                            PageRequest pageable = PageRequest.of(0, 20);
-                            verify(reflectionService).invokeMethod(eq(method), anyObject(), eq("something"), eq(pageable));
-                        });
-                    });
                 });
 
                 Context("given an entity with separate Id/ContentId fields", () -> {
@@ -323,7 +306,7 @@ public class ContentSearchRestControllerIT {
                         });
                     });
 
-                    Context("given String results are found", () -> {
+                    Context("given results are found", () -> {
 
                         BeforeEach(() -> {
                             entity3 = new TestEntityWithSeparateId();
@@ -365,7 +348,7 @@ public class ContentSearchRestControllerIT {
                         });
                     });
 
-                    Context("given results contain invalid IDs", () -> {
+                    Context("given results contain orphaned fulltext documents", () -> {
 
                         BeforeEach(() -> {
                             entity3 = new TestEntityWithSeparateId();
@@ -400,7 +383,7 @@ public class ContentSearchRestControllerIT {
                     });
                 });
 
-                Context("given Custom Type results are found", () -> {
+                Context("given results are found returning a custom result type", () -> {
 
                     BeforeEach(() -> {
                         List<CustomResult> results = new ArrayList<>();
@@ -443,6 +426,42 @@ public class ContentSearchRestControllerIT {
                         assertThat(halResponse
                                 .getResourcesByRel("customResults").get(1)
                                 .getValue("bar").toString(), is("bar2"));
+                    });
+                });
+
+                Context("given paged results are found returning a custom result type", () -> {
+
+                    BeforeEach(() -> {
+                        List<CustomResult> results = new ArrayList<>();
+
+                        results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
+
+                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                                eq("else"), any())).thenReturn(results);
+                    });
+
+                    It("should return a response entity with the entity", () -> {
+                        MvcResult result = mvc.perform(get(
+                                "/testEntityWithSeparateIds/searchContent?queryString=else&page=1&size=1")
+                                .accept("application/hal+json"))
+                                .andExpect(status().isOk()).andReturn();
+
+                        ReadableRepresentation halResponse = representationFactory
+                                .readRepresentation("application/hal+json",
+                                        new StringReader(result.getResponse()
+                                                .getContentAsString()));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").size(),
+                                is(1));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("highlight").toString(), is("<em>something else</em>"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("foo").toString(), is("foo1"));
+                        assertThat(halResponse
+                                .getResourcesByRel("customResults").get(0)
+                                .getValue("bar").toString(), is("bar1"));
                     });
                 });
             });
@@ -583,7 +602,7 @@ public class ContentSearchRestControllerIT {
     extends FilesystemContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
     }
 
-    // stub out a Searchable implementation so that the content store can be intantiated
+    // stub out a Searchable implementation so that the content store can be instantiated
     // this wont actually get called because the test intercepts calls to the Searchable by mocking the reflection
     // service
     public static class SearchableImpl implements Searchable<UUID> {

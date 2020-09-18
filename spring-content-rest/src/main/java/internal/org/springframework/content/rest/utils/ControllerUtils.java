@@ -5,7 +5,6 @@ import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURC
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
@@ -13,7 +12,6 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.core.EmbeddedWrappers;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -26,16 +24,17 @@ public final class ControllerUtils {
     protected static CollectionModel<?> entitiesToResources(Page<Object> page,
             PagedResourcesAssembler<Object> prAssembler,
             PersistentEntityResourceAssembler assembler,
-            Class<?> domainType,
-            Optional<Link> baseLink) {
+            Class<?> domainType) {
 
         if (page.getContent().isEmpty()) {
-            return baseLink.<PagedModel<?>> map(it -> prAssembler.toEmptyModel(page, domainType, it))//
-                    .orElseGet(() -> prAssembler.toEmptyModel(page, domainType));
+            return prAssembler.toEmptyModel(page, domainType);
         }
 
-        return baseLink.map(it -> prAssembler.toModel(page, assembler, it))//
-                .orElseGet(() -> prAssembler.toModel(page, assembler));
+        if (assembler != null) {
+            return prAssembler.toModel(page, assembler);
+        } else {
+            return prAssembler.toModel(page);
+        }
     }
 
     protected static CollectionModel<?> entitiesToResources(Iterable<Object> entities,
@@ -71,12 +70,11 @@ public final class ControllerUtils {
     public static CollectionModel<?> toCollectionModel(Iterable<?> source,
             PagedResourcesAssembler<Object> prAssembler,
             PersistentEntityResourceAssembler assembler,
-            Class<?> domainType,
-            Optional<Link> baseLink) {
+            Class<?> domainType) {
 
         if (source instanceof Page) {
             Page<Object> page = (Page<Object>) source;
-            return entitiesToResources(page, prAssembler, assembler, domainType, baseLink);
+            return entitiesToResources(page, prAssembler, assembler, domainType);
         } else if (source instanceof Iterable) {
             return entitiesToResources((Iterable<Object>) source, assembler, domainType);
         } else {

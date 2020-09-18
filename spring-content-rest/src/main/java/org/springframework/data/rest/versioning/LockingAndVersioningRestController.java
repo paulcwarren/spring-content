@@ -3,10 +3,6 @@ package org.springframework.data.rest.versioning;
 import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
-
-import internal.org.springframework.content.rest.utils.ControllerUtils;
-import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.ReflectionService;
@@ -32,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import internal.org.springframework.content.rest.utils.ControllerUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 @RepositoryRestController
 public class LockingAndVersioningRestController {
@@ -143,7 +142,7 @@ public class LockingAndVersioningRestController {
 			List results = (List)ReflectionUtils.invokeMethod(FINDALLLATESTVERSION_METHOD, repositories.getRepositoryFor(domainType).get(), domainType);
 
 	        ResourceMetadata metadata = repoInfo.getResourceMetadata();
-	        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+	        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType());
 	        return result;
 	}
 
@@ -160,7 +159,7 @@ public class LockingAndVersioningRestController {
 		List results = (List)ReflectionUtils.invokeMethod(FINDALLVERSIONS_METHOD, repositories.getRepositoryFor(domainObj.getClass()).get(), domainObj);
 
         ResourceMetadata metadata = repoInfo.getResourceMetadata();
-        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType(), Optional.empty());
+        CollectionModel<?> result = ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType());
         return result;
 	}
 }
