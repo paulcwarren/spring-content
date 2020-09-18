@@ -1,9 +1,7 @@
 package internal.org.springframework.content.rest.controllers;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Date;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,16 +15,12 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.io.InputStreamResource;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
-import internal.org.springframework.content.rest.utils.RepositoryUtils;
 
 @ContentRestController
 public class StoreRestController implements InitializingBean  {
@@ -55,9 +48,6 @@ public class StoreRestController implements InitializingBean  {
     private Stores stores;
     @Autowired(required=false)
     private RepositoryInvokerFactory repoInvokerFactory;
-    @Autowired(required=false)
-    private PlatformTransactionManager ptm;
-
     public StoreRestController() {
     }
 
@@ -197,30 +187,6 @@ public class StoreRestController implements InitializingBean  {
         else {
             response.setStatus(HttpStatus.OK.value());
         }
-    }
-
-    public static Object save(Repositories repositories, Object domainObj)
-            throws HttpRequestMethodNotSupportedException {
-
-        RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories,
-                domainObj.getClass());
-
-        if (ri == null) {
-            throw new ResourceNotFoundException();
-        }
-
-        Class<?> domainObjClazz = ri.getDomainType();
-
-        if (domainObjClazz != null) {
-            Optional<Method> saveMethod = ri.getCrudMethods().getSaveMethod();
-            if (!saveMethod.isPresent()) {
-                throw new HttpRequestMethodNotSupportedException("save");
-            }
-            domainObj = ReflectionUtils.invokeMethod(saveMethod.get(),
-                    repositories.getRepositoryFor(domainObjClazz).get(), domainObj);
-        }
-
-        return domainObj;
     }
 
     @Override
