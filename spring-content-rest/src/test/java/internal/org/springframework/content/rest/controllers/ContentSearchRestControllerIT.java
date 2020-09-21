@@ -13,6 +13,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,7 +51,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController;
+import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -70,6 +76,8 @@ import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
+import internal.org.springframework.data.rest.extensions.contentsearch.DefaultEntityLookupStrategy;
+import internal.org.springframework.data.rest.extensions.contentsearch.QueryMethodsEntityLookupStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -89,8 +97,15 @@ public class ContentSearchRestControllerIT {
 
     @Autowired
     TestEntityWithSharedIdsRepository repository;
+
     @Autowired
     TestEntityWithSeparateIdsRepository entityWithSeparateRepository;
+
+    @Autowired
+    RepositoryWithNoLookupStrategy repoWithNoLookupStrategy;
+
+    @Autowired
+    TestEntityWithSeparateIdsSearchableStore entityWithSeparateStore;
 
     @Autowired
     private WebApplicationContext context;
@@ -106,8 +121,13 @@ public class ContentSearchRestControllerIT {
     private TestEntityWithSeparateId entity4;
     private List<UUID> contentIds;
 
-    // mocks
+    private TestEntity2 entity5;
+    private TestEntity2 entity6;
+
+    // mocks/spys
     private static ReflectionService reflectionService;
+    private static DefaultEntityLookupStrategy defaultLookupStrategy;
+    private static QueryMethodsEntityLookupStrategy queryMethodsLookupStrategy;
 
     {
         Describe("ContentSearchRestController", () -> {
@@ -118,6 +138,11 @@ public class ContentSearchRestControllerIT {
                 reflectionService = mock(ReflectionService.class);
                 ContentSearchRestController controller = context.getBean(ContentSearchRestController.class);
                 controller.setReflectionService(reflectionService);
+
+                defaultLookupStrategy = spy(new DefaultEntityLookupStrategy());
+                controller.setDefaultEntityLookupStrategy(defaultLookupStrategy);
+                queryMethodsLookupStrategy = spy(new QueryMethodsEntityLookupStrategy());
+                controller.setQueryMethodsEntityLookupStrategy(queryMethodsLookupStrategy);
             });
 
             Describe("#search endpoint", () -> {
@@ -329,6 +354,9 @@ public class ContentSearchRestControllerIT {
                                     .accept("application/hal+json"))
                                     .andExpect(status().isOk()).andReturn();
 
+                            verify(defaultLookupStrategy, never()).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
+                            verify(queryMethodsLookupStrategy).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
+
                             ReadableRepresentation halResponse = representationFactory
                                     .readRepresentation("application/hal+json",
                                             new StringReader(result.getResponse()
@@ -462,6 +490,51 @@ public class ContentSearchRestControllerIT {
                         assertThat(halResponse
                                 .getResourcesByRel("customResults").get(0)
                                 .getValue("bar").toString(), is("bar1"));
+                    });
+                });
+
+                Context("given a repository with no lookup strategy", () -> {
+
+                    BeforeEach(() -> {
+                        entity5 = new TestEntity2();
+                        repoWithNoLookupStrategy.save(entity5);
+
+                        entity6 = new TestEntity2();
+                        repoWithNoLookupStrategy.save(entity6);
+
+                        contentIds = new ArrayList<>();
+                        contentIds.add(entity5.getContentId());
+                        contentIds.add(entity6.getContentId());
+
+                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                                eq("else"), any())).thenReturn(contentIds);
+                    });
+
+                    It("should return a response entity with the entity", () -> {
+                        MvcResult result = mvc.perform(get(
+                                "/repoWithNoLookupStrategy/searchContent?queryString=else")
+                                .accept("application/hal+json"))
+                                .andExpect(status().isOk()).andReturn();
+
+                        verify(defaultLookupStrategy).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
+                        verify(queryMethodsLookupStrategy, never()).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
+
+                        ReadableRepresentation halResponse = representationFactory
+                                .readRepresentation("application/hal+json",
+                                        new StringReader(result.getResponse()
+                                                .getContentAsString()));
+                        assertThat(halResponse
+                                .getResourcesByRel("testEntity2s").size(),
+                                is(2));
+                        String id1 = halResponse
+                                .getResourcesByRel("testEntity2s").get(0)
+                                .getValue("contentId").toString();
+                        String id2 = halResponse
+                                .getResourcesByRel("testEntity2s").get(1)
+                                .getValue("contentId").toString();
+                        assertThat(contentIds, hasItem(UUID.fromString(id1)));
+                        assertThat(contentIds, hasItem(UUID.fromString(id2)));
+                        assertThat(id1, is(not(id2)));
                     });
                 });
             });
@@ -683,11 +756,32 @@ public class ContentSearchRestControllerIT {
     }
 
     public interface TestEntityWithSeparateIdsRepository
-    extends CrudRepository<TestEntityWithSeparateId, UUID> {
+        extends CrudRepository<TestEntityWithSeparateId, UUID> {
+
+        List<TestEntityWithSeparateId> findAllByContentIdIn(@Param("contentIds") List<UUID> contentIds);
     }
 
     public interface TestEntityWithSeparateIdsSearchableStore
-    extends FilesystemContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
+        extends FilesystemContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
+    }
+
+    @Entity
+    @Getter
+    @Setter
+    public static class TestEntity2 {
+        @Id
+        private UUID id = UUID.randomUUID();
+        @ContentId
+        private UUID contentId = UUID.randomUUID();
+    }
+
+    @RepositoryRestResource(path="repoWithNoLookupStrategy")
+    public interface RepositoryWithNoLookupStrategy
+        extends CrudRepository<TestEntity2, UUID> {
+    }
+
+    public interface TestEntity2SearchableStore
+        extends FilesystemContentStore<TestEntity2, UUID>, Searchable<UUID> {
     }
 
     @Getter
