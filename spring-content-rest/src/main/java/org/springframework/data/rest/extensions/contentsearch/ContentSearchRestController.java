@@ -23,8 +23,8 @@ import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
@@ -43,6 +43,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import internal.org.springframework.content.rest.controllers.BadRequestException;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping.StoreType;
 import internal.org.springframework.content.rest.utils.ControllerUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
+import internal.org.springframework.data.rest.extensions.contentsearch.DefaultEntityLookupStrategy;
+import internal.org.springframework.data.rest.extensions.contentsearch.QueryMethodsEntityLookupStrategy;
 
 @RepositoryRestController
 public class ContentSearchRestController {
@@ -53,8 +56,10 @@ public class ContentSearchRestController {
 	private static Map<String, Method> searchMethods = new HashMap<>();
 
 	private Repositories repositories;
-	private Stores stores;
+    private Stores stores;
 	private PagedResourcesAssembler<Object> pagedResourcesAssembler;
+	private DefaultEntityLookupStrategy defaultLookupStrategy;
+	private QueryMethodsEntityLookupStrategy qmLookupStrategy;
 
 	private ReflectionService reflectionService;
 
@@ -64,20 +69,33 @@ public class ContentSearchRestController {
 	}
 
 	@Autowired
-	public ContentSearchRestController(Repositories repositories, Stores stores, PagedResourcesAssembler<Object> assembler) {
+	public ContentSearchRestController( Repositories repositories,
+	                                    Stores stores,
+	                                    PagedResourcesAssembler<Object> assembler) {
 
 		this.repositories = repositories;
 		this.stores = stores;
 		this.pagedResourcesAssembler = assembler;
 
 		this.reflectionService = new ReflectionServiceImpl();
+		this.defaultLookupStrategy = new DefaultEntityLookupStrategy();
+		this.qmLookupStrategy = new QueryMethodsEntityLookupStrategy();
 	}
 
 	public void setReflectionService(ReflectionService reflectionService) {
 		this.reflectionService = reflectionService;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+
+	public void setDefaultEntityLookupStrategy(DefaultEntityLookupStrategy lookupStrategy) {
+        this.defaultLookupStrategy = lookupStrategy;
+    }
+
+    public void setQueryMethodsEntityLookupStrategy(QueryMethodsEntityLookupStrategy lookupStrategy) {
+        this.qmLookupStrategy = lookupStrategy;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
 	@StoreType("contentstore")
 	@ResponseBody
 	@RequestMapping(value = ENTITY_CONTENTSEARCH_MAPPING, method = RequestMethod.GET)
@@ -88,7 +106,7 @@ public class ContentSearchRestController {
 			@PathVariable String repository,
 			@RequestParam(name = "queryString") String queryString) {
 
-		return searchContentInternal(repoInfo, pageable, sort, assembler, "search", new String[]{queryString});
+		return searchContentInternal(repoInfo, repository, pageable, sort, assembler, "search", new String[]{queryString});
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -102,10 +120,11 @@ public class ContentSearchRestController {
 										   @PathVariable String repository,
 										   @RequestParam(name = "keyword") List<String> keywords) {
 
-		return searchContentInternal(repoInfo, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[]{}));
+		return searchContentInternal(repoInfo, repository, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[]{}));
 	}
 
 	CollectionModel<?> searchContentInternal(RootResourceInformation repoInfo,
+	        String repository,
 			DefaultedPageable pageable,
 			Sort sort,
 			PersistentEntityResourceAssembler assembler,
@@ -153,9 +172,9 @@ public class ContentSearchRestController {
 			throw new BadRequestException();
 		}
 
-		List contentIds = (List) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable());
+		List<Object> contentIds = (List<Object>) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable());
 
-		List<Object> results = new ArrayList<>();
+		final List<Object> results = new ArrayList<>();
 		if (contentIds != null && contentIds.size() > 0) {
 
 		    if (contentIds.get(0).getClass().isPrimitive() || contentIds.get(0).getClass().equals(String.class) || contentIds.get(0).getClass().equals(UUID.class)) {
@@ -181,25 +200,23 @@ public class ContentSearchRestController {
     				}
     			}
     			else {
-    				RepositoryInvoker invoker = repoInfo.getInvoker();
-    				Iterable<?> entities = pageable.getPageable() != null ? invoker.invokeFindAll(pageable.getPageable()) : invoker.invokeFindAll(sort);
 
-    				for (Object entity : entities) {
-    					for (Object contentId : contentIds) {
+                     RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
+                     if (ri != null) {
+                         if (ri.getQueryMethods().isEmpty()) {
 
-    						Object candidate = BeanUtils.getFieldWithAnnotation(entity,
-    								ContentId.class);
-    						if (contentId.equals(candidate)) {
-    							results.add(entity);
-    						}
-    					}
-    				}
+                             defaultLookupStrategy.lookup(repoInfo, ri, contentIds, results);
+                         } else {
+
+                             qmLookupStrategy.lookup(repoInfo, ri, contentIds, results);
+                         }
+                     }
     			}
 
     			ResourceMetadata metadata = repoInfo.getResourceMetadata();
     			return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType());
 		    } else {
-		        results = contentIds;
+		        results.addAll(contentIds);
                 return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, null, contentIds.get(0).getClass());
 		    }
 		}
