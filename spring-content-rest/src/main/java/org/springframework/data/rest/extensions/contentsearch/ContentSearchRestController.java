@@ -3,6 +3,8 @@ package org.springframework.data.rest.extensions.contentsearch;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,7 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
+import org.springframework.content.rest.FulltextEntityLookupQuery;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -110,7 +113,7 @@ public class ContentSearchRestController {
         return searchContentInternal(repoInfo, repository, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[] {}));
     }
 
-    CollectionModel<?> searchContentInternal(RootResourceInformation repoInfo, String repository, DefaultedPageable pageable, Sort sort, PersistentEntityResourceAssembler assembler, String searchMethod, String[] keywords) {
+    private CollectionModel<?> searchContentInternal(RootResourceInformation repoInfo, String repository, DefaultedPageable pageable, Sort sort, PersistentEntityResourceAssembler assembler, String searchMethod, String[] keywords) {
 
         StoreInfo[] infos = stores.getStores(ContentStore.class, new StoreFilter() {
             @Override
@@ -148,12 +151,14 @@ public class ContentSearchRestController {
             throw new BadRequestException();
         }
 
-        List<Object> contentIds = (List<Object>) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable());
+        List<Object> contentIds = (List<Object>) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable(), returnType(info));
 
         final List<Object> results = new ArrayList<>();
         if (contentIds != null && contentIds.size() > 0) {
 
-            if (contentIds.get(0).getClass().isPrimitive() || contentIds.get(0).getClass().equals(String.class) || contentIds.get(0).getClass().equals(UUID.class)) {
+            if (contentIds.get(0).getClass().isPrimitive() ||
+                contentIds.get(0).getClass().equals(String.class) ||
+                contentIds.get(0).getClass().equals(UUID.class)) {
 
                 Class<?> entityType = repoInfo.getDomainType();
 
@@ -163,7 +168,6 @@ public class ContentSearchRestController {
                 }
 
                 Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType, ContentId.class);
-
                 if (idField.equals(contentIdField)) {
                     for (Object contentId : contentIds) {
                         Optional<Object> entity = repoInfo.getInvoker().invokeFindById(contentId.toString());
@@ -175,7 +179,9 @@ public class ContentSearchRestController {
 
                     RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
                     if (ri != null) {
-                        if (ri.getQueryMethods().isEmpty()) {
+                        if (ri.getQueryMethods()
+                                .filter(m -> m.getAnnotation(FulltextEntityLookupQuery.class) != null)
+                                .isEmpty()) {
 
                             defaultLookupStrategy.lookup(repoInfo, ri, contentIds, results);
                         } else {
@@ -193,5 +199,21 @@ public class ContentSearchRestController {
             }
         }
         return CollectionModel.empty();
+    }
+
+    private Class<?> returnType(StoreInfo info) {
+        Class<?> storeInterfaceClass = info.getInterface();
+        Class<?> searchReturnType = String.class;
+        for (Type t : storeInterfaceClass.getGenericInterfaces()) {
+            if (t.getTypeName().startsWith("org.springframework.content.commons.search")) {
+                if (t instanceof ParameterizedType) {
+                    Type[] fragmentGenericTypes = ((ParameterizedType)t).getActualTypeArguments();
+                    if (fragmentGenericTypes != null) {
+                        searchReturnType = (Class<?>)fragmentGenericTypes[0];
+                    }
+                }
+            }
+        }
+        return searchReturnType;
     }
 }
