@@ -17,6 +17,8 @@ import org.springframework.util.MultiValueMap;
 
 public class QueryMethodsEntityLookupStrategy {
 
+    private static final String CONTENT_IDS = "contentIds";
+
     public void lookup(RootResourceInformation rri, RepositoryInformation ri, List<Object> contentIds, List<Object> results) {
 
         Map<Object, Object> contentIdToEntities = new HashMap<>();
@@ -40,7 +42,7 @@ public class QueryMethodsEntityLookupStrategy {
                     }
                 }
 
-                Map<String, List<Object>> map = Collections.singletonMap("contentIds", contentIdsToQueryFor);
+                Map<String, List<Object>> map = Collections.singletonMap(CONTENT_IDS, contentIdsToQueryFor);
                 MultiValueMap<String, ? extends Object> args = new LinkedMultiValueMap<>(map);
                 Optional<Object> partialResults = rri.getInvoker().invokeQueryMethod(m, args, Pageable.unpaged(), Sort.unsorted());
                 if (partialResults.isPresent()) {
