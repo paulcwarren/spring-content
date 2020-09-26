@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.content.rest.FulltextEntityLookupQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -23,26 +24,29 @@ public class QueryMethodsEntityLookupStrategy {
             contentIdToEntities.put(contentId, null);
         }
 
-        ri.getQueryMethods().stream().forEach(m -> {
+        ri.getQueryMethods().stream()
+            .filter(m -> m.getAnnotation(FulltextEntityLookupQuery.class) != null)
+            .forEach(m -> {
 
-            List<Object> contentIdsToQueryFor = new ArrayList<>();
-            int i=0;
-            for (Object contentId : contentIdToEntities.keySet()) {
-                if (contentIdToEntities.get(contentId) == null) {
-                    contentIdsToQueryFor.add(contentId);
-                    i++;
-                    if (i == 250) {
-                        continue;
+                List<Object> contentIdsToQueryFor = new ArrayList<>();
+                int i=0;
+                for (Object contentId : contentIdToEntities.keySet()) {
+                    if (contentIdToEntities.get(contentId) == null) {
+                        contentIdsToQueryFor.add(contentId);
+                        i++;
+                        if (i == 250) {
+                            continue;
+                        }
                     }
                 }
-            }
 
-            Map<String, List<Object>> map = Collections.singletonMap("contentIds", contentIdsToQueryFor);
-            MultiValueMap<String, ? extends Object> args = new LinkedMultiValueMap<>(map);
-            Optional<Object> partialResults = rri.getInvoker().invokeQueryMethod(m, args, Pageable.unpaged(), Sort.unsorted());
-            if (partialResults.isPresent()) {
-                results.addAll((List<Object>) partialResults.get());
-            }
+                Map<String, List<Object>> map = Collections.singletonMap("contentIds", contentIdsToQueryFor);
+                MultiValueMap<String, ? extends Object> args = new LinkedMultiValueMap<>(map);
+                Optional<Object> partialResults = rri.getInvoker().invokeQueryMethod(m, args, Pageable.unpaged(), Sort.unsorted());
+                if (partialResults.isPresent()) {
+                    results.addAll((List<Object>) partialResults.get());
+                }
+
         });
     }
 }
