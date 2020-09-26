@@ -477,12 +477,41 @@ cause a <code>405 Method Not Allowed</code>.</p>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_format_of_the_response_payload">Format of the response payload</h3>
+<div class="paragraph">
+<p>This resource can return entities, or a custom search result type, depending on how the Searchable interface is
+specified and the type of Store it decorates.</p>
+</div>
+<div class="paragraph">
+<p>When Searchable decorates an AssociativeStore this resource will lookup and return representations of the content&#8217;s
+associated entities.  These lookups can be made more efficient by specifying a <code>@FulltextEntityLookupQuery</code> query
+method.  This is a custom <code>findAll</code> method that accepts a single <code>Collection</code> parameter annotated with the name
+<code>contentIds</code>, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>    public interface MyRepository extends CrudRepository&lt;MyEntity, Long&gt; {
+
+        @FulltextEntityLookupQuery
+        List&lt;MyEntity&gt; findAllByContentIdIn(@Param("contentIds") List&lt;UUID&gt; contentIds);
+    }
+
+    public interface MyStore extends AssociativeStore&lt;MyEntity, UUID&gt;, Searchable&lt;UUID&gt; {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When Searchable is typed to your own search return type the resource will return a representation of this type instead.
+See <code>Search Return Types</code> in the respective documentation for your chosen Spring Content fulltext module; solr or
+elasticsearch, for more information on specifying a custom search return types.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-26 04:35:51 UTC
+Last updated 2020-09-26 06:11:12 UTC
 </div>
 </div>
 </body>
