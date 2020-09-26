@@ -22,3 +22,27 @@ cause a `405 Method Not Allowed`.
 
 - `application/hal+json`
 - `application/json`.
+
+=== Format of the response payload
+
+This resource can return entities, or a custom search result type, depending on how the Searchable interface is 
+specified and the type of Store it decorates. 
+
+When Searchable decorates an AssociativeStore this resource will lookup and return representations of the content's
+associated entities.  These lookups can be made more efficient by specifying a `@FulltextEntityLookupQuery` query 
+method.  This is a custom `findAll` method that accepts a single `Collection` parameter annotated with the name 
+`contentIds`, as follows:
+
+```
+    public interface MyRepository extends CrudRepository<MyEntity, Long> {
+
+        @FulltextEntityLookupQuery
+        List<MyEntity> findAllByContentIdIn(@Param("contentIds") List<UUID> contentIds);
+    }
+    
+    public interface MyStore extends AssociativeStore<MyEntity, UUID>, Searchable<UUID> {}
+```
+
+When Searchable is typed to your own search return type the resource will return a representation of this type instead.  
+See `Search Return Types` in the respective documentation for your chosen Spring Content fulltext module; solr or 
+elasticsearch, for more information on specifying a custom search return types.
