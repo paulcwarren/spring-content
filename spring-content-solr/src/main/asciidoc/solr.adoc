@@ -54,11 +54,11 @@ public static class ApplicationConfig {
 }
 ----
 1. Specify the `@EnableFullTextSolrIndexing` annotation in an `@Configuration` class
-2. Spring Content Solr works with any Spring Content Store Module
+2. Spring Content Solr works with any Spring Content Storage Module
 3. Ensure a `(SolrJ) SolrClient` `@Bean` is instantiated somewhere within your `@Configuration`
 ====
 
-== Configuring
+== When your Solr cluster is secured with Basic Authentication 
 
 If required, credentials can be specified using the following configuration properties.
 
@@ -74,21 +74,21 @@ If required, credentials can be specified using the following configuration prop
 With fulltext-indexing enabled, Store interfaces can be made `Searchable`.  See
 <<content-repositories.search,Searchable Stores>> for more information on how to do this.
 
-== Custom Indexing
+== Taking control of the indexing process
 
 When you `@EnableFullTextSolrIndexing` a store event handler is registered that intercepts content being added to a
 Store and sends that content to your Solr instance for full-text indexing.  This is usually all you need.  However,
 sometimes you may need more control over when documents are indexed.  For these cases you can use the `IndexService`
 bean directly in your code to index (or unindex) content as required.
 
-== Custom Attributes and Filtering Queries
+== Indexing additional attributes
 
-By default Spring Content Solr indexes content only.  However, it is common to synchronize additional 
-attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating 
-search results (removing the need to perform subsequent queries against the primary domain model).
+By default Spring Content Solr indexes content only.  However, it is common to index additional 
+attributes (from the primary domain model) that can then be used for filtering subsequent full-text queries 
+or for efficiently populating search results (removing the need to perform additional queries against the 
+primary domain model).
 
-To synchronize additional attributes when content is indexed add a bean that implements `AttributeProvider` to your 
-application's configuration:
+Add a bean that implements `AttributeProvider` to your application's configuration:
 
 ====
 [source, java]
@@ -108,6 +108,9 @@ application's configuration:
         };
     }
 ====
+
+Whenever content is indexed this bean will be consulted providing an opportunity to provide the set additional attributes that 
+you would like to be indexed.
 
 To customize the query that gets executed when a Store's Searchable method is invoked add a `FilterQueryProvider` bean to your 
 application's configuration:
@@ -131,14 +134,46 @@ NOTE: this bean is often a request scoped bean or has an implementation based on
 filter queries based on the current execution context. 
 ====
 
+When fulltext queries are performed this bean will be consulted providing an opportunity to supplement the query
+with your own filters.  These filters are often based on the additional attributes that have been indexed.    
+
 == Search Return Types
 
-`Searchable` is a generic type allowing you to specify the return type of the result set.  The simplest option is to 
-type this interface to String in which case result sets will be collections of content IDs.
+`Searchable` is a generic type allowing you to specify the return type of the result set.  
+
+The simplest option is to type this interface to String in which case the result set will be a collection of the content IDs
+of content matching the search terms provided.
 
 You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
 results to your specific needs:
 
 - @ContentId; extracts the content ID of the content from your search results
-- @Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are
+- @Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are.  Note
+that highlighters usually analyze the stored field value so you may have to ensure the field that your content is indexed into
+(usually `\_text_`) is also a stored field.
 - Attribute; extracts the specified attribute from your search results (must be synchronized using an `AttributeProvider`)
+
+The following example show a searchable `ContentStore` returning a custom type `SearchResult`.
+
+====
+[source, java]
+----
+    public interface DocumentStore 
+        extends ContentStore<Document, String>, Searchable<SearchResult> {
+    }
+
+    @Getter
+    @Setter
+    public static class SearchResult {
+
+        @ContentId
+        private String contentId;
+
+        @Highlight
+        private String highlight;
+
+        @Attribute(name = "email")
+        private String email;
+    }
+----
+====
