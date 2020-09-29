@@ -1,6 +1,7 @@
 package internal.org.springframework.content.fragments;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +22,13 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.solr.FilterQueryProvider;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
+
+import internal.org.springframework.content.solr.SolrFulltextIndexServiceImpl;
 
 public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
 
@@ -165,6 +169,11 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
 
         query.setFields(field);
 
+        java.lang.reflect.Field idField = DomainObjectUtils.getIdField(domainClass);
+        if (idField != null) {
+            query.addField(SolrFulltextIndexServiceImpl.ENTITY_ID);
+        }
+
         for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
             Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
             query.addField(fieldAnnotation.name());
@@ -213,6 +222,11 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
                     result = searchType.newInstance();
                 } catch (InstantiationException | IllegalAccessException e) {
                     e.printStackTrace();
+                }
+
+                Field idField = DomainObjectUtils.getIdField(searchType);
+                if (idField != null) {
+                    new BeanWrapperImpl(result).setPropertyValue(idField.getName(), list.get(j).getFirstValue(SolrFulltextIndexServiceImpl.ENTITY_ID));
                 }
 
                 if (BeanUtils.findFieldWithAnnotation(searchType, ContentId.class) != null) {
