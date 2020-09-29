@@ -187,9 +187,13 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
             catch (Exception e) {
 
-                logger.error("Unable to handle request", e);
+                if (isClientAbortException(e)) {
+                    // suppress
+                } else {
+                    logger.error("Unable to handle request", e);
 
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+                }
             }
         }
 
@@ -300,10 +304,13 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 byteRangeRestRequestHandler.handleRequest(request, response);
             }
             catch (Exception e) {
+                if (isClientAbortException(e)) {
+                    // suppress
+                } else {
+                    logger.error("Unable to handle request", e);
 
-                logger.error("Unable to handle request", e);
-
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, format("Failed to handle request for %s", resource.getDescription()), e);
+                }
             }
         }
 
@@ -457,5 +464,12 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
             return resolved.toArray(new Method[]{});
         }
+    }
+
+    private static boolean isClientAbortException(Exception e) {
+        if (e.getClass().getSimpleName().equals("ClientAbortException")) {
+            return true;
+        }
+        return false;
     }
 }
