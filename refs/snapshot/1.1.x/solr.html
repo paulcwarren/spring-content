@@ -517,7 +517,7 @@ public static class ApplicationConfig {
 <p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation in an <code>@Configuration</code> class</p>
 </li>
 <li>
-<p>Spring Content Solr works with any Spring Content Store Module</p>
+<p>Spring Content Solr works with any Spring Content Storage Module</p>
 </li>
 <li>
 <p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code></p>
@@ -529,7 +529,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_configuring">Configuring</h2>
+<h2 id="_when_your_solr_cluster_is_secured_with_basic_authentication">When your Solr cluster is secured with Basic Authentication</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>If required, credentials can be specified using the following configuration properties.</p>
@@ -568,7 +568,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_custom_indexing">Custom Indexing</h2>
+<h2 id="_taking_control_of_the_indexing_process">Taking control of the indexing process</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>When you <code>@EnableFullTextSolrIndexing</code> a store event handler is registered that intercepts content being added to a
@@ -579,16 +579,16 @@ bean directly in your code to index (or unindex) content as required.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_custom_attributes_and_filtering_queries">Custom Attributes and Filtering Queries</h2>
+<h2 id="_indexing_additional_attributes">Indexing additional attributes</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>By default Spring Content Solr indexes content only.  However, it is common to synchronize additional
-attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
-search results (removing the need to perform subsequent queries against the primary domain model).</p>
+<p>By default Spring Content Solr indexes content only.  However, it is common to index additional
+attributes (from the primary domain model) that can then be used for filtering subsequent full-text queries
+or for efficiently populating search results (removing the need to perform additional queries against the
+primary domain model).</p>
 </div>
 <div class="paragraph">
-<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
-application&#8217;s configuration:</p>
+<p>Add a bean that implements <code>AttributeProvider</code> to your application&#8217;s configuration:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -611,6 +611,10 @@ application&#8217;s configuration:</p>
 </div>
 </div>
 </div>
+</div>
+<div class="paragraph">
+<p>Whenever content is indexed this bean will be consulted providing an opportunity to provide the set additional attributes that
+you would like to be indexed.</p>
 </div>
 <div class="paragraph">
 <p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
@@ -648,14 +652,21 @@ filter queries based on the current execution context.
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>When fulltext queries are performed this bean will be consulted providing an opportunity to supplement the query
+with your own filters.  These filters are often based on the additional attributes that have been indexed.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_search_return_types">Search Return Types</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
-type this interface to String in which case result sets will be collections of content IDs.</p>
+<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.</p>
+</div>
+<div class="paragraph">
+<p>The simplest option is to type this interface to String in which case the result set will be a collection of the content IDs
+of content matching the search terms provided.</p>
 </div>
 <div class="paragraph">
 <p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
@@ -667,19 +678,49 @@ results to your specific needs:</p>
 <p>@ContentId; extracts the content ID of the content from your search results</p>
 </li>
 <li>
-<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
+<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are.  Note
+that highlighters usually analyze the stored field value so you may have to ensure the field that your content is indexed into
+(usually <code>_text_</code>) is also a stored field.</p>
 </li>
 <li>
 <p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>The following example show a searchable <code>ContentStore</code> returning a custom type <code>SearchResult</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    public interface DocumentStore
+        extends ContentStore&lt;Document, String&gt;, Searchable&lt;SearchResult&gt; {
+    }
+
+    @Getter
+    @Setter
+    public static class SearchResult {
+
+        @ContentId
+        private String contentId;
+
+        @Highlight
+        private String highlight;
+
+        @Attribute(name = "email")
+        private String email;
+    }</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-26 06:11:12 UTC
+Last updated 2020-09-29 04:07:48 UTC
 </div>
 </div>
 </body>
