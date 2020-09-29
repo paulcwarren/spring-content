@@ -1,6 +1,4 @@
-package internal.org.springframework.content.rest.utils;
-
-import org.springframework.content.commons.utils.BeanUtils;
+package org.springframework.content.commons.utils;
 
 public final class DomainObjectUtils {
 

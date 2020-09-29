@@ -19,6 +19,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.controllers.ContentService;
@@ -38,7 +39,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 
 import internal.org.springframework.content.rest.controllers.StoreRestController;
-import internal.org.springframework.content.rest.utils.DomainObjectUtils;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 /**
