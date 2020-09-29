@@ -81,12 +81,9 @@ public class SolrIT {
                 doc = new Document();
                 doc.setTitle("title of document 1");
                 doc.setEmail("author@email.com");
-                docContentRepo.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
-                try {
-                    doc = docRepo.save(doc);
-                } catch (Exception e) {
-                    int i=0;
-                }
+                doc = docRepo.save(doc);
+                doc = docContentRepo.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
+                doc = docRepo.save(doc);
             });
             AfterEach(() -> {
                 if (docContentRepo != null) {
@@ -287,8 +284,8 @@ public class SolrIT {
                 doc = new Document();
                 doc.setTitle("title of document 1");
                 doc.setEmail("author@email.com");
-                store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
                 doc = docRepo.save(doc);
+                doc = store.setContent(doc, this.getClass().getResourceAsStream("/one.docx"));
             });
 
             AfterEach(() -> {
@@ -311,6 +308,7 @@ public class SolrIT {
                 List<FulltextInfo> results = store.search("one", null, FulltextInfo.class);
                 assertThat(results, is(not(nullValue())));
                 assertThat(results.size(), is(greaterThanOrEqualTo(1)));
+                assertThat(results.get(0), hasProperty("id", is(doc.getId())));
                 assertThat(results.get(0), hasProperty("contentId", is(doc.getContentId())));
                 assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
                 assertThat(results.get(0), hasProperty("email", containsString("author@email.com")));
@@ -351,6 +349,9 @@ public class SolrIT {
     @Getter
     @Setter
     public static class FulltextInfo {
+
+        @Id
+        private Long id;
 
         @ContentId
         private String contentId;

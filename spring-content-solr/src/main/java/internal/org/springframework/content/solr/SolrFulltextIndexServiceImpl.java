@@ -5,6 +5,7 @@ import static org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION.
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -18,19 +19,35 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.IndexService;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.solr.AttributeProvider;
 import org.springframework.content.solr.SolrProperties;
 
 public class SolrFulltextIndexServiceImpl implements IndexService {
 
+    public static final String ENTITY_ID = "entity_id";
+
     private final SolrClient solrClient;
     private final SolrProperties properties;
+    private AttributeProvider<Object> builtinSyncer;
     private AttributeProvider<Object> syncer;
 
     @Autowired
     public SolrFulltextIndexServiceImpl(SolrClient solrClient, SolrProperties properties) {
         this.solrClient = solrClient;
         this.properties = properties;
+        builtinSyncer = new AttributeProvider<Object>() {
+
+            @Override
+            public Map synchronize(Object entity) {
+                Map<String, String> attributes = new HashMap<>();
+                Object id = DomainObjectUtils.getId(entity);
+                if (id != null) {
+                    attributes.put(ENTITY_ID, id.toString());
+                }
+                return attributes;
+            }
+        };
     }
 
     @Autowired(required=false)
@@ -49,12 +66,16 @@ public class SolrFulltextIndexServiceImpl implements IndexService {
         up.addContentStream(new ContentEntityStream(content));
         String id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class).toString();
         up.setParam("literal.id", entity.getClass().getCanonicalName() + ":" + id);
+
+        Map<String,String> attributesToSync = builtinSyncer.synchronize(entity);
         if (syncer != null) {
-            Map<String,String> attributesToSync = syncer.synchronize(entity);
-            for (Entry<String,String> entry : attributesToSync.entrySet()) {
-                up.setParam(format("literal.%s", entry.getKey()), entry.getValue());
-            }
+            attributesToSync.putAll(syncer.synchronize(entity));
         }
+
+        for (Entry<String,String> entry : attributesToSync.entrySet()) {
+            up.setParam(format("literal.%s", entry.getKey()), entry.getValue());
+        }
+
         up.setAction(COMMIT,true, true);
 
         try {
