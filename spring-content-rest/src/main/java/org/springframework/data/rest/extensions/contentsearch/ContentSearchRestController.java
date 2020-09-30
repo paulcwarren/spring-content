@@ -9,8 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
+
+import javax.persistence.Id;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
@@ -20,15 +21,15 @@ import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.content.rest.FulltextEntityLookupQuery;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -49,6 +50,9 @@ import internal.org.springframework.content.rest.utils.ControllerUtils;
 import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import internal.org.springframework.data.rest.extensions.contentsearch.DefaultEntityLookupStrategy;
 import internal.org.springframework.data.rest.extensions.contentsearch.QueryMethodsEntityLookupStrategy;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @RepositoryRestController
 public class ContentSearchRestController {
@@ -151,54 +155,68 @@ public class ContentSearchRestController {
             throw new BadRequestException();
         }
 
-        List<Object> contentIds = (List<Object>) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable(), returnType(info));
+        Class<?> returnType = returnType(info);
+        if (returnType.isPrimitive() || returnType.equals(String.class) || returnType.equals(UUID.class)) {
+
+            returnType = InternalResult.class;
+        }
+
+        List<Object> intermediateResults = (List<Object>) reflectionService.invokeMethod(method, store, keywords[0], pageable.getPageable(), returnType);
+
+        if (intermediateResults == null || intermediateResults.size() == 0) {
+            return CollectionModel.empty();
+        }
 
         final List<Object> results = new ArrayList<>();
-        if (contentIds != null && contentIds.size() > 0) {
 
-            if (contentIds.get(0).getClass().isPrimitive() ||
-                contentIds.get(0).getClass().equals(String.class) ||
-                contentIds.get(0).getClass().equals(UUID.class)) {
+        if (returnType.equals(InternalResult.class)) {
 
-                Class<?> entityType = repoInfo.getDomainType();
+            boolean idFieldEqualsContentIdField = isIdFieldOverloaded(repoInfo.getDomainType());
 
-                Field idField = BeanUtils.findFieldWithAnnotation(entityType, Id.class);
-                if (idField == null) {
-                    idField = BeanUtils.findFieldWithAnnotation(entityType, javax.persistence.Id.class);
+            List<Object> entityIds = new ArrayList<>();
+            List<Object> contentIds = new ArrayList<>();
+
+            for (Object tempResult : intermediateResults) {
+                InternalResult internalResult = (InternalResult)tempResult;
+                if (internalResult.getId() != null) {
+                    entityIds.add(internalResult.getId());
+                } else if (idFieldEqualsContentIdField) {
+                    entityIds.add(internalResult.getContentId());
+                } else if (internalResult.getContentId() != null) {
+                    contentIds.add(internalResult.getContentId());
                 }
-
-                Field contentIdField = BeanUtils.findFieldWithAnnotation(entityType, ContentId.class);
-                if (idField.equals(contentIdField)) {
-                    for (Object contentId : contentIds) {
-                        Optional<Object> entity = repoInfo.getInvoker().invokeFindById(contentId.toString());
-                        if (entity.isPresent()) {
-                            results.add(entity.get());
-                        }
-                    }
-                } else {
-
-                    RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
-                    if (ri != null) {
-                        if (ri.getQueryMethods()
-                                .filter(m -> m.getAnnotation(FulltextEntityLookupQuery.class) != null)
-                                .isEmpty()) {
-
-                            defaultLookupStrategy.lookup(repoInfo, ri, contentIds, results);
-                        } else {
-
-                            qmLookupStrategy.lookup(repoInfo, ri, contentIds, results);
-                        }
-                    }
-                }
-
-                ResourceMetadata metadata = repoInfo.getResourceMetadata();
-                return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, metadata.getDomainType());
-            } else {
-                results.addAll(contentIds);
-                return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, null, contentIds.get(0).getClass());
             }
+
+            RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
+            Class<?> domainClass = ri.getDomainType();
+            repositories.getRepositoryFor(domainClass).ifPresent(r -> {
+
+                Method findAllByIdMethod = ReflectionUtils.findMethod(CrudRepository.class, "findAllById", Iterable.class);
+                Iterable entities = (Iterable) ReflectionUtils.invokeMethod(findAllByIdMethod, r, entityIds);
+                for (Object entity : entities) {
+                    results.add(entity);
+                }
+            });
+
+            if (contentIds.size() > 0) {
+                if (ri != null) {
+                    if (ri.getQueryMethods()
+                            .filter(m -> m.getAnnotation(FulltextEntityLookupQuery.class) != null)
+                            .isEmpty()) {
+
+                        defaultLookupStrategy.lookup(repoInfo, ri, contentIds, results);
+                    } else {
+
+                        qmLookupStrategy.lookup(repoInfo, ri, contentIds, results);
+                    }
+                }
+            }
+
+            return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, assembler, domainClass);
+        } else {
+            results.addAll(intermediateResults);
+            return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, null, intermediateResults.get(0).getClass());
         }
-        return CollectionModel.empty();
     }
 
     private Class<?> returnType(StoreInfo info) {
@@ -215,5 +233,28 @@ public class ContentSearchRestController {
             }
         }
         return searchReturnType;
+    }
+
+    private boolean isIdFieldOverloaded(Class<?> domainClass) {
+
+        Field idField = DomainObjectUtils.getIdField(domainClass);
+        Field contentIdField = BeanUtils.findFieldWithAnnotation(domainClass, ContentId.class);
+
+        if (idField.equals(contentIdField)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class InternalResult {
+
+        @Id
+        private Object id;
+
+        @ContentId
+        private Object contentId;
     }
 }
