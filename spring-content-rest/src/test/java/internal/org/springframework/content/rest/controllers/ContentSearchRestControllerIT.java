@@ -59,6 +59,7 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController;
+import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController.InternalResult;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.test.context.ActiveProfiles;
@@ -127,6 +128,8 @@ public class ContentSearchRestControllerIT {
 
     private TestEntity2 entity5;
     private TestEntity2 entity6;
+
+    private List<InternalResult> internalResults;
 
     // mocks/spys
     private static ReflectionService reflectionService;
@@ -206,17 +209,17 @@ public class ContentSearchRestControllerIT {
                         Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
                         PageRequest pageable = PageRequest.of(1, 1);
 
-                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(UUID.class));
+                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(InternalResult.class));
                     });
                 });
 
-                Context("given an entity with a shared Id/ContentId field", () -> {
+                Context("given an entity with an overloaded Id field", () -> {
 
                     Context("given no results are found", () -> {
 
                         BeforeEach(() -> {
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("one"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(Collections.EMPTY_LIST);
+                                    eq("one"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(Collections.EMPTY_LIST);
                         });
 
                         It("should return an empty response entity", () -> {
@@ -242,12 +245,16 @@ public class ContentSearchRestControllerIT {
                             entity2 = new TestEntityWithSharedId();
                             repository.save(entity2);
 
+                            internalResults = new ArrayList<>();
+                            internalResults.add(new InternalResult(null, entity.getContentId()));
+                            internalResults.add(new InternalResult(entity2.getId(), entity2.getContentId()));
+
                             sharedIds = new ArrayList<>();
                             sharedIds.add(entity.getId());
                             sharedIds.add(entity2.getId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("two"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(sharedIds);
+                                    eq("two"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -255,6 +262,9 @@ public class ContentSearchRestControllerIT {
                                     "/testEntityWithSharedIds/searchContent?queryString=two")
                                     .accept("application/hal+json"))
                                     .andExpect(status().isOk()).andReturn();
+
+                            verify(defaultLookupStrategy, never()).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
+                            verify(queryMethodsLookupStrategy, never()).lookup(any(RootResourceInformation.class), any(RepositoryInformation.class), any(List.class), any(List.class));
 
                             ReadableRepresentation halResponse = representationFactory
                                     .readRepresentation("application/hal+json",
@@ -283,12 +293,18 @@ public class ContentSearchRestControllerIT {
                             entity2 = new TestEntityWithSharedId();
                             repository.save(entity2);
 
+                            UUID orphanedContentId = UUID.randomUUID();
+
+                            internalResults = new ArrayList<>();
+                            internalResults.add(new InternalResult(null, orphanedContentId));
+                            internalResults.add(new InternalResult(entity2.getId(), entity2.getContentId()));
+
                             contentIds = new ArrayList<>();
-                            contentIds.add(UUID.randomUUID()); // invalid id
+                            contentIds.add(orphanedContentId); // invalid id
                             contentIds.add(entity2.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(contentIds);
+                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -318,7 +334,7 @@ public class ContentSearchRestControllerIT {
 
                         BeforeEach(() -> {
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("something"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(Collections.EMPTY_LIST);
+                                    eq("something"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(Collections.EMPTY_LIST);
                         });
 
                         It("should return an empty response entity", () -> {
@@ -335,7 +351,7 @@ public class ContentSearchRestControllerIT {
                         });
                     });
 
-                    Context("given results are found", () -> {
+                    Context("given results are found with entity IDs", () -> {
 
                         BeforeEach(() -> {
                             entity3 = new TestEntityWithSeparateId();
@@ -344,12 +360,16 @@ public class ContentSearchRestControllerIT {
                             entity4 = new TestEntityWithSeparateId();
                             entityWithSeparateRepository.save(entity4);
 
+                            internalResults = new ArrayList<>();
+                            internalResults.add(new InternalResult(null, entity3.getContentId()));
+                            internalResults.add(new InternalResult(entity4.getId(), entity4.getContentId()));
+
                             contentIds = new ArrayList<>();
                             contentIds.add(entity3.getContentId());
                             contentIds.add(entity4.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(contentIds);
+                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -386,12 +406,18 @@ public class ContentSearchRestControllerIT {
                             entity3 = new TestEntityWithSeparateId();
                             entityWithSeparateRepository.save(entity3);
 
+                            UUID orphanedContentId = UUID.randomUUID();
+
+                            internalResults = new ArrayList<>();
+                            internalResults.add(new InternalResult(null, orphanedContentId));
+                            internalResults.add(new InternalResult(entity3.getId(), entity3.getContentId()));
+
                             contentIds = new ArrayList<>();
-                            contentIds.add(UUID.randomUUID()); // invalid id
+                            contentIds.add(orphanedContentId); // invalid id
                             contentIds.add(entity3.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(contentIds);
+                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -497,7 +523,7 @@ public class ContentSearchRestControllerIT {
                     });
                 });
 
-                Context("given a repository with no lookup strategy", () -> {
+                Context("given a repository with no entity lookup query method", () -> {
 
                     BeforeEach(() -> {
                         entity5 = new TestEntity2();
@@ -506,12 +532,16 @@ public class ContentSearchRestControllerIT {
                         entity6 = new TestEntity2();
                         repoWithNoLookupStrategy.save(entity6);
 
+                        internalResults = new ArrayList<>();
+                        internalResults.add(new InternalResult(null, entity5.getContentId()));
+                        internalResults.add(new InternalResult(entity6.getId(), entity6.getContentId()));
+
                         contentIds = new ArrayList<>();
                         contentIds.add(entity5.getContentId());
                         contentIds.add(entity6.getContentId());
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(contentIds);
+                                eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                     });
 
                     It("should return a response entity with the entity", () -> {
@@ -552,12 +582,16 @@ public class ContentSearchRestControllerIT {
                     entity4 = new TestEntityWithSeparateId();
                     entityWithSeparateRepository.save(entity4);
 
+                    internalResults = new ArrayList<>();
+                    internalResults.add(new InternalResult(null, entity3.getContentId()));
+                    internalResults.add(new InternalResult(entity4.getId(), entity4.getContentId()));
+
                     contentIds = new ArrayList<>();
                     contentIds.add(entity3.getContentId());
                     contentIds.add(entity4.getContentId());
 
                     when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                            eq("else"), argThat(instanceOf(Pageable.class)), eq(UUID.class))).thenReturn(contentIds);
+                            eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                 });
 
                 It("should return a response entity with the entity", () -> {

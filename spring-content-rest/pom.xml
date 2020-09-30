@@ -64,6 +64,11 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <!-- Transactions -->
+        
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
@@ -188,11 +193,6 @@
             <groupId>com.theoryinpractise</groupId>
             <artifactId>halbuilder-standard</artifactId>
             <version>4.1.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
