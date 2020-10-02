@@ -1,5 +1,7 @@
 package org.springframework.versions.impl;
 
+import static java.lang.String.format;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.security.Principal;
@@ -14,16 +16,9 @@ import javax.persistence.Id;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
-import internal.org.springframework.versions.AuthenticationFacade;
-import internal.org.springframework.versions.LockingService;
-import internal.org.springframework.versions.jpa.CloningService;
-import internal.org.springframework.versions.jpa.EntityInformationFacade;
-import internal.org.springframework.versions.jpa.JpaCloningServiceImpl;
-import internal.org.springframework.versions.jpa.VersioningService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.text.StringSubstitutor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.data.repository.core.EntityInformation;
@@ -40,7 +35,12 @@ import org.springframework.versions.VersionInfo;
 import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 
-import static java.lang.String.format;
+import internal.org.springframework.versions.AuthenticationFacade;
+import internal.org.springframework.versions.LockingService;
+import internal.org.springframework.versions.jpa.CloningService;
+import internal.org.springframework.versions.jpa.EntityInformationFacade;
+import internal.org.springframework.versions.jpa.JpaCloningServiceImpl;
+import internal.org.springframework.versions.jpa.VersioningService;
 
 public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> implements LockingAndVersioningRepository<T, ID> {
 
@@ -82,11 +82,19 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         if (id == null) {
             throw new IllegalStateException("@Id missing");
         }
+
+        String principal = authentication.getName();
+        Principal lockOwner = lockingService.lockOwner(id);
+        if (lockOwner != null && !principal.equals(lockOwner.getName())) {
+            throw new LockOwnerException(format("not lock owner: %s has lock owner '%s'", id, (lockOwner != null) ? lockOwner.getName() : ""));
+        }
+
         if (lockingService.lock(id, authentication)) {
             BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, authentication.getName());
             return this.save(entity);
         }
-        throw new IllegalStateException(format("failed to lock %s", id));
+
+        throw new LockingAndVersioningException(format("failed to lock %s", id));
     }
 
     @Override
@@ -115,9 +123,10 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         if (lockingService.unlock(id, authentication)) {
             return entity;
         }
-        throw new IllegalStateException(format("failed to unlock %s", id));
+        throw new LockingAndVersioningException(format("failed to unlock %s", id));
     }
 
+    @Override
     @Transactional
     public <S extends T> S save(S entity) {
         if (entityInformation == null) {
@@ -145,6 +154,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
     }
 
+    @Override
     @Transactional
     public <S extends T> S workingCopy(S currentVersion) {
 
@@ -197,6 +207,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return newVersion;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     @Transactional
     public <S extends T> S version(S currentVersion, VersionInfo info) {
@@ -388,6 +399,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return isAncestralRoot;
     }
 
+    @Override
     public <S extends T> boolean isPrivateWorkingCopy(S entity) {
 
         String sql = "select count(f1.${id}) FROM ${entityClass} f1 inner join ${entityClass} f2 on f1.${ancestorId} = f2.${id} and f2.${successorId} IS NULL where f1.${id} = :id";
@@ -402,6 +414,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return (q.getSingleResult() == 1L);
     }
 
+    @Override
     public <S extends T> S findWorkingCopy(S entity) {
 
         String sql = "select f1 FROM ${entityClass} f1 inner join ${entityClass} f2 on f1.${ancestorId} = f2.${id} and f2.${successorId} IS NULL where f1.${ancestorRootId} = :id";
