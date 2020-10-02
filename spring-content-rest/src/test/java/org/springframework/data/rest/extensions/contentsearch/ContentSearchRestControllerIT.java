@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package org.springframework.data.rest.extensions.contentsearch;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -11,11 +11,13 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
@@ -36,6 +38,7 @@ import javax.persistence.MappedSuperclass;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.fulltext.Attribute;
@@ -58,7 +61,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController;
 import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController.InternalResult;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -101,16 +103,19 @@ import lombok.Setter;
 public class ContentSearchRestControllerIT {
 
     @Autowired
-    TestEntityWithSharedIdsRepository repository;
+    private ContentSearchRestController controller;
 
     @Autowired
-    TestEntityWithSeparateIdsRepository entityWithSeparateRepository;
+    private TestEntityWithSharedIdsRepository repository;
 
     @Autowired
-    RepositoryWithNoLookupStrategy repoWithNoLookupStrategy;
+    private TestEntityWithSeparateIdsRepository entityWithSeparateRepository;
 
     @Autowired
-    TestEntityWithSeparateIdsSearchableStore entityWithSeparateStore;
+    private RepositoryWithNoLookupStrategy repoWithNoLookupStrategy;
+
+    @Autowired
+    private TestEntityWithSeparateIdsSearchableStore entityWithSeparateStore;
 
     @Autowired
     private WebApplicationContext context;
@@ -544,7 +549,7 @@ public class ContentSearchRestControllerIT {
                                 eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
                     });
 
-                    It("should return a response entity with the entity", () -> {
+                    It("should return a response with the entity", () -> {
                         MvcResult result = mvc.perform(get(
                                 "/repoWithNoLookupStrategy/searchContent?queryString=else")
                                 .accept("application/hal+json"))
@@ -621,6 +626,29 @@ public class ContentSearchRestControllerIT {
                     assertThat(id1, is(not(id2)));
                 });
             });
+
+            Describe("#fetchEntitiesInBatches", () -> {
+
+                It("should batch queries appropriately", () -> {
+
+                    List<UUID> ids = new ArrayList<>();
+                    for (int i=0; i < 500; i++) {
+                        TestEntityWithSeparateId entity = new TestEntityWithSeparateId();
+                        entity = entityWithSeparateRepository.save(entity);
+                        ids.add(entity.getId());
+                    }
+
+                    List<TestEntityWithSeparateId> entities = new ArrayList<>();
+
+                    CrudRepository<?,?> repoSpy = mock(CrudRepository.class, AdditionalAnswers.delegatesTo(entityWithSeparateRepository));
+
+                    controller.fetchEntitiesInBatches(repoSpy, ids, entities);
+
+                    verify(repoSpy, times(2)).findAllById(anyCollection());
+
+                    assertThat(entities.size(), is(500));
+                });
+            });
         });
     }
 
@@ -652,8 +680,8 @@ public class ContentSearchRestControllerIT {
         @Override
         protected String[] packagesToScan() {
             return new String[]{
-                    "internal.org.springframework.content.rest.controllers",
-                    "internal.org.springframework.content.rest.support"
+                    "internal.org.springframework.content.rest.support",
+                    "org.springframework.data.rest.extensions.contentsearch"
             };
         }
     }
@@ -796,7 +824,7 @@ public class ContentSearchRestControllerIT {
     public interface TestEntityWithSeparateIdsRepository
         extends CrudRepository<TestEntityWithSeparateId, UUID> {
 
-        @Query("select e from internal.org.springframework.content.rest.controllers.ContentSearchRestControllerIT$TestEntityWithSeparateId e")
+        @Query("select e from org.springframework.data.rest.extensions.contentsearch.ContentSearchRestControllerIT$TestEntityWithSeparateId e")
         List<TestEntityWithSeparateId> randomQueryMethod();
 
         @FulltextEntityLookupQuery
