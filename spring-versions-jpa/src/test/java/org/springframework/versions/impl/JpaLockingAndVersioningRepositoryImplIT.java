@@ -1,5 +1,18 @@
 package org.springframework.versions.impl;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -10,14 +23,9 @@ import javax.persistence.Id;
 import javax.persistence.Version;
 import javax.sql.DataSource;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.versions.LockingService;
-import lombok.Getter;
-import lombok.Setter;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -55,18 +63,11 @@ import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 import org.springframework.versions.jpa.config.JpaLockingAndVersioningConfig;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+
+import internal.org.springframework.versions.LockingService;
+import lombok.Getter;
+import lombok.Setter;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @ContextConfiguration(classes={JpaLockingAndVersioningRepositoryImplIT.TestConfig.class})
