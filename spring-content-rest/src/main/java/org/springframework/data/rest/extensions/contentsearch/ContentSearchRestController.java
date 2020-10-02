@@ -189,14 +189,13 @@ public class ContentSearchRestController {
 
             RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
             Class<?> domainClass = ri.getDomainType();
-            repositories.getRepositoryFor(domainClass).ifPresent(r -> {
 
-                Method findAllByIdMethod = ReflectionUtils.findMethod(CrudRepository.class, "findAllById", Iterable.class);
-                Iterable entities = (Iterable) ReflectionUtils.invokeMethod(findAllByIdMethod, r, entityIds);
-                for (Object entity : entities) {
-                    results.add(entity);
-                }
-            });
+            if (entityIds.size() > 0) {
+                repositories.getRepositoryFor(domainClass).ifPresent(r -> {
+
+                    fetchEntitiesInBatches((CrudRepository<?,?>)r, entityIds, results);
+                });
+            }
 
             if (contentIds.size() > 0) {
                 if (ri != null) {
@@ -216,6 +215,27 @@ public class ContentSearchRestController {
         } else {
             results.addAll(intermediateResults);
             return ControllerUtils.toCollectionModel(results, pagedResourcesAssembler, null, intermediateResults.get(0).getClass());
+        }
+    }
+
+    /* package */ void fetchEntitiesInBatches(CrudRepository<?,?> r, List entityIds, List results) {
+
+        int size = entityIds.size();
+
+        Method findAllByIdMethod = ReflectionUtils.findMethod(CrudRepository.class, "findAllById", Iterable.class);
+
+        for (int i=0; i < size; ) {
+            int lowerbound = i;
+            int upperbound = (lowerbound + 250 <= entityIds.size() ? lowerbound + 250 : size);
+
+            List<Object> subset = entityIds.subList(lowerbound, upperbound);
+
+            Iterable<?> entities = (Iterable<?>) ReflectionUtils.invokeMethod(findAllByIdMethod, r, subset);
+            for (Object entity : entities) {
+                results.add(entity);
+            }
+
+            i += 250;
         }
     }
 

@@ -1,6 +1,5 @@
 package internal.org.springframework.data.rest.extensions.contentsearch;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,25 +29,23 @@ public class QueryMethodsEntityLookupStrategy {
             .filter(m -> m.getAnnotation(FulltextEntityLookupQuery.class) != null)
             .forEach(m -> {
 
-                List<Object> contentIdsToQueryFor = new ArrayList<>();
-                int i=0;
-                for (Object contentId : contentIdToEntities.keySet()) {
-                    if (contentIdToEntities.get(contentId) == null) {
-                        contentIdsToQueryFor.add(contentId);
-                        i++;
-                        if (i == 250) {
-                            continue;
-                        }
+                int size = contentIds.size();
+
+                for (int i=0; i < size; ) {
+                    int lowerbound = i;
+                    int upperbound = (lowerbound + 250 <= size ? lowerbound + 250 : size);
+
+                    List<Object> subset = contentIds.subList(lowerbound, upperbound);
+
+                    Map<String, List<Object>> map = Collections.singletonMap(CONTENT_IDS, subset);
+                    MultiValueMap<String, ? extends Object> args = new LinkedMultiValueMap<>(map);
+                    Optional<Object> partialResults = rri.getInvoker().invokeQueryMethod(m, args, Pageable.unpaged(), Sort.unsorted());
+                    if (partialResults.isPresent()) {
+                        results.addAll((List<Object>) partialResults.get());
                     }
-                }
 
-                Map<String, List<Object>> map = Collections.singletonMap(CONTENT_IDS, contentIdsToQueryFor);
-                MultiValueMap<String, ? extends Object> args = new LinkedMultiValueMap<>(map);
-                Optional<Object> partialResults = rri.getInvoker().invokeQueryMethod(m, args, Pageable.unpaged(), Sort.unsorted());
-                if (partialResults.isPresent()) {
-                    results.addAll((List<Object>) partialResults.get());
+                    i += 250;
                 }
-
         });
     }
 }
