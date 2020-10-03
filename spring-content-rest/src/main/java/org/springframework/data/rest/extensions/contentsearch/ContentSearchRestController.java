@@ -52,6 +52,7 @@ import internal.org.springframework.data.rest.extensions.contentsearch.DefaultEn
 import internal.org.springframework.data.rest.extensions.contentsearch.QueryMethodsEntityLookupStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @RepositoryRestController
@@ -71,7 +72,7 @@ public class ContentSearchRestController {
     private ReflectionService reflectionService;
 
     static {
-        searchMethods.put("search", ReflectionUtils.findMethod(Searchable.class, "search", new Class<?>[] { String.class, Pageable.class }));
+        searchMethods.put("search", ReflectionUtils.findMethod(Searchable.class, "search", new Class<?>[] { String.class, Pageable.class, Class.class }));
         searchMethods.put("findKeyword", ReflectionUtils.findMethod(Searchable.class, "findKeyword", new Class<?>[] { String.class }));
     }
 
@@ -268,6 +269,7 @@ public class ContentSearchRestController {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class InternalResult {
 
