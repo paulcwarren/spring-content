@@ -211,7 +211,7 @@ public class ContentSearchRestControllerIT {
                                 .accept("application/hal+json"))
                                 .andExpect(status().isOk()).andReturn();
 
-                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
+                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class, Class.class });
                         PageRequest pageable = PageRequest.of(1, 1);
 
                         verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(InternalResult.class));
