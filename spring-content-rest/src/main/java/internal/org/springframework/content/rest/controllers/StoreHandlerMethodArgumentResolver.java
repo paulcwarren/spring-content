@@ -5,7 +5,6 @@ import static org.springframework.content.commons.storeservice.Stores.withDomain
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.persistence.Embeddable;
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +16,7 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -152,7 +152,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         PersistentProperty<?> property = getContentPropertyDefinition(entity, contentProperty);
         Class<?> propertyClass = property.getActualType();
 
-        if (isPrimitiveProperty(propertyClass) || String.class.equals(propertyClass) || UUID.class.equals(propertyClass)) {
+        if (ContentPropertyUtils.isPrimitiveContentPropertyClass(propertyClass)) {
 
             return resolver.resolve(storeInfo, domainObj, domainObj, false);
         }
@@ -280,10 +280,6 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         }
 
         return prop;
-    }
-
-    private boolean isPrimitiveProperty(Class<?> propClass) {
-        return propClass.isPrimitive() || propClass.equals(UUID.class);
     }
 
     private Object findOne(RepositoryInvokerFactory repoInvokerFactory, Repositories repositories, String repository, String id)
