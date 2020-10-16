@@ -1,8 +1,15 @@
 package internal.org.springframework.content.rest.controllers;
 
-import internal.org.springframework.content.rest.utils.StoreUtils;
-import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
-import internal.org.springframework.content.rest.utils.RepositoryUtils;
+import static org.springframework.content.commons.storeservice.Stores.withDomainClass;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
+
+import javax.persistence.Embeddable;
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -30,14 +37,9 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.MethodNotAllowedException;
 import org.springframework.web.util.UrlPathHelper;
 
-import javax.persistence.Embeddable;
-import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.springframework.content.commons.storeservice.Stores.withDomainClass;
+import internal.org.springframework.content.rest.utils.PersistentEntityUtils;
+import internal.org.springframework.content.rest.utils.RepositoryUtils;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -69,10 +71,12 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         return stores;
     }
 
+    @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return Store.class.isAssignableFrom(parameter.getParameterType());
     }
 
+    @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
         String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
@@ -148,7 +152,7 @@ public class StoreHandlerMethodArgumentResolver implements HandlerMethodArgument
         PersistentProperty<?> property = getContentPropertyDefinition(entity, contentProperty);
         Class<?> propertyClass = property.getActualType();
 
-        if (isPrimitiveProperty(propertyClass)) {
+        if (isPrimitiveProperty(propertyClass) || String.class.equals(propertyClass) || UUID.class.equals(propertyClass)) {
 
             return resolver.resolve(storeInfo, domainObj, domainObj, false);
         }
