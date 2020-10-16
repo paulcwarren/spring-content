@@ -36,6 +36,8 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 @ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions, org.springframework.data.rest.versioning")
 public class RestConfiguration implements InitializingBean {
 
+    public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
+
 	private static final URI NO_URI = URI.create("");
 
 	@Autowired
@@ -46,7 +48,7 @@ public class RestConfiguration implements InitializingBean {
 
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
-	private boolean fullyQualifiedLinks = true;
+	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
 
