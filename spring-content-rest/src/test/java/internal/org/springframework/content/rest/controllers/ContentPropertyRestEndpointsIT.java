@@ -1,40 +1,5 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.TimeZone;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntity2;
-import internal.org.springframework.content.rest.support.TestEntity2Repository;
-import internal.org.springframework.content.rest.support.TestEntity3;
-import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
-import internal.org.springframework.content.rest.support.TestEntity3Repository;
-import internal.org.springframework.content.rest.support.TestEntityChild;
-import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
@@ -51,6 +16,42 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.TimeZone;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+
+import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntity2Repository;
+import internal.org.springframework.content.rest.support.TestEntity3;
+import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
+import internal.org.springframework.content.rest.support.TestEntity3Repository;
+import internal.org.springframework.content.rest.support.TestEntityChild;
+import internal.org.springframework.content.rest.support.TestEntityChildContentRepository;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -72,11 +73,6 @@ public class ContentPropertyRestEndpointsIT {
    @Autowired private TestEntity3ContentRepository contentRepository3;
    private TestEntity3 testEntity3;
 
-//	@Autowired private ArrayEntityRepository arrayEntityRepo;
-//	@Autowired private ArrayEntityChildRepository arrayEntityChildRepo;
-//	@Autowired private ArrayEntityChildStore arrayEntityChildStore;
-//	private ArrayEntity arrayEntity;
-
 	@Autowired
    private WebApplicationContext context;
 
@@ -84,9 +80,6 @@ public class ContentPropertyRestEndpointsIT {
    private LastModifiedDate lastModifiedDateTests;
 
    private MockMvc mvc;
-
-
-
 
    {
       Describe("Content/Content Collection REST Endpoints", () -> {
@@ -329,18 +322,6 @@ public class ContentPropertyRestEndpointsIT {
 					  .setContent(testEntity3, new ByteArrayInputStream(content.getBytes()));
 			  testEntity3.setMimeType("text/plain");
 			  testEntity3 = repository3.save(testEntity3);
-
-		//					versionTests.setMvc(mvc);
-		//					versionTests.setUrl("/files/" + testEntity2.getId() + "/child");
-		//					versionTests.setRepo(repository2);
-		//					versionTests.setStore(contentRepository2);
-		//					versionTests.setEtag(format("\"%s\"", testEntity2.getVersion()));
-		//
-		//					lastModifiedDateTests.setMvc(mvc);
-		//					lastModifiedDateTests.setUrl("/files/" + testEntity2.getId() + "/child");
-		//					lastModifiedDateTests.setLastModifiedDate(testEntity2.getModifiedDate());
-		//					lastModifiedDateTests.setEtag(testEntity2.getVersion().toString());
-		//					lastModifiedDateTests.setContent(content);
 		  });
 		  Context("given the content property is accessed via the /{repository}/{id}/{contentProperty} endpoint", () -> {
 			  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
@@ -349,8 +330,6 @@ public class ContentPropertyRestEndpointsIT {
 							  .perform(get("/testEntity3s/" + testEntity3.getId() + "/content")
 									  .accept("text/plain"))
 							  .andExpect(status().isOk())
-		//									.andExpect(header().string("etag", is("\"1\"")))
-		//									.andExpect(header().string("last-modified", LastModifiedDate.isWithinASecond(testEntity2.getModifiedDate())))
 							  .andReturn().getResponse();
 
 					  assertThat(response, is(not(nullValue())));
@@ -415,9 +394,6 @@ public class ContentPropertyRestEndpointsIT {
 					  assertThat(fetched.get().getLen(), is(0L));
 				  });
 			  });
-
-		//					versionTests = Version.tests();
-		//					lastModifiedDateTests = LastModifiedDate.tests();
 		  });
 		});
 
@@ -425,19 +401,8 @@ public class ContentPropertyRestEndpointsIT {
 
 		  BeforeEach(() -> {
 			  testEntity3 = repository3.save(new TestEntity3());
-
-		//					versionTests.setMvc(mvc);
-		//					versionTests.setUrl("/files/" + testEntity2.getId() + "/child");
-		//					versionTests.setRepo(repository2);
-		//					versionTests.setStore(contentRepository2);
-		//					versionTests.setEtag(format("\"%s\"", testEntity2.getVersion()));
-		//
-		//					lastModifiedDateTests.setMvc(mvc);
-		//					lastModifiedDateTests.setUrl("/files/" + testEntity2.getId() + "/child");
-		//					lastModifiedDateTests.setLastModifiedDate(testEntity2.getModifiedDate());
-		//					lastModifiedDateTests.setEtag(testEntity2.getVersion().toString());
-		//					lastModifiedDateTests.setContent(content);
 		  });
+
 		  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
 			  It("should return 404", () -> {
 				  mvc.perform(
@@ -463,22 +428,30 @@ public class ContentPropertyRestEndpointsIT {
 				  }
 			  });
 		  });
-		});
 
-//		Context("given an Entity with a array content property", () -> {
-//			BeforeEach(() -> {
-//				arrayEntity = arrayEntityRepo.save(new ArrayEntity());
-//			});
-//			Context("given that is has no content", () -> {
-//				Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
-//					It("should return 406 MethodNotAllowed", () -> {
-//						mvc.perform(get(
-//							  "/testEntity6s/" + arrayEntity.getId() + "/childArray/"))
-//							  .andExpect(status().isMethodNotAllowed());
-//					});
-//				});
-//			});
-//		});
+          Context("a GET to /{repository}/{id}/{contentProperty} for a String-based property", () -> {
+              It("should return 404", () -> {
+                  mvc.perform(
+                          get("/testEntity3s/" + testEntity3.getId() + "/stringBasedContent"))
+                          .andExpect(status().isNotFound());
+              });
+          });
+
+          Context("a PUT to /{repository}/{id}/{contentProperty} for a String-based property", () -> {
+              It("should create the content", () -> {
+                  mvc.perform(
+                          put("/testEntity3s/" + testEntity3.getId() + "/stringBasedContent")
+                                  .content("Hello New Spring Content World!")
+                                  .contentType("text/plain"))
+                          .andExpect(status().is2xxSuccessful());
+
+                  mvc.perform(
+                          get("/testEntity3s/" + testEntity3.getId() + "/stringBasedContent"))
+                      .andExpect(status().is2xxSuccessful())
+                      .andExpect(content().string("Hello New Spring Content World!"));
+              });
+          });
+		});
 
 		Context("given an Entity with a collection content property", () -> {
             BeforeEach(() -> {
@@ -547,42 +520,6 @@ public class ContentPropertyRestEndpointsIT {
          });
       });
    }
-
-//	@Entity
-//	@Getter
-//	@Setter
-//	@NoArgsConstructor
-//	public static class ArrayEntity {
-//
-//   		@Id
-//		private Long id;
-//
-//   		private ArrayEntityChild[] childArray;
-//	}
-//
-//	public interface ArrayEntityRepository extends CrudRepository<ArrayEntity, Long> {}
-//
-//	@Entity
-//	@Getter
-//	@Setter
-//	@NoArgsConstructor
-//	public static class ArrayEntityChild {
-//
-//		@Id
-//		private Long id;
-//
-//		@ContentId
-//		private UUID contentId;
-//
-//		@ContentLength
-//		private Long contentLen;
-//
-//		@MimeType
-//		private String mimeType;
-//	}
-//
-//	public interface ArrayEntityChildRepository extends CrudRepository<ArrayEntityChild, Long> {}
-//	public interface ArrayEntityChildStore extends ContentStore<ArrayEntityChild, UUID> {}
 
 	@Test
    public void noop() {

@@ -1,15 +1,21 @@
 package internal.org.springframework.content.rest.links;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+
 import java.util.UUID;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.BaseUriConfig;
-import internal.org.springframework.content.rest.support.TestEntity3;
-import internal.org.springframework.content.rest.support.TestEntity5;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
@@ -29,17 +35,12 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+
+import internal.org.springframework.content.rest.support.BaseUriConfig;
+import internal.org.springframework.content.rest.support.TestEntity4;
+import internal.org.springframework.content.rest.support.TestEntity5;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -83,9 +84,9 @@ public class ContentLinksResourceProcessorIT {
 			Context("given an entity with a single @ContentId property", () -> {
 
 				BeforeEach(() -> {
-					PersistentEntity<?, ?> persistentEntity = repositories.getPersistentEntity(TestEntity3.class);
+					PersistentEntity<?, ?> persistentEntity = repositories.getPersistentEntity(TestEntity4.class);
 
-					TestEntity3 obj = new TestEntity3();
+					TestEntity4 obj = new TestEntity4();
 					obj.setId(999L);
 					obj.setContentId(UUID.randomUUID());
 
@@ -94,10 +95,10 @@ public class ContentLinksResourceProcessorIT {
 				});
 
 				It("should add an entity content links", () -> {
-					assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999/content"))));
+					assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999/content"))));
 				});
 
-				Context("when fully qualified links property is true", () -> {
+				Context("when fully qualified links property is false", () -> {
 					BeforeEach(() -> {
 						processor.getRestConfiguration().setFullyQualifiedLinks(false);
 					});
@@ -106,9 +107,9 @@ public class ContentLinksResourceProcessorIT {
 						processor.getRestConfiguration().setFullyQualifiedLinks(true);
 					});
 
-					It("should add an entity content link against a 'content' linkrel", () -> {
-						assertThat(resource.getLinks("testEntity3s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
-						assertThat(resource.getLinks("testEntity3"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity3s/999"))));
+					It("should add original and shortcut links", () -> {
+						assertThat(resource.getLinks("testEntity4s"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999"))));
+						assertThat(resource.getLinks("testEntity4"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999"))));
 					});
 				});
 			});
