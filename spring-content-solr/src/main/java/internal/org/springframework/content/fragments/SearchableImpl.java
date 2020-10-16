@@ -22,6 +22,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.solr.FilterQueryProvider;
 import org.springframework.content.solr.SolrProperties;
@@ -214,7 +215,7 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
             String id = list.get(j).getFieldValue("id").toString();
             String strippedId = id.substring(id.indexOf(':') + 1, id.length());
 
-            if (searchType.isPrimitive() || String.class.equals(searchType)) {
+            if (ContentPropertyUtils.isPrimitiveContentPropertyClass(searchType)) {
                 results.add(strippedId);
             } else {
                 Object result = null;

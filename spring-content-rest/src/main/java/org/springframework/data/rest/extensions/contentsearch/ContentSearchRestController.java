@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.persistence.Id;
 
@@ -21,6 +20,7 @@ import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
@@ -157,7 +157,7 @@ public class ContentSearchRestController {
         }
 
         Class<?> returnType = returnType(info);
-        if (returnType.isPrimitive() || returnType.equals(String.class) || returnType.equals(UUID.class)) {
+        if (ContentPropertyUtils.isPrimitiveContentPropertyClass(returnType)) {
 
             returnType = InternalResult.class;
         }

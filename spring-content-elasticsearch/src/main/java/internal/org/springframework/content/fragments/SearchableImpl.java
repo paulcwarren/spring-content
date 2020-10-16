@@ -31,6 +31,7 @@ import org.springframework.content.commons.fulltext.Highlight;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.elasticsearch.FilterQueryProvider;
 import org.springframework.data.domain.Pageable;
 
@@ -211,7 +212,7 @@ public class SearchableImpl implements Searchable<Object> {
         for (SearchHit hit : result.getHits()) {
 
             try {
-                if (resultType.isPrimitive() || String.class.equals(resultType)) {
+                if (ContentPropertyUtils.isPrimitiveContentPropertyClass(resultType)) {
                     contents.add(hit.getId());
                 } else {
                     Object row = resultType.newInstance();
