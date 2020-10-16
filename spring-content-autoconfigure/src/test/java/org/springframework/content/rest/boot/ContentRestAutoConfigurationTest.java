@@ -1,13 +1,18 @@
 package org.springframework.content.rest.boot;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.net.URI;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
-import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
 import org.junit.runner.RunWith;
-
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.annotations.Content;
@@ -20,15 +25,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
+import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -53,10 +54,11 @@ public class ContentRestAutoConfigurationTest {
 			Context("given an environment specifying rest properties", () -> {
 				BeforeEach(() -> {
 					System.setProperty("spring.content.rest.base-uri", "/contentApi");
-					System.setProperty("spring.content.rest.content-links", "false");
+					System.setProperty("spring.content.rest.fully-qualified-links", "false");
 				});
 				AfterEach(() -> {
 					System.clearProperty("spring.content.rest.base-uri");
+                    System.clearProperty("spring.content.rest.fully-qualified-links");
 				});
 				It("should have a filesystem properties bean with the correct properties set", () -> {
 					AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();

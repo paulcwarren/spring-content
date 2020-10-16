@@ -22,7 +22,7 @@ public class ContentRestAutoConfiguration {
 	public static class ContentRestProperties {
 
 		private URI baseUri;
-		private boolean fullyQualifiedLinks = false;
+		private boolean fullyQualifiedLinks = RestConfiguration.FULLY_QUALIFIED_DEFAULTS_DEFAULT;
 
 		public URI getBaseUri() {
 			return baseUri;
