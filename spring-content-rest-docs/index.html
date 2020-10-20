@@ -291,6 +291,7 @@ these endpoints for us.</p>
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-rest-0.0.1.jar</code></p>
+<h2 id="test-the-application">Test the application</h2>
 <p>And then point your browser at:-</p>
 <p><code>http://localhost:8080</code></p>
 <p>and you should see something like this:-</p>
@@ -298,6 +299,45 @@ by typing:</p>
 <p>As you did in the previous tutorial, exercise the application by uploading
 a range of new files and viewing them.  You should see viewed files open
 as they did before.</p>
+<h2 id="test-the-rest-api">Test the REST API</h2>
+<p>Alternatively, you can test the REST API directly.</p>
+<p>First create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>You should recieve a response back from your service that looks something like the following:</p>
+<pre><code>{
+  &quot;name&quot; : null,
+  &quot;created&quot; : &quot;2020-10-20T04:17:03.733+0000&quot;,
+  &quot;summary&quot; : null,
+  &quot;contentId&quot; : null,
+  &quot;contentLength&quot; : 0,
+  &quot;mimeType&quot; : &quot;text/plain&quot;,
+  &quot;_links&quot; : {
+    &quot;self&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+    },
+    &quot;file&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+    },
+    &quot;content&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>Follow the <code>content</code> link relation to add content either using CURL:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1</code> </p>
+<p>Or, if you prefer, by uploading the content via postman:</p>
+<p><center><img alt="Content Upload via Postman" src="../spring-content-rest-postman.png" /></center></p>
+<hr />
+<p><strong>NOTE</strong></p>
+<p>Unlike the curl-based PUT example above this Postman request is specifying a <code>multipart/form-data</code> request and a form entry with a key of <code>file</code> and with the content of the file as the value.</p>
+<p>Spring Content REST supports PUT and POST requests with the Content-Type header set to the actual mimetype of the content, such as <code>text/plain</code> or with a content-type of <code>multipart/form-data</code> and a properly constructed multipart form. </p>
+<hr />
+<p>Lasty, verify the content was uploaded by requesting it again:</p>
+<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1</code></p>
+<p>You should see you content returned as follows:</p>
+<p><code>Hello Spring Content World!</code></p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations!  You've written a simple application that uses Spring
 Content and Spring Content REST to save objects with content to the
@@ -369,6 +409,12 @@ storage medium.  Spring Content REST works seamlessly with all of the storage mo
                 </li>
                 <li class="nav-item">
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#test-the-application" class="nav-link">Test the application</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#test-the-rest-api" class="nav-link">Test the REST API</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>
