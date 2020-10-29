@@ -1,6 +1,16 @@
 package internal.org.springframework.content.mongo.store;
 
-import internal.org.springframework.content.mongo.io.GridFsStoreResource;
+import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
@@ -15,18 +25,10 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import static java.lang.String.format;
-import static org.springframework.data.mongodb.core.query.Query.query;
-import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
+import internal.org.springframework.content.mongo.io.GridFsStoreResource;
 
 public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -93,6 +95,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+    @Transactional
 	public S setContent(S property, InputStream content) {
 		Object contentId = BeanUtils.getFieldWithAnnotation(property, ContentId.class);
 		if (contentId == null) {
@@ -128,6 +131,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+    @Transactional
 	public S setContent(S property, Resource resourceContent) {
 		try {
 			return setContent(property, resourceContent.getInputStream());
@@ -138,6 +142,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+    @Transactional
 	public InputStream getContent(S entity) {
 		if (entity == null)
 			return null;
@@ -160,6 +165,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	}
 
 	@Override
+    @Transactional
 	public S unsetContent(S property) {
 		if (property == null)
 			return property;
