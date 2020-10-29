@@ -1,17 +1,32 @@
 package internal.org.springframework.content.mongo.config;
 
-import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.versions.LockingAndVersioningProxyFactory;
+
+import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
 
 public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private GridFsTemplate gridFs;
+
 	@Autowired
 	private PlacementService mongoStorePlacementService;
+
+	@Autowired(required=false)
+    private LockingAndVersioningProxyFactory versioning;
+
+    @Override
+    protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
+        if (versioning != null) {
+            versioning.apply(result);
+        }
+    }
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
