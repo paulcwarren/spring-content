@@ -222,15 +222,18 @@ public class LockingAndVersioningRestIT {
         @Configuration
         public class VersioningConfig extends AbstractMongoClientConfiguration {
 
+            @Value("#{environment.MONGODB_URL}")
+            private String mongoDbUrl = "mongodb://localhost:27017";
+
             @Override
             protected String getDatabaseName() {
-                return "jpaversions-with-mongostorage";
+                return "spring-content";
             }
 
             @Override
             @Bean
             public MongoClient mongoClient() {
-                return MongoClients.create("mongodb://localhost:27017");
+                return MongoClients.create(mongoDbUrl);
             }
 
             @Bean
