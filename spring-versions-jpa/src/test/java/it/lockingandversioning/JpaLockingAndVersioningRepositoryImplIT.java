@@ -1,4 +1,4 @@
-package org.springframework.versions.impl;
+package it.lockingandversioning;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -673,7 +673,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
     }
 
     @Configuration
-    @EnableJpaRepositories(considerNestedRepositories=true)
+    @EnableJpaRepositories(considerNestedRepositories=true, basePackages={"it.lockingandversioning","org.springframework.versions"})
     @Import({H2Config.class, JpaLockingAndVersioningConfig.class})
     public static class TestConfig {
     }

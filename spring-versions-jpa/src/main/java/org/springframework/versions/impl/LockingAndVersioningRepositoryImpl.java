@@ -255,7 +255,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             Object newId = getId(newVersion);
 
             newVersion = this.lock(newVersion);
-         newVersion = em.merge(newVersion);
+            newVersion = em.merge(newVersion);
         } else {
 
             newVersion = currentVersion;
