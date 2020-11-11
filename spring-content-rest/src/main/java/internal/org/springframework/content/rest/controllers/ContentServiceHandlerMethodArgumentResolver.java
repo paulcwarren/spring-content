@@ -35,6 +35,7 @@ import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.config.RestConfiguration.Resolver;
 import org.springframework.content.rest.controllers.ContentService;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -66,9 +67,12 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    private ApplicationContext context;
+
+    public ContentServiceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
         super(config, repositories, repoInvokerFactory, stores);
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        this.context = context;
     }
 
     @Override
@@ -105,7 +109,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 Object domainObj = findOne(this.getRepoInvokerFactory(), this.getRepositories(), info.getDomainObjectClass(), id);
 
                 if (ContentStore.class.isAssignableFrom(info.getInterface())) {
-                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, byteRangeRestRequestHandler);
+                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, byteRangeRestRequestHandler, context);
                 } else if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
                     throw new UnsupportedOperationException("AssociativeStoreContentService not implemented");
                 }
@@ -118,7 +122,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                         if (propertyIsEmbedded) {
                             return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p, byteRangeRestRequestHandler);
                         } else {
-                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p, byteRangeRestRequestHandler);
+                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p, byteRangeRestRequestHandler, context);
                         }
                     }
                     throw new UnsupportedOperationException(format("ContentService for interface '%s' not implemented", info.getInterface()));
@@ -232,14 +236,16 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         private final Object domainObj;
         private final Object embeddedProperty;
         private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+        private ApplicationContext context;
 
-        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
             this.config = config;
             this.store = store;
             this.repoInvoker = repoInvoker;
             this.domainObj = domainObj;
             this.embeddedProperty = null;
             this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+            this.context = context;
         }
 
         public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {

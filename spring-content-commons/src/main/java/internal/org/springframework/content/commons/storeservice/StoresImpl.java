@@ -1,5 +1,18 @@
 package internal.org.springframework.content.commons.storeservice;
 
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -11,39 +24,49 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
-
-public class StoresImpl implements Stores {
+public class StoresImpl implements Stores, InitializingBean {
 
 	private Set<StoreInfo> storeInfos = new HashSet<>();
 	private Map<String, StoreResolver> resolvers = new HashMap<>();
+    private ListableBeanFactory factory = null;
 
-	public StoresImpl() {
+    public StoresImpl() {
+    }
+
+    @Autowired
+	public StoresImpl(ListableBeanFactory factory) {
+
+	    this.factory = factory;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Autowired(required = false)
-	public void setFactories(List<StoreFactory> factories) {
-		for (StoreFactory factory : factories) {
+    @Override
+    public void afterPropertiesSet() {
+
+        String[] names = this.factory.getBeanNamesForType(StoreFactory.class);
+
+        for (String name : names) {
+            StoreFactory factory = this.factory.getBean(name, StoreFactory.class);
+
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
 				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
 						ClassTypeInformation.from(factory.getStoreInterface()).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments().get(0).getType(),
-						(ContentStore<Object, Serializable>) factory.getStore());
+						new StoreSupplier(this.factory, beanNameFromFactoryBeanName(name)));
 				storeInfos.add(info);
 			}
 			else {
 				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
 						getDomainObjectClass(factory.getStoreInterface()),
-						(Store<Serializable>) factory.getStore());
+                        new StoreSupplier(this.factory, beanNameFromFactoryBeanName(name)));
 				storeInfos.add(info);
 			}
 		}
 	}
+
+    private String beanNameFromFactoryBeanName(String name) {
+        return name.replaceFirst("&", "");
+    }
 
 	private Class<?> getDomainObjectClass(Class<?> contentStoreInterface) {
 		Type[] genericInterfaces = contentStoreInterface.getGenericInterfaces();
@@ -67,8 +90,8 @@ public class StoresImpl implements Stores {
 
 	@Override
 	public StoreInfo getStore(Class<?> storeType, StoreFilter filter) {
-		Assert.notNull(storeType);
-		Assert.notNull(filter);
+		Assert.notNull(storeType, "storeType must not be null");
+		Assert.notNull(filter, "filter must not be null");
 
 		List<StoreInfo> candidates = new ArrayList<>();
 		for (StoreInfo info : storeInfos) {
@@ -106,5 +129,23 @@ public class StoresImpl implements Stores {
 			}
 		}
 		return storeInfos.toArray(new StoreInfo[] {});
+	}
+
+	public static class StoreSupplier implements Supplier<Store<Serializable>>{
+
+	    private final ListableBeanFactory factory;
+        private final String storeFactoryBeanName;
+
+        public StoreSupplier(ListableBeanFactory factory, String storeFactoryBeanName) {
+
+	        this.factory = factory;
+	        this.storeFactoryBeanName = storeFactoryBeanName;
+	    }
+
+        @Override
+        public Store<Serializable> get() {
+
+            return factory.getBean(storeFactoryBeanName, Store.class);
+        }
 	}
 }
