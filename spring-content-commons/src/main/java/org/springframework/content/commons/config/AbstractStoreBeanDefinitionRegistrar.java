@@ -1,5 +1,7 @@
 package org.springframework.content.commons.config;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -9,16 +11,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import internal.org.springframework.content.commons.config.StoreFragment;
-import internal.org.springframework.content.commons.config.StoreFragmentDefinition;
-import internal.org.springframework.content.commons.config.StoreFragmentDetector;
-import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
-import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
-import internal.org.springframework.content.commons.storeservice.StoresImpl;
-import internal.org.springframework.content.commons.utils.StoreUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanFactory;
@@ -51,7 +45,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
-import static java.lang.String.format;
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragmentDefinition;
+import internal.org.springframework.content.commons.config.StoreFragmentDetector;
+import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
+import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
+import internal.org.springframework.content.commons.utils.StoreUtils;
 
 public abstract class AbstractStoreBeanDefinitionRegistrar
 		implements ImportBeanDefinitionRegistrar, EnvironmentAware, ResourceLoaderAware, BeanFactoryAware {
@@ -69,7 +68,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	private BeanFactory beanFactory;
 	private boolean multiStoreMode;
 
-	public void setEnvironment(Environment env) {
+	@Override
+    public void setEnvironment(Environment env) {
 		this.environment = env;
 	}
 
@@ -77,7 +77,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		return this.environment;
 	}
 
-	public void setResourceLoader(ResourceLoader resourceLoader) {
+	@Override
+    public void setResourceLoader(ResourceLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
 
@@ -96,12 +97,13 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.context.annotation.ImportBeanDefinitionRegistrar#
 	 * registerBeanDefinitions(org.springframework.core.type.AnnotationMetadata,
 	 * org.springframework.beans.factory.support.BeanDefinitionRegistry)
 	 */
-	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	@Override
+    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 		Assert.notNull(importingClassMetadata, "AnnotationMetadata must not be null!");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 		Assert.isTrue(registry instanceof ConfigurableListableBeanFactory, "BeanDefinitionRegistry must be instance of ConfigurableListableBeanFactory");
@@ -116,11 +118,6 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		repositoryInterfacePostProcessor.setSource(importingClassMetadata);
 		if (registry.containsBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR) == false) {
 			registry.registerBeanDefinition(REPOSITORY_INTERFACE_POST_PROCESSOR,repositoryInterfacePostProcessor);
-		}
-
-		BeanDefinition storeServiceBeanDef = createBeanDefinition(StoresImpl.class);
-		if (registry.containsBeanDefinition("stores") == false) {
-			registry.registerBeanDefinition("stores", storeServiceBeanDef);
 		}
 
 		BeanDefinition annotatedStoreEventHandlerDef = createBeanDefinition(AnnotatedStoreEventInvoker.class);
