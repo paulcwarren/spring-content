@@ -137,7 +137,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 
 <h2 id="add-security-constraints">Add Security Constraints</h2>
 <p>Enable web security.</p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-rbac/complete/src/main/java/gettingstarted/SpringSecruityConfig.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-rbac/complete/src/main/java/gettingstarted/SpringSecurityConfig.java 1-}
 </code></pre>
 
 <p>First, define two users and two roles.  Eric is a content <code>reader</code> and Paul is a content <code>reader</code> and <code>author</code>.</p>
