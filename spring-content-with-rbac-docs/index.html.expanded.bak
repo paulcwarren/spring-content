@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Renditions - Spring Content</title>
+        <title>RBAC - Spring Content</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -58,13 +58,13 @@
                   
 <a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="./" class="dropdown-item active">Renditions</a>
+<a href="../spring-content-with-renditions-docs/" class="dropdown-item">Renditions</a>
                   
 <a href="../spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
                   
 <a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                   
-<a href="../spring-content-with-rbac-docs/" class="dropdown-item">RBAC</a>
+<a href="./" class="dropdown-item active">RBAC</a>
                 </div>
               </li>
             </ul>
@@ -92,12 +92,12 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">Renditions</li>
+    <li class="breadcrumb-item active" aria-current="page">RBAC</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</h1>
+<h1 id="getting-started-spring-content-with-rbac">Getting Started Spring Content with RBAC</h1>
 <h2 id="what-youll-build">What you'll build</h2>
 <p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
@@ -128,55 +128,67 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-rbac/complete</code>.</p>
 <h3 id="update-dependencies">Update dependencies</h3>
-<p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
+<p>Add <code>org.springframework.boot:spring-boot-starter-security</code> dependencies.</p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-rbac/complete/pom.xml 1-}
 </code></pre>
 
-<h2 id="update-file">Update File</h2>
-<p>To be able to return renditions we need to know the mime-type of the existing
-content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
-will be by Spring Content REST.</p>
-<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
+<h2 id="add-security-constraints">Add Security Constraints</h2>
+<p>Enable web security.</p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/SpringSecruityConfig.java 1-}
 </code></pre>
 
-<h2 id="update-filecontentstore">Update FileContentStore</h2>
-<p>So that we can fetch renditions make your FileContentStore extend <code>Renderable</code>.  </p>
-<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<p>First, define two users and two roles.  Eric is a content <code>reader</code> and Paul is a content <code>reader</code> and <code>author</code>.</p>
+<p>Second, secure the Spring Content endpoint <code>/files/**/content</code> that <code>GETs</code> and <code>SETs</code> content to the <code>reader</code> and <code>author</code> roles respectively.</p>
+<h3 id="preauthorize">@PreAuthorize</h3>
+<p>As an alternative secure removing content to the <code>author</code> role by using an alternative approach using the <code>@PreAuthorize</code> annotation on the FileContentStore's <code>unset</code> method.</p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-versions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-with-renditions-0.0.1.jar</code></p>
-<h2 id="test-renditions">Test renditions</h2>
+<p><code>java -jar target/gettingstarted-spring-content-with-rbac-0.0.1.jar</code></p>
+<h2 id="create-an-entity-and-version-it">Create an Entity and version it</h2>
 <p>Create an entity:</p>
 <p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
-<p>Associate content with that entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1</code></p>
-<p>Fetch the content:</p>
-<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1</code>   </p>
-<p>And you should see a response like this:</p>
-<pre><code>Hello Spring Content World!
-</code></pre>
-
-<p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
-the mime-type <code>image/jpeg</code> as the accept header.  As it is an image let's save it
-to a file:</p>
-<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1 --output /tmp/file-1.jpg</code>   </p>
-<p>Open <code>/tmp/file-1.jpg</code> and you should see a response like this:</p>
-<p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
+<p>Attempt to associate content as Eric:</p>
+<p><code>curl -u eric:wimp -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content with RBAC World!' http://localhost:8080/files/1/content</code></p>
+<p>Associate content as Paul:</p>
+<p><code>curl -u paul:warren -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content with RBAC World!' http://localhost:8080/files/1/content</code></p>
+<p>Fetch the content as Eric:</p>
+<p><code>curl -u eric:wimp -H 'Accept:text/plain' http://localhost:8080/files/1/content</code></p>
+<p>And as Paul:</p>
+<p><code>curl -u paul:warren -H 'Accept:text/plain' http://localhost:8080/files/1/content</code></p>
+<p>Attempt to delete content as Eric:</p>
+<p><code>curl -u eric:wimp -X DELETE http://localhost:8080/files/1/content</code></p>
+<p>Delete content as Paul:</p>
+<p><code>curl -u paul:warren -X DELETE http://localhost:8080/files/1/content</code></p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've just written a simple application that uses Spring
-Content and Spring Content Renditions to be able to transform contnet from one format to another.</p>
-<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also
-add your own renderers using the RenditionProvider extension point.  For more details
-see the Spring Content Renditions reference guide.  </p>
+<p>Congratulations!  You've written a simple application that uses Spring
+Content secured with role-based access control.</p>
+<p>Don't forget you can simply change the type of the spring-content bootstarter
+project on the classpath to switch from file storage to a different
+storage technology.  </p>
+<p>Spring Content supports the following implementations:-</p>
+<ul>
+<li>
+<p>Spring Content Filesystem; stores content as Files on the Filesystem
+(as used in this tutorial)</p>
+</li>
+<li>
+<p>Spring Content S3; stores content as Objects in Amazon S3</p>
+</li>
+<li>
+<p>Spring Content JPA; stores content as BLOBs in the database</p>
+</li>
+<li>
+<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
+</li>
+</ul>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -203,7 +215,7 @@ see the Spring Content Renditions reference guide.  </p>
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-rbac">Getting Started Spring Content with RBAC</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -214,16 +226,13 @@ see the Spring Content Renditions reference guide.  </p>
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#update-file" class="nav-link">Update File</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#update-filecontentstore" class="nav-link">Update FileContentStore</a>
+                    <a href="#add-security-constraints" class="nav-link">Add Security Constraints</a>
                 </li>
                 <li class="nav-item">
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#test-renditions" class="nav-link">Test renditions</a>
+                    <a href="#create-an-entity-and-version-it" class="nav-link">Create an Entity and version it</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>

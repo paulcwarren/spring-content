@@ -63,6 +63,8 @@
 <a href="./" class="dropdown-item active">Fulltext</a>
                   
 <a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
+                  
+<a href="../spring-content-with-rbac-docs/" class="dropdown-item">RBAC</a>
                 </div>
               </li>
             </ul>
