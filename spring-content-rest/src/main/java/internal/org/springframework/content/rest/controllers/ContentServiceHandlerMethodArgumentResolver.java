@@ -278,15 +278,17 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
                     MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
                     for (MediaType acceptedMimeType : acceptedMimeTypes) {
-                        if (resource instanceof RenderableResource && ((RenderableResource) resource)
-                                .isRenderableAs(acceptedMimeType)) {
-                            resource = new RenderedResource(((RenderableResource) resource)
-                                    .renderAs(acceptedMimeType), resource);
-                            producedResourceType = acceptedMimeType;
-                            break;
-                        }
-                        else if (acceptedMimeType.includes(resourceType)) {
+
+                        if (acceptedMimeType.includes(resourceType)) {
+
                             producedResourceType = resourceType;
+                            break;
+
+                        } else if (resource instanceof RenderableResource &&
+                                ((RenderableResource) resource).isRenderableAs(acceptedMimeType)) {
+
+                            resource = new RenderedResource(((RenderableResource) resource).renderAs(acceptedMimeType), resource);
+                            producedResourceType = acceptedMimeType;
                             break;
                         }
                     }
