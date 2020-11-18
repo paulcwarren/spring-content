@@ -1,10 +1,10 @@
 package org.springframework.content.commons.utils;
 
-import org.apache.commons.io.FileUtils;
-import org.springframework.util.Assert;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.util.Assert;
 
 public class FileServiceImpl implements FileService {
 	public FileServiceImpl() {
@@ -35,7 +35,7 @@ public class FileServiceImpl implements FileService {
 			throw new IOException("Not a directory");
 		}
 		File dir = from;
-		while (dir != null && dir.listFiles().length == 0) {
+		while (dir != null && dir.listFiles() != null && dir.listFiles().length == 0) {
 			File temp = dir.getParentFile();
 			dir.delete();
 			dir = temp;
