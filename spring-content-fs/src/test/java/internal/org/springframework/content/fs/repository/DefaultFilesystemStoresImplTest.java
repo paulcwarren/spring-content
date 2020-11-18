@@ -1,6 +1,34 @@
 package internal.org.springframework.content.fs.repository;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Matchers;
@@ -18,27 +46,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultFilesystemStoresImplTest {
@@ -267,8 +275,11 @@ public class DefaultFilesystemStoresImplTest {
 
 					Context("given just the default ID converters", () -> {
 						BeforeEach(() -> {
-							when(placer.convert(eq(entity), eq(String.class)))
-									.thenReturn(null);
+							when(placer.convert(eq(entity), eq(String.class))).thenReturn(null);
+
+                            when(placer.convert(eq("12345-67890"),
+                                    eq(String.class)))
+                                    .thenReturn("12345-67890");
 
 							when(placer.convert(matches(
 									"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"),
@@ -668,19 +679,23 @@ public class DefaultFilesystemStoresImplTest {
 			this.contentId = new String(contentId);
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -698,19 +713,23 @@ public class DefaultFilesystemStoresImplTest {
 			this.contentId = null;
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -728,19 +747,23 @@ public class DefaultFilesystemStoresImplTest {
 			this.contentId = null;
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
