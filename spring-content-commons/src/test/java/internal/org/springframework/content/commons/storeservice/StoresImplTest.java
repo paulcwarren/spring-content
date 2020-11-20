@@ -1,7 +1,15 @@
 package internal.org.springframework.content.commons.storeservice;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
@@ -13,28 +21,33 @@ import org.springframework.content.commons.repository.factory.StoreFactory;
 import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
+import org.springframework.context.ApplicationContext;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class StoresImplTest {
 
 	private StoresImpl contentRepoService;
+
+	private ApplicationContext context;
 	private StoreFactory mockFactory;
+
 	{
 		Describe("StoresImpl", () -> {
 			BeforeEach(() -> {
-				contentRepoService = new StoresImpl();
+                context = mock(ApplicationContext.class);
 			});
+            JustBeforeEach(() -> {
+                contentRepoService = new StoresImpl(context);
+                contentRepoService.afterPropertiesSet();
+            });
 			Context("given no factories", () -> {
+	            BeforeEach(() -> {
+	                when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{});
+	            });
 				It("should always return empty", () -> {
 					assertThat(contentRepoService.getStores(Store.class),
 							is(new StoreInfo[] {}));
@@ -43,7 +56,8 @@ public class StoresImplTest {
 			Context("given a ContentStore factory", () -> {
 				BeforeEach(() -> {
 					mockFactory = mock(StoreFactory.class);
-					when(mockFactory.getStore()).thenReturn(mock(ContentStore.class));
+					Store store = mock(ContentStore.class);
+					when(mockFactory.getStore()).thenReturn(store);
 					when(mockFactory.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -52,9 +66,10 @@ public class StoresImplTest {
 									return ContentRepositoryInterface.class;
 								}
 							});
-					List<StoreFactory> factories = new ArrayList<>();
-					factories.add(mockFactory);
-					contentRepoService.setFactories(factories);
+
+					when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{"&testStoreFactory"});
+					when(context.getBean("&testStoreFactory", StoreFactory.class)).thenReturn(mockFactory);
+                    when(context.getBean("testStoreFactory", Store.class)).thenReturn(store);
 				});
 				It("should return no store info", () -> {
 					StoreInfo[] infos = contentRepoService.getStores(Store.class);
@@ -70,10 +85,12 @@ public class StoresImplTest {
 					assertThat(infos.length, is(1));
 				});
 			});
+
 			Context("given a Store factory", () -> {
 				BeforeEach(() -> {
 					mockFactory = mock(StoreFactory.class);
-					when(mockFactory.getStore()).thenReturn(mock(Store.class));
+                    Store store = mock(Store.class);
+                    when(mockFactory.getStore()).thenReturn(store);
 					when(mockFactory.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -82,9 +99,11 @@ public class StoresImplTest {
 									return StoreInterface.class;
 								}
 							});
-					List<StoreFactory> factories = new ArrayList<>();
-					factories.add(mockFactory);
-					contentRepoService.setFactories(factories);
+
+                    context = mock(ApplicationContext.class);
+                    when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{"&testStoreFactory"});
+                    when(context.getBean("&testStoreFactory", StoreFactory.class)).thenReturn(mockFactory);
+                    when(context.getBean("testStoreFactory", Store.class)).thenReturn(store);
 				});
 				It("should return store info", () -> {
 					StoreInfo[] infos = contentRepoService.getStores(Store.class);
@@ -103,7 +122,8 @@ public class StoresImplTest {
 			Context("given an AssociativeStore factory", () -> {
 				BeforeEach(() -> {
 					mockFactory = mock(StoreFactory.class);
-					when(mockFactory.getStore()).thenReturn(mock(AssociativeStore.class));
+                    Store store = mock(AssociativeStore.class);
+                    when(mockFactory.getStore()).thenReturn(store);
 					when(mockFactory.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -112,9 +132,11 @@ public class StoresImplTest {
 									return AssociativeStoreInterface.class;
 								}
 							});
-					List<StoreFactory> factories = new ArrayList<>();
-					factories.add(mockFactory);
-					contentRepoService.setFactories(factories);
+
+                    context = mock(ApplicationContext.class);
+                    when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{"&testStoreFactory"});
+                    when(context.getBean("&testStoreFactory", StoreFactory.class)).thenReturn(mockFactory);
+                    when(context.getBean("testStoreFactory", Store.class)).thenReturn(store);
 				});
 				It("should return no content store info", () -> {
 					StoreInfo[] infos = contentRepoService.getStores(ContentStore.class);
@@ -132,9 +154,9 @@ public class StoresImplTest {
 			});
 			Context("given multiple stores", () -> {
 				BeforeEach(() -> {
-					List<StoreFactory> factories = new ArrayList<>();
 					mockFactory = mock(StoreFactory.class);
-					when(mockFactory.getStore()).thenReturn(mock(AssociativeStore.class));
+                    Store store = mock(AssociativeStore.class);
+                    when(mockFactory.getStore()).thenReturn(store);
 					when(mockFactory.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -143,11 +165,10 @@ public class StoresImplTest {
 									return EntityStoreInterface.class;
 								}
 							});
-					factories.add(mockFactory);
 
 					StoreFactory mockFactory2 = mock(StoreFactory.class);
-					when(mockFactory2.getStore())
-							.thenReturn(mock(AssociativeStore.class));
+					Store store2 = mock(AssociativeStore.class);
+					when(mockFactory2.getStore()).thenReturn(store2);
 					when(mockFactory2.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -156,9 +177,13 @@ public class StoresImplTest {
 									return OtherEntityStoreInterface.class;
 								}
 							});
-					factories.add(mockFactory2);
 
-					contentRepoService.setFactories(factories);
+                    context = mock(ApplicationContext.class);
+                    when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{"&testStoreFactory1", "&testStoreFactory2"});
+                    when(context.getBean("&testStoreFactory1", StoreFactory.class)).thenReturn(mockFactory);
+                    when(context.getBean("&testStoreFactory2", StoreFactory.class)).thenReturn(mockFactory2);
+                    when(context.getBean("testStoreFactory1", Store.class)).thenReturn(store);
+                    when(context.getBean("testStoreFactory2", Store.class)).thenReturn(store2);
 				});
 				It("should return stores that match the filter", () -> {
 					StoreInfo[] infos = contentRepoService.getStores(
@@ -183,9 +208,10 @@ public class StoresImplTest {
 			});
 			Context("given multiple stores for the same Entity", () -> {
 				BeforeEach(() -> {
-					List<StoreFactory> factories = new ArrayList<>();
+
 					mockFactory = mock(StoreFactory.class);
-					when(mockFactory.getStore()).thenReturn(mock(ContentStore.class));
+					Store store = mock(ContentStore.class);
+					when(mockFactory.getStore()).thenReturn(store);
 					when(mockFactory.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -194,11 +220,10 @@ public class StoresImplTest {
 									return FsEntityStoreInterface.class;
 								}
 							});
-					factories.add(mockFactory);
 
 					StoreFactory mockFactory2 = mock(StoreFactory.class);
-					when(mockFactory2.getStore())
-							.thenReturn(mock(ContentStore.class));
+                    Store store2 = mock(ContentStore.class);
+                    when(mockFactory2.getStore()).thenReturn(store2);
 					when(mockFactory2.getStoreInterface())
 							.thenAnswer(new Answer<Object>() {
 								@Override
@@ -207,9 +232,13 @@ public class StoresImplTest {
 									return JpaEntityStoreInterface.class;
 								}
 							});
-					factories.add(mockFactory2);
 
-					contentRepoService.setFactories(factories);
+                    context = mock(ApplicationContext.class);
+                    when(context.getBeanNamesForType(StoreFactory.class)).thenReturn(new String[]{"&testStoreFactory1", "&testStoreFactory2"});
+                    when(context.getBean("&testStoreFactory1", StoreFactory.class)).thenReturn(mockFactory);
+                    when(context.getBean("&testStoreFactory2", StoreFactory.class)).thenReturn(mockFactory2);
+                    when(context.getBean("testStoreFactory1", Store.class)).thenReturn(store);
+                    when(context.getBean("testStoreFactory2", Store.class)).thenReturn(store2);
 				});
 
 				It("should return stores that match the filter", () -> {
