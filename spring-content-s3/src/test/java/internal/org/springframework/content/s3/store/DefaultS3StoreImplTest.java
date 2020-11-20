@@ -1,15 +1,41 @@
 package internal.org.springframework.content.s3.store;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3ObjectIdResolver;
-import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
-import internal.org.springframework.content.s3.config.S3StoreConfiguration;
-import internal.org.springframework.content.s3.io.S3StoreResource;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.endsWith;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.content.s3.S3ObjectIdResolver.createS3ObjectIdResolver;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.function.Supplier;
+
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
+import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -19,23 +45,25 @@ import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.io.*;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.WritableResource;
 import org.springframework.util.Assert;
 
-import java.io.*;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.S3ObjectId;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static java.lang.String.format;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.endsWith;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.content.s3.S3ObjectIdResolver.createS3ObjectIdResolver;
+import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3ObjectIdResolver;
+import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
+import internal.org.springframework.content.s3.config.S3StoreConfiguration;
+import internal.org.springframework.content.s3.io.S3StoreResource;
 
 @RunWith(Ginkgo4jRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -45,6 +73,7 @@ public class DefaultS3StoreImplTest {
 	private DefaultS3StoreImpl<ContentProperty, S3ObjectId> s3ObjectIdBasedStore;
 	private DefaultS3StoreImpl<ContentProperty, CustomContentId> customS3ContentIdBasedStore;
 
+	private GenericApplicationContext context = new GenericApplicationContext();
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private AmazonS3 client, client2;
@@ -75,6 +104,15 @@ public class DefaultS3StoreImplTest {
 				placementService = mock(PlacementService.class);
 				client = mock(AmazonS3.class);
 				defaultBucket = null;
+
+				context.registerBean("amazonS3", AmazonS3.class, new Supplier() {
+
+                    @Override
+                    public Object get() {
+                        return client;
+                    }
+				}, new BeanDefinitionCustomizer[]{});
+				context.refresh();
 			});
 			Describe("Store", () -> {
 				Context("#getResource", () -> {
@@ -89,12 +127,13 @@ public class DefaultS3StoreImplTest {
 								}
 							});
 
-							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 							s3Protocol.afterPropertiesSet();
+							s3Protocol.setBeanFactory(context);
 							loader = new DefaultResourceLoader();
 							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client, null);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null);
 						});
 						JustBeforeEach(() -> {
 							try {
@@ -112,7 +151,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given the store's ID is a custom ID type", () -> {
 						JustBeforeEach(() -> {
-							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client,null);
+							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client,null);
 
 							try {
 								r = customS3ContentIdBasedStore.getResource(customId);
@@ -137,8 +176,9 @@ public class DefaultS3StoreImplTest {
 													CustomContentId.class);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 									s3Protocol.afterPropertiesSet();
+									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -176,8 +216,9 @@ public class DefaultS3StoreImplTest {
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 									s3Protocol.afterPropertiesSet();
+									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -245,7 +286,7 @@ public class DefaultS3StoreImplTest {
 						JustBeforeEach(() -> {
 							placementService = new PlacementServiceImpl();
 							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(loader, placementService, client, clientProvider);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, clientProvider);
 
 							try {
 								r = s3ObjectIdBasedStore.getResource(new S3ObjectId("some-bucket", "some-object-id"));
@@ -277,7 +318,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("AssociativeStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null);
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
@@ -309,8 +350,9 @@ public class DefaultS3StoreImplTest {
                                         }
                                     });
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 									s3Protocol.afterPropertiesSet();
+									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
                                 });
@@ -330,8 +372,9 @@ public class DefaultS3StoreImplTest {
                                     placementService = new PlacementServiceImpl();
                                     S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 									s3Protocol.afterPropertiesSet();
+                                    s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -374,8 +417,9 @@ public class DefaultS3StoreImplTest {
                                         }
                                     });
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 									s3Protocol.afterPropertiesSet();
+                                    s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -447,7 +491,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(loader,placementService,client,null));
+					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null));
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {
@@ -770,19 +814,23 @@ public class DefaultS3StoreImplTest {
 			this.contentId = new String(contentId);
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -817,19 +865,23 @@ public class DefaultS3StoreImplTest {
 			this.contentId = null;
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -847,19 +899,23 @@ public class DefaultS3StoreImplTest {
 			this.contentId = null;
 		}
 
-		public String getContentId() {
+		@Override
+        public String getContentId() {
 			return this.contentId;
 		}
 
-		public void setContentId(String contentId) {
+		@Override
+        public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
-		public long getContentLen() {
+		@Override
+        public long getContentLen() {
 			return contentLen;
 		}
 
-		public void setContentLen(long contentLen) {
+		@Override
+        public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
