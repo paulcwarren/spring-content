@@ -10,10 +10,9 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,6 +63,8 @@ import internal.org.springframework.content.rest.utils.StoreUtils;
 public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
     private static final Logger logger = LoggerFactory.getLogger(ContentServiceHandlerMethodArgumentResolver.class);
+
+    private static final Map<Class<?>, StoreExportedMethodsMap> storeExportedMethods = new HashMap<>();
 
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
@@ -236,7 +237,6 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         private final Object domainObj;
         private final Object embeddedProperty;
         private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
-        private ApplicationContext context;
 
         public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
             this.config = config;
@@ -245,7 +245,6 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             this.domainObj = domainObj;
             this.embeddedProperty = null;
             this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
-            this.context = context;
         }
 
         public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
@@ -261,7 +260,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource resource, MediaType resourceType)
                 throws ResponseStatusException, MethodNotAllowedException {
 
-            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withGetContentName, this::isOveridden, this::isExported);
+            Method[] methodsToUse = getExportedMethodsFor(store.getInterface()).getContentMethods();
 
             if (methodsToUse.length > 1) {
                 throw new IllegalStateException("Too many getContent methods");
@@ -279,7 +278,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                     MediaType.sortBySpecificityAndQuality(acceptedMimeTypes);
                     for (MediaType acceptedMimeType : acceptedMimeTypes) {
 
-                        if (acceptedMimeType.includes(resourceType)) {
+                        if (acceptedMimeType.includes(resourceType) && matchParameters(acceptedMimeType, resourceType)) {
 
                             producedResourceType = resourceType;
                             break;
@@ -336,7 +335,7 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
                 }
             }
 
-            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withSetContentName, this::isOveridden, this::isExported);
+            Method[] methodsToUse = getExportedMethodsFor(store.getInterface()).setContentMethods();
 
             if (methodsToUse.length > 1) {
                 RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(store.getDomainObjectClass());
@@ -366,11 +365,10 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
         }
 
-
         @Override
         public void unsetContent(Resource resource) throws MethodNotAllowedException {
 
-            Method[] methodsToUse = filterMethods(store.getInterface().getMethods(), this::withUnsetContentName, this::isOveridden, this::isExported);
+            Method[] methodsToUse = getExportedMethodsFor(store.getInterface()).unsetContentMethods();
 
             if (methodsToUse.length == 0) {
                 throw new MethodNotAllowedException();
@@ -395,30 +393,6 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
 
             repoInvoker.invokeSave(embeddedProperty == null ? updatedDomainObj : domainObj);
-        }
-
-        private boolean withGetContentName(Method method) {
-            return method.getName().equals("getContent");
-        }
-
-        private boolean withSetContentName(Method method) {
-            return method.getName().equals("setContent");
-        }
-
-        private boolean withUnsetContentName(Method method) {
-            return method.getName().equals("unsetContent");
-        }
-
-        private boolean isOveridden(Method method) {
-            return !method.isBridge();
-        }
-
-        private boolean isExported(Method method) {
-            RestResource restResource = method.getAnnotation(RestResource.class);
-            if (restResource == null || restResource.exported()) {
-                return true;
-            }
-            return false;
         }
 
         private void cleanup(Object contentArg) {
@@ -453,14 +427,6 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
             }
         }
 
-        private Method[] filterMethods(Method[] methods, Predicate<Method>...filters) {
-
-            return Stream.of(methods)
-                    .filter(Arrays.stream(filters).reduce(Predicate::and).orElse(t->true))
-                    .collect(Collectors.toList())
-                    .toArray(new Method[]{});
-        }
-
         private Method[] filterMethods(Method[] methods, Resolver<Method, HttpHeaders> resolver, HttpHeaders headers) {
 
             List<Method> resolved = new ArrayList<>();
@@ -472,6 +438,119 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
 
             return resolved.toArray(new Method[]{});
         }
+
+        private boolean matchParameters(MediaType acceptedMediaType, MediaType producableMediaType) {
+            for (String name : producableMediaType.getParameters().keySet()) {
+                String s1 = producableMediaType.getParameter(name);
+                String s2 = acceptedMediaType.getParameter(name);
+                if (StringUtils.hasText(s1) && StringUtils.hasText(s2) && !s1.equalsIgnoreCase(s2)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    private static StoreExportedMethodsMap getExportedMethodsFor(Class<?> storeInterfaceClass) {
+
+        StoreExportedMethodsMap exportMap = storeExportedMethods.get(storeInterfaceClass);
+        if (exportMap == null) {
+            storeExportedMethods.put(storeInterfaceClass, new StoreExportedMethodsMap(storeInterfaceClass));
+            exportMap = storeExportedMethods.get(storeInterfaceClass);
+        }
+
+        return exportMap;
+    }
+
+    public static class StoreExportedMethodsMap {
+
+        private static Method[] SETCONTENT_METHODS = null;
+        private static Method[] UNSETCONTENT_METHODS = null;
+        private static Method[] GETCONTENT_METHODS = null;
+
+        static {
+            SETCONTENT_METHODS = new Method[] {
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class),
+            };
+
+            UNSETCONTENT_METHODS = new Method[] {
+                ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class),
+            };
+
+            GETCONTENT_METHODS = new Method[] {
+                ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class),
+            };
+        }
+
+        private Class<?> storeInterface;
+        private Method[] getContentMethods;
+        private Method[] setContentMethods;
+        private Method[] unsetContentMethods;
+
+        public StoreExportedMethodsMap(Class<?> storeInterface) {
+            this.storeInterface = storeInterface;
+            this.getContentMethods = calculateExports(GETCONTENT_METHODS);
+            this.setContentMethods = calculateExports(SETCONTENT_METHODS);
+            this.unsetContentMethods = calculateExports(UNSETCONTENT_METHODS);
+        }
+
+        public Method[] getContentMethods() {
+            return this.getContentMethods;
+        }
+
+        public Method[] setContentMethods() {
+            return this.setContentMethods;
+        }
+
+        public Method[] unsetContentMethods() {
+            return this.unsetContentMethods;
+        }
+
+        private Method[] calculateExports(Method[] storeMethods) {
+
+            List<Method> exportedMethods = new ArrayList<>();
+            exportedMethods.addAll(Arrays.asList(storeMethods));
+
+            List<Method> unexportedMethods = new ArrayList<>();
+
+            for (Method m : exportedMethods) {
+                for (Method dm : storeInterface.getDeclaredMethods()) {
+                    if (!dm.isBridge()) {
+                        if (dm.getName().equals(m.getName())) {
+                            if (argsMatch(dm, m)) {
+
+                                RestResource r = dm.getAnnotation(RestResource.class);
+                                if (r != null && r.exported() == false) {
+
+                                    unexportedMethods.add(m);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (Method unexportedMethod : unexportedMethods) {
+
+                exportedMethods.remove(unexportedMethod);
+            }
+
+            return exportedMethods.toArray(new Method[]{});
+        }
+
+        private boolean argsMatch(Method dm, Method m) {
+
+            for (int i=0; i < m.getParameterTypes().length; i++) {
+
+                if (!m.getParameterTypes()[i].isAssignableFrom(dm.getParameterTypes()[i])) {
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     private static boolean isClientAbortException(Exception e) {
@@ -480,4 +559,5 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
         return false;
     }
+
 }
