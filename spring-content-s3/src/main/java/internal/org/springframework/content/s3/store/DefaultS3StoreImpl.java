@@ -1,8 +1,15 @@
 package internal.org.springframework.content.s3.store;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import internal.org.springframework.content.s3.io.S3StoreResource;
+import static java.lang.String.format;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,6 +25,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
@@ -26,15 +34,10 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.S3ObjectId;
 
-import static java.lang.String.format;
+import internal.org.springframework.content.s3.io.S3StoreResource;
 
 @Transactional
 public class DefaultS3StoreImpl<S, SID extends Serializable>
@@ -42,15 +45,18 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
+	private ApplicationContext context;
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private AmazonS3 client;
 	private MultiTenantAmazonS3Provider clientProvider;
 
-	public DefaultS3StoreImpl(ResourceLoader loader, PlacementService placementService, AmazonS3 client, MultiTenantAmazonS3Provider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, AmazonS3 client, MultiTenantAmazonS3Provider provider) {
+        Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
 		Assert.notNull(client, "client must be specified");
+		this.context = context;
 		this.loader = loader;
 		this.placementService = placementService;
 		this.client = client;
@@ -111,8 +117,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
         if (clientProvider != null) {
 			AmazonS3 client = clientProvider.getAmazonS3();
 			if (client != null) {
-				SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+				SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
 				s3Protocol.afterPropertiesSet();
+				s3Protocol.setBeanFactory(context);
 
 				DefaultResourceLoader loader = new DefaultResourceLoader();
 				loader.addProtocolResolver(s3Protocol);
