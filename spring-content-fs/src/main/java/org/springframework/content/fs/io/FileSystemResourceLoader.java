@@ -2,9 +2,8 @@ package org.springframework.content.fs.io;
 
 import static org.springframework.util.StringUtils.cleanPath;
 
-import internal.org.springframework.content.fs.io.FileSystemDeletableResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.content.commons.utils.FileServiceImpl;
@@ -13,6 +12,8 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
+
+import internal.org.springframework.content.fs.io.FileSystemDeletableResource;
 
 /**
  * {@link ResourceLoader} implementation that resolves plain paths as
@@ -28,8 +29,7 @@ import org.springframework.util.Assert;
 public class FileSystemResourceLoader
 		extends org.springframework.core.io.FileSystemResourceLoader {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(FileSystemResourceLoader.class);
+    private static Log logger = LogFactory.getLog(FileSystemResourceLoader.class);
 
 	private FileSystemResource root;
 	private FileService fileService = null;

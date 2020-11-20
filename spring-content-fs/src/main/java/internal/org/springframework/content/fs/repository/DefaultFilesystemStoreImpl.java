@@ -1,5 +1,16 @@
 package internal.org.springframework.content.fs.repository;
 
+import static java.lang.String.format;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,17 +30,6 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import static java.lang.String.format;
 
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
@@ -101,13 +101,20 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	@Transactional
 	public S setContent(S entity, InputStream content) {
-		Resource resource = getResource(entity);
-		if (resource == null) {
-			UUID contentId = UUID.randomUUID();
-			Object convertedId = convertToExternalContentIdType(entity, contentId);
-			resource = getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
-		}
+        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (contentId == null) {
+            UUID newId = UUID.randomUUID();
+
+            Object convertedId = convertToExternalContentIdType(entity, newId);
+
+            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+        }
+
+        Resource resource = this.getResource(entity);
+        if (resource == null) {
+            return entity;
+        }
+
 		OutputStream os = null;
 		try {
 			if (resource.exists() == false) {

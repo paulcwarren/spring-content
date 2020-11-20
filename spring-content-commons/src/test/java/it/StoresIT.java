@@ -1,7 +1,19 @@
 package it;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.commons.storeservice.StoresImpl;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.StoreFactory;
@@ -10,21 +22,18 @@ import org.springframework.content.commons.repository.factory.testsupport.TestSt
 import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
+import org.springframework.context.support.GenericApplicationContext;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import internal.org.springframework.content.commons.storeservice.StoresImpl;
 
 @RunWith(Ginkgo4jRunner.class)
 public class StoresIT {
 
     private StoresImpl stores;
 
+    private GenericApplicationContext context;
     private List<StoreFactory> factories = new ArrayList<>();
     private StoreResolver resolver;
 
@@ -43,11 +52,16 @@ public class StoresIT {
                     factory2.setStoreInterface(RightStore.class);
                     factory2.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory2);
+
+                    context = new GenericApplicationContext();
+                    context.registerBean("factory1", StoreFactory.class, () -> {return factory1;});
+                    context.registerBean("factory2", StoreFactory.class, () -> {return factory2;});
                 });
 
                 JustBeforeEach(() -> {
-                    stores = new StoresImpl();
-                    stores.setFactories(factories);
+                    context.refresh();
+                    stores = new StoresImpl(context);
+                    stores.afterPropertiesSet();
                 });
 
                 It("should return the right store", () -> {
@@ -83,11 +97,17 @@ public class StoresIT {
                     factory2.setStoreInterface(RightStore.class);
                     factory2.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory2);
+
+                    context = new GenericApplicationContext();
+                    context.registerBean("factory1", StoreFactory.class, () -> {return factory1;});
+                    context.registerBean("factory2", StoreFactory.class, () -> {return factory2;});
                 });
 
                 JustBeforeEach(() -> {
-                    stores = new StoresImpl();
-                    stores.setFactories(factories);
+                    context.refresh();
+                    stores = new StoresImpl(context);
+                    stores.afterPropertiesSet();
+
                     stores.addStoreResolver("test", new StoreResolver() {
                         @Override
                         public StoreInfo resolve(StoreInfo... stores) {

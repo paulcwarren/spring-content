@@ -25,6 +25,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import internal.org.springframework.content.commons.storeservice.StoresImpl;
 import internal.org.springframework.content.rest.controllers.ContentServiceHandlerMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.ResourceETagMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
@@ -41,7 +42,7 @@ public class RestConfiguration implements InitializingBean {
 	private static final URI NO_URI = URI.create("");
 
 	@Autowired
-	Stores stores;
+	private ApplicationContext context;
 
 	@Autowired(required = false)
 	private List<ContentRestConfigurer> configurers = new ArrayList<>();
@@ -77,7 +78,7 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	public void addStoreResolver(String name, StoreResolver resolver) {
-		stores.addStoreResolver(name, resolver);
+		stores().addStoreResolver(name, resolver);
 	}
 
 	public DomainTypeConfig forDomainType(Class<?> type) {
@@ -90,8 +91,13 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	@Bean
+	Stores stores() {
+	    return new StoresImpl(context);
+	}
+
+	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
-		ContentHandlerMapping mapping = new ContentHandlerMapping(stores, this);
+		ContentHandlerMapping mapping = new ContentHandlerMapping(stores(), this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
 		return mapping;
 	}
@@ -135,7 +141,7 @@ public class RestConfiguration implements InitializingBean {
 			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ResourceTypeMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ResourceETagMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
-			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler));
+			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler, context));
 		}
 
 		@Override

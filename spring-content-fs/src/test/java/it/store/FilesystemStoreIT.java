@@ -1,4 +1,4 @@
-package internal.org.springframework.content.mongo.it;
+package it.store;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
@@ -13,54 +13,57 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.UUID;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
-import org.bson.types.ObjectId;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.mongo.config.EnableMongoStores;
+import org.springframework.content.fs.config.EnableFilesystemStores;
+import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.gridfs.model.GridFSFile;
 
-import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
+import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
-public class MongoStoreIT {
-	private DefaultMongoStoreImpl<Object, String> mongoContentRepoImpl;
-	private GridFsTemplate gridFsTemplate;
-	private GridFSFile gridFSFile;
-	private ObjectId gridFSId;
-	private TestEntity property;
-	private GridFsResource resource;
+@Ginkgo4jConfiguration(threads=1)
+public class FilesystemStoreIT {
+	private DefaultFilesystemStoreImpl<Object, String> mongoContentRepoImpl;
+	private FilesystemStoreIT.TEntity property;
 	private Resource genericResource;
 	private PlacementService placer;
 
@@ -75,13 +78,12 @@ public class MongoStoreIT {
 
 	private String resourceLocation;
 
-
 	{
-		Describe("DefaultMongoStoreImpl", () -> {
+		Describe("DefaultFilesystemStoreImpl", () -> {
 
 			BeforeEach(() -> {
 				context = new AnnotationConfigApplicationContext();
-				context.register(TestConfig.class);
+				context.register(FilesystemStoreIT.TestConfig.class);
 				context.refresh();
 
 				repo = context.getBean(TestEntityRepository.class);
@@ -181,7 +183,7 @@ public class MongoStoreIT {
 				Context("given a new entity", () -> {
 
 					BeforeEach(() -> {
-						property = new TestEntity();
+						property = new FilesystemStoreIT.TEntity();
 						property = repo.save(property);
 					});
 
@@ -224,7 +226,7 @@ public class MongoStoreIT {
 			Describe("ContentStore", () -> {
 
 				BeforeEach(() -> {
-					property = new TestEntity();
+					property = new FilesystemStoreIT.TEntity();
 					property = repo.save(property);
 
 					store.setContent(property, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
@@ -237,8 +239,8 @@ public class MongoStoreIT {
 				});
 
 				It("should have content metadata", () -> {
-					Assert.assertThat(property.getContentId(), is(notNullValue()));
-					Assert.assertThat(property.getContentId().trim().length(), greaterThan(0));
+					assertThat(property.getContentId(), is(notNullValue()));
+					assertThat(property.getContentId().trim().length(), greaterThan(0));
 					Assert.assertEquals(property.getContentLen(), 27L);
 				});
 
@@ -273,17 +275,17 @@ public class MongoStoreIT {
 
 				Context("when content is deleted", () -> {
 					BeforeEach(() -> {
-						resourceLocation = property.getContentId();
+						resourceLocation = property.getContentId().toString();
 						property = store.unsetContent(property);
 						property = repo.save(property);
 					});
 
 					It("should have no content", () -> {
 						try (InputStream content = store.getContent(property)) {
-							Assert.assertThat(content, is(Matchers.nullValue()));
+							assertThat(content, is(Matchers.nullValue()));
 						}
 
-						Assert.assertThat(property.getContentId(), is(Matchers.nullValue()));
+						assertThat(property.getContentId(), is(Matchers.nullValue()));
 						Assert.assertEquals(property.getContentLen(), 0);
 					});
 				});
@@ -304,23 +306,6 @@ public class MongoStoreIT {
 						assertThat(sharedIdContentIdEntity.getContentLen(), is(0L));
 					});
 				});
-
-				Context("when content is deleted and the id field is shared with spring id", () -> {
-
-					It("should not reset the id field", () -> {
-						SharedSpringIdRepository SharedSpringIdRepository = context.getBean(SharedSpringIdRepository.class);
-						SharedSpringIdStore SharedSpringIdStore = context.getBean(SharedSpringIdStore.class);
-
-						SharedSpringIdContentIdEntity SharedSpringIdContentIdEntity = SharedSpringIdRepository.save(new SharedSpringIdContentIdEntity());
-
-						SharedSpringIdContentIdEntity = SharedSpringIdStore.setContent(SharedSpringIdContentIdEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-						SharedSpringIdContentIdEntity = SharedSpringIdRepository.save(SharedSpringIdContentIdEntity);
-						String id = SharedSpringIdContentIdEntity.getContentId();
-						SharedSpringIdContentIdEntity = SharedSpringIdStore.unsetContent(SharedSpringIdContentIdEntity);
-						assertThat(SharedSpringIdContentIdEntity.getContentId(), is(id));
-						assertThat(SharedSpringIdContentIdEntity.getContentLen(), is(0L));
-					});
-				});
 			});
 		});
 	}
@@ -331,44 +316,61 @@ public class MongoStoreIT {
 	}
 
 	@Configuration
-	@EnableMongoRepositories(considerNestedRepositories = true)
-	@EnableMongoStores
+	@EnableJpaRepositories(considerNestedRepositories = true)
+	@EnableFilesystemStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
 		//
 	}
 
 	@Configuration
-	public static class InfrastructureConfig extends AbstractMongoClientConfiguration {
+	public static class InfrastructureConfig {
 
-		@Value("#{environment.MONGODB_URL}")
-		private String mongoDbUrl = "mongodb://localhost:27017";
+	    @Bean
+	    File filesystemRoot() {
+	        try {
+	            return Files.createTempDirectory("").toFile();
+	        } catch (IOException ioe) {}
+	        return null;
+	    }
 
-		@Override
-		protected String getDatabaseName() {
-			return "spring-content";
-		}
+	    @Bean
+	    FileSystemResourceLoader fileSystemResourceLoader() {
+	        return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+	    }
 
-		@Override
-        @Bean
-		public MongoClient mongoClient() {
-			return MongoClients.create(mongoDbUrl);
-		}
+	    @Bean
+	    public DataSource dataSource() {
+	        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+	        return builder.setType(EmbeddedDatabaseType.H2).build();
+	    }
 
-		@Bean
-		public GridFsTemplate gridFsTemplate(MappingMongoConverter mongoConverter) {
-			return new GridFsTemplate(mongoDbFactory(), mongoConverter);
-		}
+	    @Bean
+	    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
 
-		@Override
-        @Bean
-		public MongoDatabaseFactory mongoDbFactory() {
-			return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
-		}
+	        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+	        vendorAdapter.setDatabase(Database.H2);
+	        vendorAdapter.setGenerateDdl(true);
+
+	        LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+	        factory.setJpaVendorAdapter(vendorAdapter);
+	        factory.setPackagesToScan("it.store");
+	        factory.setDataSource(dataSource());
+
+	        return factory;
+	    }
+
+	    @Bean
+	    public PlatformTransactionManager transactionManager() {
+
+	        JpaTransactionManager txManager = new JpaTransactionManager();
+	        txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+	        return txManager;
+	    }
 	}
 
 	public interface ContentProperty {
-		String getContentId();
+	    String getContentId();
 
 		void setContentId(String contentId);
 
@@ -377,7 +379,11 @@ public class MongoStoreIT {
 		void setContentLen(long contentLen);
 	}
 
-	public static class TestEntity implements ContentProperty {
+	@Entity
+	public static class TEntity implements ContentProperty {
+
+	    @Id
+        private String id = UUID.randomUUID().toString();
 
 		@ContentId
 		private String contentId;
@@ -385,12 +391,7 @@ public class MongoStoreIT {
 		@ContentLength
 		private long contentLen;
 
-		public TestEntity() {
-			this.contentId = null;
-		}
-
-		public TestEntity(String contentId) {
-			this.contentId = new String(contentId);
+		public TEntity() {
 		}
 
 		@Override
@@ -414,20 +415,21 @@ public class MongoStoreIT {
 		}
 	}
 
-	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {}
-	public interface TestEntityStore extends ContentStore<TestEntity, String> {}
+	public interface TestEntityRepository extends JpaRepository<TEntity, String> {}
+	public interface TestEntityStore extends ContentStore<TEntity, String> {}
 
+	@Entity
+    @Table(name="shared_id_entity")
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
-		@javax.persistence.Id
+		@Id
 		@ContentId
-		private String contentId;
+		private String contentId = UUID.randomUUID().toString();
 
 		@ContentLength
 		private long contentLen;
 
 		public SharedIdContentIdEntity() {
-			this.contentId = null;
 		}
 
 		@Override
@@ -451,43 +453,6 @@ public class MongoStoreIT {
 		}
 	}
 
-	public interface SharedIdRepository extends MongoRepository<SharedIdContentIdEntity, String> {}
+	public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
 	public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
-
-	public static class SharedSpringIdContentIdEntity implements ContentProperty {
-
-		@org.springframework.data.annotation.Id
-		@ContentId
-		private String contentId;
-
-		@ContentLength
-		private long contentLen;
-
-		public SharedSpringIdContentIdEntity() {
-			this.contentId = null;
-		}
-
-		@Override
-        public String getContentId() {
-			return this.contentId;
-		}
-
-		@Override
-        public void setContentId(String contentId) {
-			this.contentId = contentId;
-		}
-
-		@Override
-        public long getContentLen() {
-			return contentLen;
-		}
-
-		@Override
-        public void setContentLen(long contentLen) {
-			this.contentLen = contentLen;
-		}
-	}
-
-	public interface SharedSpringIdRepository extends MongoRepository<SharedSpringIdContentIdEntity, String> {}
-	public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
 }

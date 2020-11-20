@@ -20,17 +20,17 @@
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-core</artifactId>
-			<version>8.2.3</version>
+			<version>8.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-export-fo</artifactId>
-			<version>8.2.3</version>
+			<version>8.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
-			<version>8.2.3</version>
+			<version>8.2.4</version>
 		</dependency>
 
 		<dependency>

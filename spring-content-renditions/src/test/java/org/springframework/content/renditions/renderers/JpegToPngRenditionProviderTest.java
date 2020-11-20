@@ -7,10 +7,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import org.apache.commons.io.IOUtils;
+import javax.imageio.ImageIO;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.content.commons.io.FileRemover;
@@ -38,7 +41,13 @@ public class JpegToPngRenditionProviderTest {
 
 		assertThat(converted.available(), is(greaterThan(0)));
 		assertThat(((ObservableInputStream)converted).getObservers(), hasItem(is(instanceOf(FileRemover.class))));
-		assertThat(IOUtils.contentEquals(converted, this.getClass().getResourceAsStream("/sample.png")), is(true));
-	}
 
+		BufferedImage expectedImage = ImageIO.read(this.getClass().getResourceAsStream("/sample.png"));
+		byte[] expectedRastaData = ((DataBufferByte) expectedImage.getData().getDataBuffer()).getData();
+
+		BufferedImage actualImage = ImageIO.read(converted);
+		byte[] actualRastaData = ((DataBufferByte) actualImage.getData().getDataBuffer()).getData();
+
+        assertThat(expectedRastaData, is(actualRastaData));
+	}
 }
