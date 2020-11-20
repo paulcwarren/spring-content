@@ -48,7 +48,8 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	}
 
 	@Autowired
-	public S3StoreFactoryBean(AmazonS3 client, PlacementService s3StorePlacementService) {
+	public S3StoreFactoryBean(ApplicationContext context, AmazonS3 client, PlacementService s3StorePlacementService) {
+	    this.context = context;
 		this.client = client;
 		this.s3StorePlacementService = s3StorePlacementService;
 	}
