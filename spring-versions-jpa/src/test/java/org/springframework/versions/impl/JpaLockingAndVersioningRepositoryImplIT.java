@@ -497,6 +497,10 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
                 Context("#isPrivateWorkingCopy", () -> {
 
+                    BeforeEach(() -> {
+                        setupSecurityContext("some-principal", true);
+                    });
+
                     It("should return false", () -> {
                         assertThat(repo.isPrivateWorkingCopy(e1), is(false));
                     });
@@ -510,6 +514,10 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                 });
 
                 Context("#findWorkingCopy", () -> {
+
+                    BeforeEach(() -> {
+                        setupSecurityContext("some-principal", true);
+                    });
 
                     It("should return true", () -> {
                         e1 = repo.save(e1);
