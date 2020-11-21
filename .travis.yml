@@ -1,5 +1,3 @@
-os: osx
-
 branches:
   except:
     - travis
