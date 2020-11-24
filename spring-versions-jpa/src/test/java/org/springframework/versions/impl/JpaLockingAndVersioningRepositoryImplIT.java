@@ -142,12 +142,27 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
                             BeforeEach(() -> {
                                 setupSecurityContext("some-other-principal", true);
-                                repo.lock(e1);
+                                e1 = repo.lock(e1);
                                 setupSecurityContext("some-principal", true);
                             });
 
                             It("should return null", () -> {
+                                assertThat(e, is(instanceOf(LockOwnerException.class)));
                                 assertThat(result, is(nullValue()));
+                            });
+                        });
+
+                        Context("when the lock is already held", () -> {
+
+                            BeforeEach(() -> {
+                                setupSecurityContext("some-principal", true);
+                                e1 = repo.lock(e1);
+                                setupSecurityContext("some-principal", true);
+                            });
+
+                            It("should succeed", () -> {
+                                assertThat(e, is(nullValue()));
+                                assertThat(result, is(not(nullValue())));
                             });
                         });
 
