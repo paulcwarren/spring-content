@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
-import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurerAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
@@ -46,7 +45,7 @@ public class BaseUriConfig extends JpaInfrastructureConfig {
 
 	@Bean
 	public RepositoryRestConfigurer repositoryRestConfigurer() {
-		return new RepositoryRestConfigurerAdapter() {
+		return new RepositoryRestConfigurer() {
 
 			@Override
 			public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
