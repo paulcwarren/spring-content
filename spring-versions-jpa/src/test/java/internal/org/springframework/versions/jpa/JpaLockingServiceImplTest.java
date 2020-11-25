@@ -1,7 +1,27 @@
 package internal.org.springframework.versions.jpa;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyVararg;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.security.Principal;
+import java.sql.ResultSet;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -9,28 +29,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyObject;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyVararg;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 @RunWith(Ginkgo4jRunner.class)
 public class JpaLockingServiceImplTest {
@@ -67,40 +66,24 @@ public class JpaLockingServiceImplTest {
                         this.e = e;
                     }
                 });
-                Context("given a null principal", () -> {
+                Context("given selecting a lock record fails", () -> {
                     BeforeEach(() -> {
-                        principal = null;
-                    });
-                    It("should throw a SecurityException", () -> {
-                        assertThat(e, is(instanceOf(SecurityException.class)));
-                    });
-                });
-                Context("given creating a lock record fails", () -> {
-                    BeforeEach(() -> {
-                        when(jdbcTemplate.update(anyString(), (Object[])anyVararg())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
+                        when(jdbcTemplate.queryForObject(Matchers.any(String.class), Matchers.<Object[]>any(), Matchers.any(Class.class))).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
                     });
                     It("should throw the DataAccessException.class", () -> {
                         assertThat(e, is(instanceOf(DataAccessException.class)));
                         assertThat(e.getMessage(), is("connection-error"));
                     });
                 });
-                Context("given a lock record is created", () -> {
+                Context("given inserting the lock record fails", () -> {
                     BeforeEach(() -> {
-                        when(jdbcTemplate.update(anyString(), (Object[])anyVararg())).thenReturn(1);
+                        ResultSet rs = mock(ResultSet.class);
+                        when(jdbcTemplate.queryForObject(Matchers.any(String.class), Matchers.<Object[]>any(), Matchers.any(Class.class))).thenReturn(0);
+                        when(jdbcTemplate.update(anyString(), (Object[])anyVararg())).thenThrow(new CannotGetJdbcConnectionException("connection-error"));
                     });
-                    It("should return true", () -> {
-                        verify(jdbcTemplate).update(argThat(startsWith("INSERT INTO locks")),
-                                argThat(is("some-id")),
-                                argThat(is("some-principal")));
-                        assertThat(result, is(true));
-                    });
-                });
-                Context("given a lock record is not created", () -> {
-                    BeforeEach(() -> {
-                        when(jdbcTemplate.update(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(0);
-                    });
-                    It("should return false", () -> {
-                        assertThat(result, is(false));
+                    It("should throw the DataAccessException.class", () -> {
+                        assertThat(e, is(instanceOf(DataAccessException.class)));
+                        assertThat(e.getMessage(), is("connection-error"));
                     });
                 });
             });
@@ -116,33 +99,6 @@ public class JpaLockingServiceImplTest {
                     } catch (Exception e) {
                         this.e = e;
                     }
-                });
-                Context("given a null principal", () -> {
-                    BeforeEach(() -> {
-                        principal = null;
-                    });
-                    It("should throw a SecurityException", () -> {
-                        assertThat(e, is(instanceOf(SecurityException.class)));
-                    });
-                });
-                Context("given the lock record can be removed", () -> {
-                    BeforeEach(() -> {
-                        when(jdbcTemplate.update((String)anyObject(), (Object[])anyVararg())).thenReturn(1);
-                    });
-                    It("should return true", () -> {
-                        verify(jdbcTemplate).update(argThat(startsWith("DELETE from locks")),
-                                                    argThat(is("some-id")),
-                                                    argThat(is("some-principal")));
-                        assertThat(result, is(true));
-                    });
-                });
-                Context("given the lock record is not removed", () -> {
-                    BeforeEach(() -> {
-                        when(jdbcTemplate.update((String)anyObject(), (Object[])anyVararg())).thenReturn(0);
-                    });
-                    It("should return true", () -> {
-                        assertThat(result, is(false));
-                    });
                 });
                 Context("given the lock record deletion fails", () -> {
                     BeforeEach(() -> {
