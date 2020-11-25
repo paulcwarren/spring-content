@@ -113,6 +113,15 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                         }
                     });
 
+                    Context("given a null principal", () -> {
+                        BeforeEach(() -> {
+                            setupSecurityContext(null, false);
+                        });
+                        It("should throw a SecurityException", () -> {
+                            assertThat(e, is(instanceOf(SecurityException.class)));
+                        });
+                    });
+
                     Context("given the entity is new", () -> {
 
                         It("should fail", () -> {
@@ -191,6 +200,15 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                         } catch (Exception e) {
                             this.e = e;
                         }
+                    });
+
+                    Context("given a null principal", () -> {
+                        BeforeEach(() -> {
+                            setupSecurityContext(null, false);
+                        });
+                        It("should throw a SecurityException", () -> {
+                            assertThat(e, is(instanceOf(SecurityException.class)));
+                        });
                     });
 
                     Context("given the entity is new", () -> {
@@ -777,10 +795,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
         SecurityContext sc = new SecurityContext() {
             @Override
             public Authentication getAuthentication() {
-                if (principal != null) {
-                    return new MockAuthentication(principal, isAuthenticated);
-                }
-                return null;
+                return new MockAuthentication(principal, isAuthenticated);
             }
 
             @Override

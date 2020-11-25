@@ -39,7 +39,6 @@ public class JpaLockingServiceImpl implements LockingService {
 
         String sql = "SELECT count(lock_owner) from locks where entity_id = ?  and lock_owner = ?";
         Integer rc = template.queryForObject(sql, new String[] {entityId.toString(), principal.getName()}, Integer.class);
-
         if (rc == 1) {
             return true;
         }
