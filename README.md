@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/paulcwarren/spring-content.svg?branch=1.1.x)](https://travis-ci.org/paulcwarren/spring-content)
-([![Coverage Status](https://codecov.io/gh/paulcwarren/spring-content/branch/1.1.x/graph/badge.svg)](https://codecov.io/gh/paulcwarren/spring-content)
+[![Build Status](https://travis-ci.org/paulcwarren/spring-content.svg?branch=1.2.x)](https://travis-ci.org/paulcwarren/spring-content)
+([![Coverage Status](https://codecov.io/gh/paulcwarren/spring-content/branch/1.2.x/graph/badge.svg)](https://codecov.io/gh/paulcwarren/spring-content)
 [![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Spring Content
