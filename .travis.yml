@@ -41,7 +41,7 @@ deploy:
     skip_cleanup: true
     on:
       repo: paulcwarren/spring-content
-      branch: 1.1.x
+      branch: 1.2.x
   - provider: script
     script: scripts/deploy.sh
     skip_cleanup: true
