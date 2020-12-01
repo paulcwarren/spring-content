@@ -14,9 +14,13 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.IdentifiableResource;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -30,6 +34,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
@@ -51,6 +56,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	public Resource getResource(SID id) {
 		String location = placer.convert(id, String.class);
 		Resource resource = loader.getResource(location);
+		((IdentifiableResource)resource).setId(id);
 		return resource;
 	}
 
@@ -73,10 +79,35 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return null;
 	}
 
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+
+        SID contentId = getContentId(entity, propertyPath);
+        if (contentId == null) {
+            UUID newId = UUID.randomUUID();
+
+            Object convertedId = convertToExternalContentIdType(entity, newId);
+
+            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+        }
+        return getResource(contentId);
+    }
+
 	@Override
 	public void associate(S entity, SID id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id.toString());
 	}
+
+    @Override
+    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+
+        SID contentId = null;
+        if (resource instanceof IdentifiableResource) {
+            contentId = (SID) ((IdentifiableResource)resource).getId();
+        }
+        setContentId(entity, propertyPath, contentId, null);
+    }
 
 	@Override
 	public void unassociate(S entity) {
@@ -97,6 +128,26 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 					}
 				});
 	}
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+
+        setContentId(entity, propertyPath, null, new Condition() {
+            @Override
+            public boolean matches(Field field) {
+                for (Annotation annotation : field.getAnnotations()) {
+                    if ("javax.persistence.Id".equals(
+                            annotation.annotationType().getCanonicalName())
+                            || "org.springframework.data.annotation.Id"
+                            .equals(annotation.annotationType()
+                                    .getCanonicalName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    }
 
 	@Override
 	@Transactional
@@ -216,4 +267,37 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 		return contentId.toString();
 	}
+
+    private SID getContentId(S entity, PropertyPath propertyPath) {
+
+        Assert.notNull(entity, "entity must not be null");
+        Assert.notNull(propertyPath, "propertyPath must not be null");
+
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        Field[] contentIdFields = BeanUtils.findFieldsWithAnnotation(entity.getClass(), ContentId.class, wrapper);
+        for (Field contentIdField : contentIdFields) {
+            if (contentIdField.getName().startsWith(propertyPath.getName())) {
+                return (SID) wrapper.getPropertyValue(contentIdField.getName());
+            }
+        }
+        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+    }
+
+    private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
+
+        Assert.notNull(entity, "entity must not be null");
+        Assert.notNull(propertyPath, "propertyPath must not be null");
+
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        Field[] contentIdFields = BeanUtils.findFieldsWithAnnotation(entity.getClass(), ContentId.class, wrapper);
+        for (Field contentIdField : contentIdFields) {
+            if (contentIdField.getName().startsWith(propertyPath.getName())) {
+                if (condition == null || condition.matches(contentIdField)) {
+                    wrapper.setPropertyValue(contentIdField.getName(), contentId);
+                }
+                return;
+            }
+        }
+        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+    }
 }
