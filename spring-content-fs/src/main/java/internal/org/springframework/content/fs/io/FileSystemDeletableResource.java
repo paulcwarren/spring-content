@@ -1,32 +1,35 @@
 package internal.org.springframework.content.fs.io;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.IdentifiableResource;
 import org.springframework.content.commons.utils.FileService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 
-import static java.lang.String.format;
-
-public class FileSystemDeletableResource implements WritableResource, DeletableResource {
+public class FileSystemDeletableResource implements WritableResource, DeletableResource, IdentifiableResource {
 
 	private static Log logger = LogFactory.getLog(FileSystemDeletableResource.class);
 
 	private final FileSystemResource resource;
+	private Serializable id;
 	private final FileService fileService;
+
 
 	public FileSystemDeletableResource(FileSystemResource resource, FileService fileService) {
 		this.resource = resource;
@@ -53,7 +56,8 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 		}
 	}
 
-	public boolean isOpen() {
+	@Override
+    public boolean isOpen() {
 		return resource.isOpen();
 	}
 
@@ -61,27 +65,33 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 		return resource.getPath();
 	}
 
-	public boolean exists() {
+	@Override
+    public boolean exists() {
 		return resource.exists();
 	}
 
-	public boolean isReadable() {
+	@Override
+    public boolean isReadable() {
 		return resource.isReadable();
 	}
 
-	public InputStream getInputStream() throws IOException {
+	@Override
+    public InputStream getInputStream() throws IOException {
 		return resource.getInputStream();
 	}
 
-	public boolean isWritable() {
+	@Override
+    public boolean isWritable() {
 		return resource.isWritable();
 	}
 
-	public long lastModified() throws IOException {
+	@Override
+    public long lastModified() throws IOException {
 		return resource.lastModified();
 	}
 
-	public OutputStream getOutputStream() throws IOException {
+	@Override
+    public OutputStream getOutputStream() throws IOException {
 		if (!exists()) {
 			Files.createDirectories(Paths.get(this.getFile().getParent()));
 			Files.createFile(this.getFile().toPath());
@@ -89,43 +99,63 @@ public class FileSystemDeletableResource implements WritableResource, DeletableR
 		return resource.getOutputStream();
 	}
 
-	public URL getURL() throws IOException {
+	@Override
+    public URL getURL() throws IOException {
 		return resource.getURL();
 	}
 
-	public URI getURI() throws IOException {
+	@Override
+    public URI getURI() throws IOException {
 		return resource.getURI();
 	}
 
-	public File getFile() {
+	@Override
+    public File getFile() {
 		return resource.getFile();
 	}
 
-	public long contentLength() throws IOException {
+	@Override
+    public long contentLength() throws IOException {
 		return resource.contentLength();
 	}
 
-	public Resource createRelative(String relativePath) {
+	@Override
+    public Resource createRelative(String relativePath) {
 		return resource.createRelative(relativePath);
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return resource.toString();
 	}
 
-	public String getFilename() {
+	@Override
+    public String getFilename() {
 		return resource.getFilename();
 	}
 
-	public String getDescription() {
+	@Override
+    public String getDescription() {
 		return resource.getDescription();
 	}
 
-	public boolean equals(Object obj) {
+	@Override
+    public boolean equals(Object obj) {
 		return resource.equals(obj);
 	}
 
-	public int hashCode() {
+	@Override
+    public int hashCode() {
 		return resource.hashCode();
 	}
+
+    @Override
+    public Serializable getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Serializable id) {
+        this.id = id ;
+    }
 }

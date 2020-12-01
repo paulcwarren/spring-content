@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import org.junit.runner.RunWith;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.core.io.Resource;
 
@@ -100,6 +101,24 @@ public class AbstractStoreFactoryBeanTest {
 		public Resource getResource(Serializable id) {
 			return null;
 		}
+
+        @Override
+        public Resource getResource(Object entity, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void associate(Object entity, Resource resource, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void unassociate(Object entity, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+
+        }
 	}
 
 	public interface TestStore extends ContentStore<String, UUID> {

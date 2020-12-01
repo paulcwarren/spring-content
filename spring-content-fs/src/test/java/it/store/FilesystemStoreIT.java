@@ -33,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -63,7 +64,7 @@ import net.bytebuddy.utility.RandomString;
 @Ginkgo4jConfiguration(threads=1)
 public class FilesystemStoreIT {
 	private DefaultFilesystemStoreImpl<Object, String> mongoContentRepoImpl;
-	private FilesystemStoreIT.TEntity property;
+	private FilesystemStoreIT.TEntity entity;
 	private Resource genericResource;
 	private PlacementService placer;
 
@@ -183,13 +184,13 @@ public class FilesystemStoreIT {
 				Context("given a new entity", () -> {
 
 					BeforeEach(() -> {
-						property = new FilesystemStoreIT.TEntity();
-						property = repo.save(property);
+						entity = new FilesystemStoreIT.TEntity();
+						entity = repo.save(entity);
 					});
 
 					It("should not have an associated resource", () -> {
-						assertThat(property.getContentId(), is(nullValue()));
-						assertThat(store.getResource(property), is(nullValue()));
+						assertThat(entity.getContentId(), is(nullValue()));
+						assertThat(store.getResource(entity), is(nullValue()));
 					});
 
 					Context("given a resource", () -> {
@@ -201,24 +202,48 @@ public class FilesystemStoreIT {
 						Context("when the resource is associated", () -> {
 
 							BeforeEach(() -> {
-								store.associate(property, resourceLocation);
+								store.associate(entity, resourceLocation);
 							});
 
 							It("should be recorded as such on the entity's @ContentId", () -> {
-								assertThat(property.getContentId(), is(resourceLocation));
+								assertThat(entity.getContentId(), is(resourceLocation));
 							});
 
 							Context("when the resource is unassociated", () -> {
 
 								BeforeEach(() -> {
-									store.unassociate(property);
+									store.unassociate(entity);
 								});
 
 								It("should reset the entity's @ContentId", () -> {
-									assertThat(property.getContentId(), is(nullValue()));
+									assertThat(entity.getContentId(), is(nullValue()));
 								});
 							});
 						});
+
+                        Context("when the resource is associated with a property path", () -> {
+
+                            BeforeEach(() -> {
+                                store.associate(entity, genericResource, PropertyPath.from("rendition"));
+                            });
+
+                            It("should be recorded as such on the entity's @ContentId", () -> {
+                                assertThat(entity.getContentId(), is(nullValue()));
+                                assertThat(entity.getRenditionId(), is(resourceLocation));
+                            });
+
+                            Context("when the resource is unassociated", () -> {
+
+                                BeforeEach(() -> {
+                                    store.unassociate(entity, PropertyPath.from("rendition"));
+                                });
+
+                                It("should reset the entity's @ContentId", () -> {
+                                    assertThat(entity.getContentId(), is(nullValue()));
+                                    assertThat(entity.getRenditionId(), is(nullValue()));
+                                });
+                            });
+                        });
 					});
 				});
 			});
@@ -226,33 +251,33 @@ public class FilesystemStoreIT {
 			Describe("ContentStore", () -> {
 
 				BeforeEach(() -> {
-					property = new FilesystemStoreIT.TEntity();
-					property = repo.save(property);
+					entity = new FilesystemStoreIT.TEntity();
+					entity = repo.save(entity);
 
-					store.setContent(property, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+					store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 				});
 
 				It("should be able to store new content", () -> {
-					try (InputStream content = store.getContent(property)) {
+					try (InputStream content = store.getContent(entity)) {
 						assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
 					} catch (IOException ioe) {}
 				});
 
 				It("should have content metadata", () -> {
-					assertThat(property.getContentId(), is(notNullValue()));
-					assertThat(property.getContentId().trim().length(), greaterThan(0));
-					Assert.assertEquals(property.getContentLen(), 27L);
+					assertThat(entity.getContentId(), is(notNullValue()));
+					assertThat(entity.getContentId().trim().length(), greaterThan(0));
+					Assert.assertEquals(entity.getContentLen(), 27L);
 				});
 
 				Context("when content is updated", () -> {
 					BeforeEach(() ->{
-						store.setContent(property, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-						property = repo.save(property);
+						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+						entity = repo.save(entity);
 					});
 
 					It("should have the updated content", () -> {
 						boolean matches = false;
-						try (InputStream content = store.getContent(property)) {
+						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
 							assertThat(matches, is(true));
 						}
@@ -261,12 +286,12 @@ public class FilesystemStoreIT {
 
 				Context("when content is updated with shorter content", () -> {
 					BeforeEach(() -> {
-						store.setContent(property, new ByteArrayInputStream("Hello Spring World!".getBytes()));
-						property = repo.save(property);
+						store.setContent(entity, new ByteArrayInputStream("Hello Spring World!".getBytes()));
+						entity = repo.save(entity);
 					});
 					It("should store only the new content", () -> {
 						boolean matches = false;
-						try (InputStream content = store.getContent(property)) {
+						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
 							assertThat(matches, is(true));
 						}
@@ -275,18 +300,18 @@ public class FilesystemStoreIT {
 
 				Context("when content is deleted", () -> {
 					BeforeEach(() -> {
-						resourceLocation = property.getContentId().toString();
-						property = store.unsetContent(property);
-						property = repo.save(property);
+						resourceLocation = entity.getContentId().toString();
+						entity = store.unsetContent(entity);
+						entity = repo.save(entity);
 					});
 
 					It("should have no content", () -> {
-						try (InputStream content = store.getContent(property)) {
+						try (InputStream content = store.getContent(entity)) {
 							assertThat(content, is(Matchers.nullValue()));
 						}
 
-						assertThat(property.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(property.getContentLen(), 0);
+						assertThat(entity.getContentId(), is(Matchers.nullValue()));
+						Assert.assertEquals(entity.getContentLen(), 0);
 					});
 				});
 
@@ -391,6 +416,12 @@ public class FilesystemStoreIT {
 		@ContentLength
 		private long contentLen;
 
+        @ContentId
+        private String renditionId;
+
+        @ContentLength
+        private long renditionLen;
+
 		public TEntity() {
 		}
 
@@ -413,6 +444,22 @@ public class FilesystemStoreIT {
         public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
+
+        public String getRenditionId() {
+            return this.renditionId;
+        }
+
+        public void setRenditionId(String renditionId) {
+            this.renditionId = renditionId;
+        }
+
+        public long getRenditionLen() {
+            return renditionLen;
+        }
+
+        public void setRenditionLen(long renditionLen) {
+            this.renditionLen = renditionLen;
+        }
 	}
 
 	public interface TestEntityRepository extends JpaRepository<TEntity, String> {}

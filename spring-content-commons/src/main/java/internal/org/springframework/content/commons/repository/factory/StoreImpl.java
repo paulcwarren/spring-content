@@ -1,8 +1,18 @@
 package internal.org.springframework.content.commons.repository.factory;
 
-import lombok.Getter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.file.Files;
+
 import org.springframework.content.commons.io.FileRemover;
 import org.springframework.content.commons.io.ObservableInputStream;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
@@ -19,15 +29,7 @@ import org.springframework.content.commons.repository.events.BeforeUnsetContentE
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.nio.file.Files;
+import lombok.Getter;
 
 public class StoreImpl implements ContentStore<Object, Serializable> {
 
@@ -174,6 +176,30 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     }
 
     @Override
+    public Resource getResource(Object entity, PropertyPath propertyPath) {
+
+        BeforeGetResourceEvent before = new BeforeGetResourceEvent(entity, propertyPath, delegate);
+        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, propertyPath, delegate);
+
+        publisher.publishEvent(before);
+
+        Resource result;
+        try {
+            result = delegate.getResource(entity, propertyPath);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            after.setResult(result);
+            publisher.publishEvent(after);
+        }
+
+        return result;
+    }
+
+    @Override
     public Resource getResource(Serializable id) {
 
         BeforeGetResourceEvent before = new BeforeGetResourceEvent(id, delegate);
@@ -218,6 +244,26 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     }
 
     @Override
+    public void associate(Object entity, Resource resource, PropertyPath propertyPath) {
+
+        BeforeAssociateEvent before = new BeforeAssociateEvent(entity, propertyPath, delegate);
+        AfterAssociateEvent after = new AfterAssociateEvent(entity, propertyPath, delegate);
+
+        publisher.publishEvent(before);
+
+        try {
+            delegate.associate(entity, resource, propertyPath);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            publisher.publishEvent(after);
+        }
+    }
+
+    @Override
     public void unassociate(Object entity) {
 
         BeforeUnassociateEvent before = new BeforeUnassociateEvent(entity, delegate);
@@ -227,6 +273,26 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
 
         try {
             delegate.unassociate(entity);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            publisher.publishEvent(after);
+        }
+    }
+
+    @Override
+    public void unassociate(Object entity, PropertyPath propertyPath) {
+
+        BeforeUnassociateEvent before = new BeforeUnassociateEvent(entity, propertyPath, delegate);
+        AfterUnassociateEvent after = new AfterUnassociateEvent(entity, propertyPath, delegate);
+
+        publisher.publishEvent(before);
+
+        try {
+            delegate.unassociate(entity, propertyPath);
         }
         catch (Exception e) {
             throw e;
