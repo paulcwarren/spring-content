@@ -41,7 +41,10 @@ public class JpaInfrastructureConfig {
 	}
 
 	protected String[] packagesToScan() {
-		return new String[]{"internal.org.springframework.content.rest.support"};
+		return new String[] {
+	        "internal.org.springframework.content.rest.support",
+            "internal.org.springframework.content.rest.controllers.revisions"
+		};
 	}
 
 	@Bean
