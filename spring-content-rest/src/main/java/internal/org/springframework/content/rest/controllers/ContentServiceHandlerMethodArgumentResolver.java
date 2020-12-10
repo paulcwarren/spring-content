@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.io.DeletableResource;
-import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -43,7 +42,6 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
@@ -53,12 +51,10 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UrlPathHelper;
 
 import internal.org.springframework.content.rest.io.RenderableResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
-import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
@@ -84,59 +80,36 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
-        pathInfo = new UrlPathHelper().getPathWithinApplication(webRequest.getNativeRequest(HttpServletRequest.class));
-        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+        return super.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+    }
 
-        String[] pathSegments = pathInfo.split("/");
-        if (pathSegments.length < 2) {
-            return null;
-        }
 
-        String store = pathSegments[1];
+    @Override
+    protected Object resolveStoreArgument(NativeWebRequest nativeWebRequest, StoreInfo info) {
 
-        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
-        if (info == null) {
-            throw new IllegalArgumentException(format("Store for path %s not found", store));
-        }
+        return new StoreContentService(info.getImplementation(Store.class), byteRangeRestRequestHandler);
+    }
 
-        if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
-            // do associativestore resource resolution
+    @Override
+    protected Object resolveAssociativeStoreEntityArgument(StoreInfo info, Object domainObj) {
 
-            // entity content
-            if (pathSegments.length == 3) {
-                String id = pathSegments[2];
+      if (ContentStore.class.isAssignableFrom(info.getInterface())) {
+          return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, byteRangeRestRequestHandler, context);
+      }
+      throw new UnsupportedOperationException(format("No content service for store %s", info.getInterface()));
+    }
 
-                Object domainObj = findOne(this.getRepoInvokerFactory(), this.getRepositories(), info.getDomainObjectClass(), id);
+    @Override
+    protected Object resolveAssociativeStorePropertyArgument(StoreInfo info, Object domainObj, Object propertyVal, boolean embeddedProperty) {
 
-                if (ContentStore.class.isAssignableFrom(info.getInterface())) {
-                    return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, byteRangeRestRequestHandler, context);
-                } else if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
-                    throw new UnsupportedOperationException("AssociativeStoreContentService not implemented");
-                }
-
-                // property content
-            } else {
-                return this.resolveProperty(HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod()), this.getRepositories(), info, pathSegments, (i, e, p, propertyIsEmbedded) -> {
-
-                    if (ContentStore.class.isAssignableFrom(info.getInterface())) {
-                        if (propertyIsEmbedded) {
-                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(e.getClass()), e, p, byteRangeRestRequestHandler);
-                        } else {
-                            return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(p.getClass()), p, byteRangeRestRequestHandler, context);
-                        }
-                    }
-                    throw new UnsupportedOperationException(format("ContentService for interface '%s' not implemented", info.getInterface()));
-                });
-            }
-
-            // do store resource resolution
-        } else if (Store.class.isAssignableFrom(info.getInterface())) {
-
-            return new StoreContentService(info.getImplementation(Store.class), byteRangeRestRequestHandler);
-        }
-
-        throw new IllegalArgumentException();
+      if (ContentStore.class.isAssignableFrom(info.getInterface())) {
+          if (embeddedProperty) {
+              return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(domainObj.getClass()), domainObj, propertyVal, byteRangeRestRequestHandler);
+          } else {
+              return new ContentStoreContentService(getConfig(), info, this.getRepoInvokerFactory().getInvokerFor(propertyVal.getClass()), propertyVal, byteRangeRestRequestHandler, context);
+          }
+      }
+      throw new UnsupportedOperationException(format("ContentService for interface '%s' not implemented", info.getInterface()));
     }
 
     public static class StoreContentService implements ContentService {
@@ -559,5 +532,4 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         }
         return false;
     }
-
 }
