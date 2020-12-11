@@ -7,6 +7,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -32,9 +33,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.GenericGenerator;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -58,12 +61,15 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
+import lombok.Getter;
+import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class FilesystemStoreIT {
-	private DefaultFilesystemStoreImpl<Object, String> mongoContentRepoImpl;
+
+    private DefaultFilesystemStoreImpl<Object, String> mongoContentRepoImpl;
 	private FilesystemStoreIT.TEntity entity;
 	private Resource genericResource;
 	private PlacementService placer;
@@ -76,6 +82,9 @@ public class FilesystemStoreIT {
 
 	private TestEntityRepository repo;
 	private TestEntityStore store;
+
+	private TEntityWithGenRepository repoWithGen;
+	private TEntityWithGenStore storeWithGen;
 
 	private String resourceLocation;
 
@@ -331,6 +340,43 @@ public class FilesystemStoreIT {
 						assertThat(sharedIdContentIdEntity.getContentLen(), is(0L));
 					});
 				});
+
+				Context("when content is updated and the content id field is computed from a custom value generator", () -> {
+
+				    It("should assign a new content Id", () -> {
+
+				        TEntityWithGenRepository repoWithGen = context.getBean(TEntityWithGenRepository.class);
+				        TEntityWithGenStore storeWithGen = context.getBean(TEntityWithGenStore.class);
+
+				        FilesystemStoreIT.TEntityWithGenerator entity = new FilesystemStoreIT.TEntityWithGenerator();
+	                    entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repoWithGen.save(entity);
+	                    String firstContentId = entity.getContentId();
+
+                        entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repoWithGen.save(entity);
+	                    String secondContentId = entity.getContentId();
+
+	                    assertThat(firstContentId, is(not(secondContentId)));
+				    });
+				});
+
+                Context("when content is updated and the content id field is not computed", () -> {
+
+                    It("should assign a new content Id", () -> {
+
+                        entity = new FilesystemStoreIT.TEntity();
+                        entity = store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repo.save(entity);
+                        String firstContentId = entity.getContentId();
+
+                        entity = store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repo.save(entity);
+                        String secondContentId = entity.getContentId();
+
+                        assertThat(firstContentId, is(secondContentId));
+                    });
+                });
 			});
 		});
 	}
@@ -502,4 +548,41 @@ public class FilesystemStoreIT {
 
 	public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
 	public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
+
+    @Entity
+    @Getter
+    @Setter
+    public static class TEntityWithGenerator {
+
+        @Id
+        private String id = UUID.randomUUID().toString();
+
+        @ContentId
+        @GenericGenerator(strategy=FilesystemStoreIT.TestContentIdGenerator.class)
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+
+        public TEntityWithGenerator() {
+        }
+    }
+
+    public interface TEntityWithGenRepository extends JpaRepository<TEntityWithGenerator, String> {}
+    public interface TEntityWithGenStore extends ContentStore<TEntityWithGenerator, String> {}
+
+    public static class TestContentIdGenerator implements ValueGenerator<FilesystemStoreIT.TEntityWithGenerator, String> {
+
+        @Override
+        public String generate(TEntityWithGenerator entity) {
+
+            return UUID.randomUUID().toString();
+        }
+
+        @Override
+        public boolean regenerate(TEntityWithGenerator entity) {
+
+            return true;
+        }
+    }
 }
