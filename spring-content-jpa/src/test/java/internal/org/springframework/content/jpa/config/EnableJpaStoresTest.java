@@ -1,15 +1,29 @@
 package internal.org.springframework.content.jpa.config;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
-import internal.org.springframework.content.jpa.io.MySQLBlobResource;
-import internal.org.springframework.content.jpa.io.SQLServerBlobResource;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.io.InputStream;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
@@ -30,15 +44,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.sql.DataSource;
-import java.io.InputStream;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
+import internal.org.springframework.content.jpa.io.MySQLBlobResource;
+import internal.org.springframework.content.jpa.io.SQLServerBlobResource;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1) // required
@@ -226,5 +237,23 @@ public class EnableJpaStoresTest {
 		public Resource getResource(String id) {
 			return null;
 		}
+
+        @Override
+        public Resource getResource(TestEntity entity, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void associate(TestEntity entity, Resource resource, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void unassociate(TestEntity entity, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+
+        }
 	}
 }

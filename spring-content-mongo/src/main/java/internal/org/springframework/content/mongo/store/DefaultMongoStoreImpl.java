@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -237,4 +238,19 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		}
 		return contentId.toString();
 	}
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
 }

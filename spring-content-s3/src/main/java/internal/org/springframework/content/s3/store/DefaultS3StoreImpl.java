@@ -17,6 +17,7 @@ import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -299,4 +300,19 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 		}
 	}
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
 }
