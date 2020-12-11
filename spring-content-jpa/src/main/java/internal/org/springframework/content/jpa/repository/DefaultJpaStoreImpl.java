@@ -1,11 +1,22 @@
 package internal.org.springframework.content.jpa.repository;
 
+import static java.lang.String.format;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -20,16 +31,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import static java.lang.String.format;
 
 public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -179,4 +180,18 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return contentId.toString();
 	}
 
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+        throw new UnsupportedOperationException();
+    }
 }
