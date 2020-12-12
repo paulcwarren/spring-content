@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -22,6 +21,8 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.store.ContentIdGeneratorManager;
+import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -51,6 +52,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private PlacementService placementService;
 	private AmazonS3 client;
 	private MultiTenantAmazonS3Provider clientProvider;
+    private ContentIdGeneratorManager generatorManager;
 
 	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, AmazonS3 client, MultiTenantAmazonS3Provider provider) {
         Assert.notNull(context, "context must be specified");
@@ -62,6 +64,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client;
 		this.clientProvider = provider;
+	    this.generatorManager = new ContentIdGeneratorManager();
 	}
 
 	@Override
@@ -162,9 +165,19 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S entity, InputStream content) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-		if (contentId == null) {
-			UUID newId = UUID.randomUUID();
+
+       ValueGenerator<Object, Serializable> generator;
+        try {
+            generator = generatorManager.generator(entity.getClass());
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.error(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+            throw new StoreAccessException(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+        }
+
+        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (contentId == null || generator.regenerate(entity)) {
+
+            Serializable newId = generator.generate(entity);
 
 			Object convertedId = placementService.convert(
 						newId,

@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -21,6 +20,8 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.store.ContentIdGeneratorManager;
+import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.jpa.io.BlobResource;
@@ -39,8 +40,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 	private ResourceLoader loader;
 
+    private ContentIdGeneratorManager generatorManager;
+
 	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader) {
 		this.loader = blobResourceLoader;
+		this.generatorManager = new ContentIdGeneratorManager();
 	}
 
 	@Override
@@ -102,14 +106,30 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S entity, InputStream content) {
+
+       ValueGenerator<Object, Serializable> generator;
+        try {
+            generator = generatorManager.generator(entity.getClass());
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.error(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+            throw new StoreAccessException(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+        }
+
+        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (contentId == null || generator.regenerate(entity)) {
+
+            Serializable newId = generator.generate(entity);
+
+            Object convertedId = convertToExternalContentIdType(entity, newId);
+
+            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+        }
+
 		Resource resource = getResource(entity);
 		if (resource == null) {
-			UUID contentId = UUID.randomUUID();
-			Object convertedId = convertToExternalContentIdType(entity, contentId);
-			resource = this.getResource((SID)convertedId);
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class,
-					convertedId);
+		    return entity;
 		}
+
 		OutputStream os = null;
 		long contentLen = -1L;
 		try {
