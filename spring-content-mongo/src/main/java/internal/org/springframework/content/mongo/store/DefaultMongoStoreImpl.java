@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,6 +20,8 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.store.ContentIdGeneratorManager;
+import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -39,6 +40,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
 	private GridFsTemplate gridFs;
 	private PlacementService placer;
+    private ContentIdGeneratorManager generatorManager;
 
 	public DefaultMongoStoreImpl(GridFsTemplate gridFs, PlacementService placer) {
 		Assert.notNull(gridFs, "gridFs cannot be null");
@@ -46,6 +48,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
 		this.gridFs = gridFs;
 		this.placer = placer;
+	    this.generatorManager = new ContentIdGeneratorManager();
 	}
 
 	@Override
@@ -108,17 +111,24 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	@Override
     @Transactional
 	public S setContent(S entity, InputStream content) {
-		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-		if (contentId == null) {
-			UUID newId = UUID.randomUUID();
 
-	         Object convertedId = placer.convert(
-                     newId,
-                     TypeDescriptor.forObject(newId),
-                     TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(entity, ContentId.class)));
+       ValueGenerator<Object, Serializable> generator;
+        try {
+            generator = generatorManager.generator(entity.getClass());
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.error(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+            throw new StoreAccessException(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
+        }
 
-			BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId.toString());
-		}
+        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+        if (contentId == null || generator.regenerate(entity)) {
+
+            Serializable newId = generator.generate(entity);
+
+            Object convertedId = convertToExternalContentIdType(entity, newId);
+
+            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+        }
 
 		Resource resource = this.getResource(entity);
         if (resource == null) {

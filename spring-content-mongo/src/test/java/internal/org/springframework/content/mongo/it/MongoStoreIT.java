@@ -7,6 +7,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -16,6 +17,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
+
+import javax.persistence.Id;
 
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
@@ -26,8 +30,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.GenericGenerator;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -40,6 +46,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -51,6 +58,9 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -321,6 +331,44 @@ public class MongoStoreIT {
 						assertThat(SharedSpringIdContentIdEntity.getContentLen(), is(0L));
 					});
 				});
+
+                Context("when content is updated and the content id field is computed from a custom value generator", () -> {
+
+                    It("should assign a new content Id", () -> {
+
+                        TEntityWithGenRepository repoWithGen = context.getBean(TEntityWithGenRepository.class);
+                        TEntityWithGenStore storeWithGen = context.getBean(TEntityWithGenStore.class);
+
+                        MongoStoreIT.TEntityWithGenerator entity = new MongoStoreIT.TEntityWithGenerator();
+                        entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repoWithGen.save(entity);
+                        String firstContentId = entity.getContentId();
+
+                        entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        entity = repoWithGen.save(entity);
+                        String secondContentId = entity.getContentId();
+
+                        assertThat(firstContentId, is(not(secondContentId)));
+                    });
+                });
+
+                Context("when content is updated and the content id field is not computed", () -> {
+
+                    It("should assign a new content Id", () -> {
+
+                        property = new TestEntity();
+                        property = repo.save(property);
+                        store.setContent(property, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        property = repo.save(property);
+                        String firstContentId = property.getContentId();
+
+                        store.setContent(property, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        property = repo.save(property);
+                        String secondContentId = property.getContentId();
+
+                        assertThat(firstContentId, is(secondContentId));
+                    });
+                });
 			});
 		});
 	}
@@ -490,4 +538,39 @@ public class MongoStoreIT {
 
 	public interface SharedSpringIdRepository extends MongoRepository<SharedSpringIdContentIdEntity, String> {}
 	public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
+
+    @Document
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class TEntityWithGenerator {
+
+        @Id
+        private String id;
+
+        @ContentId
+        @GenericGenerator(strategy=MongoStoreIT.TestContentIdGenerator.class)
+        private String contentId;
+
+        @ContentLength
+        private long contentLen;
+    }
+
+    public interface TEntityWithGenRepository extends MongoRepository<TEntityWithGenerator, String> {}
+    public interface TEntityWithGenStore extends ContentStore<TEntityWithGenerator, String> {}
+
+    public static class TestContentIdGenerator implements ValueGenerator<MongoStoreIT.TEntityWithGenerator, String> {
+
+        @Override
+        public String generate(TEntityWithGenerator entity) {
+
+            return UUID.randomUUID().toString();
+        }
+
+        @Override
+        public boolean regenerate(TEntityWithGenerator entity) {
+
+            return true;
+        }
+    }
 }
