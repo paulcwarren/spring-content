@@ -91,7 +91,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
         if (lockingService.lock(id, authentication)) {
             BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, authentication.getName());
-            return this.save(entity);
+            return entity;
         }
 
         throw new LockingAndVersioningException(format("failed to lock %s", id));
@@ -118,7 +118,6 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, null);
-        entity = this.save(entity);
 
         if (lockingService.unlock(id, authentication)) {
             return entity;
@@ -180,7 +179,6 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         S ancestorRoot;
         if (isAnestralRoot(currentVersion)) {
             currentVersion = (S)versioner.establishAncestralRoot(currentVersion);
-            em.merge(currentVersion);
             ancestorRoot = currentVersion;
         } else {
             Object ancestorRootId = getAncestralRootId(currentVersion);
@@ -202,7 +200,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         Object newId = getId(newVersion);
 
         newVersion = this.lock(newVersion);
-      newVersion = em.merge(newVersion);
+        newVersion = em.merge(newVersion);
 
         return newVersion;
     }
@@ -255,7 +253,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             Object newId = getId(newVersion);
 
             newVersion = this.lock(newVersion);
-         newVersion = em.merge(newVersion);
+            newVersion = em.merge(newVersion);
         } else {
 
             newVersion = currentVersion;
