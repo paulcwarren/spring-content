@@ -7,7 +7,6 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -34,10 +33,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.GenericGenerator;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -332,43 +329,6 @@ public class S3StoreIT {
 //                    });
 //                });
 
-                Context("when content is updated and the content id field is computed from a custom value generator", () -> {
-
-                    It("should assign a new content Id", () -> {
-
-                        TEntityWithGenRepository repoWithGen = context.getBean(TEntityWithGenRepository.class);
-                        TEntityWithGenStore storeWithGen = context.getBean(TEntityWithGenStore.class);
-
-                        S3StoreIT.TEntityWithGenerator entity = new S3StoreIT.TEntityWithGenerator();
-                        entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                        entity = repoWithGen.save(entity);
-                        String firstContentId = entity.getContentId();
-
-                        entity = storeWithGen.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                        entity = repoWithGen.save(entity);
-                        String secondContentId = entity.getContentId();
-
-                        assertThat(firstContentId, is(not(secondContentId)));
-                    });
-                });
-
-                Context("when content is updated and the content id field is not computed", () -> {
-
-                    It("should assign a new content Id", () -> {
-
-                        entity = new TestEntity();
-                        entity = repo.save(entity);
-                        store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                        entity = repo.save(entity);
-                        String firstContentId = entity.getContentId();
-
-                        store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                        entity = repo.save(entity);
-                        String secondContentId = entity.getContentId();
-
-                        assertThat(firstContentId, is(secondContentId));
-                    });
-                });
             });
         });
     }
@@ -495,40 +455,4 @@ public class S3StoreIT {
 //
 //    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
 //    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
-
-    @Entity
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public static class TEntityWithGenerator {
-
-        @Id
-        @GeneratedValue(strategy=GenerationType.AUTO)
-        private Long id;
-
-        @ContentId
-        @GenericGenerator(strategy=S3StoreIT.TestContentIdGenerator.class)
-        private String contentId;
-
-        @ContentLength
-        private long contentLen;
-    }
-
-    public interface TEntityWithGenRepository extends JpaRepository<TEntityWithGenerator, Long> {}
-    public interface TEntityWithGenStore extends ContentStore<TEntityWithGenerator, String> {}
-
-    public static class TestContentIdGenerator implements ValueGenerator<S3StoreIT.TEntityWithGenerator, String> {
-
-        @Override
-        public String generate(TEntityWithGenerator entity) {
-
-            return UUID.randomUUID().toString();
-        }
-
-        @Override
-        public boolean regenerate(TEntityWithGenerator entity) {
-
-            return true;
-        }
-    }
 }

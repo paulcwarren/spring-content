@@ -25,8 +25,6 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.content.commons.store.ContentIdGeneratorManager;
-import org.springframework.content.commons.store.ValueGenerator;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
@@ -48,13 +46,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private PlacementService placer;
 	private FileService fileService;
 
-    private ContentIdGeneratorManager generatorManager;
-
 	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, PlacementService conversion, FileService fileService) {
 		this.loader = loader;
 		this.placer = conversion;
 		this.fileService = fileService;
-		this.generatorManager = new ContentIdGeneratorManager();
 	}
 
 	@Override
@@ -158,18 +153,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Transactional
 	public S setContent(S entity, InputStream content) {
 
-	    ValueGenerator<Object, Serializable> generator;
-        try {
-            generator = generatorManager.generator(entity.getClass());
-        } catch (InstantiationException | IllegalAccessException e) {
-            logger.error(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
-            throw new StoreAccessException(format("Error instantiating GenericGenerator for entity class %s", entity.getClass()), e);
-        }
-
         Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-        if (contentId == null || generator.regenerate(entity)) {
+        if (contentId == null) {
 
-            Serializable newId = generator.generate(entity);
+            Serializable newId = UUID.randomUUID().toString();
 
             Object convertedId = convertToExternalContentIdType(entity, newId);
 
