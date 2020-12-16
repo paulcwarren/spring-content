@@ -179,6 +179,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         S ancestorRoot;
         if (isAnestralRoot(currentVersion)) {
             currentVersion = (S)versioner.establishAncestralRoot(currentVersion);
+            em.merge(currentVersion);
             ancestorRoot = currentVersion;
         } else {
             Object ancestorRootId = getAncestralRootId(currentVersion);
