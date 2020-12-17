@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Versions - Spring Content</title>
+        <title>Versions - Content Services for Spring</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -38,7 +38,7 @@
 
       <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
 	<div class="container">
-	<a class="navbar-brand" href="..">Spring Content</a>
+	<a class="navbar-brand" href="..">Content Services for Spring</a>
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04" aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
 	</button>
@@ -139,7 +139,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
         &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.3.4.RELEASE&lt;/version&gt;
+        &lt;version&gt;2.4.1&lt;/version&gt;
     &lt;/parent&gt;
 
     &lt;artifactId&gt;spring-content-with-versions&lt;/artifactId&gt;
@@ -173,17 +173,17 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M4&lt;/version&gt;
+            &lt;version&gt;1.2.0&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M4&lt;/version&gt;
+            &lt;version&gt;1.2.0&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;1.1.0.M4&lt;/version&gt;
+            &lt;version&gt;1.2.0&lt;/version&gt;
         &lt;/dependency&gt;
 
         &lt;!-- Test dependencies --&gt;
@@ -191,6 +191,16 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
             &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
             &lt;scope&gt;test&lt;/scope&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-api&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-engine&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
