@@ -33,7 +33,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn -B test -P tests --file pom.xml
+      run: mvn -B -P tests install --file pom.xml
       env:
         SQLSERVER_DB_NAME: "sc"
         SQLSERVER_HOST: "sqlserver"
