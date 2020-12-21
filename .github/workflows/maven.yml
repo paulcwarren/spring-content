@@ -19,10 +19,10 @@ jobs:
       sqlserver: 
         image: exoplatform/sqlserver:2017-CU8
         env:
-          SA_PASSWORD=5F4Dt9ky9dU$
-          SQLSERVER_DATABASE=sc
-          SQLSERVER_USER=user
-          SQLSERVER_PASSWORD=5F4Dt9ky9dU$
+          SA_PASSWORD: 5F4Dt9ky9dU$
+          SQLSERVER_DATABASE: sc
+          SQLSERVER_USER: user
+          SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
         ports:
           - 1433
 
