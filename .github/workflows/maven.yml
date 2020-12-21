@@ -38,4 +38,4 @@ jobs:
         SQLSERVER_DB_NAME: "sc"
         SQLSERVER_HOST: "localhost:1433"
         SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
-        SQLSERVER_USERNAME: "user"
+        SQLSERVER_USERNAME: "sa"
