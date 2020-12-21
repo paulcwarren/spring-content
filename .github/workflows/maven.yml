@@ -24,7 +24,7 @@ jobs:
           SQLSERVER_USER: user
           SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
         ports:
-          - 1433
+          - 1433:1433
 
     steps:
     - uses: actions/checkout@v2
@@ -36,6 +36,6 @@ jobs:
       run: mvn -B -P tests install --file pom.xml
       env:
         SQLSERVER_DB_NAME: "sc"
-        SQLSERVER_HOST: "sqlserver:1433"
+        SQLSERVER_HOST: "localhost:1433"
         SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
         SQLSERVER_USERNAME: "user"
