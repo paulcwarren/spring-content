@@ -1,0 +1,56 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ 1.2.x ]
+  pull_request:
+    branches: [ 1.2.x ]
+
+jobs:
+  # Label of the container job
+  container-job:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: node:10.18-jessie
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver: 
+        image: exoplatform/sqlserver:2017-CU8
+        env:
+          SA_PASSWORD=5F4Dt9ky9dU$
+          SQLSERVER_DATABASE=sc
+          SQLSERVER_USER=user
+          SQLSERVER_PASSWORD=5F4Dt9ky9dU$
+        ports:
+          - 1433
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build with Maven
+      run: mvn -B test -P tests --file pom.xml
+      env:
+        SQLSERVER_DB_NAME="sc"
+        SQLSERVER_HOST="sqlserver"
+        SQLSERVER_PASSWORD="5F4Dt9ky9dU$"
+        SQLSERVER_USERNAME="user"
