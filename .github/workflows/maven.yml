@@ -59,7 +59,15 @@ jobs:
     - name: Build with Maven
       run: mvn -B -P tests install --file pom.xml
       env:
+        SQLSERVER_USERNAME: "sa"
+        SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
         SQLSERVER_DB_NAME: "sc"
         SQLSERVER_HOST: "localhost:1433"
-        SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
-        SQLSERVER_USERNAME: "sa"
+        POSTGRESQL_USERNAME: "postgres"
+        POSTGRESQL_PASSWORD: "5F4Dt9ky9dU$"
+        POSTGRESQL_URL: "jdbc:postgres://localhost:5432/postgres?sslmode=disable"
+        MYSQL_USERNAME: "root"
+        MYSQL_PASSWORD: "5F4Dt9ky9dU$"
+        MYSQL_URL: "jdbc:mysql://localhost:3306/test?emulateLocators=true&serverTimezone=UTC"
+        SOLR_USER: "solr"
+        SOLR_PASSWORD: "SolrRocks"
