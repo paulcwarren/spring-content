@@ -49,6 +49,12 @@ jobs:
         image: paulcwarren/solr 
         ports:
           - 8983:8983 
+      mongo:
+        image: mongo:3.6.12
+        env:
+          MONGO_INITDB_DATABASE: spring-content 
+        ports:
+          - 27017:27017
 
     steps:
     - uses: actions/checkout@v2
@@ -69,5 +75,6 @@ jobs:
         MYSQL_USERNAME: "root"
         MYSQL_PASSWORD: "5F4Dt9ky9dU$"
         MYSQL_URL: "jdbc:mysql://localhost:3306/sc?emulateLocators=true&serverTimezone=UTC"
+        MONGODB_URL: "mongodb://localhost:27017/spring-content?retryWrites=false"
         SOLR_USER: "solr"
         SOLR_PASSWORD: "SolrRocks"
