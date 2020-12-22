@@ -25,6 +25,30 @@ jobs:
           SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
         ports:
           - 1433:1433
+      postgres:
+        image: postgres:12.1
+        env:
+          POSTGRES_PASSWORD: 5F4Dt9ky9dU$ 
+        ports:
+          - 5432:5432
+      mysql:
+        image: mysql:8.0.19
+        env:
+          MYSQL_ROOT_PASSWORD: 5F4Dt9ky9dU$
+          MYSQL_DATABASE: sc
+        ports:
+          - 3306:3306 
+      elasticsearch:
+        image: paulcwarren/elasticsearch:7.6.2
+        env:
+          discovery.type: single-node
+        ports:
+          - 9200:9200
+          - 9300:9300
+      solr:
+        image: paulcwarren/solr 
+        ports:
+          - 8983:8983 
 
     steps:
     - uses: actions/checkout@v2
