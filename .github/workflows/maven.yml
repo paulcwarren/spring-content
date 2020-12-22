@@ -68,6 +68,6 @@ jobs:
         POSTGRESQL_URL: "jdbc:postgres://localhost:5432/postgres?sslmode=disable"
         MYSQL_USERNAME: "root"
         MYSQL_PASSWORD: "5F4Dt9ky9dU$"
-        MYSQL_URL: "jdbc:mysql://localhost:3306/test?emulateLocators=true&serverTimezone=UTC"
+        MYSQL_URL: "jdbc:mysql://localhost:3306/sc?emulateLocators=true&serverTimezone=UTC"
         SOLR_USER: "solr"
         SOLR_PASSWORD: "SolrRocks"
