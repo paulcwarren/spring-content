@@ -62,8 +62,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Build with Maven
-      run: mvn -B -P tests install --file pom.xml
+        server-id: ossrh
+        server-username: ${{ secrets.MAVEN_USERNAME }}
+        server-password: ${{ secrets.MAVEN_PASSWORD }}
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      run: mvn -B -U -P tests,docs,ci deploy scm-publish:publish-scm --file pom.xml
       env:
         SQLSERVER_USERNAME: "sa"
         SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
@@ -78,3 +82,5 @@ jobs:
         MONGODB_URL: "mongodb://localhost:27017/spring-content?retryWrites=false"
         SOLR_USER: "solr"
         SOLR_PASSWORD: "SolrRocks"
+        GITHUB_USERNAME: "springcontentci"
+        GITHUB_PASSWORD: "o^RomPJ@6xMk"
