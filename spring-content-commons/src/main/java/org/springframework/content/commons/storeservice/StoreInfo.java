@@ -19,8 +19,10 @@ public interface StoreInfo {
     /**
      * Returns the Store's implementation
      *
-     * @param clazz the type of the implementation
-     * @return the implementation, or null
+     * @param clazz
+     *          the type of the implementation
+     * @return T
+     *          the implementation, or null
      */
     public <T> T getImplementation(Class<? extends T> clazz);
 }

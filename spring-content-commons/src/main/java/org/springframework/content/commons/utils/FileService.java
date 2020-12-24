@@ -17,8 +17,8 @@ public interface FileService {
 	 * 			the directory path to be removed
 	 * @param to
 	 * 			the sub-directory to preserve.  Maybe null
-	 * @throws
-	 * 			IOException
+	 * @throws IOException
+	 *          when the directories cannot be removed
 	 */
 	void rmdirs(File from, File to) throws IOException;
 
@@ -29,8 +29,8 @@ public interface FileService {
 
 	 * @param from
 	 * 			the directory path to be removed
-	 * @throws
-	 * 			IOException
+	 * @throws IOException
+     *          when the directories cannot be removed
 	 */
 	void rmdirs(File from) throws IOException;
 }
