@@ -42,10 +42,10 @@ public interface AssociativeStore<S, SID extends Serializable> extends Store<SID
      *
      * @param entity
      *          the target of the association
+     * @param resource
+     *          the resource to be associated
      * @param propertyPath
      *          the property path to associate the resource to
-     * @param id
-     *          the id of the resource to be associated
      */
     void associate(S entity, Resource resource, PropertyPath propertyPath);
 
