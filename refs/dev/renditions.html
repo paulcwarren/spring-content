@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>JPA Content Stores</title>
+<title>Renditions</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -436,151 +436,164 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body class="book">
+<body id="renditions" class="book">
 <div id="header">
-<h1>JPA Content Stores</h1>
+<h1>Renditions</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
+<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
+set of renderers out-of-the-box.</p>
 </div>
+<div class="paragraph">
+<p>It also provides an extension point for providing your own renderers.</p>
+</div>
+<div class="paragraph">
+<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
+project.  This enables the renditions capability and a small set of renderers that can convert documents of various
+types to jpeg images based on the apache poi and pdfbox libraries</p>
+</div>
+<div class="paragraph">
+<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
+can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
+<div class="sectionbody">
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
+<div class="title">Example 1. Enabling Spring Content Renditions with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaStores
-@EnableTransactionManagement
+@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
+@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
 public static class ApplicationConfig {
-
-  @Bean
-  public DataSource dataSource() {
-
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
-
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
-
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
-
-  @Bean
-  public PlatformTransactionManager transactionManager() {
-
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
-
 }</code></pre>
 </div>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+</ol>
 </div>
-</div>
-<div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
-then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
-declared here is the JpaTransactionManager.</p>
-</div>
-<div class="paragraph">
-<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
-stores using <code>@EnableJpaStores</code> and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
-</div>
-<div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
-configuration class resides in as the base package.</p>
-</div>
-<div class="sect2">
-<h3 id="_content_streaming">Content Streaming</h3>
-<div class="paragraph">
-<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
-the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
-</div>
-<div class="sect3">
-<h4 id="_mysql">MySQL</h4>
-<div class="paragraph">
-<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
-will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
-being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
-</div>
-<div class="paragraph">
-<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
-that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_postgresql">Postgresql</h3>
-<div class="paragraph">
-<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.</p>
-</div>
-<div class="paragraph">
-<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
-convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
-therefore the transaction must be handled by the consumer.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_sql_server">SQL Server</h3>
-<div class="paragraph">
-<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
-to serve BLOBs in a memory efficient way.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_persisting_content">Persisting Content</h2>
+<h2 id="_making_stores_renderable">Making Stores Renderable</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
+<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_renderers">Renderers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Pdf To Jpeg</p>
+</li>
+<li>
+<p>Text To Jpeg</p>
+</li>
+<li>
+<p>Word To Jpeg</p>
+</li>
+<li>
+<p>Jpeg To Png</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
+<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>Word To Html</p>
+</li>
+<li>
+<p>Word To PDF</p>
+</li>
+<li>
+<p>Word To Text</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_renditionprovider_extension_point">RenditionProvider Extension Point</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
-field, if appropriate.</p>
+<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
+renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
+to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
+contributed as a bean to your application context at runtime.</p>
 </div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
-<div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
-content is initially set.</p>
+<div class="exampleblock">
+<div class="title">Example 2. Implementing the RenditionProvider Extension Point</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
+
+@Service    <b class="conum">(2)</b>
+public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
+
+	@Override
+	public String consumes() {
+		return "my/type";
+	}
+
+	@Override
+	public String[] produces() {
+		return new String[] { "your/type" };
+	}
+
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
+public static class ApplicationConfig {
+}</code></pre>
 </div>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Implementation of <code>RenditionProvider</code></p>
+</li>
+<li>
+<p>Marked as an <code>@Service</code></p>
+</li>
+<li>
+<p>Ensure the service is scanned by Spring and offered as a bean</p>
+</li>
+</ol>
 </div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 </div>

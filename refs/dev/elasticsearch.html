@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>JPA Content Stores</title>
+<title>Fulltext Indexing and Searching with Elasticsearch</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -436,152 +436,295 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body class="book">
+<body id="fulltext-search" class="book">
 <div id="header">
-<h1>JPA Content Stores</h1>
+<h1>Fulltext Indexing and Searching with Elasticsearch</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
+<p>When enabled, the Elasticsearch integration will, by default, forward all content to an Elasticsearch cluster for fulltext indexing.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to your Elasticsearch
+cluster.</p>
+</div>
+<div class="paragraph">
+<p>Elasticsearch can be enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
+<div class="title">Example 1. Enabling Spring Content Elasticsearch with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaStores
-@EnableTransactionManagement
+@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
 public static class ApplicationConfig {
 
-  @Bean
-  public DataSource dataSource() {
+                                            <b class="conum">(3)</b>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
 
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
+</li>
+<li>
+<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
+</li>
+<li>
+<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_spring_boot_configuration">Spring Boot Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Alternatively, you can use the Spring Boot Starter <code>spring-content-elasticsearch-boot-starter</code>.</p>
+</div>
+<div class="paragraph">
+<p>When using this method of configuration the <code>@EnableElasticsearchFulltextIndexing</code> annotation can be omitted as it will
+be added for you.  As will a RestHighLevelClient client bean configured to connect to localhost.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix spring.content.elasticsearch) are supported.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">autoindex</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether, or not, to enable autoindexing to index content as it is added</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_making_stores_searchable">Making Stores Searchable</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_custom_indexing">Custom Indexing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default when you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content
+being added to a Store and sends that content to your Elasticsearch cluster for full-text indexing.  This is usually
+all you need.  However, sometimes you may need more control over when documents are indexed.  For these cases you can
+use the <code>IndexService</code> bean directly in your code to index (or unindex) content as required.</p>
+</div>
+<div class="paragraph">
+<p>When performing custom indexing it is usual to turn of the auto-indexing feature but specifying
+<code>spring.content.elasticsearch.autoindex=false</code> in your application properties.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_text_extraction">Text Extraction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For images and other media, it also possible to configure the elasticsearch integration to perform text extraction and
+send that instead of the image content to Elasticsearch.</p>
+</div>
+<div class="paragraph">
+<p>This requires two stages of configuration:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Add one or more renderers to the application context.  These renderers are used to perform the text extraction.  To be
+used for text extraction a renderer <strong>must</strong> produce <code>text/plain</code> content but can consume any suitable mime type.   When
+content matching its <code>consume</code> mime type is added to a Store the renderer will be invoked to extract text and this extracted text
+will then be sent to the Elasticsearch for fulltext indexing in place of the original content.</p>
+</li>
+</ol>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Adding a renderer to perform text extraction</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing
+@EnableFilesystemStores
+public static class ApplicationConfig {
 
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
 
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
+    @Bean
+    public RenditionProvider jpgTextExtractor() {
+        return new RenditionProvider() {
 
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
+            @Override
+            public String consumes() {
+                return "image/jpg";                     // can be any mime-type
+            }
 
-  @Bean
-  public PlatformTransactionManager transactionManager() {
+            @Override
+            public String[] produces() {
+                return new String[] {"text/plain"};     // must be 'text/plain'
+            }
 
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
-
+            @Override
+            public InputStream convert(InputStream fromInputSource, String toMimeType) {
+                ...implementation...
+            }
+        }
+    }
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
-<div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
-then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
-declared here is the JpaTransactionManager.</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Make the Store Renderable as this will be used internally to extract the text</p>
+</li>
+</ol>
 </div>
-<div class="paragraph">
-<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
-stores using <code>@EnableJpaStores</code> and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
-</div>
-<div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
-configuration class resides in as the base package.</p>
-</div>
-<div class="sect2">
-<h3 id="_content_streaming">Content Streaming</h3>
-<div class="paragraph">
-<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
-the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
-</div>
-<div class="sect3">
-<h4 id="_mysql">MySQL</h4>
-<div class="paragraph">
-<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
-will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
-being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
-</div>
-<div class="paragraph">
-<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
-that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
+<div class="exampleblock">
+<div class="title">Example 3. Making the Store interface Renderable</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentStore extends ContentStore&lt;Document, UUID&gt; implements Searchable&lt;Document&gt;, Renderable&lt;Document&gt; {
+}</code></pre>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_postgresql">Postgresql</h3>
-<div class="paragraph">
-<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.</p>
-</div>
-<div class="paragraph">
-<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
-convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
-therefore the transaction must be handled by the consumer.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_sql_server">SQL Server</h3>
-<div class="paragraph">
-<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
-to serve BLOBs in a memory efficient way.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_persisting_content">Persisting Content</h2>
+<h2 id="_custom_attributes_and_filtering_queries">Custom Attributes and Filtering Queries</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
+<p>By default Spring Content Elasticsearch indexes content only.  However, it is common to synchronize additional
+attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
+search results (removing the need to perform subsequent queries against the primary domain model).</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
-field, if appropriate.</p>
+<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
+application&#8217;s configuration:</p>
 </div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public AttributeProvider&lt;Document&gt; attributeProvider() {
+        return new AttributeProvider&lt;Document&gt;() {
+
+            @Override
+            public Map&lt;String, String&gt; synchronize(Document entity) {
+
+                Map&lt;String, String&gt; attrs = new HashMap&lt;&gt;();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
-content is initially set.</p>
+<p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
+application&#8217;s configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public FilterQueryProvider fqProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class&lt;?&gt; entity) {
+
+                return new String[] {"author:foo@bar.com"};
+            }
+        };
+    }</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return
+filter queries based on the current execution context.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_search_return_types">Search Return Types</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
+type this interface to String in which case result sets will be collections of content IDs.</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
+results to your specific needs:</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>@ContentId; extracts the content ID of the content from your search results</p>
+</li>
+<li>
+<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
+</li>
+<li>
+<p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)</p>
+</li>
+</ul>
 </div>
 </div>
 </div>

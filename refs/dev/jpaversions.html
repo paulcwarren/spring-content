@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>JPA Content Stores</title>
+<title>Introduction</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,149 +438,470 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>JPA Content Stores</h1>
+<h1>Introduction</h1>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
+<p>Traditional document management use cases often require content to be locked and versioned.   The Spring Versions JPA
+module provides these capabilities.</p>
+</div>
+<div class="paragraph">
+<p>Spring Versions JPA can be used with the following storage modules:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-fs">Spring Content Filesystem</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-s3">Spring Content S3</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="_getting_started" class="sect0">Getting Started</h1>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Versions are enhancements to Spring Data that extend the existing optimistic locking semantics of Entities to
+any associated Spring Content Resources and also adds user-facing pessimistic locking and versioning semantics to
+Entities and their Content through a new <code>LockingAndVersioningRepository</code> interface defined in the base module
+<a href="https://github.com/paulcwarren/spring-content/spring-versions-jpa">Spring Version Commons</a>.</p>
+</div>
+<div class="paragraph">
+<p>Spring Versions JPA is the JPA-based implementation of these enhancements.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_adding_spring_versions_jpa_to_a_spring_boot_project">Adding Spring Versions JPA to a Spring Boot project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Versions JPA has both a Spring Boot starter and auto-configuration so the simplest way to get to started is
+with a Spring Boot application.  Add the <code>spring-versions-jpa-boot-starter</code> to the classpath:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
+<div class="title">Example 1. Classpath configuration with Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa-boot-starter:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Classpath configuration with Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa-boot-starter&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_adding_spring_versions_jpa_to_a_non_spring_boot_project">Adding Spring Versions JPA to a Non-Spring Boot Project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Whilst it is the easiest way to get started Spring Versions JPA does not require Spring Boot however.  To a add
+Spring Versions JPA to a non-Spring Boot project, add the <code>spring-versions-jpa</code> dependency to the classpath:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Classpath configuration for Gradle</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
+    ...
+    compile("com.github.paulcwarren:spring-versions-jpa:${version}")
+	...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Classpath configuration for Maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
+	...
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-versions-jpa&lt;/artifactId&gt;
+      &lt;version&gt;${version}&lt;/version&gt;
+    &lt;/dependency&gt;
+	...
+  &lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuring_spring_versions_jpa">Configuring Spring Versions JPA</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before they can be used, the locking and versioning capabilities must be configured.  This is done by importing the
+<code>@Configuration</code> class <code>org.springframework.versions.jpa.JpaLockingAndVersioningConfig</code> into your application and
+initializing the database with the pre-defined sql scripts:</p>
+</div>
+<div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaStores
-@EnableTransactionManagement
-public static class ApplicationConfig {
+@Import(JpaLockingAndVersioningConfig.class)
+public class LockingAndVersioningConfig {
 
-  @Bean
-  public DataSource dataSource() {
+    @Value("/org/springframework/versions/jpa/schema-drop-hsqldb.sql") // <b class="conum">(1)</b>
+    private Resource dropVersionSchema;
 
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
+    @Value("/org/springframework/versions/jpa/schema-hsqldb.sql")
+    private Resource createVersionSchema;
 
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+    @Bean
+    DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+        ResourceDatabasePopulator databasePopulator =
+                new ResourceDatabasePopulator();
 
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
+        databasePopulator.addScript(dropVersionSchema);
+        databasePopulator.addScript(createVersionSchema);
+        databasePopulator.setIgnoreFailedDrops(true);
 
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator);
 
-  @Bean
-  public PlatformTransactionManager transactionManager() {
+        return initializer;
+    }
 
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
+    @Bean
+    public DataSource dataSource() {
+        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+        return builder.setType(EmbeddedDatabaseType.HSQL).build();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Replace with schema resources for database.  Supported databases; H2, HSQL, MySQL, Postgres and SQL Server.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+This step is unnecessary if you are using Spring Boot as it will automatically enable Spring Versions JPA
+when you place <code>com.github.paulcwarren:spring-versions-jpa-boot-starter</code> on your application&#8217;s classpath and your application
+is annotated as a <code>@SpringBootApplication</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Configure the Spring Content Storage module by adding the package <code>org.springframework.versions</code> to your
+@Enable&#8230;&#8203;Repositories package context.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+public class Application {
 
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Configuration
+    @EnableJpaRepositories(basePackages={"tests.versioning", "org.springframework.versions"})	// <b class="conum">(1)</b>
+    @EnableFilesystemStores(basePackages = "tests.versioning")
+    public static class ApplicationConfiguration {
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>This is required whether you are using Spring Boot, or not.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<h1 id="_locking_and_versioning" class="sect0">Locking And Versioning</h1>
+<div class="sect1">
+<h2 id="_fundamentals">Fundamentals</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Locking and Versioning supports both optimistic and pessimistic locking strategies as well as versioning of Spring Data
+Entities and associated Spring Content Resources.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_optimistic_locking">Optimistic Locking</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Once configured (see Configuring Spring Versions JPA) optimistic locking semantics are automatically extended to Spring
+Content Resource&#8217;s associated with <a href="https://docs.oracle.com/javaee/7/tutorial/persistence-locking001.htm">@Version</a>ed
+Spring Data Entities.</p>
+</div>
+<div class="paragraph">
+<p>As a result any <code>ContentStore</code> operation that is attempted on an out-of-date Entity, that with an out-of-date @Version
+value, will throw <code>javax.persistence.OptimisticLockException</code>.</p>
+</div>
+<div class="paragraph">
+<p>In addition, any <code>ContentStore</code> operation on an up-to-date Entity&#8217;s content will cause the @Version value to be
+incremented rendering all other copies out-of-date and forcing those to be re-fetched.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pessimistic_locking_and_versioning">Pessimistic Locking and Versioning</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To use a pessimistic locking strategy and versioning, the repository should be made to extend
+<code>LockingAndVersioningRepository</code>.  For example:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>LockingAndVersioningRepository</code> interface adds (and overrides) the following methods to a <code>Repository</code>:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface LockingAndVersioningRepository&lt;T, ID extends Serializable&gt; {
+
+    /**
+     * Locks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to be locked
+     * @return the locked entity
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S lock(S entity);
+
+    /**
+     * Unlocks the entity and returns the updated entity (@Version and @LockOwner) attributes updated, otherwise
+     * returns null
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to unlock
+     * @return the unlocked entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S unlock(S entity);
+
+    /**
+     * Overridden implementation of save that enforces locking semantics
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to save
+     * @return the saved entity
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S save(S entity);
+
+    /**
+     * Creates and returns a new version of the entity.  This new version becomes the latest version in the version
+     * list.
+     *
+     * This method requires the entity class to have a copy constructor used for cloning the new version instance.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to base the new versionWithEntity on
+     * @param info the version info
+     * @return the new versionWithEntity
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; S version(S entity, VersionInfo info);
+
+    /**
+     * Returns the latest version of all entities.  When extending LockingAndVersioningRepository this
+     * method would usually be preferred over CrudRepository's findAll that would find all versions
+     * of all entities.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @return list of latest versionWithEntity entities
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllLatestVersion();
+
+    /**
+     * Returns a list of all versions for the given entity.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to find versions for
+     * @return list of entity versions
+     */
+    &lt;S extends T&gt; List&lt;S&gt; findAllVersions(@Param("entity") S entity);
+
+    /**
+     * Deletes a given entity version.  The entity must be the head of the version list.
+     *
+     * If the entity is locked the lock will be carried over to the previous version when
+     * it becomes the new head.
+     *
+     * @param &lt;S&gt; the type of entity
+     * @param entity the entity to delete
+     * @throws LockingAndVersioningException if entity is not the latest
+     * @throws LockOwnerException if the current principal is not the lock owner
+     * @throws SecurityException if no authentication exists
+     */
+    &lt;S extends T&gt; void delete(S entity);
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
-then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
-declared here is the JpaTransactionManager.</p>
+<p>Lock and version information is recorded on each Entity instance by adding the following attribute annotations to the
+Entity class that is the subject of <code>LockingAndVersioningRepository</code>:</p>
 </div>
-<div class="paragraph">
-<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
-stores using <code>@EnableJpaStores</code> and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Annotation</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The previous version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AncestorRootId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The first version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SuccessorId</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">@Id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The next version in the set.  The type of this field will be dictated by the entity&#8217;s @Id field.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LockOwner</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the lock owner.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionNumber</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version number.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VersionLabel</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The entity&#8217;s version label.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class Document {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Version
+    private Long vstamp;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private int contentLen;
+
+    @MimeType
+    private String mimeType;
+
+    @LockOwner
+    private String lockOwner;
+
+    @AncestorId
+    private Long ancestorId;
+
+    @AncestorRootId
+    private Long ancestralRootId;
+
+    @SuccessorId
+    private Long successorId;
+
+    @VersionNumber
+    private String version;
+
+    @VersionLabel
+    private String label;
+}</code></pre>
 </div>
-<div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
-configuration class resides in as the base package.</p>
 </div>
-<div class="sect2">
-<h3 id="_content_streaming">Content Streaming</h3>
-<div class="paragraph">
-<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
-the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
-</div>
-<div class="sect3">
-<h4 id="_mysql">MySQL</h4>
-<div class="paragraph">
-<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
-will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
-being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
-</div>
-<div class="paragraph">
-<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
-that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_postgresql">Postgresql</h3>
-<div class="paragraph">
-<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.</p>
-</div>
-<div class="paragraph">
-<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
-convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
-therefore the transaction must be handled by the consumer.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_sql_server">SQL Server</h3>
-<div class="paragraph">
-<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
-to serve BLOBs in a memory efficient way.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_persisting_content">Persisting Content</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
-</div>
-<div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
-field, if appropriate.</p>
-</div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
-<div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
-content is initially set.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 </div>

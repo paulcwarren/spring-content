@@ -5,7 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>JPA Content Stores</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Content Renditions - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,149 +439,905 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>JPA Content Stores</h1>
+<h1>Spring Content Renditions - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren</span><br>
+<span id="revnumber">version 1.2.1-SNAPSHOT,</span>
+<span id="revdate">2020-12-25</span>
+</div>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
+<p>&#169; 2019-present The original authors.</p>
 </div>
-<div class="exampleblock">
-<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#content-repositories">1. Working with Spring Stores</a>
+<ul class="sectlevel2">
+<li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
+<li><a href="#content-repositories.creation">1.2. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
+</ul>
+</li>
+<li><a href="#renditions">2. Renditions</a>
+<ul class="sectlevel2">
+<li><a href="#_overview">2.1. Overview</a></li>
+<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
+<li><a href="#_making_stores_renderable">2.3. Making Stores Renderable</a></li>
+<li><a href="#_renderers">2.4. Renderers</a></li>
+<li><a href="#_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="preface" class="sect0">Preface</h1>
+<div class="sect1">
+<h2 id="project">Project metadata</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="content-repositories">1. Working with Spring Stores</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
+and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
+the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
+class-path dependencies, Spring Content is then able to inject storage-specific implementations.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
+<div class="paragraph">
+<p>The central interfaces in the Spring Content are <code>Store</code>, <code>AssociativeStore</code> and <code>ContentStore</code>.  These interfaces
+provide access to content streams through the standard Spring Resource API either directly or through association with
+Spring Data entities.</p>
+</div>
+<div id="content-repositories.repository" class="exampleblock">
+<div class="title">Example 1. ContentStore interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaStores
-@EnableTransactionManagement
-public static class ApplicationConfig {
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
 
-  @Bean
-  public DataSource dataSource() {
+	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
 
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
+	InputStream getContent(E entity);			<b class="conum">(2)</b>
 
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+	void unsetContent(E entity);				<b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Stores content and associates it with <code>entity</code></p>
+</li>
+<li>
+<p>Returns the content associated with <code>entity</code></p>
+</li>
+<li>
+<p>Deletes content and unassociates it from <code>entity</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it is possible to associate and
+store a profile picture for each user.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. ContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
 
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
+	private String username;
 
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
+	@ContentId
+	private String contentId;
 
-  @Bean
-  public PlatformTransactionManager transactionManager() {
+	@ContentLength
+	private Long contentLength
+}
 
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
 
+public interface ProfilePictureStore extends ContentStore&lt;User, String&gt; {
+}
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+		return (args) -&gt; {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store profile picture
+			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.multimodule">1.1.1. Using Stores with Multiple Spring Content Modules</h4>
+<div class="paragraph">
+<p>Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
+the one Spring Content module.  Sometimes, applications require using more than one Spring Content
+module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
+module-specific ContentStore interfaces.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.events">1.1.2. Events</h4>
+<div class="paragraph">
+<p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>BeforeGetResourceEvent</p>
+</li>
+<li>
+<p>AfterGetResourceEvent</p>
+</li>
+<li>
+<p>BeforeAssociateEvent</p>
+</li>
+<li>
+<p>AfterAssociateEvent</p>
+</li>
+<li>
+<p>BeforeUnassociateEvent</p>
+</li>
+<li>
+<p>AfterUnassociateEvent</p>
+</li>
+<li>
+<p>BeforeSetContent</p>
+</li>
+<li>
+<p>AfterSetContent</p>
+</li>
+<li>
+<p>BeforeGetContent</p>
+</li>
+<li>
+<p>AfterGetContent</p>
+</li>
+<li>
+<p>BeforeUnsetContent</p>
+</li>
+<li>
+<p>AfterUnsetContent</p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
+<div class="paragraph">
+<p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
+override the methods that you are interested in.  When these events occur your handlers will be called.</p>
+</div>
+<div class="paragraph">
+<p>There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
+source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
+methods that return results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+
+	@Override
+	public void onAfterSetContent(Object entity) {
+		...logic to inspect and handle the entity and it's content after it is stored
+	}
+
+	@Override
+	public void onBeforeGetContent(BeforeGetContentEvent event) {
+		...logic to inspect and handle the entity and it's content before it is fetched
+	}
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
-then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
-declared here is the JpaTransactionManager.</p>
+<p>The down-side of this approach is that it does not filter events based on Entity.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h5>
+<div class="paragraph">
+<p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
 </div>
 <div class="paragraph">
-<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
-stores using <code>@EnableJpaStores</code> and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
+<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
+Spring Content that this class needs to be inspected for handler methods.  It
+iterates over the class&#8217;s methods and looks for annotations that correspond to the
+event.  There are twelve handler annotations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HandleBeforeGetResource</p>
+</li>
+<li>
+<p>HandleAfterGetResource</p>
+</li>
+<li>
+<p>HandleBeforeAssociate</p>
+</li>
+<li>
+<p>HandleAfterAssociate</p>
+</li>
+<li>
+<p>HandleBeforeUnassociate</p>
+</li>
+<li>
+<p>HandleAfterUnassociate</p>
+</li>
+<li>
+<p>HandleBeforeSetContent</p>
+</li>
+<li>
+<p>HandleAfterSetContent</p>
+</li>
+<li>
+<p>HandleBeforeGetContent</p>
+</li>
+<li>
+<p>HandleAfterGetContent</p>
+</li>
+<li>
+<p>HandleBeforeUnsetContent</p>
+</li>
+<li>
+<p>HandleAfterUnsetContent</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Entity-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterSetContent(SopDocument doc) {
+		...type-safe handling logic for SopDocument's and their content after it is stored
+	}
+
+	@HandleBeforeGetContent
+	public void onBeforeGetContent(Product product) {
+		...type-safe handling logic for Product's and their content before it is fetched
+	}
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
-configuration class resides in as the base package.</p>
+<p>These handlers will be called only when the event originates from a matching entity.</p>
 </div>
-<div class="sect2">
-<h3 id="_content_streaming">Content Streaming</h3>
 <div class="paragraph">
-<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
-the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
+<p>As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
+methods returns results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Event-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterGetResource(AfterGetResourceEvent event) {
+		SopDocument doc = event.getSource();
+		Resource resourceToBeReturned = event.getResult();
+		...code that manipulates the resource being returned...
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To register your event handler, either mark the class with one of Spring’s @Component
+stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
+declare an instance of your annotated bean in your ApplicationContext.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 6. Handler registration</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class ContentStoreConfiguration {
+
+	@Bean
+	ExampeAnnotatedEventHandler exampleEventHandler() {
+		return new ExampeAnnotatedEventHandler();
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_mysql">MySQL</h4>
+<h4 id="content-repositories.search">1.1.3. Searchable Stores</h4>
 <div class="paragraph">
-<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
-will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
-being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
+<p>Applications that handle documents and other media usually have search capabilities allowing relevant content to be
+found by looking inside of it for keywords or phrases, so called full-text search.</p>
 </div>
 <div class="paragraph">
-<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
-that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
+<p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. Searchable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Searchable&lt;CID&gt; {
+
+    Iterable&lt;T&gt; search(String queryString);
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
+<p>Any Store interface can be made to extend <code>Searchable&lt;CID&gt;</code> in order to extend its capabilities to include the
+<code>search(String queryString)</code> method.  For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentContentStore extends ContentStore&lt;Document, UUID&gt;, Searchable&lt;UUID&gt; {
+}
+
+...
+
+@Autowired
+private DocumentContentStore store;
+
+Iterable&lt;UUID&gt; = store.search("to be or not to be");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For <code>search</code> to return actual results full-text indexing must be enabled.  See <a href="#fulltext-search">Fulltext Indexing and Searching</a>
+for more information on how to do this.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.renditions">1.1.4. Renderable Stores</h4>
+<div class="paragraph">
+<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
+from one format to another.</p>
+</div>
+<div class="paragraph">
+<p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 8. Renderable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Renderable&lt;E&gt; {
+
+	InputStream getRendition(E entity, String mimeType);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Renditions must be enabled and renderers provided.  See <a href="#renditions">Renditions</a> for more
+information on how to do this.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_postgresql">Postgresql</h3>
+<h3 id="content-repositories.creation">1.2. Creating Content Store Instances</h3>
 <div class="paragraph">
-<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.</p>
+<p>To use these core concepts:</p>
 </div>
-<div class="paragraph">
-<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
-convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
-therefore the transaction must be handled by the consumer.</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Define a Spring Data entity and give it&#8217;s instances the ability to be associated with content by adding <code>@ContentId</code> and <code>@ContentLength</code> annotations</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class SopDocument {
+	private @Id @GeneratedValue Long id;
+	private String title;
+	private String[] authors, keywords;
+
+	// Spring Content managed attribute
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define an interface extending Spring Data&#8217;s <code>CrudRepository</code> and type it to the domain and ID classes.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentRepository extends CrudRepository&lt;SopDocument, Long&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define another interface extending <code>ContentStore</code> and type it to the domain and <code>@ContentId</code> class.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Searchable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Searchable&lt;UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Renderable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Renderable&lt;SopDocument&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Set up Spring to create proxy instances for these two interfaces using JavaConfig:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
+@EnableS3Stores
+class Config {}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Inject the repositories and use them</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Component
+public class SomeClass {
+	@Autowired private SopDocumentRepository repo;
+  	@Autowired private SopDocumentContentStore contentStore;
+
+	public void doSomething() {
+
+		SopDocument doc = new SopDocument();
+		doc.setTitle("example");
+		contentStore.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); # <b class="conum">(1)</b>
+		doc.save();
+		...
+
+		InputStream content = contentStore.getContent(sopDocument);
+		...
+
+		List&lt;SopDocument&gt; docs = doc.findAllByContentId(contentStore.findKeyword("interesting"));
+		...
+
+	}
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Spring Content will update the <code>@ContentId</code> and <code>@ContentLength</code> fields</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</li>
+</ol>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sql_server">SQL Server</h3>
+<h3 id="_patterns_of_content_association">1.3. Patterns of Content Association</h3>
 <div class="paragraph">
-<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
-to serve BLOBs in a memory efficient way.</p>
+<p>Content can be associated with a Spring Data Entity in several ways.</p>
+</div>
+<div class="sect3">
+<h4 id="_entity_association">1.3.1. Entity Association</h4>
+<div class="paragraph">
+<p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a Resource associated with an Entity <code>Dvd</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+
+	...
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_property_association">1.3.2. Property Association</h4>
+<div class="paragraph">
+<p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows two Resources associated with a <code>Dvd</code> entity.  The first Resource is the Dvd&#8217;s cover Image and the second is the Dvd&#8217;s Stream.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "image_id")
+	private Image image;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "stream_id")
+	private Stream stream;
+
+	...
+}
+
+@Entity
+public class Image {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+@Entity
+public class Stream {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	@OneToOne
+	private Dvd dvd;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ImageStore extends ContentStore&lt;Image, UUID&gt; {}
+
+public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Note how the Content attributes are placed on each property object of on the Entity itself.</p>
+</div>
+<div class="paragraph">
+<p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
+</div>
+<div class="sect4">
+<h5 id="_property_collection_associations">Property Collection Associations</h5>
+<div class="paragraph">
+<p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	@OneToMany
+	@JoinColumn(name = "chapter_id")
+	private List&lt;Chapter&gt; chapters;
+
+	...
+}
+
+@Entity
+public class Chapter {
+	// Spring Data managed attribute
+	private @Id @GeneratedValue Long id;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_persisting_content">Persisting Content</h2>
+<h2 id="renditions">2. Renditions</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
+<h3 id="_overview">2.1. Overview</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
+set of renderers out-of-the-box.</p>
 </div>
 <div class="paragraph">
-<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
+<p>It also provides an extension point for providing your own renderers.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
-field, if appropriate.</p>
+<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
+project.  This enables the renditions capability and a small set of renderers that can convert documents of various
+types to jpeg images based on the apache poi and pdfbox libraries</p>
 </div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
 <div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
-content is initially set.</p>
+<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
+can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
+<div class="exampleblock">
+<div class="title">Example 9. Enabling Spring Content Renditions with Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
+@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
+public static class ApplicationConfig {
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+<li>
+<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
+</li>
+</ol>
+</div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
+<h3 id="_making_stores_renderable">2.3. Making Stores Renderable</h3>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
+<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
+<h3 id="_renderers">2.4. Renderers</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Pdf To Jpeg</p>
+</li>
+<li>
+<p>Text To Jpeg</p>
+</li>
+<li>
+<p>Word To Jpeg</p>
+</li>
+<li>
+<p>Jpeg To Png</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Word To Html</p>
+</li>
+<li>
+<p>Word To PDF</p>
+</li>
+<li>
+<p>Word To Text</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</h3>
+<div class="paragraph">
+<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
+renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
+to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
+contributed as a bean to your application context at runtime.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 10. Implementing the RenditionProvider Extension Point</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
+
+@Service    <b class="conum">(2)</b>
+public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
+
+	@Override
+	public String consumes() {
+		return "my/type";
+	}
+
+	@Override
+	public String[] produces() {
+		return new String[] { "your/type" };
+	}
+
+	@Override
+	public InputStream convert(InputStream fromInputSource, String toMimeType) {
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
+public static class ApplicationConfig {
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Implementation of <code>RenditionProvider</code></p>
+</li>
+<li>
+<p>Marked as an <code>@Service</code></p>
+</li>
+<li>
+<p>Ensure the service is scanned by Spring and offered as a bean</p>
+</li>
+</ol>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -588,6 +1345,7 @@ content is initially set.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 1.2.1-SNAPSHOT<br>
 Last updated 2020-12-25 06:35:39 UTC
 </div>
 </div>
