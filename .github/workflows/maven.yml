@@ -86,7 +86,7 @@ jobs:
         SOLR_PASSWORD: "SolrRocks"
 
     - name: Publish with Maven
-      run: mvn -B -P ci,docs deploy scm-publish:publish-scm --file pom.xml
+      run: mvn -B -DskipTests=true -P ci,docs deploy scm-publish:publish-scm --file pom.xml
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
         GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
