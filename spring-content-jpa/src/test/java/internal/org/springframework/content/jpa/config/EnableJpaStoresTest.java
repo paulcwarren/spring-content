@@ -245,7 +245,7 @@ public class EnableJpaStoresTest {
         }
 
         @Override
-        public void associate(TestEntity entity, Resource resource, PropertyPath propertyPath) {
+        public void associate(TestEntity entity, PropertyPath propertyPath, String id) {
             // TODO Auto-generated method stub
 
         }

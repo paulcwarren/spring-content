@@ -2,7 +2,9 @@ package org.springframework.content.commons.io;
 
 import java.io.Serializable;
 
-public interface IdentifiableResource {
+import org.springframework.core.io.Resource;
+
+public interface IdentifiableResource extends Resource {
 
     Serializable getId();
 
