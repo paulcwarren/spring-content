@@ -135,8 +135,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     <!-- <dryRun>true</dryRun> -->
                     <pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
                     <scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
-                    <username>${env.GITHUB_USERNAME}</username>
-                    <password>${env.GITHUB_PASSWORD}</password>
+                    <username>${env.CI_USERNAME}</username>
+                    <password>${env.CI_PASSWORD}</password>
                     <ignorePathsToDelete>
                         <ignorePathToDelete>/*</ignorePathToDelete>
                     </ignorePathsToDelete>
