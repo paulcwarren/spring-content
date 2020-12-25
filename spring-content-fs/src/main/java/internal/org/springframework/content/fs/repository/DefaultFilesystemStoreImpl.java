@@ -19,7 +19,6 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
-import org.springframework.content.commons.io.IdentifiableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -56,7 +55,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	public Resource getResource(SID id) {
 		String location = placer.convert(id, String.class);
 		Resource resource = loader.getResource(location);
-		((IdentifiableResource)resource).setId(id);
 		return resource;
 	}
 
@@ -100,13 +98,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	}
 
     @Override
-    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+    public void associate(S entity, PropertyPath propertyPath, SID id) {
 
-        SID contentId = null;
-        if (resource instanceof IdentifiableResource) {
-            contentId = (SID) ((IdentifiableResource)resource).getId();
-        }
-        setContentId(entity, propertyPath, contentId, null);
+        setContentId(entity, propertyPath, id, null);
     }
 
 	@Override

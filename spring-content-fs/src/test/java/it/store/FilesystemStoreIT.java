@@ -225,7 +225,7 @@ public class FilesystemStoreIT {
                         Context("when the resource is associated with a property path", () -> {
 
                             BeforeEach(() -> {
-                                store.associate(entity, genericResource, PropertyPath.from("rendition"));
+                                store.associate(entity, PropertyPath.from("rendition"), resourceLocation);
                             });
 
                             It("should be recorded as such on the entity's @ContentId", () -> {

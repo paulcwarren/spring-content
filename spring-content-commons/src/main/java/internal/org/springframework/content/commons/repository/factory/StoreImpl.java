@@ -244,7 +244,7 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     }
 
     @Override
-    public void associate(Object entity, Resource resource, PropertyPath propertyPath) {
+    public void associate(Object entity, PropertyPath propertyPath, Serializable id) {
 
         BeforeAssociateEvent before = new BeforeAssociateEvent(entity, propertyPath, delegate);
         AfterAssociateEvent after = new AfterAssociateEvent(entity, propertyPath, delegate);
@@ -252,7 +252,7 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         publisher.publishEvent(before);
 
         try {
-            delegate.associate(entity, resource, propertyPath);
+            delegate.associate(entity, propertyPath, id);
         }
         catch (Exception e) {
             throw e;

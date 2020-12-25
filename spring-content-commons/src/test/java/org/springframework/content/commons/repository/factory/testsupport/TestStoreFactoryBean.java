@@ -63,7 +63,7 @@ public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
         }
 
         @Override
-        public void associate(Object entity, Resource resource, PropertyPath propertyPath) {
+        public void associate(Object entity, PropertyPath propertyPath, Serializable id) {
             // TODO Auto-generated method stub
 
         }

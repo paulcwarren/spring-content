@@ -309,7 +309,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     }
 
     @Override
-    public void associate(S entity, Resource resource, PropertyPath propertyPath) {
+    public void associate(S entity, PropertyPath propertyPath, SID id) {
         throw new UnsupportedOperationException();
     }
 
