@@ -1,0 +1,82 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ 1.1.x,1.2.x ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver: 
+        image: exoplatform/sqlserver:2017-CU8
+        env:
+          SA_PASSWORD: 5F4Dt9ky9dU$
+          SQLSERVER_DATABASE: sc
+          SQLSERVER_USER: user
+          SQLSERVER_PASSWORD: 5F4Dt9ky9dU$
+        ports:
+          - 1433:1433
+      postgres:
+        image: postgres:12.1
+        env:
+          POSTGRES_PASSWORD: 5F4Dt9ky9dU$ 
+        ports:
+          - 5432:5432
+      mysql:
+        image: mysql:8.0.19
+        env:
+          MYSQL_ROOT_PASSWORD: 5F4Dt9ky9dU$
+          MYSQL_DATABASE: sc
+        ports:
+          - 3306:3306 
+      elasticsearch:
+        image: paulcwarren/elasticsearch:7.6.2
+        env:
+          discovery.type: single-node
+        ports:
+          - 9200:9200
+          - 9300:9300
+      solr:
+        image: paulcwarren/solr 
+        ports:
+          - 8983:8983 
+      mongo:
+        image: mongo:3.6.12
+        env:
+          MONGO_INITDB_DATABASE: spring-content 
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+        server-id: ossrh
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    
+    - name: Build and test
+      run: |
+        mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
+      env:
+        SQLSERVER_USERNAME: "sa"
+        SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
+        SQLSERVER_DB_NAME: "sc"
+        SQLSERVER_HOST: "localhost"
+        POSTGRESQL_USERNAME: "postgres"
+        POSTGRESQL_PASSWORD: "5F4Dt9ky9dU$"
+        POSTGRESQL_URL: "jdbc:postgresql://localhost:5432/postgres?sslmode=disable"
+        MYSQL_USERNAME: "root"
+        MYSQL_PASSWORD: "5F4Dt9ky9dU$"
+        MYSQL_URL: "jdbc:mysql://localhost:3306/sc?emulateLocators=true&serverTimezone=UTC"
+        MONGODB_URL: "mongodb://localhost:27017/spring-content?retryWrites=false"
+        SOLR_USER: "solr"
+        SOLR_PASSWORD: "SolrRocks"
