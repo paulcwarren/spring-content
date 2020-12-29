@@ -67,7 +67,9 @@ jobs:
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
     
     - name: Build with Maven
-      run: mvn -B -P tests install --file pom.xml
+      run: |
+        mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
+        bash <(curl -s https://codecov.io/bash)
       env:
         SQLSERVER_USERNAME: "sa"
         SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
