@@ -1,11 +1,11 @@
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Branch build
 
 on:
   push:
-    branches: [ 1.2.x ]
+    branches: [ 1.1.x,1.2.x ]
 
 jobs:
 
@@ -66,7 +66,7 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
     
-    - name: Build with Maven
+    - name: Build and test
       run: |
         mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
         bash <(curl -s https://codecov.io/bash)
@@ -85,7 +85,7 @@ jobs:
         SOLR_USER: "solr"
         SOLR_PASSWORD: "SolrRocks"
 
-    - name: Publish JARs to Maven Central
+    - name: Publish JARs
       run: mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
