@@ -117,24 +117,24 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     <target>1.8</target>
                 </configuration>
             </plugin>
-
-            <!-- Doc Publishing -->
+<!-- 
+            Doc Publishing
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-scm-publish-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <!--<providerImplementations>-->
-                        <!--<git>jgit</git>-->
-                    <!--</providerImplementations>-->
+                    <providerImplementations>
+                        <git>jgit</git>
+                    </providerImplementations>
                     <checkoutDirectory>${project.build.directory}/scmpublish</checkoutDirectory>
                     <checkinComment>Publishing reference guides for
                         ${project.artifactId}:${project.version}</checkinComment>
                     <content>${basedir}/target/generated-docs</content>
                     <skipDeletedFiles>true</skipDeletedFiles>
-                    <!-- <dryRun>true</dryRun> -->
+                    <dryRun>true</dryRun>
                     <pubScmUrl>scm:git:https://github.com/paulcwarren/spring-content.git</pubScmUrl>
-                    <scmBranch>gh-pages</scmBranch> <!-- branch with static site -->
+                    <scmBranch>gh-pages</scmBranch> branch with static site
                     <username>${env.CI_USERNAME}</username>
                     <password>${env.CI_PASSWORD}</password>
                     <ignorePathsToDelete>
@@ -144,7 +144,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
-                        <!--<artifactId>maven-scm-provider-jgit</artifactId>-->
+                        <artifactId>maven-scm-provider-jgit</artifactId>
                         <artifactId>maven-scm-provider-gitexe</artifactId>
                         <version>1.11.2</version>
                     </dependency>
@@ -155,7 +155,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     </dependency>
                 </dependencies>
             </plugin>
-        </plugins>
+ -->        </plugins>
     </build>
 
     <profiles>
