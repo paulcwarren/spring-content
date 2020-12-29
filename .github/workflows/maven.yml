@@ -6,8 +6,6 @@ name: Java CI with Maven
 on:
   push:
     branches: [ 1.2.x ]
-  pull_request:
-    branches: [ 1.2.x ]
 
 jobs:
 
@@ -85,7 +83,7 @@ jobs:
         SOLR_USER: "solr"
         SOLR_PASSWORD: "SolrRocks"
 
-    - name: Publish with Maven
+    - name: Publish JARs to Maven Central
       run: mvn -B -DskipTests=true -P ci,docs deploy scm-publish:publish-scm --file pom.xml
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
@@ -93,3 +91,45 @@ jobs:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        
+    - name: Publish Docs
+      run: |
+        #!/bin/bash
+
+        set -eux
+
+        if [[ "${GITHUB_REF}" == *"tags"* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            export BUILD_TYPE=release/"${TAG}"
+            mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
+        else
+            export BUILD_TYPE=snapshot/"${GITHUB_REF#refs/heads/}"
+        fi
+
+        mvn -B -U -P docs generate-resources -DskipTests=true -Dmaven.javadoc.skip=true
+
+        git config --global user.email "${CI_EMAIL}"
+        git config --global user.name "${CI_USERNAME}"
+
+        set +x
+        mkdir -p ~/.ssh
+        echo "${CI_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 700 ~/.ssh/id_rsa
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
+        set -x
+
+        mkdir -p /tmp/spring-content-gh-pages
+        git clone --branch gh-pages git@github.com:paulcwarren/spring-content.git /tmp/spring-content-gh-pages
+
+        cp -R target/generated-docs/refs/* /tmp/spring-content-gh-pages/refs/
+
+        pushd /tmp/spring-content-gh-pages
+            git add .
+            git commit -m "Publishing reference guides for ${GITHUB_REF}"
+            git push origin gh-pages
+        popd
+      env:
+        CI_USERNAME: ${{ secrets.CI_USERNAME }}
+        CI_EMAIL: ${{ secrets.CI_EMAIL }}
+        CI_PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}
