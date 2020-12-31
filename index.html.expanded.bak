@@ -94,7 +94,7 @@
 
 
 <h4 id="content-services-for-spring">Content Services for Spring</h4>
-<p>Cloud-Native Content Management Services for Spring.</p>
+<p>Cloud-Native Content Management Extensions for Spring.</p>
 <p>For creating cloud-native, horizontally scaling Content Management Services that manage your unstructured data and rich content such as documents, images and movies.  </p>
 <h2 id="features">Features</h2>
 <ul>
@@ -439,5 +439,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2020-12-31 04:29:27.123846+00:00
+Build Date UTC : 2020-12-31 04:31:24.976378+00:00
 -->
