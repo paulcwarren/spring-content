@@ -26,6 +26,9 @@ import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.solr.FilterQueryProvider;
 import org.springframework.content.solr.SolrProperties;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
@@ -38,12 +41,16 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
     private SolrClient solr;
     private SolrProperties solrProperties;
     private Class<?> domainClass;
+    private Class<?> idClass;
     private FilterQueryProvider filterProvider;
+    private ConversionService conversionService;
+
 
     @Autowired
     public SearchableImpl(SolrClient solr, SolrProperties solrProperties) {
         this.solr = solr;
         this.solrProperties = solrProperties;
+        this.conversionService = new DefaultConversionService();
     }
 
     @Autowired(required=false)
@@ -54,6 +61,11 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
     @Override
     public void setDomainClass(Class<?> domainClass) {
         this.domainClass = domainClass;
+    }
+
+    @Override
+    public void setIdClass(Class<?> idClass) {
+        this.idClass = idClass;
     }
 
     @Override
@@ -216,7 +228,7 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
             String strippedId = id.substring(id.indexOf(':') + 1, id.length());
 
             if (ContentPropertyUtils.isPrimitiveContentPropertyClass(searchType)) {
-                results.add(strippedId);
+                results.add(conversionService.convert(strippedId, TypeDescriptor.valueOf(String.class), TypeDescriptor.valueOf(idClass)));
             } else {
                 Object result = null;
                 try {
@@ -258,10 +270,6 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
 
     protected Class<?> getDomainClass() {
         return domainClass;
-    }
-
-    @Override
-    public void setIdClass(Class<?> idClass) {
     }
 
     @Override

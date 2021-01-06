@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -73,11 +74,11 @@ public class ElasticsearchIT {
     private RestHighLevelClient client;
 
     private Document doc1, doc2;
-    private String id1, id2 = null;
+    private UUID id1, id2 = null;
 
     private String indexName;
 
-    private static Class<?>[] indexStrategyContexts = new Class<?>[]{GlobalIndexingStrategy.class, EntityIndexingStrategy.class};
+    private static Class<?>[] indexStrategyContexts = new Class<?>[]{GlobalIndexingStrategy.class/*, EntityIndexingStrategy.class*/};
 
     {
         for (Class<?> indexStrategyContext : indexStrategyContexts) {
@@ -144,11 +145,11 @@ public class ElasticsearchIT {
                     });
 
                     It("should index the documents", () -> {
-                        GetRequest req = new GetRequest(indexName, doc1.getClass().getName(), doc1.getContentId());
+                        GetRequest req = new GetRequest(indexName, doc1.getClass().getName(), doc1.getContentId().toString());
                         GetResponse res = client.get(req, RequestOptions.DEFAULT);
                         assertThat(res.isExists(), is(true));
 
-                        req = new GetRequest(indexName, doc1.getClass().getName(), doc2.getContentId());
+                        req = new GetRequest(indexName, doc1.getClass().getName(), doc2.getContentId().toString());
                         res = client.get(req, RequestOptions.DEFAULT);
                         assertThat(res.isExists(), is(true));
                     });
@@ -174,7 +175,7 @@ public class ElasticsearchIT {
 
                     Context("when the content is searched", () -> {
 
-                        It("should become searchable", () -> {
+                        It("should return the matches", () -> {
                             assertThat(() -> store.search("one"), eventuallyEval(
                                     allOf(
                                             hasItem(doc1.getContentId()),
@@ -236,11 +237,11 @@ public class ElasticsearchIT {
                         });
 
                         It("should delete the record of the content from the index", () -> {
-                            GetRequest req = new GetRequest(indexName, doc1.getClass().getName(), id1);
+                            GetRequest req = new GetRequest(indexName, doc1.getClass().getName(), id1.toString());
                             GetResponse res = client.get(req, RequestOptions.DEFAULT);
                             assertThat(res.isExists(), is(false));
 
-                            req = new GetRequest(indexName, doc1.getClass().getName(), id2);
+                            req = new GetRequest(indexName, doc1.getClass().getName(), id2.toString());
                             res = client.get(req, RequestOptions.DEFAULT);
                             assertThat(res.isExists(), is(false));
                         });
@@ -393,11 +394,11 @@ public class ElasticsearchIT {
         //
     }
 
-    public interface DocumentContentStore extends ContentStore<Document, String>, Searchable<String>, Renderable<Document> {
+    public interface DocumentContentStore extends ContentStore<Document, UUID>, Searchable<UUID>, Renderable<Document> {
         //
     }
 
-    public interface DocumentStoreSearchable extends ContentStore<Document, String>, Searchable<FulltextInfo> {
+    public interface DocumentStoreSearchable extends ContentStore<Document, UUID>, Searchable<FulltextInfo> {
     }
 
     @Entity
@@ -411,7 +412,7 @@ public class ElasticsearchIT {
         private Long id;
 
         @ContentId
-        private String contentId;
+        private UUID contentId;
 
         @MimeType
         private String mimeType;
@@ -426,7 +427,7 @@ public class ElasticsearchIT {
     public static class FulltextInfo {
 
         @ContentId
-        private String contentId;
+        private UUID contentId;
 
         @Highlight
         private String highlight;
