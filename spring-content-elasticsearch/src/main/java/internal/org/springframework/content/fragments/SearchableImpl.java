@@ -33,6 +33,9 @@ import org.springframework.content.commons.search.Searchable;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.elasticsearch.FilterQueryProvider;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.Pageable;
 
 import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
@@ -45,13 +48,16 @@ public class SearchableImpl implements Searchable<Object> {
     private final RestHighLevelClient client;
     private final IndexManager manager;
     private FilterQueryProvider filterProvider;
+    private ConversionService conversionService;
 
     private Class<?> domainClass;
+    private Class<?> idClass;
 
     public SearchableImpl() {
         client = null;
         manager = null;
         domainClass = null;
+        idClass = null;
         filterProvider = null;
     }
 
@@ -60,6 +66,7 @@ public class SearchableImpl implements Searchable<Object> {
         this.client = client;
         this.manager = manager;
         this.filterProvider = null;
+        this.conversionService = new DefaultConversionService();
     }
 
     @Autowired(required=false)
@@ -71,14 +78,18 @@ public class SearchableImpl implements Searchable<Object> {
         this.domainClass = domainClass;
     }
 
+    public void setIdClass(Class<?> idClass) {
+        this.idClass = idClass;
+    }
+
     @Override
     public Iterable<Object> search(String queryStr) {
-        return search(queryStr, null, String.class);
+        return search(queryStr, null, idClass);
     }
 
     @Override
     public List<Object> search(String queryStr, Pageable pageable) {
-        return search(queryStr, pageable, String.class);
+        return search(queryStr, pageable, idClass);
     }
 
     @Override
@@ -90,9 +101,11 @@ public class SearchableImpl implements Searchable<Object> {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
         List<String> attributesToFetch = new ArrayList<>();
-        for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(searchType, Attribute.class, new BeanWrapperImpl(searchType))) {
-            Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
-            attributesToFetch.add(fieldAnnotation.name());
+        if (!ContentPropertyUtils.isPrimitiveContentPropertyClass(searchType)) {
+            for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(searchType, Attribute.class, new BeanWrapperImpl(searchType))) {
+                Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
+                attributesToFetch.add(fieldAnnotation.name());
+            }
         }
         if (attributesToFetch.size() > 0) {
             sourceBuilder.fetchSource(attributesToFetch.toArray(new String[]{}), null);
@@ -117,10 +130,12 @@ public class SearchableImpl implements Searchable<Object> {
             sourceBuilder.size(pageable.getPageSize());
         }
 
-        if (BeanUtils.findFieldWithAnnotation(searchType, Highlight.class) != null) {
-            HighlightBuilder hb = SearchSourceBuilder.highlight();
-            hb.field("attachment.content");
-            sourceBuilder.highlighter(hb);
+        if (!ContentPropertyUtils.isPrimitiveContentPropertyClass(searchType)) {
+            if (BeanUtils.findFieldWithAnnotation(searchType, Highlight.class) != null) {
+                HighlightBuilder hb = SearchSourceBuilder.highlight();
+                hb.field("attachment.content");
+                sourceBuilder.highlighter(hb);
+            }
         }
 
         searchRequest.source(sourceBuilder);
@@ -213,7 +228,7 @@ public class SearchableImpl implements Searchable<Object> {
 
             try {
                 if (ContentPropertyUtils.isPrimitiveContentPropertyClass(resultType)) {
-                    contents.add(hit.getId());
+                    contents.add(conversionService.convert(hit.getId(), TypeDescriptor.valueOf(String.class), TypeDescriptor.valueOf(this.idClass)));
                 } else {
                     Object row = resultType.newInstance();
                     BeanWrapper wrapper = new BeanWrapperImpl(row);

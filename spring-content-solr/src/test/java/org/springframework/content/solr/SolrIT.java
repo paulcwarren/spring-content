@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -70,7 +71,7 @@ public class SolrIT {
     @Autowired
     private SolrProperties solrProperties;
     private Document doc, doc2, doc3;
-    private String id = null;
+    private UUID id = null;
 
     {
         Describe("Index", () -> {
@@ -122,7 +123,7 @@ public class SolrIT {
             });
             Context("when the content is searched", () -> {
                 It("should return the searched content", () -> {
-                    Iterable<String> content = docContentRepo.search("one");
+                    Iterable<UUID> content = docContentRepo.search("one");
                     assertThat(content, CoreMatchers.hasItem(doc.getContentId()));
                 });
             });
@@ -154,7 +155,7 @@ public class SolrIT {
             });
             Context("given that document is deleted", () -> {
                 BeforeEach(() -> {
-                    id = doc.getContentId().toString();
+                    id = doc.getContentId();
                     docContentRepo.unsetContent(doc);
                     docRepo.delete(doc);
                 });
@@ -265,10 +266,10 @@ public class SolrIT {
             });
 
             It("should apply the provided attributes and filter query", () -> {
-                Iterable<String> tmp = docContentRepo.search("one");
+                Iterable<UUID> tmp = docContentRepo.search("one");
                 assertThat(tmp, is(not(nullValue())));
 
-                List<String> results = new ArrayList<String>();
+                List<UUID> results = new ArrayList<UUID>();
                 tmp.forEach(results::add);
 
                 assertThat(results, hasItem(is(doc.getContentId())));
@@ -334,16 +335,16 @@ public class SolrIT {
         private String email;
 
         @ContentId
-        private String contentId;
+        private UUID contentId;
     }
 
     public interface DocumentRepository extends CrudRepository<Document, Long> {
     }
 
-    public interface DocumentContentRepository extends ContentStore<Document, String>, Searchable<String> {
+    public interface DocumentContentRepository extends ContentStore<Document, UUID>, Searchable<UUID> {
     }
 
-    public interface DocumentStoreSearchable extends ContentStore<Document, String>, Searchable<FulltextInfo> {
+    public interface DocumentStoreSearchable extends ContentStore<Document, UUID>, Searchable<FulltextInfo> {
     }
 
     @Getter
@@ -354,7 +355,7 @@ public class SolrIT {
         private Long id;
 
         @ContentId
-        private String contentId;
+        private UUID contentId;
 
         @Highlight
         private String highlight;
