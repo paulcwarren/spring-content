@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package it.internal.org.springframework.content.rest.controllers;
 
 import java.io.StringReader;
 import java.util.Optional;

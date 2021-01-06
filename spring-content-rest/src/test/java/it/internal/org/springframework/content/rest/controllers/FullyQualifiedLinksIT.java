@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package it.internal.org.springframework.content.rest.controllers;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.rest.support.*;

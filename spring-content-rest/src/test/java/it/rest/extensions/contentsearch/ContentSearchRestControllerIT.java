@@ -1,4 +1,4 @@
-package org.springframework.data.rest.extensions.contentsearch;
+package it.rest.extensions.contentsearch;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -52,7 +52,6 @@ import org.springframework.content.rest.FulltextEntityLookupQuery;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -61,10 +60,10 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController;
 import org.springframework.data.rest.extensions.contentsearch.ContentSearchRestController.InternalResult;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -87,6 +86,7 @@ import internal.org.springframework.data.rest.extensions.contentsearch.DefaultEn
 import internal.org.springframework.data.rest.extensions.contentsearch.QueryMethodsEntityLookupStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -99,7 +99,6 @@ import lombok.Setter;
         DelegatingWebMvcConfiguration.class, RepositoryRestMvcConfiguration.class,
         RestConfiguration.class })
 @Transactional
-@ActiveProfiles("search")
 public class ContentSearchRestControllerIT {
 
     @Autowired
@@ -642,7 +641,7 @@ public class ContentSearchRestControllerIT {
 
                     CrudRepository<?,?> repoSpy = mock(CrudRepository.class, AdditionalAnswers.delegatesTo(entityWithSeparateRepository));
 
-                    controller.fetchEntitiesInBatches(repoSpy, ids, entities);
+                    ContentSearchRestController.fetchEntitiesInBatches(repoSpy, ids, entities);
 
                     verify(repoSpy, times(2)).findAllById(anyCollection());
 
@@ -657,10 +656,10 @@ public class ContentSearchRestControllerIT {
     }
 
     @Configuration
-    @EnableJpaRepositories(considerNestedRepositories = true)
+    @EnableJpaRepositories( basePackages="it.rest.extensions.contentsearch",
+                            considerNestedRepositories = true)
     @EnableTransactionManagement
-    @EnableFilesystemStores
-    @Profile("search")
+    @EnableFilesystemStores(basePackages="it.rest.extensions.contentsearch")
     public static class TestConfig extends JpaInfrastructureConfig {
 
         @Bean
@@ -671,8 +670,7 @@ public class ContentSearchRestControllerIT {
         @Bean
         public File filesystemRoot() {
             File baseDir = new File(System.getProperty("java.io.tmpdir"));
-            File filesystemRoot = new File(baseDir,
-                    "spring-content-search-controller-tests");
+            File filesystemRoot = new File(baseDir,"spring-content-search-controller-tests");
             filesystemRoot.mkdirs();
             return filesystemRoot;
         }
@@ -680,13 +678,13 @@ public class ContentSearchRestControllerIT {
         @Override
         protected String[] packagesToScan() {
             return new String[]{
-                    "internal.org.springframework.content.rest.support",
-                    "org.springframework.data.rest.extensions.contentsearch"
+                    "it.rest.extensions.contentsearch"
             };
         }
     }
 
     @MappedSuperclass
+    @NoArgsConstructor
     public static class AbstractTestEntity {
         @Id
         @ContentId
@@ -713,32 +711,27 @@ public class ContentSearchRestControllerIT {
     public static class TestEntityNoContent extends AbstractTestEntity {
     }
 
-    public interface TestEntityNoContentRepository
-    extends CrudRepository<TestEntityNoContent, UUID> {
+    public interface TestEntityNoContentRepository extends CrudRepository<TestEntityNoContent, UUID> {
     }
 
     @Entity(name = "testentitynotsearchable")
     public static class TestEntityNotSearchable extends AbstractTestEntity {
     }
 
-    public interface TestEntityNotSearchableRepository
-    extends CrudRepository<TestEntityNotSearchable, UUID> {
+    public interface TestEntityNotSearchableRepository extends CrudRepository<TestEntityNotSearchable, UUID> {
     }
 
-    public interface TestEntityNotSearchableStore
-    extends FilesystemContentStore<TestEntityNotSearchable, UUID> {
+    public interface TestEntityNotSearchableStore extends FilesystemContentStore<TestEntityNotSearchable, UUID> {
     }
 
     @Entity(name = "testentitysharedid")
     public static class TestEntityWithSharedId extends AbstractTestEntity {
     }
 
-    public interface TestEntityWithSharedIdsRepository
-    extends CrudRepository<TestEntityWithSharedId, UUID> {
+    public interface TestEntityWithSharedIdsRepository extends CrudRepository<TestEntityWithSharedId, UUID> {
     }
 
-    public interface TestEntityWithSharedIdsSearchableStore
-    extends FilesystemContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
+    public interface TestEntityWithSharedIdsSearchableStore extends FilesystemContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
     }
 
     // stub out a Searchable implementation so that the content store can be instantiated
@@ -824,7 +817,7 @@ public class ContentSearchRestControllerIT {
     public interface TestEntityWithSeparateIdsRepository
         extends CrudRepository<TestEntityWithSeparateId, UUID> {
 
-        @Query("select e from org.springframework.data.rest.extensions.contentsearch.ContentSearchRestControllerIT$TestEntityWithSeparateId e")
+        @Query("select e from it.rest.extensions.contentsearch.ContentSearchRestControllerIT$TestEntityWithSeparateId e")
         List<TestEntityWithSeparateId> randomQueryMethod();
 
         @FulltextEntityLookupQuery
@@ -838,6 +831,7 @@ public class ContentSearchRestControllerIT {
     @Entity
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class TestEntity2 {
         @Id
         private UUID id = UUID.randomUUID();
@@ -857,6 +851,7 @@ public class ContentSearchRestControllerIT {
     @Entity
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class TestEntity3 {
         @Id
         private UUID id = UUID.randomUUID();

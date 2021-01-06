@@ -1,4 +1,14 @@
-package it.org.springframework.data.rest.versioning;
+package it.rest.versioning;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.jayway.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,19 +25,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.path.json.JsonPath;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -78,15 +79,15 @@ import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 import org.springframework.versions.jpa.config.JpaLockingAndVersioningConfig;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.path.json.JsonPath;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -204,9 +205,9 @@ public class LockingAndVersioningRestIT {
 
     @SpringBootApplication
     @EnableJpaRepositories(considerNestedRepositories = true,
-                            basePackages={"it.org.springframework.data.rest.versioning", "org.springframework.versions"})
+                            basePackages={"it.rest.versioning", "org.springframework.versions"})
     @EnableTransactionManagement
-    @EnableFilesystemStores(basePackages = "it.org.springframework.data.rest.versioning")
+    @EnableFilesystemStores(basePackages = "it.rest.versioning")
     @Import({JpaLockingAndVersioningConfig.class, RestConfiguration.class, SecurityConfiguration.class})
     public static class Application {
 
@@ -268,7 +269,7 @@ public class LockingAndVersioningRestIT {
 
                 LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
                 factory.setJpaVendorAdapter(vendorAdapter);
-                factory.setPackagesToScan("it.org.springframework.data.rest.versioning");
+                factory.setPackagesToScan("it.rest.versioning");
                 factory.setDataSource(dataSource());
 
                 return factory;

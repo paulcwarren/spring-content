@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package it.internal.org.springframework.content.rest.controllers;
 
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;

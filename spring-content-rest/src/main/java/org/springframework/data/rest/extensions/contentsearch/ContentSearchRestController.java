@@ -219,7 +219,7 @@ public class ContentSearchRestController {
         }
     }
 
-    /* package */ void fetchEntitiesInBatches(CrudRepository<?,?> r, List entityIds, List results) {
+    public static void fetchEntitiesInBatches(CrudRepository<?,?> r, List entityIds, List results) {
 
         int size = entityIds.size();
 

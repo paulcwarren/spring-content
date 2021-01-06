@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers.revisions;
+package it.rest.revisions;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
@@ -125,13 +125,13 @@ public class RevisionPropertyRestEndpointsIT {
     }
 
     @Configuration
-    @EnableJpaRepositories(basePackages = "internal.org.springframework.content.rest.controllers.revisions", considerNestedRepositories = true, repositoryFactoryBeanClass = EnversRevisionRepositoryFactoryBean.class)
-    @EnableFilesystemStores(basePackages = "internal.org.springframework.content.rest.controllers.revisions")
+    @EnableJpaRepositories(basePackages = "it.rest.revisions", considerNestedRepositories = true, repositoryFactoryBeanClass = EnversRevisionRepositoryFactoryBean.class)
+    @EnableFilesystemStores(basePackages = "it.rest.revisions")
     public static class TestConfig extends JpaInfrastructureConfig {
 
         @Override
         protected String[] packagesToScan() {
-            return new String[] { "internal.org.springframework.content.rest.controllers.revisions" };
+            return new String[] { "it.rest.revisions" };
         }
 
         @Bean

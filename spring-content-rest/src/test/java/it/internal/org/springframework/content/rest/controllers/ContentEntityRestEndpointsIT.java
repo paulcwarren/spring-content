@@ -1,4 +1,4 @@
-package internal.org.springframework.content.rest.controllers;
+package it.internal.org.springframework.content.rest.controllers;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
