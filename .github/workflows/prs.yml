@@ -53,7 +53,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-        path: spring-content
+      path: spring-content
     - uses: actions/checkout@v2
       with:
         repository: paulcwarren/spring-content-examples
@@ -67,7 +67,7 @@ jobs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
-    
+
     - name: Build and test
       run: |
         pushd spring-content
