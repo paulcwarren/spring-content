@@ -64,7 +64,6 @@ jobs:
       with:
         repository: paulcwarren/spring-content-gettingstarted
         path: spring-content-gettingstarted
-        ref: refs/heads/1.2.x
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
