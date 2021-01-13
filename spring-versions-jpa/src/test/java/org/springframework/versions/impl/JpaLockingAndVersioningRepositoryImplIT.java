@@ -81,7 +81,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
     private TestRepository repo;
 
-    private TestEntity e1, e2, e3, e1v11, e1v12, e2v2, entityForDeletion, result;
+    private TestEntity e1, e2, e3, e1v11, e1v12, e2v2, e3wc, entityForDeletion, result;
 
     private Exception e;
 
@@ -424,19 +424,24 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                         e2 = repo.lock(e2);
                         e2v2 = repo.version(e2, new VersionInfo("2.0", "Major"));
                         e2v2 = repo.unlock(e2v2);
+
+                        e2v2 = repo.lock(e2v2);
+                        e3wc = repo.workingCopy(e2v2);
                     });
 
                     It("should return only the latest version of the entities", () -> {
                         List<TestEntity> results = repo.findAllVersionsLatest();
                         assertThat(results, Matchers.hasItems(
                                 hasProperty("xid", is(e1v11.getXid())),
-                                hasProperty("xid", is(e2v2.getXid()))
+                                hasProperty("xid", is(e2v2.getXid())),
+                                not(hasProperty("xid", is(e3wc.getXid())))
                         ));
 
                         results = repo.findAllVersionsLatest(TestEntity.class);
                         assertThat(results, Matchers.hasItems(
                                 hasProperty("xid", is(e1v11.getXid())),
-                                hasProperty("xid", is(e2v2.getXid()))
+                                hasProperty("xid", is(e2v2.getXid())),
+                                not(hasProperty("xid", is(e3wc.getXid())))
                         ));
                     });
                 });
