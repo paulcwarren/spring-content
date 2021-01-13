@@ -1,10 +1,6 @@
 package org.springframework.versions.impl;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -33,9 +29,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
@@ -81,7 +79,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
     private TestRepository repo;
 
-    private TestEntity e1, e2, e3, e1v11, e1v12, e2v2, e3wc, entityForDeletion, result;
+    private TestEntity e1, e1v11, e1v12, e2, e2v2, e2v3wc, e3, e3v11, e4, e5, entityForDeletion, result;
 
     private Exception e;
 
@@ -415,33 +413,66 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                     BeforeEach(() -> {
                         setupSecurityContext("some-principal", true);
 
+                        // version series of 2 (minor), unlocked
+                        e1.setName("e1");
                         e1 = repo.save(e1);
                         e1 = repo.lock(e1);
-                        e1v11 = repo.version(e1, new VersionInfo("1.1", "Minor"));
+                        e1v11 = repo.version(e1, new VersionInfo("1.1", "v1.1"));
                         e1v11 = repo.unlock(e1v11);
 
+                        // version series of 2 (major), locked, working copy
+                        e2.setName("e2");
                         e2 = repo.save(e2);
                         e2 = repo.lock(e2);
-                        e2v2 = repo.version(e2, new VersionInfo("2.0", "Major"));
+                        e2v2 = repo.version(e2, new VersionInfo("2.0", "v2.0"));
                         e2v2 = repo.unlock(e2v2);
-
                         e2v2 = repo.lock(e2v2);
-                        e3wc = repo.workingCopy(e2v2);
+                        e2v3wc = repo.workingCopy(e2v2);
+
+                        // version series of 2 (minor), locked
+                        e3 = new TestEntity();
+                        e3.setName("e3");
+                        e3 = repo.save(e3);
+                        e3 = repo.lock(e3);
+                        e3v11 = repo.version(e3, new VersionInfo("1.1", "v1.1"));
+
+                        // no versions yet, unlocked
+                        e4 = new TestEntity();
+                        e4.setName("e4");
+                        e4 = repo.save(e4);
+
+                        // no versions yet, locked
+                        e5 = new TestEntity();
+                        e5.setName("e5");
+                        e5 = repo.save(e5);
+                        e5 = repo.lock(e5);
                     });
 
                     It("should return only the latest version of the entities", () -> {
                         List<TestEntity> results = repo.findAllVersionsLatest();
                         assertThat(results, Matchers.hasItems(
+                                not(hasProperty("xid", is(e1.getXid()))),
                                 hasProperty("xid", is(e1v11.getXid())),
-                                hasProperty("xid", is(e2v2.getXid())),
-                                not(hasProperty("xid", is(e3wc.getXid())))
+                                not(hasProperty("xid", is(e2.getXid()))),
+                                not(hasProperty("xid", is(e2v2.getXid()))),
+                                hasProperty("xid", is(e2v3wc.getXid())),
+                                not(hasProperty("xid", is(e3.getXid()))),
+                                hasProperty("xid", is(e3v11.getXid())),
+                                hasProperty("xid", is(e4.getXid())),
+                                hasProperty("xid", is(e5.getXid()))
                         ));
 
                         results = repo.findAllVersionsLatest(TestEntity.class);
                         assertThat(results, Matchers.hasItems(
+                                not(hasProperty("xid", is(e1.getXid()))),
                                 hasProperty("xid", is(e1v11.getXid())),
-                                hasProperty("xid", is(e2v2.getXid())),
-                                not(hasProperty("xid", is(e3wc.getXid())))
+                                not(hasProperty("xid", is(e2.getXid()))),
+                                not(hasProperty("xid", is(e2v2.getXid()))),
+                                hasProperty("xid", is(e2v3wc.getXid())),
+                                not(hasProperty("xid", is(e3.getXid()))),
+                                hasProperty("xid", is(e3v11.getXid())),
+                                hasProperty("xid", is(e4.getXid())),
+                                hasProperty("xid", is(e5.getXid()))
                         ));
                     });
                 });
@@ -728,16 +759,96 @@ public class JpaLockingAndVersioningRepositoryImplIT {
     @EnableTransactionManagement
     public static class H2Config {
 
+//        @Bean
+//        public DataSource dataSource() {
+//            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+//            return builder.setType(EmbeddedDatabaseType.H2).build();
+//        }
+//
+//        @Bean
+//        public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+//            HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+//            vendorAdapter.setDatabase(Database.H2);
+//            vendorAdapter.setGenerateDdl(true);
+//
+//            LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+//            factory.setJpaVendorAdapter(vendorAdapter);
+//            factory.setPackagesToScan(getClass().getPackage().getName());
+//            factory.setDataSource(dataSource());
+//
+//            return factory;
+//        }
+//
+//        @Bean
+//        public PlatformTransactionManager transactionManager() {
+//            JpaTransactionManager txManager = new JpaTransactionManager();
+//            txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+//            return txManager;
+//        }
+//
+//        @Value("/org/springframework/versions/jpa/schema-drop-h2.sql")
+//        private ClassPathResource dropVersionSchema;
+//
+//        @Value("/org/springframework/versions/jpa/schema-h2.sql")
+//        private ClassPathResource createVersionSchema;
+//
+//        @Bean
+//        public DataSourceInitializer datasourceInitializer() {
+//            ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+//
+//            databasePopulator.addScript(dropVersionSchema);
+//            databasePopulator.addScript(createVersionSchema);
+//            databasePopulator.setIgnoreFailedDrops(true);
+//
+//            DataSourceInitializer initializer = new DataSourceInitializer();
+//            initializer.setDataSource(dataSource());
+//            initializer.setDatabasePopulator(databasePopulator);
+//
+//            return initializer;
+//        }
+
+        @Value("/org/springframework/versions/jpa/schema-drop-postgresql.sql")
+        private Resource dropReopsitoryTables;
+
+        @Value("/org/springframework/versions/jpa/schema-postgresql.sql")
+        private Resource dataReopsitorySchema;
+
+        @Bean
+        DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+            ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+
+            databasePopulator.addScript(dropReopsitoryTables);
+            databasePopulator.addScript(dataReopsitorySchema);
+            databasePopulator.setIgnoreFailedDrops(true);
+
+            DataSourceInitializer initializer = new DataSourceInitializer();
+            initializer.setDataSource(dataSource);
+            initializer.setDatabasePopulator(databasePopulator);
+
+            return initializer;
+        }
+
+        @Value("#{environment.POSTGRESQL_URL}")
+        private String url;
+        @Value("#{environment.POSTGRESQL_USERNAME}")
+        private String username;
+        @Value("#{environment.POSTGRESQL_PASSWORD}")
+        private String password;
+
         @Bean
         public DataSource dataSource() {
-            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-            return builder.setType(EmbeddedDatabaseType.H2).build();
+            DriverManagerDataSource ds = new DriverManagerDataSource();
+            ds.setDriverClassName("org.postgresql.Driver");
+            ds.setUrl(url);
+            ds.setUsername(username);
+            ds.setPassword(password);
+            return ds;
         }
 
         @Bean
         public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
             HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-            vendorAdapter.setDatabase(Database.H2);
+            vendorAdapter.setDatabase(Database.POSTGRESQL);
             vendorAdapter.setGenerateDdl(true);
 
             LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
@@ -754,27 +865,6 @@ public class JpaLockingAndVersioningRepositoryImplIT {
             txManager.setEntityManagerFactory(entityManagerFactory().getObject());
             return txManager;
         }
-
-        @Value("/org/springframework/versions/jpa/schema-drop-h2.sql")
-        private ClassPathResource dropVersionSchema;
-
-        @Value("/org/springframework/versions/jpa/schema-h2.sql")
-        private ClassPathResource createVersionSchema;
-
-        @Bean
-        public DataSourceInitializer datasourceInitializer() {
-            ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
-
-            databasePopulator.addScript(dropVersionSchema);
-            databasePopulator.addScript(createVersionSchema);
-            databasePopulator.setIgnoreFailedDrops(true);
-
-            DataSourceInitializer initializer = new DataSourceInitializer();
-            initializer.setDataSource(dataSource());
-            initializer.setDatabasePopulator(databasePopulator);
-
-            return initializer;
-        }
     }
 
     @Getter
@@ -783,6 +873,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
     public static class TestEntity {
         @Id @GeneratedValue private Long xid;
         @Version private Long version;
+        private String name;
         @AncestorId private Long xAncestorId;
         @AncestorRootId private Long xAncestorRootId;
         @SuccessorId private Long xSuccessorId;
@@ -791,7 +882,9 @@ public class JpaLockingAndVersioningRepositoryImplIT {
         @VersionLabel private String versionLabel;
 
         public TestEntity() {}
-        public TestEntity(TestEntity entity) {}
+        public TestEntity(TestEntity entity) {
+            this.name = entity.getName();
+        }
     }
 
     public interface TestRepository extends JpaRepository<TestEntity, Long>, LockingAndVersioningRepository<TestEntity, Long> {}

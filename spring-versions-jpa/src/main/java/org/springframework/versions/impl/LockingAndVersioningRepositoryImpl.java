@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,7 +39,7 @@ import internal.org.springframework.versions.jpa.EntityInformationFacade;
 import internal.org.springframework.versions.jpa.JpaCloningServiceImpl;
 import internal.org.springframework.versions.jpa.VersioningService;
 
-public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> implements LockingAndVersioningRepository<T, ID> {
+public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> implements LockingAndVersioningRepository<T,ID> {
 
     private static Log logger = LogFactory.getLog(JpaCloningServiceImpl.class);
 
@@ -91,7 +88,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
         if (lockingService.lock(id, authentication)) {
             BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, authentication.getName());
-            return entity;
+            return em.merge(entity);
         }
 
         throw new LockingAndVersioningException(format("failed to lock %s", id));
@@ -117,10 +114,10 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new LockOwnerException(format("not lock owner: %s has lock owner '%s'", id, (lockOwner != null) ? lockOwner.getName() : ""));
         }
 
-        BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, null);
 
         if (lockingService.unlock(id, authentication)) {
-            return entity;
+            BeanUtils.setFieldWithAnnotation(entity, LockOwner.class, null);
+            return em.merge(entity);
         }
         throw new LockingAndVersioningException(format("failed to unlock %s", id));
     }
@@ -281,12 +278,65 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             return new ArrayList<>();
         }
 
-        String sql = "select t from ${entityClass} t where t.${successorId} = null and t.${id} NOT IN (select f1.${id} FROM ${entityClass} f1 inner join ${entityClass} f2 on f1.${ancestorId} = f2.${id} and f2.${successorId} = null)";
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+        String principal = authentication.getName();
+
+        String sql = "SELECT " +
+        "* " +
+        "FROM " +
+        "${shortEntityClass} t " +
+        "WHERE " +
+        "t.${id} IN( " +
+        "        SELECT " +
+        "max(t.${id}) AS ${id} FROM ${shortEntityClass} t " +
+        "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+        "WHERE " +
+        "t.${successorId} IS NULL " +
+        "AND l.lock_owner IS NULL " +
+        "GROUP BY " +
+        "COALESCE(t.${ancestorRootId}, t.${id})" +
+        ") " +
+        " " +
+        "OR t.${id} IN( " +
+        "        SELECT " +
+        "t.${id} FROM ${shortEntityClass} t " +
+        "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+        "WHERE " +
+        "t.${successorId} IS NULL " +
+        "AND l.lock_owner != '" + principal + "'" +
+        "AND(t.${versionLabel} != '~~PWC~~' " +
+        "        OR t.${versionLabel} IS NULL)) " +
+        " " +
+        "OR t.${id} IN( " +
+        "        SELECT " +
+        "t.${ancestorId} " +
+        "        FROM " +
+        "${shortEntityClass} t " +
+        "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+        "WHERE " +
+        "t.${successorId} IS NULL " +
+        "AND l.lock_owner != '" + principal + "'" +
+        "AND t.${versionLabel} = '~~PWC~~' " +
+        ") " +
+        " " +
+        "OR t.${id} IN( " +
+        "        SELECT " +
+        "max(t.${id}) " +
+        "FROM ${shortEntityClass} t " +
+        "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+        "WHERE " +
+        "t.${successorId} IS NULL " +
+        "AND l.lock_owner = '" + principal + "'" +
+        "GROUP BY " +
+        "COALESCE(t.${ancestorRootId}, t.${id}))";
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(clz));
         sql = sub.replace(sql);
 
-        TypedQuery<S> q = em.createQuery(sql, clz);
+        Query q = em.createNativeQuery(sql, clz);
 
         try {
             return q.getResultList();
@@ -298,12 +348,65 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Override
     public <S extends T> List<S> findAllVersionsLatest(Class<S> entityClass) {
 
-        String sql = "select t from ${entityClass} t where t.${successorId} = null and t.${id} NOT IN (select f1.${id} FROM ${entityClass} f1 inner join ${entityClass} f2 on f1.${ancestorId} = f2.${id} and f2.${successorId} = null)";
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+        String principal = authentication.getName();
+
+        String sql = "SELECT " +
+                "        * " +
+                "FROM " +
+                "${shortEntityClass} t " +
+                "WHERE " +
+                "t.${id} IN( " +
+                "        SELECT " +
+                "max(t.${id}) AS ${id} FROM ${shortEntityClass} t " +
+                "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+                "WHERE " +
+                "t.${successorId} IS NULL " +
+                "AND l.lock_owner IS NULL " +
+                "GROUP BY " +
+                "COALESCE(t.${ancestorRootId}, t.${id})" +
+                ") " +
+                " " +
+                "OR t.${id} IN( " +
+                "        SELECT " +
+                "t.${id} FROM ${shortEntityClass} t " +
+                "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+                "WHERE " +
+                "t.${successorId} IS NULL " +
+                "AND l.lock_owner != '" + principal + "'" +
+                "AND(t.${versionLabel} != '~~PWC~~' " +
+                "        OR t.${versionLabel} IS NULL)) " +
+                " " +
+                "OR t.${id} IN( " +
+                "        SELECT " +
+                "t.${ancestorId} " +
+                "        FROM " +
+                "${shortEntityClass} t " +
+                "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+                "WHERE " +
+                "t.${successorId} IS NULL " +
+                "AND l.lock_owner != '" + principal + "'" +
+                "AND t.${versionLabel} = '~~PWC~~' " +
+                ") " +
+                " " +
+                "OR t.${id} IN( " +
+                "        SELECT " +
+                "max(t.${id}) " +
+                "FROM ${shortEntityClass} t " +
+                "LEFT JOIN locks l ON CAST(t.${id} AS TEXT) = l.entity_id " +
+                "WHERE " +
+                "t.${successorId} IS NULL " +
+                "AND l.lock_owner = '" + principal + "'" +
+                "GROUP BY " +
+                "COALESCE(t.${ancestorRootId}, t.${id}))";
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entityClass));
         sql = sub.replace(sql);
 
-        TypedQuery<S> q = em.createQuery(sql, entityClass);
+        Query q = em.createNativeQuery(sql, entityClass);
 
         try {
             return q.getResultList();
@@ -439,7 +542,9 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         attributes.put("ancestorId", ancestorIdAttribute(entityClass));
         attributes.put("ancestorRootId", ancestorRootIdAttribute(entityClass));
         attributes.put("successorId", successorIdAttribute(entityClass));
+        attributes.put("versionLabel", versionLabelAttribute(entityClass));
         attributes.put("entityClass", entityClass.getName());
+        attributes.put("shortEntityClass", entityClass.getEnclosingClass().getSimpleName() + "$" + entityClass.getSimpleName());
         return attributes;
     }
 
@@ -452,6 +557,14 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new IllegalStateException(format("Entity class is missing @Id field: %s", entityClass.getCanonicalName()));
         }
         return idField.getName();
+    }
+
+    private String versionLabelAttribute(Class<?> entityClass) {
+        Field versionLabelField = BeanUtils.findFieldWithAnnotation(entityClass, VersionLabel.class);
+        if (versionLabelField == null) {
+            throw new IllegalStateException(format("Entity class is missing @VersionLabel field: %s", entityClass.getCanonicalName()));
+        }
+        return versionLabelField.getName();
     }
 
     private String successorIdAttribute(Class<?> entityClass) {
