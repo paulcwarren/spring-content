@@ -255,7 +255,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
             }
 		}
         catch (ClassNotFoundException e) {
-            e.printStackTrace();
+
+            LOGGER.error("Failed setting fragment generic arguments", e);
         }
 
 		try {
@@ -266,7 +267,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			}
 		}
 		catch (ClassNotFoundException e) {
-			e.printStackTrace();
+
+            LOGGER.error("Failed setting fragment domain class", e);
 		}
 
 		try {
@@ -277,7 +279,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			}
 		}
 		catch (ClassNotFoundException e) {
-			e.printStackTrace();
+
+            LOGGER.error("Failed setting fragment ID class", e);
 		}
 
 		registry.registerBeanDefinition(beanName, fragmentDefinition.getBeanDefinition());
