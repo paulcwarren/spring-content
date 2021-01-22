@@ -36,6 +36,8 @@ import org.springframework.content.elasticsearch.FilterQueryProvider;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
@@ -52,6 +54,7 @@ public class SearchableImpl implements Searchable<Object> {
 
     private Class<?> domainClass;
     private Class<?> idClass;
+    private Class<?>[] genericArguments;
 
     public SearchableImpl() {
         client = null;
@@ -82,18 +85,21 @@ public class SearchableImpl implements Searchable<Object> {
         this.idClass = idClass;
     }
 
+    public void setGenericArguments(Class<?>[] genericArguments) {
+        this.genericArguments = genericArguments;
+    }
+
     @Override
     public Iterable<Object> search(String queryStr) {
-        return search(queryStr, null, idClass);
+        return search(queryStr, null, genericArguments[0], ArrayList.class);
     }
 
     @Override
-    public List<Object> search(String queryStr, Pageable pageable) {
-        return search(queryStr, pageable, idClass);
+    public Page<Object> search(String queryStr, Pageable pageable) {
+        return search(queryStr, pageable, genericArguments[0], Page.class);
     }
 
-    @Override
-    public List<Object> search(String queryString, Pageable pageable, Class<? extends Object> searchType) {
+    private <R> R search(String queryString, Pageable pageable, Class<? extends Object> searchType, Class<R> returnType) {
 
         SearchRequest searchRequest = new SearchRequest(manager.indexName(domainClass));
         searchRequest.types(domainClass.getName());
@@ -149,7 +155,7 @@ public class SearchableImpl implements Searchable<Object> {
             throw new StoreAccessException(format("Error searching indexed content for '%s'", queryString), e);
         }
 
-        return getResults(res.getHits(), searchType);
+        return getResults(res.getHits(), pageable, searchType, returnType);
     }
 
     @Override
@@ -216,12 +222,12 @@ public class SearchableImpl implements Searchable<Object> {
         return contents;
     }
 
-    private List<Object> getResults(SearchHits result, Class<?> resultType) {
+    private <R> R getResults(SearchHits result, Pageable pageable, Class<?> resultType, Class<R> returnType) {
 
         List<Object> contents = new ArrayList<>();
 
         if (result == null || result.getTotalHits().value == 0) {
-            return contents;
+            return wrapResult(returnType, contents, pageable, 0);
         }
 
         for (SearchHit hit : result.getHits()) {
@@ -258,6 +264,20 @@ public class SearchableImpl implements Searchable<Object> {
             }
         }
 
-        return contents;
+        return wrapResult(returnType, contents, pageable, result.getTotalHits().value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <R> R wrapResult(Class<R> returnType, List<Object> content, Pageable pageable, long total) {
+
+        R rc = null;
+        if (Page.class.isAssignableFrom(returnType)) {
+            LOGGER.debug("Wrapping result in Page");
+            rc = (R) new PageImpl<Object>(content, pageable, total);
+        } else {
+            LOGGER.debug("Returning result as-is");
+            rc = (R) content;
+        }
+        return rc;
     }
 }

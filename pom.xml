@@ -45,7 +45,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
     </licenses>
 
     <properties>
-        <ginkgo4j-version>1.0.12</ginkgo4j-version>
+        <ginkgo4j-version>1.0.13</ginkgo4j-version>
         <springboot-version>2.4.2</springboot-version>
         <spring-cloud.version>Hoxton.SR9</spring-cloud.version>
         <commonsio-version>2.8.0</commonsio-version>

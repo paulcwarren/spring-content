@@ -52,6 +52,7 @@ import org.springframework.content.rest.FulltextEntityLookupQuery;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -210,7 +211,7 @@ public class ContentSearchRestControllerIT {
                                 .accept("application/hal+json"))
                                 .andExpect(status().isOk()).andReturn();
 
-                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class, Class.class });
+                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
                         PageRequest pageable = PageRequest.of(1, 1);
 
                         verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(InternalResult.class));
@@ -745,12 +746,7 @@ public class ContentSearchRestControllerIT {
         }
 
         @Override
-        public List<UUID> search(String queryString, Pageable pageable) {
-            return null;
-        }
-
-        @Override
-        public List<UUID> search(String queryString, Pageable pageable, Class<? extends UUID> searchType) {
+        public Page<UUID> search(String queryString, Pageable pageable) {
             return null;
         }
 
