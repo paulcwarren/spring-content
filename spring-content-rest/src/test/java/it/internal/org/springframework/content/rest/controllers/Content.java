@@ -144,7 +144,6 @@ public class Content {
                             .getResponse();
 
                     assertThat(response, is(not(nullValue())));
-                    assertThat(response.getContentLength(), is(-1));
                     assertThat(response.getContentAsString(), is("<html><body>Hello Spring Content World!</body></html>"));
                     assertThat(response.getContentType(), is("text/html"));
                 });
