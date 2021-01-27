@@ -214,7 +214,7 @@ public class ContentSearchRestControllerIT {
                         Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
                         PageRequest pageable = PageRequest.of(1, 1);
 
-                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(InternalResult.class));
+                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable));
                     });
                 });
 
@@ -259,7 +259,7 @@ public class ContentSearchRestControllerIT {
                             sharedIds.add(entity2.getId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("two"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("two"))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -309,7 +309,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity2.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -374,7 +374,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity4.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -422,7 +422,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity3.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -455,7 +455,7 @@ public class ContentSearchRestControllerIT {
                         results.add(new CustomResult("67890", "<em>else altogether</em>", "foo2", "bar2"));
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(CustomResult.class))).thenReturn(results);
+                                eq("else"))).thenReturn(results);
                     });
 
                     It("should return a response entity with the entity", () -> {
@@ -500,7 +500,7 @@ public class ContentSearchRestControllerIT {
                         results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(CustomResult.class))).thenReturn(results);
+                                eq("else"), argThat(instanceOf(Pageable.class)))).thenReturn(results);
                     });
 
                     It("should return a response entity with the entity", () -> {
@@ -546,7 +546,7 @@ public class ContentSearchRestControllerIT {
                         contentIds.add(entity6.getContentId());
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                eq("else")  )).thenReturn(internalResults);
                     });
 
                     It("should return a response with the entity", () -> {
@@ -596,7 +596,7 @@ public class ContentSearchRestControllerIT {
                     contentIds.add(entity4.getContentId());
 
                     when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                            eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                            eq("else"))).thenReturn(internalResults);
                 });
 
                 It("should return a response entity with the entity", () -> {
