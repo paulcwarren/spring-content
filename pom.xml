@@ -80,6 +80,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <module>./spring-content-docx4j</module>
         <module>./spring-content-fs</module>
         <module>./spring-content-fs-boot-starter</module>
+        <module>./spring-content-gcs</module>
         <module>./spring-content-jpa</module>
         <module>./spring-content-jpa-boot-starter</module>
         <module>./spring-content-mongo</module>
