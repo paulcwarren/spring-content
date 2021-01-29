@@ -52,6 +52,12 @@ jobs:
           - 27017:27017
 
     steps:
+- name: Set up Cloud SDK
+    - uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
     - uses: actions/checkout@v2
       with:
         path: spring-content
@@ -97,6 +103,8 @@ jobs:
         AWS_BUCKET: ${{secrets.AWS_BUCKET}}
         AWS_REGION: ${{secrets.AWS_REGION}}
         AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+        GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{env.GOOGLE_APPLICATION_CREDENTIALS}}
 
     - name: Validate examples
       run: |
