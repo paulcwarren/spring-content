@@ -55,6 +55,11 @@ jobs:
           - 27017:27017
 
     steps:
+    - uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
@@ -88,6 +93,8 @@ jobs:
         AWS_BUCKET: ${{secrets.AWS_BUCKET}}
         AWS_REGION: ${{secrets.AWS_REGION}}
         AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+        GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{env.GOOGLE_APPLICATION_CREDENTIALS}}
 
     - name: Publish JARs
       run: mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
