@@ -54,6 +54,8 @@ jobs:
         ports:
           - 27017:27017
 
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: gac-key.json
     steps:
     - uses: google-github-actions/setup-gcloud@master
       with:
@@ -73,6 +75,7 @@ jobs:
     
     - name: Build and test
       run: |
+        echo -n ${{ secrets.GCP_SA_KEY }} | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS
         mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
         bash <(curl -s https://codecov.io/bash)
       env:
@@ -94,7 +97,6 @@ jobs:
         AWS_REGION: ${{secrets.AWS_REGION}}
         AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
         GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
-        GOOGLE_APPLICATION_CREDENTIALS: ${{env.GOOGLE_APPLICATION_CREDENTIALS}}
 
     - name: Publish JARs
       run: mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
