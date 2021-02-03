@@ -30,6 +30,7 @@ import internal.org.springframework.content.rest.controllers.ContentServiceHandl
 import internal.org.springframework.content.rest.controllers.ResourceETagMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.ResourceTypeMethodArgumentResolver;
+import internal.org.springframework.content.rest.controllers.StoreInfoHandlerMethodArgumentResolver;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
@@ -142,6 +143,7 @@ public class RestConfiguration implements InitializingBean {
 			argumentResolvers.add(new ResourceTypeMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ResourceETagMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler, context));
+            argumentResolvers.add(new StoreInfoHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 		}
 
 		@Override

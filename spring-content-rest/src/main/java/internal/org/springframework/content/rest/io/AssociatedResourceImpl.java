@@ -1,31 +1,39 @@
 package internal.org.springframework.content.rest.io;
 
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.OriginalFileName;
-import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.core.io.Resource;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.convert.Jsr310Converters;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.resource.HttpResource;
+import static java.lang.String.format;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
+import javax.persistence.Version;
+
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.convert.support.ConfigurableConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.convert.Jsr310Converters;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.resource.HttpResource;
 
 /**
  * Represents a Spring Content Resource that is associated with a Spring Data Entity.
@@ -46,19 +54,63 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
 
     private S entity;
     private Resource original;
+    private Object property;
 
     public AssociatedResourceImpl(S entity, Resource original) {
         this.entity = entity;
         this.original = original;
     }
 
+    public AssociatedResourceImpl(Object property, S entity, Resource original) {
+        this.entity = entity;
+        this.property = property;
+        this.original = original;
+    }
+
+    @Override
     public S getAssociation() {
-        return entity;
+
+        Object obj = property != null ? property : entity;
+        return (S)obj;
+    }
+
+    @Override
+    public Object getETag() {
+
+        Object etag = null;
+
+        if (property != null) {
+            etag = BeanUtils.getFieldWithAnnotation(property, Version.class);
+        }
+
+        if (etag == null) {
+            etag = BeanUtils.getFieldWithAnnotation(entity, Version.class);
+        }
+
+        if (etag == null) {
+            etag = "";
+        }
+
+        return etag.toString();
+    }
+
+    @Override
+    public MediaType getMimeType() {
+
+        Object mimeType = null;
+
+        Object obj = property != null ? property : entity;
+        mimeType = BeanUtils.getFieldWithAnnotation(obj, MimeType.class);
+
+        return MediaType.valueOf(mimeType != null ? mimeType.toString() : MediaType.ALL_VALUE);
     }
 
     @Override
     public long contentLength() throws IOException {
-        Long contentLength = (Long) BeanUtils.getFieldWithAnnotation(entity, ContentLength.class);
+
+        Object obj = property != null ? property : entity;
+
+        Long contentLength = (Long) BeanUtils.getFieldWithAnnotation(obj, ContentLength.class);
         if (contentLength == null) {
             contentLength = original.contentLength();
         }
@@ -67,7 +119,10 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
 
     @Override
     public long lastModified() throws IOException {
-        Object lastModified = BeanUtils.getFieldWithAnnotation(entity, LastModifiedDate.class);
+
+        Object obj = property != null ? property : entity;
+
+        Object lastModified = BeanUtils.getFieldWithAnnotation(obj, LastModifiedDate.class);
         if (lastModified == null) {
             return original.lastModified();
         }
@@ -143,12 +198,39 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
     @Override
     public HttpHeaders getResponseHeaders() {
         HttpHeaders headers = new HttpHeaders();
+
+        Object obj = property != null ? property : entity;
+
         // Modified to show download
-        Object originalFileName = BeanUtils.getFieldWithAnnotation(entity, OriginalFileName.class);
+        Object originalFileName = BeanUtils.getFieldWithAnnotation(obj, OriginalFileName.class);
         if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
             ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
             headers.setContentDisposition(builder.build());
         }
         return headers;
+    }
+
+    @Override
+    public boolean isWritable() {
+        return ((WritableResource)original).isWritable();
+    }
+
+    @Override
+    public OutputStream getOutputStream()
+            throws IOException {
+        return ((WritableResource)original).getOutputStream();
+    }
+
+    @Override
+    public WritableByteChannel writableChannel()
+            throws IOException {
+        return ((WritableResource)original).writableChannel();
+    }
+
+
+    @Override
+    public void delete()
+            throws IOException {
+        ((DeletableResource)original).delete();
     }
 }

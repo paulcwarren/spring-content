@@ -1,9 +1,8 @@
 package internal.org.springframework.content.rest.io;
 
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 
-public interface AssociatedResource<S> extends Resource {
+public interface AssociatedResource<S> extends WritableResource, StoreResource {
 
     S getAssociation();
-
 }

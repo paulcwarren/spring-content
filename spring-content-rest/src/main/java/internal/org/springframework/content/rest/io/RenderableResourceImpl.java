@@ -3,16 +3,18 @@ package internal.org.springframework.content.rest.io;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
 import java.time.ZonedDateTime;
 
-import org.apache.commons.io.IOUtils;
-
+import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 import org.springframework.web.servlet.resource.HttpResource;
@@ -25,10 +27,10 @@ import org.springframework.web.servlet.resource.HttpResource;
 public class RenderableResourceImpl implements Resource, HttpResource, RenderableResource {
 
     private final Renderable renderer;
-    private final AssociatedResource original;
+    private final StoreResource original;
     private final long lastModified;
 
-    public RenderableResourceImpl(Renderable renderer, AssociatedResource original) {
+    public RenderableResourceImpl(Renderable renderer, StoreResource original) {
         this.renderer = renderer;
         this.original = original;
         this.lastModified = ZonedDateTime.now().toInstant().toEpochMilli();
@@ -36,17 +38,32 @@ public class RenderableResourceImpl implements Resource, HttpResource, Renderabl
 
     @Override
     public boolean isRenderableAs(MimeType mimeType) {
-        InputStream is = renderer.getRendition(original.getAssociation(), mimeType.toString());
-        try {
-            return is != null;
-        } finally {
-            IOUtils.closeQuietly(is);
+
+        if (original instanceof AssociatedResource) {
+            return renderer.hasRendition(((AssociatedResource)original).getAssociation(), mimeType.toString());
         }
+
+        return false;
     }
 
     @Override
     public InputStream renderAs(MimeType mimeType) {
-        return renderer.getRendition(original.getAssociation(), mimeType.toString());
+
+        if (original instanceof AssociatedResource) {
+            return renderer.getRendition(((AssociatedResource)original).getAssociation(), mimeType.toString());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object getETag() {
+        return original.getETag();
+    }
+
+    @Override
+    public MediaType getMimeType() {
+        return original.getMimeType();
     }
 
     @Override
@@ -125,7 +142,19 @@ public class RenderableResourceImpl implements Resource, HttpResource, Renderabl
         if (original instanceof HttpResource) {
             return ((HttpResource)original).getResponseHeaders();
         } else {
-          return new HttpHeaders();  
+          return new HttpHeaders();
         }
+    }
+
+    @Override
+    public OutputStream getOutputStream()
+            throws IOException {
+        return ((WritableResource)original).getOutputStream();
+    }
+
+    @Override
+    public void delete()
+            throws IOException {
+        ((DeletableResource)original).delete();
     }
 }

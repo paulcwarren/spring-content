@@ -211,6 +211,15 @@ public class ContentServiceHandlerMethodArgumentResolver extends StoreHandlerMet
         private final Object embeddedProperty;
         private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
+        public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+            this.config = config;
+            this.store = store;
+            this.repoInvoker = repoInvoker;
+            this.domainObj = domainObj;
+            this.embeddedProperty = null;
+            this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        }
+
         public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
             this.config = config;
             this.store = store;

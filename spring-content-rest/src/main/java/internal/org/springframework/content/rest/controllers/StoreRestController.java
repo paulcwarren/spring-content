@@ -12,6 +12,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.Stores;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -31,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
 import internal.org.springframework.content.rest.io.InputStreamResource;
+import internal.org.springframework.content.rest.io.StoreResource;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.HeaderUtils;
 
 @ContentRestController
@@ -48,7 +51,17 @@ public class StoreRestController implements InitializingBean  {
     private Stores stores;
     @Autowired(required=false)
     private RepositoryInvokerFactory repoInvokerFactory;
+
+    @Autowired
+    private RestConfiguration config;
+
+    @Autowired
+    private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+
+    private ContentServiceFactory contentServiceFactory;
+
     public StoreRestController() {
+        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
@@ -59,21 +72,29 @@ public class StoreRestController implements InitializingBean  {
             MediaType resourceType,
             Object resourceETag,
             ContentService contentService)
+//                StoreInfo storeInfo
+//            )
                     throws MethodNotAllowedException {
 
         if (resource == null || resource.exists() == false) {
             throw new ResourceNotFoundException();
         }
 
+        StoreResource storeResource = (StoreResource)resource;
+
         long lastModified = -1;
         try {
             lastModified = resource.lastModified();
         } catch (IOException e) {}
-        if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
+        if(new ServletWebRequest(request, response).checkNotModified(storeResource.getETag() != null ? storeResource.getETag().toString() : null, lastModified)) {
+//        if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
             return;
         }
 
-        contentService.getContent(request, response, headers, resource, resourceType);
+//        ContentService contentService = contentServiceFactory.getContentService(storeInfo, storeResource);
+
+        contentService.getContent(request, response, headers, storeResource, storeResource.getMimeType());
+//        contentService.getContent(request, response, headers, storeResource, resourceType);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {

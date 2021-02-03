@@ -20,6 +20,7 @@ import org.springframework.web.util.UrlPathHelper;
 import internal.org.springframework.content.rest.io.AssociatedResource;
 import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
 import internal.org.springframework.content.rest.io.RenderableResourceImpl;
+import internal.org.springframework.content.rest.io.StoreResourceImpl;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
@@ -44,7 +45,7 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
       String path = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
       String pathToUse = path.substring(StoreUtils.storePath(info).length() + 1);
 
-      return info.getImplementation(Store.class).getResource(pathToUse);
+      return new StoreResourceImpl(info.getImplementation(Store.class).getResource(pathToUse));
     }
 
     @Override
@@ -64,7 +65,8 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
 
         AssociativeStore s = storeInfo.getImplementation(AssociativeStore.class);
         Resource resource = s.getResource(propertyVal);
-        resource = new AssociatedResourceImpl(propertyVal, resource);
+//        resource = new AssociatedResourceImpl(propertyVal, resource);
+        resource = new AssociatedResourceImpl(propertyVal, domainObj, resource);
         if (Renderable.class.isAssignableFrom(storeInfo.getInterface())) {
             resource = new RenderableResourceImpl((Renderable)storeInfo.getImplementation(AssociativeStore.class), (AssociatedResource)resource);
         }
