@@ -12,18 +12,31 @@ import java.nio.channels.WritableByteChannel;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.util.MimeType;
 
 public class StoreResourceImpl implements Resource, StoreResource {
 
     private Resource delegate;
+    private StoreInfo storeInfo;
 
-    public StoreResourceImpl(Resource delegate) {
-        Assert.notNull(delegate, "Delegate cannot be null");
+    public StoreResourceImpl(StoreInfo storeInfo, Resource delegate) {
+
+        Assert.notNull(storeInfo, "storeInfo cannot be null");
+        Assert.notNull(delegate, "delegate cannot be null");
+
+        this.storeInfo = storeInfo;
         this.delegate = delegate;
+    }
+
+    @Override
+    public StoreInfo getStoreInfo() {
+
+        return storeInfo;
     }
 
     @Override
@@ -41,6 +54,18 @@ public class StoreResourceImpl implements Resource, StoreResource {
 
         String mimeType = new MimetypesFileTypeMap().getContentType(this.getFilename());
         return MediaType.valueOf(mimeType != null ? mimeType : "");
+    }
+
+    @Override
+    public boolean isRenderableAs(MimeType mimeType) {
+
+        return false;
+    }
+
+    @Override
+    public InputStream renderAs(MimeType mimeType) {
+
+        throw new UnsupportedOperationException("not implemented");
     }
 
     @Override

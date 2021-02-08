@@ -21,7 +21,11 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.renditions.Renderable;
+import org.springframework.content.commons.repository.AssociativeStore;
+import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
@@ -44,7 +48,7 @@ import org.springframework.web.servlet.resource.HttpResource;
  *
  * Also sets appropriate headers to pass the Spring Data Entity recorded filename, if exists.
  */
-public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResource<S> {
+public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedStoreResource<S> {
 
     private final ConfigurableConversionService conversionService = new DefaultConversionService();
 
@@ -55,16 +59,25 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
     private S entity;
     private Resource original;
     private Object property;
+    private StoreInfo info;
 
-    public AssociatedResourceImpl(S entity, Resource original) {
+    public AssociatedStoreResourceImpl(StoreInfo info, S entity, Resource original) {
+        this.info = info;
         this.entity = entity;
         this.original = original;
     }
 
-    public AssociatedResourceImpl(Object property, S entity, Resource original) {
+    public AssociatedStoreResourceImpl(StoreInfo info, Object property, S entity, Resource original) {
+        this.info = info;
         this.entity = entity;
         this.property = property;
         this.original = original;
+    }
+
+    @Override
+    public StoreInfo getStoreInfo() {
+
+        return info;
     }
 
     @Override
@@ -72,6 +85,39 @@ public class AssociatedResourceImpl<S> implements HttpResource, AssociatedResour
 
         Object obj = property != null ? property : entity;
         return (S)obj;
+    }
+
+    protected Resource getDelegate() {
+
+        return original;
+    }
+
+    protected ConversionService getConversionService() {
+        return conversionService;
+    }
+
+    @Override
+    public boolean isRenderableAs(org.springframework.util.MimeType mimeType) {
+
+        if (Renderable.class.isAssignableFrom(info.getInterface())) {
+
+            Renderable renderer = (Renderable)info.getImplementation(AssociativeStore.class);
+            return renderer.hasRendition(entity, mimeType.toString());
+        }
+
+        return false;
+    }
+
+    @Override
+    public InputStream renderAs(org.springframework.util.MimeType mimeType) {
+
+        if (Renderable.class.isAssignableFrom(info.getInterface())) {
+
+            Renderable renderer = (Renderable)info.getImplementation(AssociativeStore.class);
+            return renderer.getRendition(entity, mimeType.toString());
+        }
+
+        return null;
     }
 
     @Override

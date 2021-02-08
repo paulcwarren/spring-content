@@ -26,11 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import internal.org.springframework.content.commons.storeservice.StoresImpl;
-import internal.org.springframework.content.rest.controllers.ContentServiceHandlerMethodArgumentResolver;
-import internal.org.springframework.content.rest.controllers.ResourceETagMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
-import internal.org.springframework.content.rest.controllers.ResourceTypeMethodArgumentResolver;
-import internal.org.springframework.content.rest.controllers.StoreInfoHandlerMethodArgumentResolver;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
@@ -140,10 +136,6 @@ public class RestConfiguration implements InitializingBean {
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
 			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
-			argumentResolvers.add(new ResourceTypeMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
-			argumentResolvers.add(new ResourceETagMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
-			argumentResolvers.add(new ContentServiceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler, context));
-            argumentResolvers.add(new StoreInfoHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
 		}
 
 		@Override

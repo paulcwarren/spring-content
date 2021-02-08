@@ -22,7 +22,6 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
@@ -32,7 +31,6 @@ import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.hateoas.server.core.LinkBuilderSupport;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -51,7 +49,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
-	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, Resource.class, MediaType.class, Object.class, ContentService.class);
+	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, Resource.class);
 
 	static {
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");

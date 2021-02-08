@@ -13,7 +13,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.content.rest.controllers.ContentService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
@@ -31,6 +30,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.contentservice.ContentService;
+import internal.org.springframework.content.rest.contentservice.ContentServiceFactory;
 import internal.org.springframework.content.rest.io.InputStreamResource;
 import internal.org.springframework.content.rest.io.StoreResource;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
@@ -45,10 +46,13 @@ public class StoreRestController implements InitializingBean  {
 
     @Autowired
     ApplicationContext context;
+
     @Autowired(required=false)
     private Repositories repositories;
+
     @Autowired
     private Stores stores;
+
     @Autowired(required=false)
     private RepositoryInvokerFactory repoInvokerFactory;
 
@@ -61,19 +65,13 @@ public class StoreRestController implements InitializingBean  {
     private ContentServiceFactory contentServiceFactory;
 
     public StoreRestController() {
-        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.GET)
     public void getContent(HttpServletRequest request,
             HttpServletResponse response,
             @RequestHeader HttpHeaders headers,
-            Resource resource,
-            MediaType resourceType,
-            Object resourceETag,
-            ContentService contentService)
-//                StoreInfo storeInfo
-//            )
+            Resource resource)
                     throws MethodNotAllowedException {
 
         if (resource == null || resource.exists() == false) {
@@ -84,100 +82,107 @@ public class StoreRestController implements InitializingBean  {
 
         long lastModified = -1;
         try {
-            lastModified = resource.lastModified();
+            lastModified = storeResource.lastModified();
         } catch (IOException e) {}
         if(new ServletWebRequest(request, response).checkNotModified(storeResource.getETag() != null ? storeResource.getETag().toString() : null, lastModified)) {
-//        if(new ServletWebRequest(request, response).checkNotModified(resourceETag != null ? resourceETag.toString() : null, lastModified)) {
             return;
         }
 
-//        ContentService contentService = contentServiceFactory.getContentService(storeInfo, storeResource);
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
         contentService.getContent(request, response, headers, storeResource, storeResource.getMimeType());
-//        contentService.getContent(request, response, headers, storeResource, resourceType);
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = {
             "content-type!=multipart/form-data", "accept!=application/hal+json" })
     @ResponseBody
     public void putContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-            Resource resource,
-            Object resourceETag,
-            ContentService contentService)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
+
+        StoreResource storeResource = (StoreResource)resource;
+
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
         handleMultipart(request, response, headers,
                 contentService,
                 new InputStreamResource(request.getInputStream(), null),
                 headers.getContentType(),
-                resource,
-                resourceETag);
+                storeResource,
+                storeResource.getETag());
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.PUT, headers = "content-type=multipart/form-data")
     @ResponseBody
     public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
             @RequestParam("file") MultipartFile multiPart,
-            Resource resource,
-            Object resourceETag,
-            ContentService contentService)
+            StoreResource resource)
                     throws IOException, MethodNotAllowedException {
+
+        StoreResource storeResource = resource;
+
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
         handleMultipart(request, response, headers,
                 contentService,
                 multiPart.getResource(),
                 MediaType.parseMediaType(multiPart.getContentType()),
-                resource,
-                resourceETag);
+                storeResource,
+                storeResource.getETag());
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = "content-type=multipart/form-data")
     @ResponseBody
     public void postMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
             @RequestParam("file") MultipartFile multiPart,
-            Resource resource,
-            Object resourceETag,
-            ContentService contentService)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
+
+        StoreResource storeResource = (StoreResource)resource;
+
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
         handleMultipart(request, response, headers,
                 contentService,
                 new InputStreamResource(multiPart.getInputStream(), multiPart.getOriginalFilename()),
                 MediaType.parseMediaType(multiPart.getContentType()),
-                resource,
-                resourceETag);
+                storeResource,
+                storeResource.getETag());
 
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.POST, headers = {"content-type!=multipart/form-data"})
     @ResponseBody
     public void postContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
-            Resource resource,
-            Object resourceETag,
-            ContentService contentService)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
+
+        StoreResource storeResource = (StoreResource)resource;
+
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
         handleMultipart(request, response, headers,
                 contentService,
                 new InputStreamResource(request.getInputStream(), null),
                 headers.getContentType(),
-                resource,
-                resourceETag);
+                storeResource,
+                storeResource.getETag());
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
     public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
-            Resource resource,
-            Object resourceETag,
-            ContentService contentService)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
+
+        StoreResource storeResource = (StoreResource)resource;
 
         if (!resource.exists()) {
             throw new ResourceNotFoundException();
         } else {
-            HeaderUtils.evaluateHeaderConditions(headers, resourceETag != null ? resourceETag.toString() : null, new Date(resource.lastModified()));
+            HeaderUtils.evaluateHeaderConditions(headers, storeResource.getETag() != null ? storeResource.getETag().toString() : null, new Date(storeResource.lastModified()));
         }
 
+        ContentService contentService = contentServiceFactory.getContentService(storeResource);
         contentService.unsetContent(resource);
 
         response.setStatus(HttpStatus.NO_CONTENT.value());
@@ -188,7 +193,7 @@ public class StoreRestController implements InitializingBean  {
             ContentService contentService,
             Resource source,
             MediaType sourceMimeType,
-            Resource target,
+            StoreResource target,
             Object targetETag)
                     throws IOException, MethodNotAllowedException {
 
@@ -212,14 +217,18 @@ public class StoreRestController implements InitializingBean  {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+
         try {
             this.repositories = context.getBean(Repositories.class);
         }
         catch (BeansException be) {
             this.repositories = new Repositories(context);
         }
+
         if (this.repoInvokerFactory == null) {
             this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
         }
+
+        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
     }
 }

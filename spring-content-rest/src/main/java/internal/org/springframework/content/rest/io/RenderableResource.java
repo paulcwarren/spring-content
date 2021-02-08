@@ -4,8 +4,7 @@ import java.io.InputStream;
 
 import org.springframework.util.MimeType;
 
-public interface RenderableResource extends StoreResource {
-
+public interface RenderableResource {
 
     boolean isRenderableAs(MimeType mimeType);
 

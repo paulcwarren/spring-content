@@ -3,7 +3,6 @@ package it.internal.org.springframework.content.rest.controllers;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
@@ -146,7 +145,7 @@ public class ContentPropertyRestEndpointsIT {
 			  });
 			  Context("given the content property is accessed via the /{repository}/{id}/{contentProperty} endpoint", () -> {
 				  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
-					  FIt("should return the content", () -> {
+					  It("should return the content", () -> {
 						  MockHttpServletResponse response = mvc
 								  .perform(get("/files/" + testEntity2.getId() + "/child")
 										  .accept("text/plain"))

@@ -39,8 +39,8 @@ public class RenderableResourceImpl implements Resource, HttpResource, Renderabl
     @Override
     public boolean isRenderableAs(MimeType mimeType) {
 
-        if (original instanceof AssociatedResource) {
-            return renderer.hasRendition(((AssociatedResource)original).getAssociation(), mimeType.toString());
+        if (original instanceof AssociatedStoreResource) {
+            return renderer.hasRendition(((AssociatedStoreResource)original).getAssociation(), mimeType.toString());
         }
 
         return false;
@@ -49,19 +49,17 @@ public class RenderableResourceImpl implements Resource, HttpResource, Renderabl
     @Override
     public InputStream renderAs(MimeType mimeType) {
 
-        if (original instanceof AssociatedResource) {
-            return renderer.getRendition(((AssociatedResource)original).getAssociation(), mimeType.toString());
+        if (original instanceof AssociatedStoreResource) {
+            return renderer.getRendition(((AssociatedStoreResource)original).getAssociation(), mimeType.toString());
         }
 
         return null;
     }
 
-    @Override
     public Object getETag() {
         return original.getETag();
     }
 
-    @Override
     public MediaType getMimeType() {
         return original.getMimeType();
     }
@@ -146,13 +144,11 @@ public class RenderableResourceImpl implements Resource, HttpResource, Renderabl
         }
     }
 
-    @Override
     public OutputStream getOutputStream()
             throws IOException {
         return ((WritableResource)original).getOutputStream();
     }
 
-    @Override
     public void delete()
             throws IOException {
         ((DeletableResource)original).delete();
