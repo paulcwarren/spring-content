@@ -4,7 +4,8 @@ import org.springframework.core.convert.converter.ConverterRegistry;
 
 public interface S3StoreConfigurer {
 
-	void configureS3StoreConverters(ConverterRegistry registry);
+    default void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
+    }
 
-	void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers);
+	void configureS3StoreConverters(ConverterRegistry registry);
 }
