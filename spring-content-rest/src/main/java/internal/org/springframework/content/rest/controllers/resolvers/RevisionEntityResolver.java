@@ -19,8 +19,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 import internal.org.springframework.content.rest.controllers.ResourceNotFoundException;
-import internal.org.springframework.content.rest.io.AssociatedResource;
-import internal.org.springframework.content.rest.io.AssociatedResourceImpl;
+import internal.org.springframework.content.rest.io.AssociatedStoreResource;
+import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
 import internal.org.springframework.content.rest.io.RenderableResourceImpl;
 
 public class RevisionEntityResolver {
@@ -67,9 +67,9 @@ public class RevisionEntityResolver {
 
         AssociativeStore s = i.getImplementation(AssociativeStore.class);
         Resource resource = s.getResource(p);
-        resource = new AssociatedResourceImpl(p, resource);
+        resource = new AssociatedStoreResourceImpl(i, p, resource);
         if (Renderable.class.isAssignableFrom(i.getInterface())) {
-            resource = new RenderableResourceImpl((Renderable)i.getImplementation(AssociativeStore.class), (AssociatedResource)resource);
+            resource = new RenderableResourceImpl((Renderable)i.getImplementation(AssociativeStore.class), (AssociatedStoreResource)resource);
         }
         return resource;
     }

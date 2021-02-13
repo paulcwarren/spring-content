@@ -1,4 +1,4 @@
-package org.springframework.content.rest.controllers;
+package internal.org.springframework.content.rest.contentservice;
 
 import java.io.IOException;
 
