@@ -29,6 +29,8 @@ import org.springframework.content.solr.SolrProperties;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
@@ -42,9 +44,9 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
     private SolrProperties solrProperties;
     private Class<?> domainClass;
     private Class<?> idClass;
+    private Class<?>[] genericArguments;
     private FilterQueryProvider filterProvider;
     private ConversionService conversionService;
-
 
     @Autowired
     public SearchableImpl(SolrClient solr, SolrProperties solrProperties) {
@@ -68,61 +70,60 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
         this.idClass = idClass;
     }
 
+    public void setGenericArguments(Class<?>[] genericArguments) {
+        this.genericArguments = genericArguments;
+    }
+
     @Override
     public List<Object> search(String queryStr) {
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
-    public List<Object> search(String queryStr, Pageable pageable) {
-        return getResults(executeQuery(this.getDomainClass(), queryStr, pageable, String.class), String.class);
-    }
-
-    @Override
-    public List<Object> search(String queryStr, Pageable pageable, Class<?> searchType) {
-        return getResults(executeQuery(this.getDomainClass(), queryStr, pageable, searchType), searchType);
+    public Page<Object> search(String queryStr, Pageable pageable) {
+        return getResults(executeQuery(this.getDomainClass(), queryStr, pageable, genericArguments[0]), pageable, genericArguments[0], PageImpl.class);
     }
 
     @Override
     public List<Object> findKeyword(String queryStr) {
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findAllKeywords(String... terms) {
         String queryStr = this.parseTerms("AND", terms);
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findAnyKeywords(String... terms) {
         String queryStr = this.parseTerms("OR", terms);
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findKeywordsNear(int proximity, String... terms) {
         String termStr = this.parseTerms("NONE", terms);
         String queryStr = "\"" + termStr + "\"~" + Integer.toString(proximity);
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findKeywordStartsWith(String term) {
         String queryStr = term + "*";
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findKeywordStartsWithAndEndsWith(String a, String b) {
         String queryStr = a + "*" + b;
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     @Override
     public List<Object> findAllKeywordsWithWeights(String[] terms, double[] weights) {
         String queryStr = parseTermsAndWeights("AND", terms, weights);
-        return getResults(executeQuery(this.getDomainClass(), queryStr, null, String.class), String.class);
+        return getResults(executeQuery(this.getDomainClass(), queryStr, null, genericArguments[0]), null, genericArguments[0], ArrayList.class);
     }
 
     /* package */ String parseTermsAndWeights(String operator, String[] terms,
@@ -187,13 +188,17 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
             query.addField(SolrFulltextIndexServiceImpl.ENTITY_ID);
         }
 
-        for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
-            Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
-            query.addField(fieldAnnotation.name());
+        if (!ContentPropertyUtils.isPrimitiveContentPropertyClass(resultType)) {
+            for (java.lang.reflect.Field field : BeanUtils.findFieldsWithAnnotation(resultType, Attribute.class, new BeanWrapperImpl(resultType))) {
+                Attribute fieldAnnotation = field.getAnnotation(Attribute.class);
+                query.addField(fieldAnnotation.name());
+            }
         }
 
-        if (BeanUtils.findFieldWithAnnotation(resultType, Highlight.class) != null) {
-            query.setHighlight(true);
+        if (!ContentPropertyUtils.isPrimitiveContentPropertyClass(resultType)) {
+            if (BeanUtils.findFieldWithAnnotation(resultType, Highlight.class) != null) {
+                query.setHighlight(true);
+            }
         }
 
         if (pageable != null) {
@@ -218,10 +223,16 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
         return response;
     }
 
-    private List<Object> getResults(QueryResponse response, Class<?> searchType) {
+    private <T> T getResults(QueryResponse response, Pageable pageable, Class<?> searchType, Class<T> returnType) {
 
         List<Object> results = new ArrayList<>();
+
         SolrDocumentList list = response.getResults();
+
+        if (results == null || list.size() == 0) {
+            return wrapResult(returnType, results, pageable, 0);
+        }
+
         for (int j = 0; j < list.size(); ++j) {
 
             String id = list.get(j).getFieldValue("id").toString();
@@ -265,7 +276,7 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
             }
         }
 
-        return results;
+        return wrapResult(returnType, results, pageable, list.size());
     }
 
     protected Class<?> getDomainClass() {
@@ -274,5 +285,18 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
 
     @Override
     public void setContentStore(ContentStore store) {
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <T> T wrapResult(Class<T> returnType, List<Object> content, Pageable pageable, long total) {
+
+        T rc = null;
+        if (Page.class.isAssignableFrom(returnType)) {
+            rc = (T) new PageImpl<Object>(content, pageable, total);
+        } else {
+            rc = (T) content;
+        }
+        return rc;
     }
 }

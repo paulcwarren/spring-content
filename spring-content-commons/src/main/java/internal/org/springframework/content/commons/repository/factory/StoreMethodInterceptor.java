@@ -1,7 +1,12 @@
 package internal.org.springframework.content.commons.repository.factory;
 
-import internal.org.springframework.content.commons.config.StoreFragment;
-import internal.org.springframework.content.commons.config.StoreFragments;
+import static java.lang.String.format;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Optional;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
@@ -12,12 +17,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.lang.String.format;
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragments;
 
 public class StoreMethodInterceptor implements MethodInterceptor {
 
@@ -48,6 +49,12 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 			Optional<StoreFragment> fragment = storeFragments.stream()
 					.filter(it -> it.hasMethod(invocation.getMethod()))
 					.findFirst();
+
+		     if (fragment.isPresent() == false) {
+		            fragment = storeFragments.stream()
+		                    .filter(it -> it.hasImplementationMethod(invocation.getMethod()))
+		                    .findFirst();
+		     }
 
 			fragment.orElseThrow(() -> new IllegalStateException(format("No fragment found for method %s", invocation.getMethod())));
 

@@ -6,20 +6,22 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.matchers.Eventually.eventually;
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.fail;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +37,6 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -211,22 +212,39 @@ public class SolrIT {
                 });
 
                 It("should return results in pages", () -> {
-                    MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(0, 3)),
-                            eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
 
-                    MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(1, 3)),
-                            eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+                    eventually(
+                        () -> {return docContentRepo.search("foo", PageRequest.of(0, 3));},
+                        (page) -> {
+                            assertThat(page.getNumberOfElements(), is(3));
+                        });
 
-                    MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(2, 3)),
-                            eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+                    eventually(
+                            () -> {return docContentRepo.search("foo", PageRequest.of(1, 3));},
+                            (page) -> {
+                                assertThat(page.getNumberOfElements(), is(3));
+                            });
 
-                    MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(3, 3)),
-                            eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
+                    eventually(
+                            () -> {return docContentRepo.search("foo", PageRequest.of(2, 3));},
+                            (page) -> {
+                                assertThat(page.getNumberOfElements(), is(3));
+                            });
+
+                    eventually(
+                            () -> {return docContentRepo.search("foo", PageRequest.of(3, 3));},
+                            (page) -> {
+                                assertThat(page.getNumberOfElements(), is(1));
+                            });
                 });
 
                 It("should return specific result page", () -> {
-                    MatcherAssert.assertThat(() -> docContentRepo.search("foo", PageRequest.of(3, 3)),
-                            eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
+
+                    eventually(
+                        () -> {return docContentRepo.search("foo", PageRequest.of(3, 3));},
+                        (page) -> {
+                            assertThat(page.getNumberOfElements(), is(1));
+                        });
                 });
             });
         });
@@ -305,14 +323,22 @@ public class SolrIT {
                 }
             });
 
-            It("should return the searched content", () -> {
-                List<FulltextInfo> results = store.search("one", null, FulltextInfo.class);
-                assertThat(results, is(not(nullValue())));
-                assertThat(results.size(), is(greaterThanOrEqualTo(1)));
-                assertThat(results.get(0), hasProperty("id", is(doc.getId())));
-                assertThat(results.get(0), hasProperty("contentId", is(doc.getContentId())));
-                assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
-                assertThat(results.get(0), hasProperty("email", containsString("author@email.com")));
+            It("should return results using the return type", () -> {
+
+                eventually(() -> {
+                            return store.search("one");
+                        },
+                        (result) -> {
+
+                            Iterator<FulltextInfo> iterator = result.iterator();
+                            assertThat(iterator.hasNext(), is(true));
+                            assertThat(iterator.next(), allOf(
+                                    hasProperty("contentId", is(doc.getContentId())),
+                                    hasProperty("highlight", containsString("<em>one</em>")),
+                                    hasProperty("email", containsString("author@email.com"))
+                                ));
+                            assertThat(iterator.hasNext(), is(false));
+                    });
             });
         });
     }
