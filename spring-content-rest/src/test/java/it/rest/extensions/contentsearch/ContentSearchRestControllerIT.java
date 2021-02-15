@@ -52,6 +52,7 @@ import org.springframework.content.rest.FulltextEntityLookupQuery;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -210,10 +211,10 @@ public class ContentSearchRestControllerIT {
                                 .accept("application/hal+json"))
                                 .andExpect(status().isOk()).andReturn();
 
-                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class, Class.class });
+                        Method m = ReflectionUtils.findMethod(Searchable.class,"search", new Class<?>[] { String.class, Pageable.class });
                         PageRequest pageable = PageRequest.of(1, 1);
 
-                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable), eq(InternalResult.class));
+                        verify(reflectionService).invokeMethod(eq(m), any(), eq("else"), eq(pageable));
                     });
                 });
 
@@ -258,7 +259,7 @@ public class ContentSearchRestControllerIT {
                             sharedIds.add(entity2.getId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("two"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("two"))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -308,7 +309,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity2.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -373,7 +374,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity4.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should return a response entity with the entity", () -> {
@@ -421,7 +422,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity3.getContentId());
 
                             when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                    eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                    eq("else"))).thenReturn(internalResults);
                         });
 
                         It("should filter out invalid IDs", () -> {
@@ -454,7 +455,7 @@ public class ContentSearchRestControllerIT {
                         results.add(new CustomResult("67890", "<em>else altogether</em>", "foo2", "bar2"));
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(CustomResult.class))).thenReturn(results);
+                                eq("else"))).thenReturn(results);
                     });
 
                     It("should return a response entity with the entity", () -> {
@@ -499,7 +500,7 @@ public class ContentSearchRestControllerIT {
                         results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(CustomResult.class))).thenReturn(results);
+                                eq("else"), argThat(instanceOf(Pageable.class)))).thenReturn(results);
                     });
 
                     It("should return a response entity with the entity", () -> {
@@ -545,7 +546,7 @@ public class ContentSearchRestControllerIT {
                         contentIds.add(entity6.getContentId());
 
                         when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                                eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                                eq("else")  )).thenReturn(internalResults);
                     });
 
                     It("should return a response with the entity", () -> {
@@ -595,7 +596,7 @@ public class ContentSearchRestControllerIT {
                     contentIds.add(entity4.getContentId());
 
                     when(reflectionService.invokeMethod(anyObject(), anyObject(),
-                            eq("else"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(internalResults);
+                            eq("else"))).thenReturn(internalResults);
                 });
 
                 It("should return a response entity with the entity", () -> {
@@ -745,12 +746,7 @@ public class ContentSearchRestControllerIT {
         }
 
         @Override
-        public List<UUID> search(String queryString, Pageable pageable) {
-            return null;
-        }
-
-        @Override
-        public List<UUID> search(String queryString, Pageable pageable, Class<? extends UUID> searchType) {
+        public Page<UUID> search(String queryString, Pageable pageable) {
             return null;
         }
 

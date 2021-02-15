@@ -6,6 +6,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.matchers.Eventually.eventually;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -14,15 +15,13 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -176,28 +175,48 @@ public class ElasticsearchIT {
                     Context("when the content is searched", () -> {
 
                         It("should return the matches", () -> {
-                            assertThat(() -> store.search("one"), eventuallyEval(
-                                    allOf(
-                                            hasItem(doc1.getContentId()),
-                                            not(hasItem(doc2.getContentId()))
-                                            ),
-                                    Duration.ofSeconds(10)));
 
-                            assertThat(() -> store.search("two"), eventuallyEval(
-                                    allOf(
-                                            not(hasItem(doc1.getContentId())),
-                                            hasItem(doc2.getContentId())
-                                            ),
-                                    Duration.ofSeconds(10)));
+                            eventually(
+                                    () -> {
+                                        return store.search("one"); },
+                                    (result) -> {
+                                        assertThat(result,allOf(
+                                                hasItem(doc1.getContentId()),
+                                                not(hasItem(doc2.getContentId()))
+                                                ));
+                                        }
+                            );
 
-                            assertThat(() -> store.search("one two"), eventuallyEval(hasItems(doc1.getContentId(), doc2.getContentId()), Duration.ofSeconds(10)));
+                            eventually(
+                                    () -> {
+                                        return store.search("two"); },
+                                    (result) -> {
+                                        assertThat(result, allOf(
+                                                not(hasItem(doc1.getContentId())),
+                                                hasItem(doc2.getContentId())
+                                                ));
+                                        }
+                            );
 
-                            assertThat(() -> store.search("+document +one -two"), eventuallyEval(
-                                    allOf(
-                                            hasItem(doc1.getContentId()),
-                                            hasItem(not(doc2.getContentId()))
-                                            ),
-                                    Duration.ofSeconds(10)));
+                            eventually(
+                                    () -> {
+                                        return store.search("one two"); },
+                                    (result) -> {
+                                        assertThat(result, hasItems(doc1.getContentId(), doc2.getContentId()));
+                                        }
+                            );
+
+                            eventually(
+                                    () -> {
+                                        return store.search("+document +one -two"); },
+                                    (result) -> {
+                                        assertThat(result, allOf(
+                                                hasItem(doc1.getContentId()),
+                                                hasItem(not(doc2.getContentId()))
+                                                ));
+                                        }
+                            );
+
                         });
                     });
 
@@ -213,9 +232,14 @@ public class ElasticsearchIT {
                         });
 
                         It("should index the documents", () -> {
-                            assertThat(() -> store.search("wisdom"), eventuallyEval(
-                                    hasItem(doc1.getContentId()),
-                                    Duration.ofSeconds(10)));
+
+                            eventually(
+                                    () -> {
+                                        return store.search("wisdom"); },
+                                    (result) -> {
+                                        assertThat(result, hasItem(doc1.getContentId()));
+                                        }
+                            );
                         });
                     });
 
@@ -280,18 +304,42 @@ public class ElasticsearchIT {
             });
 
             It("should return results in pages", () -> {
-                assertThat(() -> store.search("one", PageRequest.of(0, 3)), eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
 
-                assertThat(() -> store.search("one", PageRequest.of(1, 3)), eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+                eventually(
+                        () -> {return store.search("one", PageRequest.of(0, 3));},
+                        (page) -> {
+                            assertThat(page.getTotalElements(), is(10L));
+                            assertThat(page.getTotalPages(), is(4));
+                            assertThat(page.getNumberOfElements(), is(3));
+                            assertThat(page.getContent().size(), is(3));
+                        });
 
-                assertThat(() -> store.search("one", PageRequest.of(2, 3)), eventuallyEval(hasSize(3), Duration.ofSeconds(10)));
+                eventually(
+                        () -> {return store.search("one", PageRequest.of(1, 3));},
+                        (page) -> {
+                            assertThat(page.getTotalElements(), is(10L));
+                            assertThat(page.getTotalPages(), is(4));
+                            assertThat(page.getNumberOfElements(), is(3));
+                            assertThat(page.getContent().size(), is(3));
+                        });
 
-                assertThat(() -> store.search("one", PageRequest.of(3, 3)), eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
-            });
+                eventually(
+                        () -> {return store.search("one", PageRequest.of(2, 3));},
+                        (page) -> {
+                            assertThat(page.getTotalElements(), is(10L));
+                            assertThat(page.getTotalPages(), is(4));
+                            assertThat(page.getNumberOfElements(), is(3));
+                            assertThat(page.getContent().size(), is(3));
+                        });
 
-            It("should return specific result page", () -> {
-                assertThat(() -> store.search("one", PageRequest.of(3, 3)),
-                        eventuallyEval(hasSize(1), Duration.ofSeconds(10)));
+                eventually(
+                        () -> {return store.search("one", PageRequest.of(3, 3));},
+                        (page) -> {
+                            assertThat(page.getTotalElements(), is(10L));
+                            assertThat(page.getTotalPages(), is(4));
+                            assertThat(page.getNumberOfElements(), is(1));
+                            assertThat(page.getContent().size(), is(1));
+                        });
             });
         });
 
@@ -331,7 +379,7 @@ public class ElasticsearchIT {
                     }
                 });
 
-                It("should return results in pages", () -> {
+                It("should return the specified attributes", () -> {
                     assertThat(() -> store.search("one", PageRequest.of(0, 10)),
                             eventuallyEval(
                                     allOf(
@@ -370,18 +418,23 @@ public class ElasticsearchIT {
                 }
             });
 
-            It("should return results in pages", () -> {
-                assertThat(() -> searchableStore.search("one", null),
-                        eventuallyEval(
-                                hasSize(1),
-                                Duration.ofSeconds(10)));
+            It("should return results using the custom return type", () -> {
 
-                List<FulltextInfo> results = searchableStore.search("one", null, FulltextInfo.class);
-                assertThat(results, is(not(nullValue())));
-                assertThat(results.size(), is(greaterThanOrEqualTo(1)));
-                assertThat(results.get(0), hasProperty("contentId", is(doc1.getContentId())));
-                assertThat(results.get(0), hasProperty("highlight", containsString("<em>one</em>")));
-                assertThat(results.get(0), hasProperty("author", containsString("Buck Rogers")));
+                eventually(
+                        () -> {
+                        return searchableStore.search("one");},
+                    (result) -> {
+                        assertThat(result, is(not(nullValue())));
+                        Iterator<FulltextInfo> iterator = result.iterator();
+                        assertThat(iterator.hasNext(), is(true));
+                        assertThat(iterator.next(), allOf(
+                                hasProperty("contentId", is(doc1.getContentId())),
+                                hasProperty("highlight", containsString("<em>one</em>")),
+                                hasProperty("author", containsString("Buck Rogers"))
+                            ));
+                        assertThat(iterator.hasNext(), is(false));
+                    }
+                );
             });
         });
     }

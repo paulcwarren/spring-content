@@ -1,9 +1,14 @@
 package org.springframework.content.commons.repository.factory;
 
-import internal.org.springframework.content.commons.config.StoreFragment;
-import internal.org.springframework.content.commons.config.StoreFragments;
-import internal.org.springframework.content.commons.repository.factory.StoreImpl;
-import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -13,6 +18,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.fragments.ParameterTypeAware;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -21,14 +27,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragments;
+import internal.org.springframework.content.commons.repository.factory.StoreImpl;
+import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
 public abstract class AbstractStoreFactoryBean
 		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
@@ -61,28 +63,30 @@ public abstract class AbstractStoreFactoryBean
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#
 	 * getContentStoreInterface()
 	 */
-	public Class<?> getStoreInterface() {
+	@Override
+    public Class<?> getStoreInterface() {
 		return this.storeInterface;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.content.commons.repository.factory.ContentStoreFactory#
 	 * getContentStore()
 	 */
-	@SuppressWarnings("unchecked")
+	@Override
+    @SuppressWarnings("unchecked")
 	public Store<Serializable> getStore() {
 		return (Store<Serializable>) getObject();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang
 	 * .ClassLoader)
@@ -94,7 +98,7 @@ public abstract class AbstractStoreFactoryBean
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.context.ApplicationEventPublisherAware#
 	 * setApplicationEventPublisher(org.springframework.context.ApplicationEventPublisher)
 	 */
@@ -106,19 +110,21 @@ public abstract class AbstractStoreFactoryBean
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
-	public Store<? extends Serializable> getObject() {
+	@Override
+    public Store<? extends Serializable> getObject() {
 		return initAndReturn();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 	 */
-	@SuppressWarnings("unchecked")
+	@Override
+    @SuppressWarnings("unchecked")
 	public Class<? extends Store<? extends Serializable>> getObjectType() {
 		return (Class<? extends Store<? extends Serializable>>) (null == storeInterface
 				? Store.class : storeInterface);
@@ -126,16 +132,17 @@ public abstract class AbstractStoreFactoryBean
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
 	 */
-	public boolean isSingleton() {
+	@Override
+    public boolean isSingleton() {
 		return true;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
 	@Override
@@ -157,7 +164,7 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class });
+		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class, ParameterTypeAware.class });
 
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
@@ -233,7 +240,8 @@ public abstract class AbstractStoreFactoryBean
  * (non-Javadoc)
  * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
  */
-	public void setBeanFactory(BeanFactory beanFactory) {
+	@Override
+    public void setBeanFactory(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

@@ -9,6 +9,10 @@
 		</layout>
 	</appender>
 
+    <logger name="internal.org.springframework.content.elasticsearch.ElasticsearchIndexer" level="info">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
 	<root level="info">
 		<appender-ref ref="STDOUT" />
 	</root>
