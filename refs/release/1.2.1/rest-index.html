@@ -5,7 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>Introduction</title>
+<meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
+<title>Spring Content REST - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,10 +439,147 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Introduction</h1>
+<h1>Spring Content REST - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
+<span id="revnumber">version 1.2.1,</span>
+<span id="revdate">2021-02-16</span>
+</div>
 </div>
 <div id="content">
 <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>&#169; 2008-2017 The original authors.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#_introduction">1. Introduction</a></li>
+<li><a href="#_getting_started">2. Getting Started</a>
+<ul class="sectlevel2">
+<li><a href="#_introduction_2">2.1. Introduction</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_spring_boot_project">2.2. Adding Spring Content REST to a Spring Boot project</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_gradle_project">2.3. Adding Spring Content REST to a Gradle Project</a></li>
+<li><a href="#_adding_spring_content_rest_to_a_maven_project">2.4. Adding Spring Content REST to a Maven Project</a></li>
+<li><a href="#_configuring_spring_content_rest">2.5. Configuring Spring Content REST</a></li>
+</ul>
+</li>
+<li><a href="#_store_resources">3. Store Resources</a>
+<ul class="sectlevel2">
+<li><a href="#_fundamentals">3.1. Fundamentals</a>
+<ul class="sectlevel3">
+<li><a href="#_resources">3.1.1. Resources</a></li>
+<li><a href="#_entity_resources">3.1.2. Entity Resources</a></li>
+<li><a href="#_property_resources">3.1.3. Property Resources</a></li>
+<li><a href="#_property_collection_resources">3.1.4. Property Collection Resources</a></li>
+<li><a href="#_search">3.1.5. Search</a></li>
+<li><a href="#_default_status_codes">3.1.6. Default status codes</a></li>
+<li><a href="#_resource_discoverability">3.1.7. Resource Discoverability</a></li>
+</ul>
+</li>
+<li><a href="#_the_store_resource">3.2. The Store Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods">3.2.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+<li><a href="#_the_entity_resource">3.3. The Entity Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods_2">3.3.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+<li><a href="#_the_property_resource">3.4. The Property Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods_3">3.4.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+<li><a href="#_the_collection_property_resource">3.5. The Collection Property Resource</a>
+<ul class="sectlevel3">
+<li><a href="#_supported_http_methods_4">3.5.1. Supported HTTP Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</a>
+<ul class="sectlevel2">
+<li><a href="#search">4.1. Search</a>
+<ul class="sectlevel3">
+<li><a href="#_the_searchcontent_resource">4.1.1. The SearchContent Resource</a></li>
+</ul>
+</li>
+<li><a href="#_locking_and_versioning">4.2. Locking and Versioning</a>
+<ul class="sectlevel3">
+<li><a href="#_the_lock_resource">4.2.1. The Lock Resource</a></li>
+<li><a href="#_the_version_resource">4.2.2. The Version Resource</a></li>
+<li><a href="#_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</a></li>
+<li><a href="#_the_findallversions_resource">4.2.4. The FindAllVersions Resource</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_customizing_store_resources">5. Customizing Store Resources</a>
+<ul class="sectlevel2">
+<li><a href="#_configuring_cors">5.1. Configuring CORS</a>
+<ul class="sectlevel3">
+<li><a href="#_store_interface_cors_configuration">5.1.1. Store Interface CORS Configuration</a></li>
+<li><a href="#_global_cors_configuration">5.1.2. Global CORS Configuration</a></li>
+</ul>
+</li>
+<li><a href="#_changing_the_base_uri">5.2. Changing the Base URI</a></li>
+<li><a href="#_store_links">5.3. Store Links</a>
+<ul class="sectlevel3">
+<li><a href="#_customizing_the_link_relation">5.3.1. Customizing the link relation</a></li>
+</ul>
+</li>
+<li><a href="#_store_resolver">5.4. Store Resolver</a></li>
+<li><a href="#_putpost_content_handling">5.5. Put/Post Content Handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<h1 id="preface" class="sect0">Preface</h1>
+<div class="sect1">
+<h2 id="project">Project metadata</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>REST web services have become the number one means for application integration on the web. In its core, REST defines that a system consists of resources that clients interact with. These resources are often also implemented in a hypermedia driven way.  Spring MVC offers a solid foundation to build theses kinds of services.  But implementing even the simplest REST web services for a multi-domain object system can be quite tedious and result in a lot of boilerplate code.</p>
@@ -470,18 +608,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-<h1 id="_getting_started" class="sect0">Getting Started</h1>
 <div class="sect1">
-<h2 id="_introduction">Introduction</h2>
+<h2 id="_getting_started">2. Getting Started</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_introduction_2">2.1. Introduction</h3>
 <div class="paragraph">
 <p>Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_spring_boot_project">Adding Spring Content REST to a Spring Boot project</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_adding_spring_content_rest_to_a_spring_boot_project">2.2. Adding Spring Content REST to a Spring Boot project</h3>
 <div class="paragraph">
 <p>The simplest way to get to started is if you are building a Spring Boot application. That’s because Spring Content REST has both a starter as well as auto-configuration.</p>
 </div>
@@ -521,10 +658,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>When using Spring Boot, Spring Content REST gets configured automatically.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_gradle_project">Adding Spring Content REST to a Gradle Project</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_adding_spring_content_rest_to_a_gradle_project">2.3. Adding Spring Content REST to a Gradle Project</h3>
 <div class="paragraph">
 <p>To add Spring Content REST to a Gradle-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
 </div>
@@ -542,10 +677,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_maven_project">Adding Spring Content REST to a Maven Project</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_adding_spring_content_rest_to_a_maven_project">2.4. Adding Spring Content REST to a Maven Project</h3>
 <div class="paragraph">
 <p>To add Spring Content REST to a Maven-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
 </div>
@@ -567,10 +700,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_configuring_spring_content_rest">Configuring Spring Content REST</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_configuring_spring_content_rest">2.5. Configuring Spring Content REST</h3>
 <div class="paragraph">
 <p>To install Spring Content REST alongside your existing Spring MVC application, you need to include the appropriate MVC configuration.  Spring Content REST configuration is defined in two classes  called; <code>RestConfiguration</code> and <code>HypermediaConfiguration</code> and they can just be imported into your applications configuration.</p>
 </div>
@@ -591,10 +722,12 @@ This step is unnecessary if you are using Spring Boot’s auto-configuration. Sp
 </div>
 </div>
 </div>
-<h1 id="_store_resources" class="sect0">Store Resources</h1>
+</div>
 <div class="sect1">
-<h2 id="_fundamentals">Fundamentals</h2>
+<h2 id="_store_resources">3. Store Resources</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_fundamentals">3.1. Fundamentals</h3>
 <div class="paragraph">
 <p>The core functionality of Spring Content REST, enabled through <code>@Import(RestConfiguration.class)</code>, is to export resources
 for Spring Content stores.  This is often closely related to Spring Data repositories.</p>
@@ -602,8 +735,8 @@ for Spring Content stores.  This is often closely related to Spring Data reposit
 <div class="paragraph">
 <p>The following describes typical store scenarios and how they are exported with Spring Content REST.</p>
 </div>
-<div class="sect2">
-<h3 id="_resources">Resources</h3>
+<div class="sect3">
+<h4 id="_resources">3.1.1. Resources</h4>
 <div class="paragraph">
 <p>Spring Content Stores manage Spring Resources that, when exported using Spring Content REST, are accessible by REST
 endpoint.</p>
@@ -628,8 +761,8 @@ For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4
 the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_entity_resources">Entity Resources</h3>
+<div class="sect3">
+<h4 id="_entity_resources">3.1.2. Entity Resources</h4>
 <div class="paragraph">
 <p>Entity Resources are Spring Resource associated with Spring Data Entities.</p>
 </div>
@@ -689,8 +822,8 @@ HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_property_resources">Property Resources</h3>
+<div class="sect3">
+<h4 id="_property_resources">3.1.3. Property Resources</h4>
 <div class="paragraph">
 <p>Property Resources are associated with the properties of Spring Data Entities, that themselves maybe Spring Data Entities.
 This allows many Resources to be associated with a single Entity.</p>
@@ -780,8 +913,8 @@ as these properties are both single values these Resources are also available un
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_property_collection_resources">Property Collection Resources</h3>
+<div class="sect3">
+<h4 id="_property_collection_resources">3.1.4. Property Collection Resources</h4>
 <div class="paragraph">
 <p>Property Resources can also target Collections.</p>
 </div>
@@ -830,8 +963,8 @@ However, in this case, POSTing to <code>/dvds/{id}/chapters</code> always <stron
 This Resource supports both POST and PUT HTTP methods.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_search">Search</h3>
+<div class="sect3">
+<h4 id="_search">3.1.5. Search</h4>
 <div class="paragraph">
 <p>Exported content stores may be marked as <code>Searchable</code>.  Assuming the following content store interface:</p>
 </div>
@@ -858,8 +991,8 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_default_status_codes">Default status codes</h3>
+<div class="sect3">
+<h4 id="_default_status_codes">3.1.6. Default status codes</h4>
 <div class="paragraph">
 <p>For the content resources exposed, we use a set of default status codes:</p>
 </div>
@@ -880,8 +1013,8 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_resource_discoverability">Resource Discoverability</h3>
+<div class="sect3">
+<h4 id="_resource_discoverability">3.1.7. Resource Discoverability</h4>
 <div class="paragraph">
 <p>A core principle of HATEOAS is that Resources should be discoverable through the publication of links that point to the
 available resources.  There are a few competing de-facto standards specifying how to represent links in JSON.  By default,
@@ -898,51 +1031,49 @@ Resources links for both into the HAL responses created by Spring Data REST.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_the_store_resource">The Store Resource</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_store_resource">3.2. The Store Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exports Store Resources to <code>/{store}/**</code>.  The resource path and linkrel can be customized using the
 <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
-<div class="sect2">
-<h3 id="_supported_http_methods">Supported HTTP Methods</h3>
+<div class="sect3">
+<h4 id="_supported_http_methods">3.2.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Store Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
 Allowed</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="_get">GET</h4>
+<div class="sect4">
+<h5 id="_get">GET</h5>
 <div class="paragraph">
 <p>Returns the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_putpost">PUT/POST</h4>
+<div class="sect4">
+<h5 id="_putpost">PUT/POST</h5>
 <div class="paragraph">
 <p>Sets the Resources&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_2">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_2">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_delete">DELETE</h4>
+<div class="sect4">
+<h5 id="_delete">DELETE</h5>
 <div class="paragraph">
 <p>Removes the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_3">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_3">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
@@ -950,51 +1081,49 @@ Allowed</code>.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_the_entity_resource">The Entity Resource</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_entity_resource">3.3. The Entity Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exports Entity Resources to <code>/{store}/{id}</code>.  The resource path can be customized using the
 <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
-<div class="sect2">
-<h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
+<div class="sect3">
+<h4 id="_supported_http_methods_2">3.3.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Entity Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
 Allowed</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="_get_2">GET</h4>
+<div class="sect4">
+<h5 id="_get_2">GET</h5>
 <div class="paragraph">
 <p>Returns the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_4">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_4">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_putpost_2">PUT/POST</h4>
+<div class="sect4">
+<h5 id="_putpost_2">PUT/POST</h5>
 <div class="paragraph">
 <p>Sets the Resources&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_5">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_5">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_delete_2">DELETE</h4>
+<div class="sect4">
+<h5 id="_delete_2">DELETE</h5>
 <div class="paragraph">
 <p>Removes the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_6">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_6">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
@@ -1002,74 +1131,676 @@ Allowed</code>.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_the_property_resource">The Property Resource</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_property_resource">3.4. The Property Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
 The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
-<div class="sect2">
-<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
+<div class="sect3">
+<h4 id="_supported_http_methods_3">3.4.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Property Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
 Allowed</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="_get_3">GET</h4>
+<div class="sect4">
+<h5 id="_get_3">GET</h5>
 <div class="paragraph">
 <p>Returns the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_7">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_7">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_putpost_3">PUT/POST</h4>
+<div class="sect4">
+<h5 id="_putpost_3">PUT/POST</h5>
 <div class="paragraph">
 <p>Sets the Resources&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_8">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_8">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_delete_3">DELETE</h4>
+<div class="sect4">
+<h5 id="_delete_3">DELETE</h5>
 <div class="paragraph">
 <p>Removes the Resource&#8217;s content</p>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_the_collection_property_resource">The Collection Property Resource</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_collection_property_resource">3.5. The Collection Property Resource</h3>
 <div class="paragraph">
 <p>Spring Content REST exports Property Collection Resources to <code>/{store}/{id}/{property}</code>.  The resource path can be
 customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
-<div class="sect2">
-<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
+<div class="sect3">
+<h4 id="_supported_http_methods_4">3.5.1. Supported HTTP Methods</h4>
 <div class="paragraph">
 <p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="_putpost_4">PUT/POST</h4>
+<div class="sect4">
+<h5 id="_putpost_4">PUT/POST</h5>
 <div class="paragraph">
 <p>Appends new content to the collection of Resources</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_9">Supported media types</h5>
+<div class="sect5">
+<h6 id="_supported_media_types_9">Supported media types</h6>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="search">4.1. Search</h3>
+<div class="sect3">
+<h4 id="_the_searchcontent_resource">4.1.1. The SearchContent Resource</h4>
+<div class="paragraph">
+<p>When a Store extending <code>Searchable</code> is exported, a <code>searchContent</code> endpoint will be
+available at the <code>/{store}/searchContent</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_5">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>As the SearchContent resource is read-only it supports <code>GET</code> only.  All other HTTP methods will
+cause a <code>405 Method Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_supported_media_types_10">Supported media types</h6>
+<div class="ulist">
+<ul>
+<li>
+<p><code>application/hal+json</code></p>
+</li>
+<li>
+<p><code>application/json</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_format_of_the_response_payload">Format of the response payload</h5>
+<div class="paragraph">
+<p>This resource can return entities, or a custom search result type, depending on how the Searchable interface is
+specified and the type of Store it decorates.</p>
+</div>
+<div class="paragraph">
+<p>When Searchable decorates an AssociativeStore this resource will lookup and return representations of the content&#8217;s
+associated entities.  These lookups can be made more efficient by specifying a <code>@FulltextEntityLookupQuery</code> query
+method.  This is a custom <code>findAll</code> method that accepts a single <code>Collection</code> parameter annotated with the name
+<code>contentIds</code>, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>    public interface MyRepository extends CrudRepository&lt;MyEntity, Long&gt; {
+
+        @FulltextEntityLookupQuery
+        List&lt;MyEntity&gt; findAllByContentIdIn(@Param("contentIds") List&lt;UUID&gt; contentIds);
+    }
+
+    public interface MyStore extends AssociativeStore&lt;MyEntity, UUID&gt;, Searchable&lt;UUID&gt; {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When Searchable is typed to your own search return type the resource will return a representation of this type instead.
+See <code>Search Return Types</code> in the respective documentation for your chosen Spring Content fulltext module; solr or
+elasticsearch, for more information on specifying a custom search return types.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_locking_and_versioning">4.2. Locking and Versioning</h3>
+<div class="sect3">
+<h4 id="_the_lock_resource">4.2.1. The Lock Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
+will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/lock
+  curl -X DELETE http://localhost:8080/docs/1234/lock</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_6">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
+<code>405 Method Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_put">PUT</h6>
+<div class="paragraph">
+<p>Acquires a pessimistic lock on the resource.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_delete_4">DELETE</h6>
+<div class="paragraph">
+<p>If held, releases the pessimistic lock on the resource.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_11">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_version_resource">4.2.2. The Version Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
+endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X PUT http://localhost:8080/docs/1234/version -d '{"number": "1.1", "label": "a minor change"}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_7">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_put_2">PUT</h6>
+<div class="paragraph">
+<p>Creates a new version of the entity.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_12">Supported media types</h7>
+<div class="paragraph">
+<p>application/json</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
+endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/findAllVersionsLatest</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_8">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_get_4">GET</h6>
+<div class="paragraph">
+<p>Returns the latest version of all entities.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_13">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_findallversions_resource">4.2.4. The FindAllVersions Resource</h4>
+<div class="paragraph">
+<p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
+endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -X GET http://localhost:8080/docs/1234/findAllVersions</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_supported_http_methods_9">Supported HTTP Methods</h5>
+<div class="paragraph">
+<p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
+Not Allowed</code>.</p>
+</div>
+<div class="sect5">
+<h6 id="_get_5">GET</h6>
+<div class="paragraph">
+<p>Returns all versions of the given entity.</p>
+</div>
+<div class="sect6">
+<h7 id="_supported_media_types_14">Supported media types</h7>
+<div class="paragraph">
+<p>Not applicable.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_customizing_store_resources">5. Customizing Store Resources</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_configuring_cors">5.1. Configuring CORS</h3>
+<div class="paragraph">
+<p>For security reasons, browsers prohibit AJAX calls to resources residing outside the current origin.  When working with
+client-side HTTP requests issued by a browser you may want to enable specific HTTP resources to be accessible.</p>
+</div>
+<div class="paragraph">
+<p>Spring Data Content supports Cross-Origin Resource Sharing (CORS) through Spring’s CORS support.</p>
+</div>
+<div class="sect3">
+<h4 id="_store_interface_cors_configuration">5.1.1. Store Interface CORS Configuration</h4>
+<div class="paragraph">
+<p>You can add a @CrossOrigin annotation to your store interfaces to enable CORS for the whole store.  By default
+@CrossOrigin allows all origins and HTTP methods:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@CrossOrigin
+interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>In the above example CORS support is enabled for the whole DvdStore.  @CrossOrigin also provides attributes to perform
+more granular configuration.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@CrossOrigin(origins = "http://mydomain.com",
+  methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE },
+  maxAge = 3600)
+interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This example enables CORS support for the whole DvdStore providing one origin, restricted to GET, POST and DELETE
+methods with a max age of 3600 seconds.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_global_cors_configuration">5.1.2. Global CORS Configuration</h4>
+<div class="paragraph">
+<p>In addition to fine-grained, annotation-based configuration, you probably want to define some global CORS configuration
+as well. This is similar to Spring Web MVC’S CORS configuration but can be declared within Spring Content REST and
+combined with fine-grained @CrossOrigin configuration. By default, all origins and GET, HEAD, and POST methods are
+allowed.</p>
+</div>
+<div class="paragraph">
+<p>The following example sets up the same CORS configuration but as a global configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class SpringContentRestCustomization {
+
+	@Bean
+	private ContentRestConfigurer contentRestConfigurer() {
+
+		return new ContentRestConfigurer() {
+			@Override
+			public void configure(RestConfiguration config) {
+				config.getCorsRegistry().addMapping("/dvds/**")
+						.allowedMethods("GET", "POST", "DELETE")
+						.allowedOrigins("http://mydomain.com")
+						.maxAge(3600);
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_changing_the_base_uri">5.2. Changing the Base URI</h3>
+<div class="paragraph">
+<p>By default, Spring Content REST serves up REST resources at the root URI, '/'.</p>
+</div>
+<div class="paragraph">
+<p>With Spring Boot 1.2 and later versions, you can change the base URI by setting a single property in application.properties, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.baseUri=/api</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Or if you are not using Spring Boot, you can do the following:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.setBaseUri(URI.create("/contentApi"));
+      }
+    };
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_store_links">5.3. Store Links</h3>
+<div class="paragraph">
+<p>For each Spring Resource associated with an Entity, Spring Content REST will generate a fully-qualified link and inject it into the Entity&#8217;s
+Spring Data REST HAL response.</p>
+</div>
+<div class="paragraph">
+<p>Given the following domain model, Repository and Store:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @ContentId
+    private UUID contentId;
+
+    @ContentLength
+    private Long contentLength;
+
+    @MimeType
+    private String mimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Content REST will inject the following link:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "content" : {
+      "href" : "http://localhost:8080/dvds/1/content"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Where the linkrel is named after the <code>@ContentId</code> property and the link URI is the fully-qualified URI of that content property.</p>
+</div>
+<div class="sect3">
+<h4 id="_customizing_the_link_relation">5.3.1. Customizing the link relation</h4>
+<div class="paragraph">
+<p>Sometimes it can be useful to configure the linkrel for a content property.  This is done by specifying the <code>linkRel</code> attribute on
+the StoreRestResource, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @StoreRestResource(linkRel="custom-content")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This will result in the following linkrel instead:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "custom-content" : {
+      "href" : "http://localhost:8080/dvds/1/content"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_store_resolver">5.4. Store Resolver</h3>
+<div class="paragraph">
+<p>Every REST request must map to one store and one store only.  However, it is entirely possible to define an application
+with multiple stores that make this impossible.</p>
+</div>
+<div class="paragraph">
+<p>For these situations you need to provide a <code>StoreResolver</code> that, based on runtime context, can resolve these conflicts.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Configuring a StoreResolver</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface S3ExampleStore extends S3ContentStore&lt;Example, UUID&gt;{}
+public interface FSExampleStore extends FilesystemContentStore&lt;Example, UUID&gt;{}     <b class="conum">(1)</b>
+
+@Configuration
+@EnableS3Stores
+@EnableFilesystemStores
+public static class ApplicationConfig {
+
+    @Bean
+    public ContentRestConfigurer contentRestConfigurer() {
+        return new ContentRestConfigurer() {
+            @Override
+            public void configure(RestConfiguration config) {
+                config.addStoreResolver("examples", new StoreResolver() {           <b class="conum">(2)</b>
+                    @Override
+                    public StoreInfo resolve(StoreInfo... stores) {
+                        /* your resolver implementation */
+                    }
+                });
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Both stores are typed to the domain type <code>Example</code> and will therefore be exported to the URI <code>/examples</code></p>
+</li>
+<li>
+<p>Store resolver resolves requests to <code>/examples/&#8230;&#8203;</code> to either S3ExamplesStore or FSExampleStore, depending
+on request context.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_putpost_content_handling">5.5. Put/Post Content Handling</h3>
+<div class="paragraph">
+<p>A <code>ContentStore</code> provides two methods for setting content.  Spring Content REST prefers to use
+<code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code> so that content is streamed through
+the application.  This is usually the best approach.</p>
+</div>
+<div class="paragraph">
+<p>However, under some circumstances this can be inconvenient when event handlers and store customizations
+must handle the content as it moves through the application.  This also becomes inefficient when the
+content is large and the content needs to be processed several times.</p>
+</div>
+<div class="paragraph">
+<p>For these situations, it is possible to configure Spring Content REST to call <code>setContent(S entity, Resource)</code> as
+follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Configuring PUT/POST Handling</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ExampleStore extends ContentStore&lt;Example, UUID&gt;{}
+
+@Configuration
+public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config.forDomainType(Example.class).putAndPostPreferResource();
+           }
+       };
+   }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+if preferred, it is also possible to configure your <code>ContentStore</code> to hide the <code>setContent(S entity, InputStream)</code>
+method by annotating this method with the <code>RestResource(export=false)</code> annotation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When configured this way, Spring Content REST will create a file backed Resource allowing event handlers and store
+customizations to use <code>File</code>, <code>RandomAccessFile</code> and <code>Channel</code> Java io/nio APIs to process the content stream.</p>
+</div>
+<div class="paragraph">
+<p>If you would like to defer until runtime so that a decision can be based on the request, you can instead provide
+a <code>Resource&lt;Method, HttpHeaders&gt;</code>, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Deferring PUT/POST Handling until runtime</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ExampleStore extends ContentStore&lt;Example, UUID&gt;{}
+
+@Configuration
+public static class ApplicationConfig {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+
+               config.forDomainType(TestEntity.class).setSetContentResolver(new Resolver&lt;Method, HttpHeaders&gt;(){
+
+                @Override
+                public boolean resolve(Method method, HttpHeaders context) {
+
+                    return // your logic here
+               }});
+           }
+       };
+   }
+}</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -1079,6 +1810,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 1.2.1<br>
 Last updated 2021-02-16 04:58:46 UTC
 </div>
 </div>

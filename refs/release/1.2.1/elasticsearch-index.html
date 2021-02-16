@@ -5,7 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>Introduction</title>
+<meta name="author" content="Paul Warren">
+<title>Spring Content Elasticsearch - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,141 +439,92 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Introduction</h1>
+<h1>Spring Content Elasticsearch - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Paul Warren</span><br>
+<span id="revnumber">version 1.2.1,</span>
+<span id="revdate">2021-02-16</span>
+</div>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>REST web services have become the number one means for application integration on the web. In its core, REST defines that a system consists of resources that clients interact with. These resources are often also implemented in a hypermedia driven way.  Spring MVC offers a solid foundation to build theses kinds of services.  But implementing even the simplest REST web services for a multi-domain object system can be quite tedious and result in a lot of boilerplate code.</p>
+<p>&#169; 2019-present The original authors.</p>
 </div>
-<div class="paragraph">
-<p>Spring Content REST builds on top of Spring Content stores and automatically exports those as REST resources.  It leverages REST to expose end-points for each content resource and it also optionally integrates with Spring Data REST&#8217;s hypermedia API to allow clients to find content resources that have been associated with Spring Data entities.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
 </div>
-<div class="paragraph">
-<p>Spring Content REST officially supports:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://github.com/paulcwarren/spring-content/spring-content-fs">Spring Content Filesystem</a></p>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#preface">Preface</a>
+<ul class="sectlevel1">
+<li><a href="#project">Project metadata</a></li>
+<li><a href="#content-repositories">1. Working with Spring Stores</a>
+<ul class="sectlevel2">
+<li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
+<li><a href="#content-repositories.creation">1.2. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
+</ul>
 </li>
-<li>
-<p><a href="https://github.com/paulcwarren/spring-content/spring-content-s3">Spring Content S3</a></p>
+<li><a href="#fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</a>
+<ul class="sectlevel2">
+<li><a href="#_overview">2.1. Overview</a></li>
+<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
+<li><a href="#_spring_boot_configuration">2.3. Spring Boot Configuration</a></li>
+<li><a href="#_making_stores_searchable">2.4. Making Stores Searchable</a></li>
+<li><a href="#_custom_indexing">2.5. Custom Indexing</a></li>
+<li><a href="#_text_extraction">2.6. Text Extraction</a></li>
+<li><a href="#_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</a></li>
+<li><a href="#_search_return_types">2.8. Search Return Types</a></li>
+</ul>
 </li>
-<li>
-<p><a href="https://github.com/paulcwarren/spring-content/spring-content-mongo">Spring Content Mongo</a></p>
-</li>
-<li>
-<p><a href="https://github.com/paulcwarren/spring-content/spring-content-jpa">Spring Content JPA</a></p>
+</ul>
 </li>
 </ul>
 </div>
 </div>
 </div>
-<h1 id="_getting_started" class="sect0">Getting Started</h1>
+<h1 id="preface" class="sect0">Preface</h1>
 <div class="sect1">
-<h2 id="_introduction">Introduction</h2>
+<h2 id="project">Project metadata</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_spring_boot_project">Adding Spring Content REST to a Spring Boot project</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The simplest way to get to started is if you are building a Spring Boot application. That’s because Spring Content REST has both a starter as well as auto-configuration.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 1. Spring Boot configuration with Gradle</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
-    ...
-    compile("com.github.paulcwarren:spring-content-rest-boot-starter:${version}")
-	...
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. Spring Boot configuration with Maven</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
-	...
-    &lt;dependency&gt;
-      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-      &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-      &lt;version&gt;${version}&lt;/version&gt;
-    &lt;/dependency&gt;
-	...
-  &lt;/dependencies&gt;</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>When using Spring Boot, Spring Content REST gets configured automatically.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="http://github.com/paulcwarren/spring-content/" class="bare">http://github.com/paulcwarren/spring-content/</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="http://github.com/paulcwarren/spring-content/issues" class="bare">http://github.com/paulcwarren/spring-content/issues</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo1.maven.org/maven2/" class="bare">https://repo1.maven.org/maven2/</a></p>
+</li>
+<li>
+<p>Snapshots repository - <a href="https://oss.sonatype.org/content/repositories/snapshots" class="bare">https://oss.sonatype.org/content/repositories/snapshots</a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_gradle_project">Adding Spring Content REST to a Gradle Project</h2>
+<h2 id="content-repositories">1. Working with Spring Stores</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To add Spring Content REST to a Gradle-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">dependencies {
-    ...
-    compile("com.github.paulcwarren:spring-content-rest:${version}")
-	...
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_adding_spring_content_rest_to_a_maven_project">Adding Spring Content REST to a Maven Project</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>To add Spring Content REST to a Maven-based project, add the spring-content-rest artifact to your compile-time dependencies:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java"> &lt;dependencies&gt;
-	...
-    &lt;dependency&gt;
-      &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-      &lt;artifactId&gt;spring-content-rest&lt;/artifactId&gt;
-      &lt;version&gt;${version}&lt;/version&gt;
-    &lt;/dependency&gt;
-	...
-  &lt;/dependencies&gt;</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_configuring_spring_content_rest">Configuring Spring Content REST</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>To install Spring Content REST alongside your existing Spring MVC application, you need to include the appropriate MVC configuration.  Spring Content REST configuration is defined in two classes  called; <code>RestConfiguration</code> and <code>HypermediaConfiguration</code> and they can just be imported into your applications configuration.</p>
+<p>The goal of the Spring Content is to make it easy to create applications that manage content such as documents, images
+and video by significantly reducing the amount of boilerplate code that the Developer must create for themselves.  Instead,
+the Developer provides interfaces only that declare the intent for the content-related functionality.  Based on these, and on
+class-path dependencies, Spring Content is then able to inject storage-specific implementations.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -581,122 +533,561 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="title">Important</div>
 </td>
 <td class="content">
-This step is unnecessary if you are using Spring Boot’s auto-configuration. Spring Boot will automatically enable Spring Content REST when you include <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> and your app is flagged as a <code>@SpringBootApplication</code>.
+<div class="paragraph">
+<p>This chapter explains the core concepts and interfaces for Spring Content. The examples in this chapter use Java configuration and code samples for the Spring Content S3 module.  Adapt the Java configuration and the types to be extended to the equivalents for the particular Spring Content module that you are using.</p>
+</div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Make sure you also configure Spring Content stores for the store you wish to use.  For details on that, please consult the reference documentation for the corresponding Spring Content module.</p>
-</div>
-</div>
-</div>
-<h1 id="_store_resources" class="sect0">Store Resources</h1>
-<div class="sect1">
-<h2 id="_fundamentals">Fundamentals</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The core functionality of Spring Content REST, enabled through <code>@Import(RestConfiguration.class)</code>, is to export resources
-for Spring Content stores.  This is often closely related to Spring Data repositories.</p>
-</div>
-<div class="paragraph">
-<p>The following describes typical store scenarios and how they are exported with Spring Content REST.</p>
-</div>
 <div class="sect2">
-<h3 id="_resources">Resources</h3>
+<h3 id="content-repositories.core-concepts">1.1. Core concepts</h3>
 <div class="paragraph">
-<p>Spring Content Stores manage Spring Resources that, when exported using Spring Content REST, are accessible by REST
-endpoint.</p>
+<p>The central interfaces in the Spring Content are <code>Store</code>, <code>AssociativeStore</code> and <code>ContentStore</code>.  These interfaces
+provide access to content streams through the standard Spring Resource API either directly or through association with
+Spring Data entities.</p>
 </div>
-<div class="paragraph">
-<p>Consider the following Store interface:</p>
-</div>
-<div class="exampleblock">
+<div id="content-repositories.repository" class="exampleblock">
+<div class="title">Example 1. ContentStore interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">  public interface DvdStore extends Store&lt;String&gt; {}</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ContentStore&lt;E, CID extends Serializable&gt; {
+
+	void setContent(E entity, InputStream content); 	<b class="conum">(1)</b>
+
+	InputStream getContent(E entity);			<b class="conum">(2)</b>
+
+	void unsetContent(E entity);				<b class="conum">(3)</b>
+}</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Stores content and associates it with <code>entity</code></p>
+</li>
+<li>
+<p>Returns the content associated with <code>entity</code></p>
+</li>
+<li>
+<p>Deletes content and unassociates it from <code>entity</code></p>
+</li>
+</ol>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>In this example, the Store&#8217;s Resources are exported to the URI <code>/dvds</code>.  The path is derived from the
-uncapitalized, pluralized, simple class name of the interface.  When interacting with this endpoint any additional path
-is deemed to be the Resource&#8217;s location and will be used to fetch the Resource using the Store&#8217;s <code>getResource</code> method.
-For example, a GET request to <code>/dvds/comedy/monty_pythons_flying_circus.mp4</code> will fetch from the <code>DvdStore</code> (<code>/dvds</code>),
-the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_entity_resources">Entity Resources</h3>
-<div class="paragraph">
-<p>Entity Resources are Spring Resource associated with Spring Data Entities.</p>
-</div>
-<div class="paragraph">
-<p>Assume the following <code>Entity</code> class, <code>Repository</code> and <code>Store</code> interfaces:</p>
+<p>For example, given an Entity <code>User</code>, a <code>UserRepository</code> and a <code>ProfilePictureStore</code> it is possible to associate and
+store a profile picture for each user.</p>
 </div>
 <div class="exampleblock">
+<div class="title">Example 2. ContentStore interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
-  public class Dvd {
-  	@Id
-  	private Long id;
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
 
-    @ContentId
-    private UUID contentId;
+	private String username;
 
-  	@ContentLength
-  	private Long contentLength;
+	@ContentId
+	private String contentId;
 
-  	@MimeType
-  	private String mimeType;
+	@ContentLength
+	private Long contentLength
+}
 
-  	// getters and setters
-  }
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
 
-  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+public interface ProfilePictureStore extends ContentStore&lt;User, String&gt; {
+}
 
-  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+		return (args) -&gt; {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store profile picture
+			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}</code></pre>
 </div>
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="content-repositories.multimodule">1.1.1. Using Stores with Multiple Spring Content Modules</h4>
 <div class="paragraph">
-<p>In this example a single Spring Resource (the DVD&#8217;s video stream) is associated with a Dvd Entity by annotating additional
-fields on the Entity using the <code>@ContentId</code>, <code>@ContentLength</code> and <code>@MimeType</code> annotations.   In this example Spring Data
-REST exports a collection  resource to <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class
-name of the domain class.  Item resources are also exported to the URI <code>/dvds/{id}</code>.  The HTTP methods used to request
-this endpoint map onto the methods of <code>CrudRepository</code>.</p>
+<p>Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
+the one Spring Content module.  Sometimes, applications require using more than one Spring Content
+module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
+module-specific ContentStore interfaces.</p>
 </div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.events">1.1.2. Events</h4>
 <div class="paragraph">
-<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}</code>.  In this case the
-HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
+<p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>GET &#8594; getContent</p>
+<p>BeforeGetResourceEvent</p>
 </li>
 <li>
-<p>POST/PUT &#8594; setContent</p>
+<p>AfterGetResourceEvent</p>
 </li>
 <li>
-<p>DELETE &#8594; unsetContent</p>
+<p>BeforeAssociateEvent</p>
+</li>
+<li>
+<p>AfterAssociateEvent</p>
+</li>
+<li>
+<p>BeforeUnassociateEvent</p>
+</li>
+<li>
+<p>AfterUnassociateEvent</p>
+</li>
+<li>
+<p>BeforeSetContent</p>
+</li>
+<li>
+<p>AfterSetContent</p>
+</li>
+<li>
+<p>BeforeGetContent</p>
+</li>
+<li>
+<p>AfterGetContent</p>
+</li>
+<li>
+<p>BeforeUnsetContent</p>
+</li>
+<li>
+<p>AfterUnsetContent</p>
 </li>
 </ul>
 </div>
+<div class="sect4">
+<h5 id="_writing_an_applicationlistener">Writing an ApplicationListener</h5>
+<div class="paragraph">
+<p>If you wish to extend Spring Content&#8217;s functionality you can subclass the abstract class <code>AbstractStoreEventListener</code> and
+override the methods that you are interested in.  When these events occur your handlers will be called.</p>
+</div>
+<div class="paragraph">
+<p>There are two variants of each event handler.  The first takes the entity with with the content is associated and is the
+source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
+methods that return results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+
+	@Override
+	public void onAfterSetContent(Object entity) {
+		...logic to inspect and handle the entity and it's content after it is stored
+	}
+
+	@Override
+	public void onBeforeGetContent(BeforeGetContentEvent event) {
+		...logic to inspect and handle the entity and it's content before it is fetched
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The down-side of this approach is that it does not filter events based on Entity.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_writing_an_annotated_storeeventhandler">Writing an Annotated StoreEventHandler</h5>
+<div class="paragraph">
+<p>Another approach is to use an annotated handler, which does filter events based on Entity.</p>
+</div>
+<div class="paragraph">
+<p>To declare a handler, create a POJO and annotate it as <code>@StoreEventHandler</code>. This tells
+Spring Content that this class needs to be inspected for handler methods.  It
+iterates over the class&#8217;s methods and looks for annotations that correspond to the
+event.  There are twelve handler annotations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HandleBeforeGetResource</p>
+</li>
+<li>
+<p>HandleAfterGetResource</p>
+</li>
+<li>
+<p>HandleBeforeAssociate</p>
+</li>
+<li>
+<p>HandleAfterAssociate</p>
+</li>
+<li>
+<p>HandleBeforeUnassociate</p>
+</li>
+<li>
+<p>HandleAfterUnassociate</p>
+</li>
+<li>
+<p>HandleBeforeSetContent</p>
+</li>
+<li>
+<p>HandleAfterSetContent</p>
+</li>
+<li>
+<p>HandleBeforeGetContent</p>
+</li>
+<li>
+<p>HandleAfterGetContent</p>
+</li>
+<li>
+<p>HandleBeforeUnsetContent</p>
+</li>
+<li>
+<p>HandleAfterUnsetContent</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. Entity-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterSetContent(SopDocument doc) {
+		...type-safe handling logic for SopDocument's and their content after it is stored
+	}
+
+	@HandleBeforeGetContent
+	public void onBeforeGetContent(Product product) {
+		...type-safe handling logic for Product's and their content before it is fetched
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>These handlers will be called only when the event originates from a matching entity.</p>
+</div>
+<div class="paragraph">
+<p>As with the ApplicationListener event handler in some cases it is useful to handle the event.  For example, when Store
+methods returns results to the caller.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. Event-based annotated event handler</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@StoreEventHandler
+public class ExampleAnnotatedEventListener {
+
+	@HandleAfterSetContent
+	public void handleAfterGetResource(AfterGetResourceEvent event) {
+		SopDocument doc = event.getSource();
+		Resource resourceToBeReturned = event.getResult();
+		...code that manipulates the resource being returned...
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To register your event handler, either mark the class with one of Spring’s @Component
+stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. Or
+declare an instance of your annotated bean in your ApplicationContext.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 6. Handler registration</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class ContentStoreConfiguration {
+
+	@Bean
+	ExampeAnnotatedEventHandler exampleEventHandler() {
+		return new ExampeAnnotatedEventHandler();
+	}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.search">1.1.3. Searchable Stores</h4>
+<div class="paragraph">
+<p>Applications that handle documents and other media usually have search capabilities allowing relevant content to be
+found by looking inside of it for keywords or phrases, so called full-text search.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. Searchable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Searchable&lt;CID&gt; {
+
+    Iterable&lt;T&gt; search(String queryString);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Any Store interface can be made to extend <code>Searchable&lt;CID&gt;</code> in order to extend its capabilities to include the
+<code>search(String queryString)</code> method.  For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentContentStore extends ContentStore&lt;Document, UUID&gt;, Searchable&lt;UUID&gt; {
+}
+
+...
+
+@Autowired
+private DocumentContentStore store;
+
+Iterable&lt;UUID&gt; = store.search("to be or not to be");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For <code>search</code> to return actual results full-text indexing must be enabled.  See <a href="#fulltext-search">Fulltext Indexing and Searching</a>
+for more information on how to do this.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.renditions">1.1.4. Renderable Stores</h4>
+<div class="paragraph">
+<p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
+from one format to another.</p>
+</div>
+<div class="paragraph">
+<p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 8. Renderable interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface Renderable&lt;E&gt; {
+
+	InputStream getRendition(E entity, String mimeType);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returns a <code>mimeType</code> rendition of the content associated with <code>entity</code>.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Renditions must be enabled and renderers provided.  See <a href="#renditions">Renditions</a> for more
+information on how to do this.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_property_resources">Property Resources</h3>
+<h3 id="content-repositories.creation">1.2. Creating Content Store Instances</h3>
 <div class="paragraph">
-<p>Property Resources are associated with the properties of Spring Data Entities, that themselves maybe Spring Data Entities.
-This allows many Resources to be associated with a single Entity.</p>
+<p>To use these core concepts:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Define a Spring Data entity and give it&#8217;s instances the ability to be associated with content by adding <code>@ContentId</code> and <code>@ContentLength</code> annotations</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class SopDocument {
+	private @Id @GeneratedValue Long id;
+	private String title;
+	private String[] authors, keywords;
+
+	// Spring Content managed attribute
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define an interface extending Spring Data&#8217;s <code>CrudRepository</code> and type it to the domain and ID classes.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentRepository extends CrudRepository&lt;SopDocument, Long&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Define another interface extending <code>ContentStore</code> and type it to the domain and <code>@ContentId</code> class.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Searchable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Searchable&lt;UUID&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Optionally, make it extend <code>Renderable</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface SopDocumentContentStore extends ContentStore&lt;SopDocument, UUID&gt;, Renderable&lt;SopDocument&gt; {
+}</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Set up Spring to create proxy instances for these two interfaces using JavaConfig:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableJpaRepositories
+@EnableS3Stores
+class Config {}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The JPA and S3 namespaces are used in this example.  If you are using the repository and content store abstractions for other databases and stores, you need to change this to the appropriate namespace declaration for your store module.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Inject the repositories and use them</p>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Component
+public class SomeClass {
+	@Autowired private SopDocumentRepository repo;
+  	@Autowired private SopDocumentContentStore contentStore;
+
+	public void doSomething() {
+
+		SopDocument doc = new SopDocument();
+		doc.setTitle("example");
+		contentStore.setContent(doc, new ByteArrayInputStream("some interesting content".getBytes())); # <b class="conum">(1)</b>
+		doc.save();
+		...
+
+		InputStream content = contentStore.getContent(sopDocument);
+		...
+
+		List&lt;SopDocument&gt; docs = doc.findAllByContentId(contentStore.findKeyword("interesting"));
+		...
+
+	}
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Spring Content will update the <code>@ContentId</code> and <code>@ContentLength</code> fields</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_patterns_of_content_association">1.3. Patterns of Content Association</h3>
+<div class="paragraph">
+<p>Content can be associated with a Spring Data Entity in several ways.</p>
+</div>
+<div class="sect3">
+<h4 id="_entity_association">1.3.1. Entity Association</h4>
+<div class="paragraph">
+<p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
 </div>
 <div class="paragraph">
-<p>Consider the following <code>Entity</code> model, with <code>Repository</code> and <code>Store</code> interfaces:</p>
+<p>The following example shows a Resource associated with an Entity <code>Dvd</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Dvd {
+	private @Id @GeneratedValue Long id;
+	private String title;
+
+	// Spring Content managed attributes
+	private @ContentId UUID contentId;
+	private @ContentLength Long contentLen;
+
+	...
+}
+
+public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_property_association">1.3.2. Property Association</h4>
+<div class="paragraph">
+<p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows two Resources associated with a <code>Dvd</code> entity.  The first Resource is the Dvd&#8217;s cover Image and the second is the Dvd&#8217;s Stream.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -754,39 +1145,15 @@ public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code><
 </div>
 </div>
 <div class="paragraph">
-<p>In this example separate Resources are associated with the <code>image</code> and <code>stream</code> properties of the <code>Dvd</code> Entity.</p>
+<p>Note how the Content attributes are placed on each property object of on the Entity itself.</p>
 </div>
 <div class="paragraph">
-<p>When using JPA and its relational characteristics these associations are typically (but not always) also Entity
-associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing
-hierarchical data they are true property associations.</p>
+<p>When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.</p>
 </div>
+<div class="sect4">
+<h5 id="_property_collection_associations">Property Collection Associations</h5>
 <div class="paragraph">
-<p>As before, Spring Data REST will export an item resource under the URI <code>/dvds/{id}</code>.  However, this time Spring Content
-REST will export Property Resources to the URI <code>/dvds/{id}/image/{contentId}</code> and <code>/dvds/{id}/stream/{contentId}</code>
-managed by the respective Store.  A property can be set by POSTing to <code>/dvds/{id}/image</code> (or <code>/dvds/{id}/stream</code>).</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-as these properties are both single values these Resources are also available under the simplified URI
-<code>/dvds/{id}/image</code> and <code>/dvds/{id}/stream</code> where the <code>{contentId}</code> is omitted for convenience.
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_property_collection_resources">Property Collection Resources</h3>
-<div class="paragraph">
-<p>Property Resources can also target Collections.</p>
-</div>
-<div class="paragraph">
-<p>Consider the following example:-</p>
+<p>In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a <code>java.util.Collection</code> property, as the following example shows.</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -821,257 +1188,284 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 </div>
-<div class="paragraph">
-<p>In this example many Resources can be associated with the <code>chapters</code> property of the <code>Dvd</code> Entity.</p>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview">2.1. Overview</h3>
 <div class="paragraph">
-<p>As with Property Resources, Property Collection Resources are also exported to the URI <code>/dvds/{id}/chapters</code>.
-However, in this case, POSTing to <code>/dvds/{id}/chapters</code> always <strong>appends</strong> a new Resource to the 'Chapters' Collection.
-This Resource supports both POST and PUT HTTP methods.</p>
+<p>When enabled, the Elasticsearch integration will, by default, forward all content to an Elasticsearch cluster for fulltext indexing.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_search">Search</h3>
+<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
 <div class="paragraph">
-<p>Exported content stores may be marked as <code>Searchable</code>.  Assuming the following content store interface:</p>
+<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to your Elasticsearch
+cluster.</p>
+</div>
+<div class="paragraph">
+<p>Elasticsearch can be enabled with the following Java Config.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 9. Enabling Spring Content Elasticsearch with Java Config</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
+@EnableFilesystemStores                     <b class="conum">(2)</b>
+public static class ApplicationConfig {
+
+                                            <b class="conum">(3)</b>
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
+</li>
+<li>
+<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
+</li>
+<li>
+<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_spring_boot_configuration">2.3. Spring Boot Configuration</h3>
+<div class="paragraph">
+<p>Alternatively, you can use the Spring Boot Starter <code>spring-content-elasticsearch-boot-starter</code>.</p>
+</div>
+<div class="paragraph">
+<p>When using this method of configuration the <code>@EnableElasticsearchFulltextIndexing</code> annotation can be omitted as it will
+be added for you.  As will a RestHighLevelClient client bean configured to connect to localhost.</p>
+</div>
+<div class="paragraph">
+<p>The following configuration properties (prefix spring.content.elasticsearch) are supported.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">autoindex</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether, or not, to enable autoindexing to index content as it is added</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_making_stores_searchable">2.4. Making Stores Searchable</h3>
+<div class="paragraph">
+<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
+<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_indexing">2.5. Custom Indexing</h3>
+<div class="paragraph">
+<p>By default when you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content
+being added to a Store and sends that content to your Elasticsearch cluster for full-text indexing.  This is usually
+all you need.  However, sometimes you may need more control over when documents are indexed.  For these cases you can
+use the <code>IndexService</code> bean directly in your code to index (or unindex) content as required.</p>
+</div>
+<div class="paragraph">
+<p>When performing custom indexing it is usual to turn of the auto-indexing feature but specifying
+<code>spring.content.elasticsearch.autoindex=false</code> in your application properties.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_text_extraction">2.6. Text Extraction</h3>
+<div class="paragraph">
+<p>For images and other media, it also possible to configure the elasticsearch integration to perform text extraction and
+send that instead of the image content to Elasticsearch.</p>
+</div>
+<div class="paragraph">
+<p>This requires two stages of configuration:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Add one or more renderers to the application context.  These renderers are used to perform the text extraction.  To be
+used for text extraction a renderer <strong>must</strong> produce <code>text/plain</code> content but can consume any suitable mime type.   When
+content matching its <code>consume</code> mime type is added to a Store the renderer will be invoked to extract text and this extracted text
+will then be sent to the Elasticsearch for fulltext indexing in place of the original content.</p>
+</li>
+</ol>
+</div>
+<div class="exampleblock">
+<div class="title">Example 10. Adding a renderer to perform text extraction</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableElasticsearchFulltextIndexing
+@EnableFilesystemStores
+public static class ApplicationConfig {
+
+    public RestHighLevelClient client() {
+        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    }
+
+    @Bean
+    public RenditionProvider jpgTextExtractor() {
+        return new RenditionProvider() {
+
+            @Override
+            public String consumes() {
+                return "image/jpg";                     // can be any mime-type
+            }
+
+            @Override
+            public String[] produces() {
+                return new String[] {"text/plain"};     // must be 'text/plain'
+            }
+
+            @Override
+            public InputStream convert(InputStream fromInputSource, String toMimeType) {
+                ...implementation...
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Make the Store Renderable as this will be used internally to extract the text</p>
+</li>
+</ol>
+</div>
+<div class="exampleblock">
+<div class="title">Example 11. Making the Store interface Renderable</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentStore extends ContentStore&lt;Document, UUID&gt; implements Searchable&lt;Document&gt;, Renderable&lt;Document&gt; {
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</h3>
+<div class="paragraph">
+<p>By default Spring Content Elasticsearch indexes content only.  However, it is common to synchronize additional
+attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
+search results (removing the need to perform subsequent queries against the primary domain model).</p>
+</div>
+<div class="paragraph">
+<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
+application&#8217;s configuration:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt;, Searchable&lt;UUID&gt; {}</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public AttributeProvider&lt;Document&gt; attributeProvider() {
+        return new AttributeProvider&lt;Document&gt;() {
+
+            @Override
+            public Map&lt;String, String&gt; synchronize(Document entity) {
+
+                Map&lt;String, String&gt; attrs = new HashMap&lt;&gt;();
+                attrs.put("title", entity.getTitle());
+                attrs.put("author", entity.getAuthor());
+                return attrs;
+            }
+        };
+    }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>When the store is exported, Spring Content REST exposes a fulltext query resource for the <code>Searchable.search</code> methods.
-These resources are exported to the URI <code>/dvds/searchContent</code>.  Method parameters can be supplied as query parameters:</p>
+<p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
+application&#8217;s configuration:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl -H 'Accept: application/hal+json'  http://localhost:8080/searchContent?queryString=foo</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
+    public FilterQueryProvider fqProvider() {
+        return new FilterQueryProvider() {
+
+            @Override
+            public String[] filterQueries(Class&lt;?&gt; entity) {
+
+                return new String[] {"author:foo@bar.com"};
+            }
+        };
+    }</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return
+filter queries based on the current execution context.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_default_status_codes">Default status codes</h3>
+<h3 id="_search_return_types">2.8. Search Return Types</h3>
 <div class="paragraph">
-<p>For the content resources exposed, we use a set of default status codes:</p>
+<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
+type this interface to String in which case result sets will be collections of content IDs.</p>
+</div>
+<div class="paragraph">
+<p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
+results to your specific needs:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>200 OK - for plain GET requests and POST and PUT requests that overwrite existing content resources</p>
+<p>@ContentId; extracts the content ID of the content from your search results</p>
 </li>
 <li>
-<p>201 Created - for POST and PUT requests that create new content resources</p>
+<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
 </li>
 <li>
-<p>204 No Content - for DELETE requests</p>
-</li>
-<li>
-<p>206 Partial Content - for range GET requests</p>
+<p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)
+:leveloffset: -1</p>
 </li>
 </ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_resource_discoverability">Resource Discoverability</h3>
-<div class="paragraph">
-<p>A core principle of HATEOAS is that Resources should be discoverable through the publication of links that point to the
-available resources.  There are a few competing de-facto standards specifying how to represent links in JSON.  By default,
-Spring Data REST uses HAL to render responses.  HAL defines links to be contained in a property of the returned document.</p>
-</div>
-<div class="paragraph">
-<p>Resource discovery starts at the top level of the application.  By issuing a request to the root URL under which the
-Spring Data REST application is deployed, the client can extract a set of links from the returned JSON object that
-represent the next level of resources that are available to the client.</p>
-</div>
-<div class="paragraph">
-<p>When enabled through <code>@Import(HypermediaConfiguration.class)</code> Spring Content REST will inject Store, Entity and Property
-Resources links for both into the HAL responses created by Spring Data REST.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_store_resource">The Store Resource</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST exports Store Resources to <code>/{store}/**</code>.  The resource path and linkrel can be customized using the
-<code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>Store Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
-Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_get">GET</h4>
-<div class="paragraph">
-<p>Returns the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_putpost">PUT/POST</h4>
-<div class="paragraph">
-<p>Sets the Resources&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_2">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_delete">DELETE</h4>
-<div class="paragraph">
-<p>Removes the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_3">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_entity_resource">The Entity Resource</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST exports Entity Resources to <code>/{store}/{id}</code>.  The resource path can be customized using the
-<code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>Entity Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
-Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_get_2">GET</h4>
-<div class="paragraph">
-<p>Returns the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_4">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_putpost_2">PUT/POST</h4>
-<div class="paragraph">
-<p>Sets the Resources&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_5">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_delete_2">DELETE</h4>
-<div class="paragraph">
-<p>Removes the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_6">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_property_resource">The Property Resource</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
-The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>Property Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
-Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_get_3">GET</h4>
-<div class="paragraph">
-<p>Returns the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_7">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_putpost_3">PUT/POST</h4>
-<div class="paragraph">
-<p>Sets the Resources&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_8">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_delete_3">DELETE</h4>
-<div class="paragraph">
-<p>Removes the Resource&#8217;s content</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_collection_property_resource">The Collection Property Resource</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST exports Property Collection Resources to <code>/{store}/{id}/{property}</code>.  The resource path can be
-customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_putpost_4">PUT/POST</h4>
-<div class="paragraph">
-<p>Appends new content to the collection of Resources</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_9">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -1079,6 +1473,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
+Version 1.2.1<br>
 Last updated 2021-02-16 04:58:46 UTC
 </div>
 </div>
