@@ -95,7 +95,18 @@ jobs:
         GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     - name: Publish JARs
-      run: mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+      run: |
+        #!/bin/bash
+
+        set -eux
+
+        if [[ "${GITHUB_REF}" == *"tags"* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
+        fi
+      
+        mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+        
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
         GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
