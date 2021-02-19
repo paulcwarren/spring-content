@@ -128,6 +128,8 @@ jobs:
         AWS_BUCKET: ${{secrets.AWS_BUCKET}}
         AWS_REGION: ${{secrets.AWS_REGION}}
         AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+        GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{env.GOOGLE_APPLICATION_CREDENTIALS}}
 
     - name: Validate gettingstarteds
       run: |
