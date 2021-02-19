@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.gcs.Bucket;
@@ -19,13 +18,11 @@ import com.google.cloud.storage.BlobId;
 public class BlobIdResolverConverter implements GenericConverter {
 
 	private final String defaultBucket;
-	private Class<?> fromType;
 
 	private static Set<ConvertiblePair> convertibleTypes = new HashSet<>();
 
 	static {
 	    convertibleTypes.add(new ConvertiblePair(Serializable.class, BlobId.class));
-        convertibleTypes.add(new ConvertiblePair(Object.class, BlobId.class));
 	}
 
 	public BlobIdResolverConverter(String defaultBucket) {
@@ -60,11 +57,6 @@ public class BlobIdResolverConverter implements GenericConverter {
 
     private String getKey(Object source) {
 
-        if (BeanUtils.hasFieldWithAnnotation(source, ContentId.class)) {
-            Object contentId = BeanUtils.getFieldWithAnnotation(source, ContentId.class);
-            return contentId != null ? contentId.toString() : null;
-        } else {
-            return source.toString();
-        }
+        return source.toString();
     }
 }
