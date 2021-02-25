@@ -20,6 +20,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.data.rest.webmvc.BaseUri;
+import org.springframework.data.rest.webmvc.config.RootResourceInformationHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -130,12 +132,18 @@ public class RestConfiguration implements InitializingBean {
 		private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
 		@Autowired
+		private RootResourceInformationHandlerMethodArgumentResolver rootResourceInfoResolver;
+
+		@Autowired
+		private BaseUri baseUri;
+
+		@Autowired
 		private Stores stores;
 
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores, rootResourceInfoResolver, baseUri));
 		}
 
 		@Override

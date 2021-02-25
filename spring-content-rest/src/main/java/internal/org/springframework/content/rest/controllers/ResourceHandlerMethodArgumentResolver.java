@@ -11,6 +11,8 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.data.rest.webmvc.BaseUri;
+import org.springframework.data.rest.webmvc.config.RootResourceInformationHandlerMethodArgumentResolver;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
@@ -23,8 +25,8 @@ import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ResourceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
-        super(config, repositories, repoInvokerFactory, stores);
+    public ResourceHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, RootResourceInformationHandlerMethodArgumentResolver rootResourceInfoResolver, BaseUri baseUri) {
+        super(config, repositories, repoInvokerFactory, stores, rootResourceInfoResolver, baseUri);
     }
 
     @Override
