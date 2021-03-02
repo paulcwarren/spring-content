@@ -178,37 +178,21 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 			return entity;
 		}
 
-		OutputStream os = null;
-		try {
-			if (resource instanceof WritableResource) {
-				os = ((WritableResource) resource).getOutputStream();
-				IOUtils.copy(content, os);
-				IOUtils.closeQuietly(os);
-			}
+		if (resource instanceof WritableResource) {
+    		try (OutputStream os = ((WritableResource) resource).getOutputStream()) {
+    				IOUtils.copy(content, os);
+    		}
+    		catch (IOException e) {
+    		    logger.error(format("Unexpected error setting content for entity %s", entity), e);
+    		    throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+    		}
+		}
 
-			try {
-				BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
-						resource.contentLength());
-			}
-			catch (IOException e) {
-				logger.error(format(
-						"Unexpected error setting content length for entity %s",
-						entity), e);
-			}
+		try {
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, resource.contentLength());
 		}
 		catch (IOException e) {
-			logger.error(format("Unexpected error setting content for entity %s", resource.toString()), e);
-			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
-		}
-		finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-			}
-			catch (IOException ioe) {
-				// ignore
-			}
+			logger.error(format("Unexpected error setting content length for entity %s", entity), e);
 		}
 		return entity;
 	}
