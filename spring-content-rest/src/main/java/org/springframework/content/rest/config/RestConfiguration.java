@@ -129,19 +129,13 @@ public class RestConfiguration implements InitializingBean {
 		@Autowired
 		private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-//		@Autowired
-//		private RootResourceInformationHandlerMethodArgumentResolver rootResourceInfoResolver;
-
-//		@Autowired
-//		private BaseUri baseUri;
-
 		@Autowired
 		private Stores stores;
 
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores));
 		}
 
 		@Override

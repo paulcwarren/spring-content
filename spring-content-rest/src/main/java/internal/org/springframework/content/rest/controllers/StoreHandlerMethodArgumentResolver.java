@@ -12,7 +12,6 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -29,14 +28,6 @@ import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public abstract class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
-//    private static boolean ROOT_RESOURCE_INFORMATION_CLASS_PRESENT = false;
-//
-//    static {
-//        try {
-//            ROOT_RESOURCE_INFORMATION_CLASS_PRESENT = StoreHandlerMethodArgumentResolver.class.getClassLoader().loadClass("org.springframework.data.rest.webmvc.config.RootResourceInformation") != null;
-//        } catch (ClassNotFoundException e) {}
-//    }
-
     private UriTemplate entityUriTemplate = new UriTemplate("/{repository}/{id}");
     private UriTemplate entityPropertyUriTemplate = new UriTemplate("/{repository}/{id}/{property}");
     private UriTemplate entityPropertyWithIdUriTemplate = new UriTemplate("/{repository}/{id}/{property}/{contentId}");
@@ -46,14 +37,12 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
     private ApplicationContext context;
     private final RestConfiguration config;
     private final Repositories repositories;
-    private final RepositoryInvokerFactory repoInvokerFactory;
     private final Stores stores;
 
-    public StoreHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
+    public StoreHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores) {
         this.context = context;
         this.config = config;
         this.repositories = repositories;
-        this.repoInvokerFactory = repoInvokerFactory;
         this.stores = stores;
     }
 
@@ -63,10 +52,6 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
     protected Repositories getRepositories() {
         return repositories;
-    }
-
-    RepositoryInvokerFactory getRepoInvokerFactory() {
-        return repoInvokerFactory;
     }
 
     protected Stores getStores() {
@@ -99,10 +84,8 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
         if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
-//            RootResourceInformation rri = resolveRootResourceInformation(info, pathSegments, mavContainer, binderFactory);
-
             if (entityUriTemplate.matches(pathInfo)) {
-                Object entity = new EntityResolver(context, this.getRepoInvokerFactory(), this.getRepositories(), info, pathSegments)
+                Object entity = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(entityUriTemplate.match(pathInfo));
 
                 return this.resolveAssociativeStoreEntityArgument(info, entity);
@@ -112,7 +95,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(context, this.getRepoInvokerFactory(), this.getRepositories(), info, pathSegments)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -126,7 +109,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyWithIdUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(context, this.getRepoInvokerFactory(), this.getRepositories(), info, pathSegments)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -140,7 +123,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = revisionPropertyUriTemplate.match(pathInfo);
 
-                Object domainObj = new RevisionEntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), this.getStores(), info)
+                Object domainObj = new RevisionEntityResolver(this.getRepositories(), info)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -155,7 +138,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = revisionPropertyWithIdUriTemplate.match(pathInfo);
 
-                Object domainObj = new RevisionEntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), this.getStores(), info)
+                Object domainObj = new RevisionEntityResolver(this.getRepositories(), info)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -172,40 +155,6 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
         throw new IllegalArgumentException();
     }
-
-//    private RootResourceInformation resolveRootResourceInformation(StoreInfo info, String[] pathSegments, ModelAndViewContainer mavContainer, WebDataBinderFactory binderFactory)
-//            throws Exception {
-//
-//        Method m = ReflectionUtils.findMethod(RepositoryEntityControllerFacade.class, "getItemResource", RootResourceInformation.class);
-//        MethodParameter repoRequestMethodParameter = new MethodParameter(m, 0);
-//
-//        RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, info.getDomainObjectClass());
-//
-//        // this above lookup may fail when the path for a content store for a child entity is mapped to the same path as
-//        // repository path for the parent entity
-//        // this should probably not be allowed
-//        // when this is the case we perform an additional lookup using the repository variable from the URI
-//        if (ri == null) {
-//            ri = RepositoryUtils.findRepositoryInformation(repositories, pathSegments[1]);
-//        }
-//
-//        if (ri == null) {
-//            throw new IllegalStateException(String.format("Unable to resolve root resource information for ", String.join("/", pathSegments)));
-//        }
-//
-//        String repo = RepositoryUtils.repositoryPath(ri);
-//        String id = pathSegments[2];
-//
-//        String repoUri = String.format("/%s/%s", repo, id);
-//        if (baseUri.equals(BaseUri.NONE) == false) {
-//            repoUri = String.format("%s%s", baseUri.getUri().toString(), repoUri);
-//        }
-//
-//        NativeWebRequest repoRequestFacade = nativeWebRequestForGetItemResource(repoUri);
-//        RootResourceInformation rri = rootResourceInfoResolver.resolveArgument(repoRequestMethodParameter, mavContainer, repoRequestFacade, binderFactory);
-//        return rri;
-//    }
-
 
     protected abstract Object resolveStoreArgument(NativeWebRequest nativeWebRequest, StoreInfo info);
 

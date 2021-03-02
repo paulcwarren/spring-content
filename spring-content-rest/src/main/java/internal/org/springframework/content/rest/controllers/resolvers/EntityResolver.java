@@ -36,7 +36,6 @@ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -62,19 +61,15 @@ public class EntityResolver {
     }
 
     private ApplicationContext context;
-    private RepositoryInvokerFactory factory;
     private Repositories repositories;
     private StoreInfo storeInfo;
-    private RepositoryInvoker invoker;
     private String[] pathSegments;
 
-    public EntityResolver(ApplicationContext context, RepositoryInvokerFactory factory, Repositories repositories, StoreInfo storeInfo, String[] pathSegments) {
+    public EntityResolver(ApplicationContext context, Repositories repositories, StoreInfo storeInfo, String[] pathSegments) {
         this.context = context;
-        this.factory = factory;
         this.repositories = repositories;
         this.storeInfo = storeInfo;
         this.pathSegments = pathSegments;
-        //this.invoker = invoker;
     }
 
     public Object resolve(Map<String,String> variables) {
@@ -84,9 +79,9 @@ public class EntityResolver {
         Object domainObj = null;
         try {
             try {
-                domainObj = findOne(factory, repositories, storeInfo.getDomainObjectClass(), id);
+                domainObj = findOne(repositories, storeInfo.getDomainObjectClass(), id);
             } catch (IllegalArgumentException iae) {
-                domainObj = findOne(factory, repositories, repository, id);
+                domainObj = findOne(repositories, repository, id);
             }
         }
         catch (HttpRequestMethodNotSupportedException e) {
@@ -96,7 +91,7 @@ public class EntityResolver {
         return domainObj;
     }
 
-    public Object findOne(RepositoryInvokerFactory repoInvokerFactory, Repositories repositories, String repository, String id)
+    public Object findOne(Repositories repositories, String repository, String id)
             throws HttpRequestMethodNotSupportedException {
 
         RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, repository);
@@ -107,10 +102,10 @@ public class EntityResolver {
 
         Class<?> domainObjClazz = ri.getDomainType();
 
-        return findOne(repoInvokerFactory, repositories, domainObjClazz, id);
+        return findOne(repositories, domainObjClazz, id);
     }
 
-    public Object findOne(RepositoryInvokerFactory repoInvokerFactory, Repositories repositories, Class<?> domainObjClass, String id)
+    public Object findOne(Repositories repositories, Class<?> domainObjClass, String id)
             throws HttpRequestMethodNotSupportedException {
 
         Optional<Object> domainObj = null;
