@@ -9,9 +9,9 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -22,8 +22,8 @@ import org.springframework.web.util.UrlPathHelper;
 
 import internal.org.springframework.content.rest.controllers.resolvers.EntityResolver;
 import internal.org.springframework.content.rest.controllers.resolvers.PropertyResolver;
-import internal.org.springframework.content.rest.controllers.resolvers.RevisionEntityResolver;
 import internal.org.springframework.content.rest.controllers.resolvers.PropertyResolver.PropertySpec;
+import internal.org.springframework.content.rest.controllers.resolvers.RevisionEntityResolver;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public abstract class StoreHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
@@ -34,15 +34,15 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
     private UriTemplate revisionPropertyUriTemplate = new UriTemplate("/{repository}/{id}/revisions/{revisionId}/{property}");
     private UriTemplate revisionPropertyWithIdUriTemplate = new UriTemplate("/{repository}/{id}/revisions/{revisionId}/{property}/{contentId}");
 
+    private ApplicationContext context;
     private final RestConfiguration config;
     private final Repositories repositories;
-    private final RepositoryInvokerFactory repoInvokerFactory;
     private final Stores stores;
 
-    public StoreHandlerMethodArgumentResolver(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores) {
+    public StoreHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores) {
+        this.context = context;
         this.config = config;
         this.repositories = repositories;
-        this.repoInvokerFactory = repoInvokerFactory;
         this.stores = stores;
     }
 
@@ -52,10 +52,6 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
     protected Repositories getRepositories() {
         return repositories;
-    }
-
-    RepositoryInvokerFactory getRepoInvokerFactory() {
-        return repoInvokerFactory;
     }
 
     protected Stores getStores() {
@@ -89,7 +85,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
         if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
             if (entityUriTemplate.matches(pathInfo)) {
-                Object entity = new EntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), info)
+                Object entity = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(entityUriTemplate.match(pathInfo));
 
                 return this.resolveAssociativeStoreEntityArgument(info, entity);
@@ -99,7 +95,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), info)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -113,7 +109,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyWithIdUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), info)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -127,7 +123,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = revisionPropertyUriTemplate.match(pathInfo);
 
-                Object domainObj = new RevisionEntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), this.getStores(), info)
+                Object domainObj = new RevisionEntityResolver(this.getRepositories(), info)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -142,7 +138,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = revisionPropertyWithIdUriTemplate.match(pathInfo);
 
-                Object domainObj = new RevisionEntityResolver(this.getRepoInvokerFactory(), this.getRepositories(), this.getStores(), info)
+                Object domainObj = new RevisionEntityResolver(this.getRepositories(), info)
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
