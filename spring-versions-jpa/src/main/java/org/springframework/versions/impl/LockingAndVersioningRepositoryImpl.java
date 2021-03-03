@@ -149,7 +149,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         } else if (authentication != null && authentication.isAuthenticated() && (lockOwner == null || authentication.getName().equals(lockOwner.getName()))) {
             return em.merge(entity);
         } else {
-            throw new LockOwnerException(format("entity not locked by you"));
+            throw new LockOwnerException(format("entity not locked by you. lock owner: %s", lockOwner.getName()));
         }
     }
 

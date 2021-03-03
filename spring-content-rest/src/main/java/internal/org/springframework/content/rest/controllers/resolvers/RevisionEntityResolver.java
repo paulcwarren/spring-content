@@ -9,12 +9,10 @@ import java.util.Optional;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
-import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.core.io.Resource;
 import org.springframework.data.history.Revision;
 import org.springframework.data.repository.history.RevisionRepository;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -25,15 +23,11 @@ import internal.org.springframework.content.rest.io.RenderableResourceImpl;
 
 public class RevisionEntityResolver {
 
-    private RepositoryInvokerFactory factory;
     private Repositories repositories;
-    private Stores stores;
     private StoreInfo storeInfo;
 
-    public RevisionEntityResolver(RepositoryInvokerFactory factory, Repositories repositories, Stores stores, StoreInfo storeInfo) {
-        this.factory = factory;
+    public RevisionEntityResolver(Repositories repositories, StoreInfo storeInfo) {
         this.repositories = repositories;
-        this.stores = stores;
         this.storeInfo = storeInfo;
     }
 

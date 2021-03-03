@@ -135,7 +135,7 @@ public class RestConfiguration implements InitializingBean {
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(config, repositories, repoInvokerFactory, stores));
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores));
 		}
 
 		@Override
