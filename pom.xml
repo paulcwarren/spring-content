@@ -76,6 +76,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
     <modules>
         <module>./spring-content-autoconfigure</module>
+        <module>./spring-content-azure-storage</module>
         <module>./spring-content-commons</module>
         <module>./spring-content-docx4j</module>
         <module>./spring-content-fs</module>
