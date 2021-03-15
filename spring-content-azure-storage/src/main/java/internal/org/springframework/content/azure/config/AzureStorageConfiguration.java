@@ -44,7 +44,7 @@ public class AzureStorageConfiguration {
 			return;
 
 		for (AzureStorageConfigurer configurer : configurers) {
-			configurer.configureGCPStorageConverters(registry);
+			configurer.configureAzureStorageConverters(registry);
 		}
 	}
 }

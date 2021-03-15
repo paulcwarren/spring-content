@@ -4,5 +4,5 @@ import org.springframework.core.convert.converter.ConverterRegistry;
 
 public interface AzureStorageConfigurer {
 
-	void configureGCPStorageConverters(ConverterRegistry registry);
+	void configureAzureStorageConverters(ConverterRegistry registry);
 }
