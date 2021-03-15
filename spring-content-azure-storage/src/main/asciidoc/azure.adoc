@@ -1,0 +1,122 @@
+= Azure Storage
+
+== Annotation-based Configuration
+
+Spring Content Azure Storage is enabled with the following Java Config.
+
+.Enabling Spring Content Azure using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableAzureStorage
+public static class ApplicationConfig {
+
+        @Value("#{environment.AZURE_STORAGE_ENDPOINT}")
+        private String endpoint;
+
+        @Value("#{environment.AZURE_STORAGE_CONNECTION_STRING}")
+        private String connString;
+
+        @Bean
+        public BlobServiceClientBuilder storage() {
+                return new BlobServiceClientBuilder()
+                .endpoint(endpoint)
+                .connectionString(connString);
+        }
+}
+----
+====
+
+== Configuration Properties
+
+The following configuration properties (prefix `spring.content.azure`) are supported.
+
+[cols="3*", options="header"]
+|=========
+| Property | Required | Description
+| bucket | No | Content store location.  If not set as an application property Spring Content Azure Storage will look for  the environment variable `AZURE_STORAGE_BUCKET`
+|=========
+
+== Accessing Content
+
+=== Storage Model
+
+With Azure Blob Storage, buckets and objects are the two main primitives, where objects are stored in buckets.  Azure has a
+flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
+of buckets or objects in buckets.  
+
+=== Loading Spring Resources from a Store or AssociativeStore
+
+When a Resource is loaded from the Store the following rules are used to determine the identify the `BlobId` of the
+object.
+
+For a `Store`, when a Resource is loaded using a call to `getResource(ID location)`.
+
+- if the Store is typed to a `BlobId` this will be used as-is.
+- otherwise, if a registered Spring Converter exists that converts from Store's ID type to a `BlobId` this 
+will be used to convert the location (specified in the call to `getResource`) into an instance of `BlobId`
+- otherwise, a `BlobId` is created from the default bucket and the location (specified in the call to `getResource`).
+
+For an `AssociativeStore` (or indirectly a `ContentStore`), when a Resource is loaded from a call to `getResource(S entity)`:
+
+- if the store's ID type is typed to a `BlobId` this will be used as-is
+- otherwise, if a registered Spring Converter exists that converts the the Store's entity (S) type to a `BlobId` this will be used
+to establish an instance of `BlobId`
+- otherwise, if one of the Entity's fields is annotated with `@Bucket`, the `@ContentId` and the `@Bucket` will be used as
+name and bucket respectively to create an instance of `BlobId`
+- otherwise, the `@ContentId` field and default bucket will be used as name and bucket respectively to create an
+instance of `BlobId`
+
+See <<configuring_converters,Configuring a Spring Converter>> for more information on how to register a converter.
+
+=== Setting Content using a ContentStore
+
+Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.
+
+If content has not yet been stored with this entity and an Id has not been assigned one will be generated
+based in `java.util.UUID`.
+
+The `@ContentId` and `@ContentLength` annotations will be updated on `entity`.
+
+If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.
+
+=== Getting Content from a ContentStore
+
+Content can be accessed using the `ContentStore.getContent(entity)` method.
+
+=== Unsetting Content from a ContentStore
+
+Content can be removed using the `ContentStore.unsetContent(entity)` method.
+
+=== Configuring a Spring Converter
+[[configuring_converters]]
+
+To configure Spring Content Azure Storage with one or more Spring Converters that convert your Entities, or IDs, to an
+instance of BlobId the following approach can be used:
+
+.Configuring Spring Content Azure Storage with a custom Spring Converter
+====
+[source, java]
+----
+@Configuration
+public class AzureStoreConfiguration  {
+
+    @Bean
+    public AzureStorageConfigurer configurer() {
+        return new AzureStorageConfigurer() {
+
+            @Override
+            public void configureAzureStorageConverters(ConverterRegistry registry) {
+                registry.addConverter(new Converter<TestEntity, BlobId>() {
+                    @Override
+                    public BlobId convert(TestEntity entity) {
+                        return BlobId.of(entity.getCustomBucketField(), entity.getCustomContentIdField());
+                    }
+                });
+            }
+        }
+    }
+}
+----
+====
