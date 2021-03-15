@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
 <meta name="author" content="Paul Warren">
-<title>Spring Content Renditions - Reference Documentation</title>
+<title>Spring Content Azure Storage - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Spring Content Renditions - Reference Documentation</h1>
+<h1>Spring Content Azure Storage - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 1.2.2-SNAPSHOT,</span>
@@ -450,7 +450,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2019-present The original authors.</p>
+<p>&#169; 2008-present The original authors.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -477,13 +477,19 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_patterns_of_content_association">1.3. Patterns of Content Association</a></li>
 </ul>
 </li>
-<li><a href="#renditions">2. Renditions</a>
+<li><a href="#_azure_storage">2. Azure Storage</a>
 <ul class="sectlevel2">
-<li><a href="#_overview">2.1. Overview</a></li>
-<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
-<li><a href="#_making_stores_renderable">2.3. Making Stores Renderable</a></li>
-<li><a href="#_renderers">2.4. Renderers</a></li>
-<li><a href="#_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</a></li>
+<li><a href="#_annotation_based_configuration">2.1. Annotation-based Configuration</a></li>
+<li><a href="#_configuration_properties">2.2. Configuration Properties</a></li>
+<li><a href="#_accessing_content">2.3. Accessing Content</a></li>
+</ul>
+</li>
+<li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
+<ul class="sectlevel2">
+<li><a href="#_overview">3.1. Overview</a></li>
+<li><a href="#_dependencies">3.2. Dependencies</a></li>
+<li><a href="#_enabling">3.3. Enabling</a></li>
+<li><a href="#_configuring">3.4. Configuring</a></li>
 </ul>
 </li>
 </ul>
@@ -1191,154 +1197,284 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="renditions">2. Renditions</h2>
+<h2 id="_azure_storage">2. Azure Storage</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview">2.1. Overview</h3>
+<h3 id="_annotation_based_configuration">2.1. Annotation-based Configuration</h3>
 <div class="paragraph">
-<p>When enabled, renditions give stores the ability to transform content from one format to another by providing a small
-set of renderers out-of-the-box.</p>
+<p>Spring Content Azure Storage is enabled with the following Java Config.</p>
 </div>
-<div class="paragraph">
-<p>It also provides an extension point for providing your own renderers.</p>
-</div>
-<div class="paragraph">
-<p>To enable renditions add the <code>spring-content-renditions</code> or <code>spring-content-renditions-boot-starter</code> dependency to your
-project.  This enables the renditions capability and a small set of renderers that can convert documents of various
-types to jpeg images based on the apache poi and pdfbox libraries</p>
-</div>
-<div class="paragraph">
-<p>You can also add the <code>spring-content-docx4j</code> dependency to your project for an additional small set of renderers that
-can convert documents between Microsoft Word, Adobe PDF and HTML based on the docx4j library.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
 <div class="exampleblock">
-<div class="title">Example 9. Enabling Spring Content Renditions with Java Config</div>
+<div class="title">Example 9. Enabling Spring Content Azure using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@Import(org.springframework.content.renditions.config.RenditionsConfiguration.class) <b class="conum">(1)</b>
-@Import(org.springframework.content.docx4j.config.Docx4jConfiguration.class)         <b class="conum">(2)</b>
+@EnableAzureStorage
 public static class ApplicationConfig {
+
+        @Value("#{environment.AZURE_STORAGE_ENDPOINT}")
+        private String endpoint;
+
+        @Value("#{environment.AZURE_STORAGE_CONNECTION_STRING}")
+        private String connString;
+
+        @Bean
+        public BlobServiceClientBuilder storage() {
+                return new BlobServiceClientBuilder()
+                .endpoint(endpoint)
+                .connectionString(connString);
+        }
 }</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
-</li>
-<li>
-<p>Not required when using <code>spring-content-renditions-boot-starter</code></p>
-</li>
-</ol>
-</div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_making_stores_renderable">2.3. Making Stores Renderable</h3>
+<h3 id="_configuration_properties">2.2. Configuration Properties</h3>
 <div class="paragraph">
-<p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
-<a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
+<p>The following configuration properties (prefix <code>spring.content.azure</code>) are supported.</p>
 </div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content Azure Storage will look for  the environment variable <code>AZURE_STORAGE_BUCKET</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
-<h3 id="_renderers">2.4. Renderers</h3>
+<h3 id="_accessing_content">2.3. Accessing Content</h3>
+<div class="sect3">
+<h4 id="_storage_model">2.3.1. Storage Model</h4>
 <div class="paragraph">
-<p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
+<p>With Azure Blob Storage, buckets and objects are the two main primitives, where objects are stored in buckets.  Azure has a
+flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
+of buckets or objects in buckets.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_loading_spring_resources_from_a_store_or_associativestore">2.3.2. Loading Spring Resources from a Store or AssociativeStore</h4>
+<div class="paragraph">
+<p>When a Resource is loaded from the Store the following rules are used to determine the identify the <code>BlobId</code> of the
+object.</p>
+</div>
+<div class="paragraph">
+<p>For a <code>Store</code>, when a Resource is loaded using a call to <code>getResource(ID location)</code>.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Pdf To Jpeg</p>
+<p>if the Store is typed to a <code>BlobId</code> this will be used as-is.</p>
 </li>
 <li>
-<p>Text To Jpeg</p>
+<p>otherwise, if a registered Spring Converter exists that converts from Store&#8217;s ID type to a <code>BlobId</code> this
+will be used to convert the location (specified in the call to <code>getResource</code>) into an instance of <code>BlobId</code></p>
 </li>
 <li>
-<p>Word To Jpeg</p>
-</li>
-<li>
-<p>Jpeg To Png</p>
+<p>otherwise, a <code>BlobId</code> is created from the default bucket and the location (specified in the call to <code>getResource</code>).</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>The <code>spring-content-docx4j</code> dependency contributes the following renderer:</p>
+<p>For an <code>AssociativeStore</code> (or indirectly a <code>ContentStore</code>), when a Resource is loaded from a call to <code>getResource(S entity)</code>:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Word To Html</p>
+<p>if the store&#8217;s ID type is typed to a <code>BlobId</code> this will be used as-is</p>
 </li>
 <li>
-<p>Word To PDF</p>
+<p>otherwise, if a registered Spring Converter exists that converts the the Store&#8217;s entity (S) type to a <code>BlobId</code> this will be used
+to establish an instance of <code>BlobId</code></p>
 </li>
 <li>
-<p>Word To Text</p>
+<p>otherwise, if one of the Entity&#8217;s fields is annotated with <code>@Bucket</code>, the <code>@ContentId</code> and the <code>@Bucket</code> will be used as
+name and bucket respectively to create an instance of <code>BlobId</code></p>
+</li>
+<li>
+<p>otherwise, the <code>@ContentId</code> field and default bucket will be used as name and bucket respectively to create an
+instance of <code>BlobId</code></p>
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</h3>
 <div class="paragraph">
-<p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
-renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
-to implement the <code>RenditionProvider</code> interface, mark this implementation as a <code>@Service</code> and ensure that it is
-contributed as a bean to your application context at runtime.</p>
+<p>See <a href="#configuring_converters">Configuring a Spring Converter</a> for more information on how to register a converter.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_setting_content_using_a_contentstore">2.3.3. Setting Content using a ContentStore</h4>
+<div class="paragraph">
+<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+</div>
+<div class="paragraph">
+<p>If content has not yet been stored with this entity and an Id has not been assigned one will be generated
+based in <code>java.util.UUID</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
+</div>
+<div class="paragraph">
+<p>If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_getting_content_from_a_contentstore">2.3.4. Getting Content from a ContentStore</h4>
+<div class="paragraph">
+<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_unsetting_content_from_a_contentstore">2.3.5. Unsetting Content from a ContentStore</h4>
+<div class="paragraph">
+<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_configuring_a_spring_converter">2.3.6. Configuring a Spring Converter</h4>
+<div id="configuring_converters" class="paragraph">
+<p>To configure Spring Content Azure Storage with one or more Spring Converters that convert your Entities, or IDs, to an
+instance of BlobId the following approach can be used:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Implementing the RenditionProvider Extension Point</div>
+<div class="title">Example 10. Configuring Spring Content Azure Storage with a custom Spring Converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package my.custom.rendition.provider;
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class AzureStoreConfiguration  {
 
-@Service    <b class="conum">(2)</b>
-public class CustomRenditionProvider implements RenditionProvider { <b class="conum">(1)</b>
+    @Bean
+    public AzureStorageConfigurer configurer() {
+        return new AzureStorageConfigurer() {
 
-	@Override
-	public String consumes() {
-		return "my/type";
-	}
-
-	@Override
-	public String[] produces() {
-		return new String[] { "your/type" };
-	}
-
-	@Override
-	public InputStream convert(InputStream fromInputSource, String toMimeType) {
-}
-
-...
-
-@Configuration
-@ComponentScan("my.custom.rendition.provider")         <b class="conum">(3)</b>
-public static class ApplicationConfig {
+            @Override
+            public void configureAzureStorageConverters(ConverterRegistry registry) {
+                registry.addConverter(new Converter&lt;TestEntity, BlobId&gt;() {
+                    @Override
+                    public BlobId convert(TestEntity entity) {
+                        return BlobId.of(entity.getCustomBucketField(), entity.getCustomContentIdField());
+                    }
+                });
+            }
+        }
+    }
 }</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="solr-search">3. Indexing &amp; Searching with Solr</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview">3.1. Overview</h3>
+<div class="paragraph">
+<p>When enabled the Solr integration will forward all content to Solr for fulltext indexing which can then be searched by adding the optional <code>Searchable&lt;CID&gt;</code> interface to the Content Repositories.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dependencies">3.2. Dependencies</h3>
+<div class="paragraph">
+<p>Add the solrj to the classpath.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">	&lt;dependency&gt;
+		&lt;groupId&gt;org.apache.solr&lt;/groupId&gt;
+		&lt;artifactId&gt;solr-solrj&lt;/artifactId&gt;
+		&lt;version&gt;5.5.3&lt;/version&gt;			<b class="conum">(1)</b>
+		&lt;exclusions&gt;
+			&lt;exclusion&gt;
+				&lt;groupId&gt;org.codehaus.woodstox&lt;/groupId&gt;
+				&lt;artifactId&gt;wstx-asl&lt;/artifactId&gt;
+			&lt;/exclusion&gt;
+			&lt;exclusion&gt;
+				&lt;artifactId&gt;log4j&lt;/artifactId&gt;
+				&lt;groupId&gt;log4j&lt;/groupId&gt;
+			&lt;/exclusion&gt;
+		&lt;/exclusions&gt;
+	&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
 <li>
-<p>Implementation of <code>RenditionProvider</code></p>
-</li>
-<li>
-<p>Marked as an <code>@Service</code></p>
-</li>
-<li>
-<p>Ensure the service is scanned by Spring and offered as a bean</p>
+<p>If using Spring Boot the version may be omitted</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_enabling">3.3. Enabling</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Specify the <code>@EnableFullTextSolrIndexing</code> annotation to your <code>@Configuration</code> Spring Application block.</p>
+</li>
+<li>
+<p>Ensure a <code>(SolrJ) SolrClient</code> <code>@Bean</code> is instantiated somewhere within your <code>@Configuration</code> Spring Application block.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuring">3.4. Configuring</h3>
+<div class="paragraph">
+<p>By default when the Solr module is enabled Spring-Content looks for a <code><a href="http://localhost:8983/solr/solr" class="bare">http://localhost:8983/solr/solr</a></code> solr server with no username or password.</p>
+</div>
+<div class="paragraph">
+<p>To change this behavior the following variables need to be set via the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html#boot-features-external-config">Externalized Configuration</a> method.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.url</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Url of the Solr host (including port and core)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.username</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">solr.password</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Solr user&#8217;s password</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
