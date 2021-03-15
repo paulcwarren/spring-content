@@ -7,13 +7,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.content.azure.Bucket;
+import org.springframework.content.azure.config.BlobId;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.util.Assert;
-
-import internal.org.springframework.content.azure.store.BlobId;
 
 public class BlobIdResolverConverter implements GenericConverter {
 

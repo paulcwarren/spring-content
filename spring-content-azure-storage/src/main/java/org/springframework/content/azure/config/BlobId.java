@@ -1,4 +1,4 @@
-package internal.org.springframework.content.azure.store;
+package org.springframework.content.azure.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

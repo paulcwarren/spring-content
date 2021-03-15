@@ -1,1 +1,1 @@
-org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean=internal.org.springframework.content.gcs.config.GCPStorageFactoryBean
+org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean=internal.org.springframework.content.azure.config.AzureStorageFactoryBean
