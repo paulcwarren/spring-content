@@ -1,26 +1,28 @@
 package org.springframework.versions.interceptors;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.aop.ProxyMethodInvocation;
-import org.springframework.aop.framework.ReflectiveMethodInvocation;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.utils.BeanUtils;
-import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
-
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Version;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Version;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
+
 public class OptimisticLockingInterceptor implements MethodInterceptor {
 
     private static Method getContentMethod;
     private static Method setContentMethod;
+    private static Method setContentMethodWithResource;
     private static Method unsetContentMethod;
 
     static {
@@ -28,6 +30,8 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
         Assert.notNull(getContentMethod);
         setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class);
         Assert.notNull(setContentMethod);
+        setContentMethodWithResource = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class);
+        Assert.notNull(setContentMethodWithResource);
         unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class);
         Assert.notNull(unsetContentMethod);
     }
@@ -51,6 +55,16 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
             }
         }
         else if (setContentMethod.equals(methodInvocation.getMethod())) {
+            if (methodInvocation.getArguments().length > 0) {
+                Object entity = methodInvocation.getArguments()[0];
+                entity = lock(entity);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
+                entity = methodInvocation.proceed();
+                touch(entity, Version.class);
+                return entity;
+            }
+        }
+        else if (setContentMethodWithResource.equals(methodInvocation.getMethod())) {
             if (methodInvocation.getArguments().length > 0) {
                 Object entity = methodInvocation.getArguments()[0];
                 entity = lock(entity);

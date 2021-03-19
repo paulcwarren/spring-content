@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.junit.runner.RunWith;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.EntityManager;
@@ -75,6 +77,33 @@ public class OptimisticLockingInterceptorTest {
                         entity = new TestEntity();
                         when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class));
                         when(mi.getArguments()).thenReturn(new Object[]{entity, new ByteArrayInputStream("".getBytes())});
+                        when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
+                    });
+                    JustBeforeEach(() -> {
+                        result = interceptor.invoke(mi);
+                    });
+                    It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
+                        verify(em).lock(entity, LockModeType.OPTIMISTIC);
+                        verify(mi).setArguments(eq(entity), anyObject());
+                        verify(mi).proceed();
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
+                    });
+                });
+                Context("when the method invocation is setContent (with resource)", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class));
+                        when(mi.getArguments()).thenReturn(new Object[]{entity, new FileSystemResource("")});
                         when(em.merge(entity)).thenReturn(entity);
                         when(mi.proceed()).thenReturn(entity);
                     });
