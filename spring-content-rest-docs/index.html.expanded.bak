@@ -136,13 +136,13 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 <h3 id="update-dependencies">Update dependencies</h3>
 <p>Add the <code>com.github.paulcwarren:spring-content-rest-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/pom.xml 1-}
 </code></pre>
 
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
 <p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
@@ -152,7 +152,7 @@ annotation so that Spring Content REST will update its value on our behalf.</p>
 API, update our <code>FileContentStore</code> by annotating it with the
 <code>@StoreRestResource</code> Spring Content REST annotation.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-rest/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
 <h2 id="remove-filecontentcontroller">Remove FileContentController</h2>

@@ -145,7 +145,7 @@ When you’re finished, you can check your results against the code in <code>spr
 </code></pre>
 
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/pom.xml 1-}
 </code></pre>
 
 <p>We add several dependencies:-</p>
@@ -171,7 +171,7 @@ association with an Entity</p>
 <h2 id="define-a-simple-entity">Define a simple Entity</h2>
 <p>Let's define a simple Entity to represent a File.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/java/gettingstarted/File.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
 <p>As you would expect we created a standard JPA Entity to capture some metadata about our file; <code>name</code> and <code>summary</code>.  In addition, because we will be serving these files over the web, we also record <code>mimeType</code> so that we can instruct the browser correctly.</p>
@@ -182,13 +182,13 @@ association with an Entity</p>
 <p>NB. For more information on Spring Data JPA and Spring Data REST see their respective spring.io getting started guides.</p>
 </blockquote>
 <p><code>src/main/java/gettingstated/FileRepository.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/java/gettingstarted/FileRepository.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileRepository.java 1-}
 </code></pre>
 
 <h2 id="create-a-file-content-store">Create a File Content Store</h2>
 <p>Similarly, we then create a <code>ContentStore</code> for handling content associated with the File entity.</p>
 <p><code>src/main/java/gettngstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
 <p>Let's investigate this interface:-</p>
@@ -212,7 +212,7 @@ we have to roll our own REST endpoints.</p>
 <h2 id="create-a-file-controller">Create a File Controller</h2>
 <p>Let's create these endpoints with a simple Controller class.</p>
 <p><code>src/main/java/gettingstarted/FileContentController.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/java/gettingstarted/FileContentController.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileContentController.java 1-}
 </code></pre>
 
 <p>Let's explain this class.  </p>
@@ -236,12 +236,12 @@ we have to roll our own REST endpoints.</p>
 <h2 id="create-web-client">Create Web Client</h2>
 <p>Now let's create a really simple angular web front-end for our document list.  </p>
 <p><code>src/main/resources/static/index.html</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/resources/static/index.html 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/resources/static/index.html 1-}
 </code></pre>
 
 <p>This HTML presents a simple list of files using an <code>ng-repeat</code> directive and contains a simple form allowing new files to be uploaded.</p>
 <p>All the interesting code is in the code-behind file so add the following code behind to <code>src/main/resources/static/files.js</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/resources/static/files.js 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/resources/static/files.js 1-}
 </code></pre>
 
 <p>This angular controller has the following functions:-</p>
@@ -265,7 +265,7 @@ the Files content REST endpoint <code>files/{fileId}</code> (that ultimately cal
 <h2 id="create-an-application-class">Create an Application class</h2>
 <p>Our simple document list app is now complete.  All that remains is to add the usual Spring Boot Application class.</p>
 <p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-fs/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>

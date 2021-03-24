@@ -132,7 +132,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <h3 id="update-dependencies">Update dependencies</h3>
 <p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/pom.xml 1-}
 </code></pre>
 
 <h2 id="update-file">Update File</h2>
@@ -140,13 +140,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
 will be by Spring Content REST.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can fetch renditions make your FileContentStore extend <code>Renderable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/master/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
