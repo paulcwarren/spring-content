@@ -76,9 +76,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 		Object entityId = DomainObjectUtils.getId(object);
 
-		StoreInfo store = stores.getStore(AssociativeStore.class, Stores.withDomainClass(object.getClass()));
+		Class<?> persistentEntityType = resource.getPersistentEntity().getType();
+		StoreInfo store = stores.getStore(AssociativeStore.class, Stores.withDomainClass(persistentEntityType));
 
-		Field[] fields = BeanUtils.findFieldsWithAnnotation(object.getClass(), ContentId.class, new BeanWrapperImpl(object));
+		Field[] fields = BeanUtils.findFieldsWithAnnotation(persistentEntityType, ContentId.class, new BeanWrapperImpl(object));
 		if (fields.length == 1) {
 
 			if (store != null) {
@@ -156,6 +157,9 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	}
 
 	private Link fullyQualifiedLink(URI baseUri, StoreInfo store, Object id, String fieldName) {
+
+	    Assert.notNull(id);
+
 		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
 		builder = builder.slash(id);
