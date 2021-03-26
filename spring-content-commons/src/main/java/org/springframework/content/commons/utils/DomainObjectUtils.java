@@ -1,6 +1,10 @@
 package org.springframework.content.commons.utils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.core.annotation.AnnotationUtils;
 
 public final class DomainObjectUtils {
 
@@ -16,13 +20,32 @@ public final class DomainObjectUtils {
 
     public static final Object getId(Object entity) {
 
+        Object id = null;
+
         if (JAVAX_PERSISTENCE_ID_CLASS_PRESENT && BeanUtils.hasFieldWithAnnotation(entity, javax.persistence.Id.class)) {
-            return BeanUtils.getFieldWithAnnotation(entity, javax.persistence.Id.class);
+
+            id = BeanUtils.getFieldWithAnnotation(entity, javax.persistence.Id.class);
+            if (id == null) {
+                PropertyDescriptor[] propertyDescriptors = new BeanWrapperImpl(entity).getPropertyDescriptors();
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                    if (AnnotationUtils.findAnnotation(propertyDescriptor.getReadMethod(), javax.persistence.Id.class) != null) {
+                        return new BeanWrapperImpl(entity).getPropertyValue(propertyDescriptor.getName());
+                    }
+                }
+            }
         } else if (BeanUtils.hasFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class)) {
-            return BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
+            id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
+            if (id == null) {
+                PropertyDescriptor[] propertyDescriptors = new BeanWrapperImpl(entity).getPropertyDescriptors();
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                    if (AnnotationUtils.findAnnotation(propertyDescriptor.getReadMethod(), org.springframework.data.annotation.Id.class) != null) {
+                        return new BeanWrapperImpl(entity).getPropertyValue(propertyDescriptor.getName());
+                    }
+                }
+            }
         }
 
-        return null;
+        return id;
     }
 
     public static final Field getIdField(Class<?> domainClass) {
