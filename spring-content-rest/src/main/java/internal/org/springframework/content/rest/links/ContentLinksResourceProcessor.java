@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
@@ -23,6 +24,7 @@ import org.springframework.content.commons.utils.DomainObjectUtils;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.Resource;
+import org.springframework.data.projection.TargetAware;
 import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.hateoas.Affordance;
@@ -73,6 +75,10 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		Object object = resource.getContent();
 		if (object == null)
 			return resource;
+
+		if (isProjection(object)) {
+            object = getProjectionTarget(object);
+        }
 
 		Object entityId = DomainObjectUtils.getId(object);
 
@@ -169,6 +175,14 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 		return builder.withRel(propertyLinkRel(store, fieldName));
 	}
+
+    private Object getProjectionTarget(Object object) {
+        return ((TargetAware)object).getTarget();
+    }
+
+    private boolean isProjection(Object object) {
+        return AopUtils.isAopProxy(object);
+    }
 
 	public static class StoreLinkBuilder extends LinkBuilderSupport<StoreLinkBuilder> {
 
