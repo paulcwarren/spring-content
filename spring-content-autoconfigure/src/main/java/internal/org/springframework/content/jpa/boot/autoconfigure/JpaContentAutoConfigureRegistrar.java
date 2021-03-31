@@ -25,7 +25,7 @@ public class JpaContentAutoConfigureRegistrar extends JpaStoresRegistrar {
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

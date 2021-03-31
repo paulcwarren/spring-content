@@ -2,9 +2,6 @@ package internal.org.springframework.content.fs.boot.autoconfigure;
 
 import java.util.Set;
 
-import internal.org.springframework.content.commons.utils.StoreUtils;
-import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
-
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
@@ -12,6 +9,9 @@ import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+
+import internal.org.springframework.content.commons.utils.StoreUtils;
+import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 
 public class FilesystemContentAutoConfigureRegistrar extends FilesystemStoreRegistrar {
 
@@ -23,7 +23,7 @@ public class FilesystemContentAutoConfigureRegistrar extends FilesystemStoreRegi
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

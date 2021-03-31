@@ -31,4 +31,9 @@ public class FilesystemStoreRegistrar extends AbstractStoreBeanDefinitionRegistr
 	protected Class<?>[] getIdentifyingTypes() {
 		return new Class[]{FilesystemStore.class, FilesystemAssociativeStore.class, FilesystemContentStore.class};
 	}
+
+    @Override
+    protected String getStorageTypeDefaultPropertyValue() {
+        return "fs";
+    }
 }

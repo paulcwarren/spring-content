@@ -2,9 +2,6 @@ package internal.org.springframework.content.mongo.boot.autoconfigure;
 
 import java.util.Set;
 
-import internal.org.springframework.content.commons.utils.StoreUtils;
-import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
-
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
@@ -12,6 +9,9 @@ import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+
+import internal.org.springframework.content.commons.utils.StoreUtils;
+import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
 
 public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegistrar {
 
@@ -26,7 +26,7 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

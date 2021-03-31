@@ -11,6 +11,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 public class StoreUtils {
 
@@ -50,7 +51,7 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType) {
+	public static Set<GenericBeanDefinition> getStoreCandidates(Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType, String storageTypeDefaultValue) {
 
 		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
 		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
@@ -68,7 +69,9 @@ public class StoreUtils {
 			Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
 			for (BeanDefinition candidate : candidates) {
 
-				boolean qualifiedForImplementation = !multiStoreMode || isStrictRepositoryCandidate(identifyingType, candidate.getBeanClassName(), loader);
+				boolean qualifiedForImplementation = !multiStoreMode ||
+				        candidateImplementsIdentifyingType(identifyingType, candidate.getBeanClassName(), loader) ||
+                        registrarMatchesProperty(env, storageTypeDefaultValue);
 				if (qualifiedForImplementation) {
 					result.add((GenericBeanDefinition)candidate);
 				}
@@ -78,7 +81,46 @@ public class StoreUtils {
 		return result;
 	}
 
-	protected static boolean isStrictRepositoryCandidate(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
+    public static Set<GenericBeanDefinition> getStoreCandidates(StoreCandidateComponentProvider scanner, Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType, String storageTypeDefaultValue) {
+
+//        StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
+//        // scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
+//        scanner.setResourceLoader(loader);
+//        // scanner.setEnvironment(environment);
+
+        /*
+         * for (TypeFilter filter : getExcludeFilters()) {
+         * scanner.addExcludeFilter(filter); }
+         */
+
+        Set<GenericBeanDefinition> result = new HashSet<>();
+
+        for (String basePackage : basePackages) {
+            Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
+            for (BeanDefinition candidate : candidates) {
+
+                boolean qualifiedForImplementation = !multiStoreMode ||
+                        candidateImplementsIdentifyingType(identifyingType, candidate.getBeanClassName(), loader) ||
+                        registrarMatchesProperty(env, storageTypeDefaultValue);
+                if (qualifiedForImplementation) {
+                    result.add((GenericBeanDefinition)candidate);
+                }
+            }
+        }
+
+        return result;
+    }
+
+	private static boolean registrarMatchesProperty(Environment env, String registrarStorageTypeDefaultValue) {
+
+	    String property = env.getProperty("spring.content.storage.type.default");
+	    if (!StringUtils.hasLength(property)) {
+	        return false;
+	    }
+	    return property.equals(registrarStorageTypeDefaultValue);
+    }
+
+    protected static boolean candidateImplementsIdentifyingType(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
 
 		Class<?> storeClass = null;
 		try {

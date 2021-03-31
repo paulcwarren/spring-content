@@ -136,7 +136,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(environment, resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes());
+		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(environment, resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
@@ -355,4 +355,12 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	 * @return
 	 */
 	protected abstract Class<?>[] getIdentifyingTypes();
+
+    /**
+     * Return the identifying type for this repository
+     * @return
+     */
+    protected String getStorageTypeDefaultPropertyValue() {
+        return "";
+    }
 }
