@@ -13,7 +13,7 @@ public class MongoContentRepositoriesRegistrar extends AbstractStoreBeanDefiniti
 	}
 
 	@Override
-	protected Class<?>[] getIdentifyingTypes() {
+	protected Class<?>[] getSignatureTypes() {
 		return null;
 	}
 }

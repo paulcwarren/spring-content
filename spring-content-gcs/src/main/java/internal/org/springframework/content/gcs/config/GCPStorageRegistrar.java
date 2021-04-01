@@ -14,12 +14,12 @@ public class GCPStorageRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 	}
 
     @Override
-    protected Class<?>[] getIdentifyingTypes() {
+    protected Class<?>[] getSignatureTypes() {
         return new Class[]{GCPStorageContentStore.class};
     }
 
     @Override
-    protected String getStorageTypeDefaultPropertyValue() {
+    protected String getOverridePropertyValue() {
         return "gs";
     }
 }

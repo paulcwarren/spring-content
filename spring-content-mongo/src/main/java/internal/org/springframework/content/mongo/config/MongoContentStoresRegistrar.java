@@ -14,12 +14,12 @@ public class MongoContentStoresRegistrar extends AbstractStoreBeanDefinitionRegi
 	}
 
 	@Override
-	protected Class<?>[] getIdentifyingTypes() {
+	protected Class<?>[] getSignatureTypes() {
 		return new Class[]{MongoContentStore.class};
 	}
 
     @Override
-    protected String getStorageTypeDefaultPropertyValue() {
+    protected String getOverridePropertyValue() {
         return "gridfs";
     }
 }

@@ -33,8 +33,8 @@ public class FilesystemContentAutoConfigureRegistrar extends FilesystemStoreRegi
                 this.getResourceLoader(),
                 basePackages,
                 multipleStoreImplementationsDetected(),
-                this.getIdentifyingTypes(),
-                this.getStorageTypeDefaultPropertyValue());
+                this.getSignatureTypes(),
+                this.getOverridePropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

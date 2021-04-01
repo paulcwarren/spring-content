@@ -146,8 +146,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
                 resourceLoader,
                 basePackages,
                 multipleStoreImplementationsDetected(),
-                this.getIdentifyingTypes(),
-                this.getStorageTypeDefaultPropertyValue());
+                this.getSignatureTypes(),
+                this.getOverridePropertyValue());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
@@ -194,7 +194,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 				final Class<?> domainClass = types.size() ==2 ? types.get(0).getType() : null;
 				final Class<?> idClass = types.size() ==2 ? types.get(1).getType() : types.get(0).getType();
 
-				Predicate isCandidate = new IsCandidatePredicate(this.getIdentifyingTypes());
+				Predicate isCandidate = new IsCandidatePredicate(this.getSignatureTypes());
 
 				List<String> fragmentBeanNames = Arrays.stream(interfaces)
 						.filter(isCandidate::test)
@@ -362,16 +362,16 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	protected abstract Class<? extends Annotation> getAnnotation();
 
 	/**
-	 * Return the identifying type for this repository
+	 * Return the the storage module's signature types
 	 * @return
 	 */
-	protected abstract Class<?>[] getIdentifyingTypes();
+	protected abstract Class<?>[] getSignatureTypes();
 
     /**
-     * Return the identifying type for this repository
+     * Return the storage module's override property value
      * @return
      */
-    protected String getStorageTypeDefaultPropertyValue() {
+    protected String getOverridePropertyValue() {
         return "";
     }
 }

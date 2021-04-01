@@ -87,7 +87,7 @@ public class StoreUtilsTest {
 
                             identifyingTypes = new Class<?>[] {};
 
-                            when(env.getProperty("spring.content.storage.type.default")).thenReturn("test");
+                            when(env.getProperty("spring.content.storage.override")).thenReturn("test");
                         });
 
                         It("should return all stores", () -> {
@@ -106,7 +106,7 @@ public class StoreUtilsTest {
                             identifyingTypes = new Class<?>[] {};
                             registrarId = "other-id";
 
-                            when(env.getProperty("spring.content.storage.type.default")).thenReturn("test");
+                            when(env.getProperty("spring.content.storage.override")).thenReturn("test");
                         });
 
                         It("shouldn't return any stores", () -> {

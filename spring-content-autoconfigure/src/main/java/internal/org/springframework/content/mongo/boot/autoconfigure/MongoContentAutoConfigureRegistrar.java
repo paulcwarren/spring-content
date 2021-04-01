@@ -36,8 +36,8 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
                 this.getResourceLoader(),
                 basePackages,
                 multipleStoreImplementationsDetected(),
-                this.getIdentifyingTypes(),
-                this.getStorageTypeDefaultPropertyValue());
+                this.getSignatureTypes(),
+                this.getOverridePropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

@@ -51,7 +51,7 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-    public static Set<GenericBeanDefinition> getStoreCandidates(StoreCandidateComponentProvider scanner, Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType, String storageTypeDefaultValue) {
+    public static Set<GenericBeanDefinition> getStoreCandidates(StoreCandidateComponentProvider scanner, Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] signatureTypes, String registrarOverridePropertyValue) {
 
         Set<GenericBeanDefinition> result = new HashSet<>();
 
@@ -60,8 +60,8 @@ public class StoreUtils {
             for (BeanDefinition candidate : candidates) {
 
                 boolean qualifiedForImplementation = !multiStoreMode ||
-                        candidateImplementsIdentifyingType(identifyingType, candidate.getBeanClassName(), loader) ||
-                        registrarMatchesProperty(env, storageTypeDefaultValue);
+                        candidateImplementsSignatureType(signatureTypes, candidate.getBeanClassName(), loader) ||
+                        registrarMatchesOverrideProperty(env.getProperty("spring.content.storage.override"), registrarOverridePropertyValue);
                 if (qualifiedForImplementation) {
                     result.add((GenericBeanDefinition)candidate);
                 }
@@ -71,31 +71,30 @@ public class StoreUtils {
         return result;
     }
 
-	private static boolean registrarMatchesProperty(Environment env, String registrarStorageTypeDefaultValue) {
+    protected static boolean candidateImplementsSignatureType(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
 
-	    String property = env.getProperty("spring.content.storage.type.default");
-	    if (!StringUtils.hasLength(property)) {
-	        return false;
-	    }
-	    return property.equals(registrarStorageTypeDefaultValue);
+        Class<?> storeClass = null;
+        try {
+            storeClass = loader.getClassLoader().loadClass(storeInterface);
+        }
+        catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        for (Class<?> identifyingType : identifyingTypes) {
+            if (identifyingType.isAssignableFrom(storeClass)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    protected static boolean candidateImplementsIdentifyingType(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
+    private static boolean registrarMatchesOverrideProperty(String overrideProperty, String registrarOverridePropertyValue) {
 
-		Class<?> storeClass = null;
-		try {
-			storeClass = loader.getClassLoader().loadClass(storeInterface);
-		}
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		for (Class<?> identifyingType : identifyingTypes) {
-			if (identifyingType.isAssignableFrom(storeClass)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+	    if (!StringUtils.hasLength(overrideProperty)) {
+	        return false;
+	    }
+	    return overrideProperty.equals(registrarOverridePropertyValue);
+    }
 }

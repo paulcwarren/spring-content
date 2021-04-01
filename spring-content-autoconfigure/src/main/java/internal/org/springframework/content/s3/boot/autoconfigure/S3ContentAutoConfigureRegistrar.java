@@ -34,8 +34,8 @@ public class S3ContentAutoConfigureRegistrar extends S3StoresRegistrar {
                 this.getResourceLoader(),
                 basePackages,
                 multipleStoreImplementationsDetected(),
-                this.getIdentifyingTypes(),
-                this.getStorageTypeDefaultPropertyValue());
+                this.getSignatureTypes(),
+                this.getOverridePropertyValue());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}
