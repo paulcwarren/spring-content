@@ -10,6 +10,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 
+import internal.org.springframework.content.commons.utils.StoreCandidateComponentProvider;
 import internal.org.springframework.content.commons.utils.StoreUtils;
 import internal.org.springframework.content.mongo.config.MongoContentStoresRegistrar;
 
@@ -26,7 +27,17 @@ public class MongoContentAutoConfigureRegistrar extends MongoContentStoresRegist
 
 		String[] basePackages = this.getBasePackages();
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(this.getEnvironment(), this.getResourceLoader(), basePackages, multipleStoreImplementationsDetected(), getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
+        StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, this.getEnvironment());
+        scanner.setResourceLoader(this.getResourceLoader());
+
+        Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(
+                scanner,
+                this.getEnvironment(),
+                this.getResourceLoader(),
+                basePackages,
+                multipleStoreImplementationsDetected(),
+                this.getIdentifyingTypes(),
+                this.getStorageTypeDefaultPropertyValue());
 
 		this.buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

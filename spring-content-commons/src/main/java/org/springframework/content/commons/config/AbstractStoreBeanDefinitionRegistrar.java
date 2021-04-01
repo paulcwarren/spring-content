@@ -51,6 +51,7 @@ import internal.org.springframework.content.commons.config.StoreFragmentDefiniti
 import internal.org.springframework.content.commons.config.StoreFragmentDetector;
 import internal.org.springframework.content.commons.config.StoreFragmentsFactoryBean;
 import internal.org.springframework.content.commons.repository.AnnotatedStoreEventInvoker;
+import internal.org.springframework.content.commons.utils.StoreCandidateComponentProvider;
 import internal.org.springframework.content.commons.utils.StoreUtils;
 
 public abstract class AbstractStoreBeanDefinitionRegistrar
@@ -136,7 +137,17 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		AnnotationAttributes attributes = new AnnotationAttributes(importingClassMetadata.getAnnotationAttributes(getAnnotation().getName()));
 		String[] basePackages = this.getBasePackages(attributes, importingClassMetadata);
 
-		Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(environment, resourceLoader, basePackages, multipleStoreImplementationsDetected(), this.getIdentifyingTypes(), this.getStorageTypeDefaultPropertyValue());
+        StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, environment);
+        scanner.setResourceLoader(resourceLoader);
+
+        Set<GenericBeanDefinition> definitions = StoreUtils.getStoreCandidates(
+                scanner,
+                environment,
+                resourceLoader,
+                basePackages,
+                multipleStoreImplementationsDetected(),
+                this.getIdentifyingTypes(),
+                this.getStorageTypeDefaultPropertyValue());
 
 		buildAndRegisterDefinitions(importingClassMetadata, registry, attributes, basePackages, definitions);
 	}

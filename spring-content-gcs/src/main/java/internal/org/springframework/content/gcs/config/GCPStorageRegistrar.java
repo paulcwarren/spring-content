@@ -17,4 +17,9 @@ public class GCPStorageRegistrar extends AbstractStoreBeanDefinitionRegistrar {
     protected Class<?>[] getIdentifyingTypes() {
         return new Class[]{GCPStorageContentStore.class};
     }
+
+    @Override
+    protected String getStorageTypeDefaultPropertyValue() {
+        return "gs";
+    }
 }

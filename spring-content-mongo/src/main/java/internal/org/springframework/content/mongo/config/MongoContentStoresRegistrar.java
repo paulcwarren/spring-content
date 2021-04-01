@@ -8,7 +8,7 @@ import org.springframework.content.mongo.store.MongoContentStore;
 
 public class MongoContentStoresRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 
-	@Override
+    @Override
 	protected Class<? extends Annotation> getAnnotation() {
 		return EnableMongoStores.class;
 	}
@@ -17,4 +17,9 @@ public class MongoContentStoresRegistrar extends AbstractStoreBeanDefinitionRegi
 	protected Class<?>[] getIdentifyingTypes() {
 		return new Class[]{MongoContentStore.class};
 	}
+
+    @Override
+    protected String getStorageTypeDefaultPropertyValue() {
+        return "gridfs";
+    }
 }

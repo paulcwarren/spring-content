@@ -51,47 +51,7 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType, String storageTypeDefaultValue) {
-
-		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
-		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
-		scanner.setResourceLoader(loader);
-		// scanner.setEnvironment(environment);
-
-		/*
-		 * for (TypeFilter filter : getExcludeFilters()) {
-		 * scanner.addExcludeFilter(filter); }
-		 */
-
-		Set<GenericBeanDefinition> result = new HashSet<>();
-
-		for (String basePackage : basePackages) {
-			Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
-			for (BeanDefinition candidate : candidates) {
-
-				boolean qualifiedForImplementation = !multiStoreMode ||
-				        candidateImplementsIdentifyingType(identifyingType, candidate.getBeanClassName(), loader) ||
-                        registrarMatchesProperty(env, storageTypeDefaultValue);
-				if (qualifiedForImplementation) {
-					result.add((GenericBeanDefinition)candidate);
-				}
-			}
-		}
-
-		return result;
-	}
-
     public static Set<GenericBeanDefinition> getStoreCandidates(StoreCandidateComponentProvider scanner, Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType, String storageTypeDefaultValue) {
-
-//        StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
-//        // scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
-//        scanner.setResourceLoader(loader);
-//        // scanner.setEnvironment(environment);
-
-        /*
-         * for (TypeFilter filter : getExcludeFilters()) {
-         * scanner.addExcludeFilter(filter); }
-         */
 
         Set<GenericBeanDefinition> result = new HashSet<>();
 

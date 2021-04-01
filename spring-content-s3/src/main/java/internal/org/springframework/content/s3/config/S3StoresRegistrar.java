@@ -22,4 +22,9 @@ public class S3StoresRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 	protected Class<?>[] getIdentifyingTypes() {
 		return new Class[]{S3ContentStore.class};
 	}
+
+    @Override
+    protected String getStorageTypeDefaultPropertyValue() {
+        return "s3";
+    }
 }
