@@ -35,6 +35,15 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <1>
 
 == Accessing Content
 
+=== Signature Types
+[[signature_types]]
+
+Mongo's GridFS Storage supports the following signature types:
+
+- `org.springframework.content.mongo.store.MongoContentStore`
+
+The module id for the `spring.content.storage.override` property is `gridfs`.
+
 === Setting Content
 
 Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  

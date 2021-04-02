@@ -40,6 +40,15 @@ The following configuration properties (prefix `spring.content.azure`) are suppo
 
 == Accessing Content
 
+=== Signature Types
+[[signature_types]]
+
+Azure Storage supports the following signature types:
+
+- `org.springframework.content.azure.store.AzureStorageContentStore`
+
+The module id for the `spring.content.storage.override` property is `azs`.
+
 === Storage Model
 
 With Azure Blob Storage, buckets and objects are the two main primitives, where objects are stored in buckets.  Azure has a

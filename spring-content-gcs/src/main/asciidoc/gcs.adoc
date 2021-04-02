@@ -44,6 +44,8 @@ Google Cloud Storage supports the following signature types:
 
 - `org.springframework.content.gcs.store.GCPStorageContentStore`
 
+The module id for the `spring.content.storage.override` property is `gcs`.
+
 === Storage Model
 
 With GCP Storage (GCS), buckets and objects are the two main primitives, where objects are stored in buckets.  GCS has a

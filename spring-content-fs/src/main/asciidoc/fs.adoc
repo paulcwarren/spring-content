@@ -54,6 +54,8 @@ Filesystem Storage supports the following signature types:
 - `org.springframework.content.fs.store.FilesystemAssociativeStore`
 - `org.springframework.content.fs.store.FilesystemContentStore`
 
+The module id for the `spring.content.storage.override` property is `fs`.
+
 === Loading Spring Resources from a Store or AssociativeStore
 
 Resources returned by Filesystem Storage are standard Spring Resources implementing the following interfaces:
