@@ -14,7 +14,12 @@ public class AzureStorageRegistrar extends AbstractStoreBeanDefinitionRegistrar 
 	}
 
     @Override
-    protected Class<?>[] getIdentifyingTypes() {
+    protected Class<?>[] getSignatureTypes() {
         return new Class[]{AzureStorageContentStore.class};
+    }
+
+    @Override
+    protected String getOverridePropertyValue() {
+        return "azs";
     }
 }

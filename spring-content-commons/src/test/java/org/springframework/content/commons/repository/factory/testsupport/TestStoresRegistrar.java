@@ -12,7 +12,7 @@ public class TestStoresRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 	}
 
 	@Override
-	protected Class<?>[] getIdentifyingTypes() {
+	protected Class<?>[] getSignatureTypes() {
 		return new Class[]{TestContentStore.class};
 	}
 }
