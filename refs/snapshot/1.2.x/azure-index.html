@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 1.2.3-SNAPSHOT,</span>
-<span id="revdate">2021-04-12</span>
+<span id="revdate">2021-04-16</span>
 </div>
 </div>
 <div id="content">
@@ -636,12 +636,24 @@ public class Application {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.multimodule">1.1.1. Using Stores with Multiple Spring Content Modules</h4>
+<h4 id="content-repositories.multimodule">1.1.1. Using Stores with Multiple Spring Content Storage Modules</h4>
 <div class="paragraph">
-<p>Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
-the one Spring Content module.  Sometimes, applications require using more than one Spring Content
-module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
-module-specific ContentStore interfaces.</p>
+<p>Using a single Spring Content storage module in your application keeps things simple because all Storage beans
+will use to that one Spring Content storage module as their implementation.  Sometimes, applications require
+more than one Spring Content storage module.  In such cases, a store definition must distinguish between storage
+ technologies by extending one of the module-specific signature Store interfaces.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="#signature_types">Signature Types</a> for the signature types for the storage modules you are using.</p>
+</div>
+<div class="sect4">
+<h5 id="_manual_storage_override">Manual Storage Override</h5>
+<div class="paragraph">
+<p>Because Spring Content provides an abstraction over storage it is also common to use one storage module for testing but another
+for production.  For these cases it is possible to again include multiple Spring Content storage modules,
+but use generic Store interfaces, rather than signature types, and instead specify the <code>spring.content.storage.type.default=&lt;storage_module_id&gt;</code>
+property to manually set the storage implementation to be injected into your Storage beans.</p>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -1261,7 +1273,23 @@ public static class ApplicationConfig {
 <div class="sect2">
 <h3 id="_accessing_content">2.3. Accessing Content</h3>
 <div class="sect3">
-<h4 id="_storage_model">2.3.1. Storage Model</h4>
+<h4 id="_signature_types">2.3.1. Signature Types</h4>
+<div id="signature_types" class="paragraph">
+<p>Azure Storage supports the following signature types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>org.springframework.content.azure.store.AzureStorageContentStore</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The module id for the <code>spring.content.storage.type.default</code> property is <code>azs</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_storage_model">2.3.2. Storage Model</h4>
 <div class="paragraph">
 <p>With Azure Blob Storage, buckets and objects are the two main primitives, where objects are stored in buckets.  Azure has a
 flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
@@ -1269,7 +1297,7 @@ of buckets or objects in buckets.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_loading_spring_resources_from_a_store_or_associativestore">2.3.2. Loading Spring Resources from a Store or AssociativeStore</h4>
+<h4 id="_loading_spring_resources_from_a_store_or_associativestore">2.3.3. Loading Spring Resources from a Store or AssociativeStore</h4>
 <div class="paragraph">
 <p>When a Resource is loaded from the Store the following rules are used to determine the identify the <code>BlobId</code> of the
 object.</p>
@@ -1318,7 +1346,7 @@ instance of <code>BlobId</code></p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content_using_a_contentstore">2.3.3. Setting Content using a ContentStore</h4>
+<h4 id="_setting_content_using_a_contentstore">2.3.4. Setting Content using a ContentStore</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -1334,19 +1362,19 @@ based in <code>java.util.UUID</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content_from_a_contentstore">2.3.4. Getting Content from a ContentStore</h4>
+<h4 id="_getting_content_from_a_contentstore">2.3.5. Getting Content from a ContentStore</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content_from_a_contentstore">2.3.5. Unsetting Content from a ContentStore</h4>
+<h4 id="_unsetting_content_from_a_contentstore">2.3.6. Unsetting Content from a ContentStore</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_configuring_a_spring_converter">2.3.6. Configuring a Spring Converter</h4>
+<h4 id="_configuring_a_spring_converter">2.3.7. Configuring a Spring Converter</h4>
 <div id="configuring_converters" class="paragraph">
 <p>To configure Spring Content Azure Storage with one or more Spring Converters that convert your Entities, or IDs, to an
 instance of BlobId the following approach can be used:</p>
@@ -1482,7 +1510,7 @@ public class AzureStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 1.2.3-SNAPSHOT<br>
-Last updated 2021-04-12 03:11:04 UTC
+Last updated 2021-04-16 05:56:40 UTC
 </div>
 </div>
 </body>

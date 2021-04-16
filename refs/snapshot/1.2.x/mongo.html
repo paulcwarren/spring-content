@@ -492,6 +492,22 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="_signature_types">Signature Types</h3>
+<div id="signature_types" class="paragraph">
+<p>Mongo&#8217;s GridFS Storage supports the following signature types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>org.springframework.content.mongo.store.MongoContentStore</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The module id for the <code>spring.content.storage.type.default</code> property is <code>gridfs</code>.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
@@ -532,7 +548,7 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-04-12 03:11:04 UTC
+Last updated 2021-04-16 05:56:40 UTC
 </div>
 </div>
 </body>

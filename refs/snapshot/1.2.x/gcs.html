@@ -511,6 +511,22 @@ public static class ApplicationConfig {
 <h2 id="_accessing_content">Accessing Content</h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="_signature_types">Signature Types</h3>
+<div id="signature_types" class="paragraph">
+<p>Google Cloud Storage supports the following signature types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>org.springframework.content.gcs.store.GCPStorageContentStore</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The module id for the <code>spring.content.storage.type.default</code> property is <code>gcs</code>.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_storage_model">Storage Model</h3>
 <div class="paragraph">
 <p>With GCP Storage (GCS), buckets and objects are the two main primitives, where objects are stored in buckets.  GCS has a
@@ -520,6 +536,12 @@ of buckets or objects in buckets.</p>
 </div>
 <div class="sect2">
 <h3 id="_loading_spring_resources_from_a_store_or_associativestore">Loading Spring Resources from a Store or AssociativeStore</h3>
+<div class="paragraph">
+<p>Resources returned by Google Cloud Storage are standard Spring Resources implementing the following interfaces:
+- <code>org.springframework.core.io.Resource</code>
+- <code>org.springframework.core.io.WriteableResource</code>
+- <code>org.springframework.content.commons.io.DeleteableResoure</code></p>
+</div>
 <div class="paragraph">
 <p>When a Resource is loaded from the Store the following rules are used to determine the identify the <code>BlobId</code> of the
 object.</p>
@@ -635,7 +657,7 @@ public class GCSStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-04-12 03:11:04 UTC
+Last updated 2021-04-16 05:56:40 UTC
 </div>
 </div>
 </body>
