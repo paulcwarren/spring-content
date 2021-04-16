@@ -89,12 +89,21 @@ public class Application {
 ====
 
 [[content-repositories.multimodule]]
-=== Using Stores with Multiple Spring Content Modules
+=== Using Stores with Multiple Spring Content Storage Modules
 
-Using a unique Spring Content module in your application keeps things simple, because all Store interfaces are bound to
-the one Spring Content module.  Sometimes, applications require using more than one Spring Content
-module.  In such cases, a store definition must distinguish between storage technologies by extending one of the
-module-specific ContentStore interfaces.
+Using a single Spring Content storage module in your application keeps things simple because all Storage beans 
+will use to that one Spring Content storage module as their implementation.  Sometimes, applications require 
+more than one Spring Content storage module.  In such cases, a store definition must distinguish between storage
+ technologies by extending one of the module-specific signature Store interfaces.
+
+See <<signature_types,Signature Types>> for the signature types for the storage modules you are using.
+
+==== Manual Storage Override
+
+Because Spring Content provides an abstraction over storage it is also common to use one storage module for testing but another 
+for production.  For these cases it is possible to again include multiple Spring Content storage modules, 
+but use generic Store interfaces, rather than signature types, and instead specify the `spring.content.storage.type.default=<storage_module_id>` 
+property to manually set the storage implementation to be injected into your Storage beans.
 
 [[content-repositories.events]]
 === Events

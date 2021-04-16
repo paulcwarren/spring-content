@@ -11,12 +11,14 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 public class StoreUtils {
 
-	private static final String BASE_PACKAGES = "basePackages";
+    private static final String BASE_PACKAGES = "basePackages";
 	private static final String BASE_PACKAGE_CLASSES = "basePackageClasses";
 	private static final String STORE_FACTORY_BEAN_CLASS = "storeFactoryBeanClass";
+	private static final String SPRING_CONTENT_STORAGE_TYPE_DEFAULT = "spring.content.storage.type.default";
 
 	public static String[] getBasePackages(AnnotationAttributes attributes, String[] defaultPackages) {
 
@@ -50,50 +52,50 @@ public class StoreUtils {
 		return Introspector.decapitalize(beanName);
 	}
 
-	public static Set<GenericBeanDefinition> getStoreCandidates(Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] identifyingType) {
+    public static Set<GenericBeanDefinition> getStoreCandidates(StoreCandidateComponentProvider scanner, Environment env, ResourceLoader loader, String[] basePackages, boolean multiStoreMode, Class<?>[] signatureTypes, String registrarOverridePropertyValue) {
 
-		StoreCandidateComponentProvider scanner = new StoreCandidateComponentProvider(false, env);
-		// scanner.setConsiderNestedRepositoryInterfaces(shouldConsiderNestedRepositories());
-		scanner.setResourceLoader(loader);
-		// scanner.setEnvironment(environment);
+        Set<GenericBeanDefinition> result = new HashSet<>();
 
-		/*
-		 * for (TypeFilter filter : getExcludeFilters()) {
-		 * scanner.addExcludeFilter(filter); }
-		 */
+        for (String basePackage : basePackages) {
+            Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
+            for (BeanDefinition candidate : candidates) {
 
-		Set<GenericBeanDefinition> result = new HashSet<>();
+                boolean qualifiedForImplementation = !multiStoreMode ||
+                        candidateImplementsSignatureType(signatureTypes, candidate.getBeanClassName(), loader) ||
+                        registrarMatchesOverrideProperty(env.getProperty(SPRING_CONTENT_STORAGE_TYPE_DEFAULT), registrarOverridePropertyValue);
+                if (qualifiedForImplementation) {
+                    result.add((GenericBeanDefinition)candidate);
+                }
+            }
+        }
 
-		for (String basePackage : basePackages) {
-			Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
-			for (BeanDefinition candidate : candidates) {
+        return result;
+    }
 
-				boolean qualifiedForImplementation = !multiStoreMode || isStrictRepositoryCandidate(identifyingType, candidate.getBeanClassName(), loader);
-				if (qualifiedForImplementation) {
-					result.add((GenericBeanDefinition)candidate);
-				}
-			}
-		}
+    protected static boolean candidateImplementsSignatureType(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
 
-		return result;
-	}
+        Class<?> storeClass = null;
+        try {
+            storeClass = loader.getClassLoader().loadClass(storeInterface);
+        }
+        catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
-	protected static boolean isStrictRepositoryCandidate(Class<?>[] identifyingTypes, String storeInterface, ResourceLoader loader) {
+        for (Class<?> identifyingType : identifyingTypes) {
+            if (identifyingType.isAssignableFrom(storeClass)) {
+                return true;
+            }
+        }
 
-		Class<?> storeClass = null;
-		try {
-			storeClass = loader.getClassLoader().loadClass(storeInterface);
-		}
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+        return false;
+    }
 
-		for (Class<?> identifyingType : identifyingTypes) {
-			if (identifyingType.isAssignableFrom(storeClass)) {
-				return true;
-			}
-		}
+    private static boolean registrarMatchesOverrideProperty(String overrideProperty, String registrarOverridePropertyValue) {
 
-		return false;
-	}
+	    if (!StringUtils.hasLength(overrideProperty)) {
+	        return false;
+	    }
+	    return overrideProperty.equals(registrarOverridePropertyValue);
+    }
 }

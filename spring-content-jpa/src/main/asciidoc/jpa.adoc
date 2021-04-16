@@ -56,6 +56,17 @@ stores using `@EnableJpaStores` and enable transaction management with the `@Ena
 If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
 configuration class resides in as the base package.
 
+== Accessing Content
+
+=== Signature Types
+[[signature_types]]
+
+JPA Storage supports the following signature types:
+
+- `org.springframework.content.jpa.store.JpaContentStore`
+
+The module id for the `spring.content.storage.type.default` property is `jpa`.
+
 === Content Streaming
 
 Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading

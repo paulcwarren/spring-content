@@ -37,6 +37,15 @@ The following configuration properties (prefix `spring.content.gcs`) are support
 
 == Accessing Content
 
+=== Signature Types
+[[signature_types]]
+
+Google Cloud Storage supports the following signature types:
+
+- `org.springframework.content.gcs.store.GCPStorageContentStore`
+
+The module id for the `spring.content.storage.type.default` property is `gcs`.
+
 === Storage Model
 
 With GCP Storage (GCS), buckets and objects are the two main primitives, where objects are stored in buckets.  GCS has a
@@ -44,6 +53,11 @@ flat structure with no hierarchy like you would see in a typical file system.  T
 of buckets or objects in buckets.  
 
 === Loading Spring Resources from a Store or AssociativeStore
+
+Resources returned by Google Cloud Storage are standard Spring Resources implementing the following interfaces:
+- `org.springframework.core.io.Resource`
+- `org.springframework.core.io.WriteableResource`
+- `org.springframework.content.commons.io.DeleteableResoure`
 
 When a Resource is loaded from the Store the following rules are used to determine the identify the `BlobId` of the
 object.
