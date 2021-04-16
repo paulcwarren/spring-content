@@ -15,9 +15,10 @@ import org.springframework.util.StringUtils;
 
 public class StoreUtils {
 
-	private static final String BASE_PACKAGES = "basePackages";
+    private static final String BASE_PACKAGES = "basePackages";
 	private static final String BASE_PACKAGE_CLASSES = "basePackageClasses";
 	private static final String STORE_FACTORY_BEAN_CLASS = "storeFactoryBeanClass";
+	private static final String SPRING_CONTENT_STORAGE_TYPE_DEFAULT = "spring.content.storage.type.default";
 
 	public static String[] getBasePackages(AnnotationAttributes attributes, String[] defaultPackages) {
 
@@ -61,7 +62,7 @@ public class StoreUtils {
 
                 boolean qualifiedForImplementation = !multiStoreMode ||
                         candidateImplementsSignatureType(signatureTypes, candidate.getBeanClassName(), loader) ||
-                        registrarMatchesOverrideProperty(env.getProperty("spring.content.storage.override"), registrarOverridePropertyValue);
+                        registrarMatchesOverrideProperty(env.getProperty(SPRING_CONTENT_STORAGE_TYPE_DEFAULT), registrarOverridePropertyValue);
                 if (qualifiedForImplementation) {
                     result.add((GenericBeanDefinition)candidate);
                 }

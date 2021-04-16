@@ -65,7 +65,7 @@ JPA Storage supports the following signature types:
 
 - `org.springframework.content.jpa.store.JpaContentStore`
 
-The module id for the `spring.content.storage.override` property is `jpa`.
+The module id for the `spring.content.storage.type.default` property is `jpa`.
 
 === Content Streaming
 

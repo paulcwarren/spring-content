@@ -102,7 +102,7 @@ See <<signature_types,Signature Types>> for the signature types for the storage 
 
 Because Spring Content provides an abstraction over storage it is also common to use one storage module for testing but another 
 for production.  For these cases it is possible to again include multiple Spring Content storage modules, 
-but use generic Store interfaces, rather than signature types, and instead specify the `spring.content.storage.override=<storage_module_id>` 
+but use generic Store interfaces, rather than signature types, and instead specify the `spring.content.storage.type.default=<storage_module_id>` 
 property to manually set the storage implementation to be injected into your Storage beans.
 
 [[content-repositories.events]]

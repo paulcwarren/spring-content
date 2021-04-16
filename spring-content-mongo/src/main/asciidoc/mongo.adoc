@@ -42,7 +42,7 @@ Mongo's GridFS Storage supports the following signature types:
 
 - `org.springframework.content.mongo.store.MongoContentStore`
 
-The module id for the `spring.content.storage.override` property is `gridfs`.
+The module id for the `spring.content.storage.type.default` property is `gridfs`.
 
 === Setting Content
 

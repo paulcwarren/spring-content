@@ -43,7 +43,7 @@ S3 Storage supports the following signature types:
 
 - `org.springframework.content.s3.store.S3ContentStore`
 
-The module id for the `spring.content.storage.override` property is `s3`.
+The module id for the `spring.content.storage.type.default` property is `s3`.
 
 === Multi-tenancy
 

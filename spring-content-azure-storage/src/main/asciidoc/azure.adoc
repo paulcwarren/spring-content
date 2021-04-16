@@ -47,7 +47,7 @@ Azure Storage supports the following signature types:
 
 - `org.springframework.content.azure.store.AzureStorageContentStore`
 
-The module id for the `spring.content.storage.override` property is `azs`.
+The module id for the `spring.content.storage.type.default` property is `azs`.
 
 === Storage Model
 

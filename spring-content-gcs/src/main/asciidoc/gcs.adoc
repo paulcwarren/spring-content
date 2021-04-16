@@ -44,7 +44,7 @@ Google Cloud Storage supports the following signature types:
 
 - `org.springframework.content.gcs.store.GCPStorageContentStore`
 
-The module id for the `spring.content.storage.override` property is `gcs`.
+The module id for the `spring.content.storage.type.default` property is `gcs`.
 
 === Storage Model
 
