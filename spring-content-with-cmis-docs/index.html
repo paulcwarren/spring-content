@@ -148,6 +148,107 @@ When you’re finished, you can check your results against the code in <code>spr
 
 <p><code>pom.xml</code></p>
 <pre><code>
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+  &lt;artifactId&gt;spring-content-with-cmis&lt;/artifactId&gt;
+
+ 	&lt;parent&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+		&lt;version&gt;2.4.1&lt;/version&gt;
+	&lt;/parent&gt;
+
+	&lt;properties&gt;
+		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+		&lt;java.version&gt;1.8&lt;/java.version&gt;
+		&lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
+	&lt;/properties&gt;
+
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
+			&lt;artifactId&gt;h2&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;1.2.0&lt;/version&gt;
+		&lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-versions-jpa&lt;/artifactId&gt;
+            &lt;version&gt;1.2.0&lt;/version&gt;
+        &lt;/dependency&gt;
+ 		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-cmis&lt;/artifactId&gt;
+			&lt;version&gt;1.2.0&lt;/version&gt;
+		&lt;/dependency&gt;
+
+		&lt;!-- Test dependencies --&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-api&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-engine&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
+			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
+			&lt;version&gt;2.9.0&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
+			&lt;version&gt;${ginkgo-version}&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+ 	&lt;/dependencies&gt;
+
+	&lt;build&gt;
+		&lt;plugins&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;/plugin&gt;
+		&lt;/plugins&gt;
+	&lt;/build&gt;
+
+	&lt;repositories&gt;
+		&lt;repository&gt;
+			&lt;id&gt;snapshots&lt;/id&gt;
+			&lt;name&gt;nexus&lt;/name&gt;
+			&lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
+			&lt;snapshots&gt;
+				&lt;enabled&gt;true&lt;/enabled&gt;
+			&lt;/snapshots&gt;
+		&lt;/repository&gt;
+	&lt;/repositories&gt;
+
+&lt;/project&gt;
 </code></pre>
 
 <p>We add several dependencies:-</p>
@@ -295,6 +396,75 @@ well as entity auditing that we use to timestamp entity creation and modificatio
 they can both inherit from:</p>
 <p><code>src/main/java/gettingstarted/BaseObject.java</code></p>
 <pre><code>
+package gettingstarted;
+
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+import javax.persistence.Version;
+
+import org.springframework.content.cmis.CmisDescription;
+import org.springframework.content.cmis.CmisName;
+import org.springframework.content.cmis.CmisReference;
+import org.springframework.content.cmis.CmisReferenceType;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Inheritance(strategy = InheritanceType.JOINED)
+@NoArgsConstructor
+@Getter
+@Setter
+public class BaseObject {
+
+	@javax.persistence.Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long Id;
+
+	@CmisName
+	private String name;
+
+	@CmisDescription
+	private String description;
+
+	@CreatedBy
+	private String createdBy;
+
+	@CreatedDate
+	private Long createdDate;
+
+	@LastModifiedBy
+	private String lastModifiedBy;
+
+	@LastModifiedDate
+	private Long lastModifiedDate;
+
+	@Version
+	private Long vstamp;
+
+	@CmisReference(type = CmisReferenceType.Parent)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private Folder parent;
+
+	public BaseObject(String name) {
+		this.name = name;
+	}
+}
 </code></pre>
 
 <p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code>, <code>description</code>.  Standard audit 
@@ -307,6 +477,39 @@ that this is part of a parent/child relationship.  </p>
 documents hierarchically.</p>
 <p><code>src/main/java/gettingstarted/Folder.java</code></p>
 <pre><code>
+package gettingstarted;
+
+
+import java.util.Collection;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
+
+import org.springframework.content.cmis.CmisFolder;
+import org.springframework.content.cmis.CmisReference;
+import org.springframework.content.cmis.CmisReferenceType;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@NoArgsConstructor
+@Getter
+@Setter
+@CmisFolder
+public class Folder extends BaseObject {
+
+	@CmisReference(type= CmisReferenceType.Child)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", cascade = CascadeType.ALL)
+	private Collection&lt;BaseObject&gt; children;
+
+	public Folder(String name) {
+		super(name);
+	}
+}
 </code></pre>
 
 <p>Note the <code>@CmisFolder</code> annotation that maps this entity to the cmis:folder object type.  Also note the <code>@CmisReference</code> annotation instructing Spring Content CMIS that this is the other end of the parent/child relationship.</p>
@@ -314,6 +517,72 @@ documents hierarchically.</p>
 <p>Lastly, we'll create the Document entity.  </p>
 <p><code>src/main/java/gettingstarted/Document.java</code></p>
 <pre><code>
+package gettingstarted;
+
+
+import java.util.UUID;
+
+import javax.persistence.Entity;
+
+import org.springframework.content.cmis.CmisDocument;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.versions.AncestorId;
+import org.springframework.versions.AncestorRootId;
+import org.springframework.versions.LockOwner;
+import org.springframework.versions.SuccessorId;
+import org.springframework.versions.VersionLabel;
+import org.springframework.versions.VersionNumber;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@NoArgsConstructor
+@Getter
+@Setter
+@CmisDocument
+public class Document extends BaseObject {
+
+	@ContentId
+	private UUID contentId;
+
+	@ContentLength
+	private Long contentLen;
+
+	@MimeType
+	private String mimeType;
+
+	@LockOwner
+	private String lockOwner;
+
+	@AncestorId
+	private Long ancestorId;
+
+	@AncestorRootId
+	private Long ancestralRootId;
+
+	@SuccessorId
+	private Long successorId;
+
+	@VersionNumber
+	private String versionNumber = "0.0";
+
+	@VersionLabel
+	private String versionLabel;
+
+	public Document(String name) {
+		super(name);
+	}
+
+	public Document(Document doc) {
+		this.setName(doc.getName());
+		this.setDescription(doc.getDescription());
+		this.setParent(doc.getParent());
+	}
+}
 </code></pre>
 
 <p>Again, note the <code>@CmisDocument</code> that maps this entity to the cmis:document object type.  We also see the standard Spring Versions

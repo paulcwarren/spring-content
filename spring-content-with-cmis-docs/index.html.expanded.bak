@@ -147,7 +147,7 @@ When you’re finished, you can check your results against the code in <code>spr
 </code></pre>
 
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/spring-content-with-cmis/complete/pom.xml 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-cmis/complete/pom.xml 1-}
 </code></pre>
 
 <p>We add several dependencies:-</p>
@@ -207,7 +207,7 @@ well as entity auditing that we use to timestamp entity creation and modificatio
 <p>We are going to model both Documents and Folders and they share some common characteristics so let's define a BaseObject that 
 they can both inherit from:</p>
 <p><code>src/main/java/gettingstarted/BaseObject.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-cmis/complete/src/main/java/gettingstarted/BaseObject.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-cmis/complete/src/main/java/gettingstarted/BaseObject.java 1-}
 </code></pre>
 
 <p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code>, <code>description</code>.  Standard audit 
@@ -219,14 +219,14 @@ that this is part of a parent/child relationship.  </p>
 <p>Next, we'll create the Folder entity.  As you would expect a Folder is a containing object allowing users to arrange their
 documents hierarchically.</p>
 <p><code>src/main/java/gettingstarted/Folder.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-cmis/complete/src/main/java/gettingstarted/Folder.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-cmis/complete/src/main/java/gettingstarted/Folder.java 1-}
 </code></pre>
 
 <p>Note the <code>@CmisFolder</code> annotation that maps this entity to the cmis:folder object type.  Also note the <code>@CmisReference</code> annotation instructing Spring Content CMIS that this is the other end of the parent/child relationship.</p>
 <h2 id="create-a-document-entity">Create a Document entity</h2>
 <p>Lastly, we'll create the Document entity.  </p>
 <p><code>src/main/java/gettingstarted/Document.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-cmis/complete/src/main/java/gettingstarted/Document.java 1-}
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-cmis/complete/src/main/java/gettingstarted/Document.java 1-}
 </code></pre>
 
 <p>Again, note the <code>@CmisDocument</code> that maps this entity to the cmis:document object type.  We also see the standard Spring Versions
