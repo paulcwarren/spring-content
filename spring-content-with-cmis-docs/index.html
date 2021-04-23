@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Java API - Content Services for Spring</title>
+        <title>CMIS - Content Services for Spring</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -54,7 +54,7 @@
                 <a href="#" role="button" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="nav-dropdown-Guides">Guides <b class="caret"></b></a>
                 <div class="dropdown-menu" aria-labelledby="nav-dropdown-Guides">
                   
-<a href="./" class="dropdown-item active">Java API</a>
+<a href="../spring-content-fs-docs/" class="dropdown-item">Java API</a>
                   
 <a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
@@ -66,7 +66,7 @@
                   
 <a href="../spring-content-with-rbac-docs/" class="dropdown-item">RBAC</a>
                   
-<a href="../spring-content-with-cmis-docs/" class="dropdown-item">CMIS</a>
+<a href="./" class="dropdown-item active">CMIS</a>
                 </div>
               </li>
             </ul>
@@ -94,14 +94,14 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">Java API</li>
+    <li class="breadcrumb-item active" aria-current="page">CMIS</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-with-spring-content">Getting Started with Spring Content</h1>
+<h1 id="getting-started-with-spring-content-and-cmis">Getting Started with Spring Content and CMIS</h1>
 <h2 id="what-youll-build">What you'll build</h2>
-<p>You'll build an application that uses Spring Content to build a simple web-based document list.</p>
+<p>You'll build a simple document management application using Spring Content and Spring Content CMIS.</p>
 <h2 id="what-youll-need">What you'll need</h2>
 <ul>
 <li>
@@ -127,11 +127,11 @@
 <p>Download and unzip the source repository for this guide, or clone it using Git: <code>git clone https://github.com/paulcwarren/spring-content-gettingstarted.git</code></p>
 </li>
 <li>
-<p><code>cd</code> into <code>spring-content-gettingstarted/spring-content-fs/initial</code></p>
+<p><code>cd</code> into <code>spring-content-gettingstarted/spring-content-with-cmis/initial</code></p>
 </li>
 <li>
 <p>Jump ahead to <code>Define a simple entity</code>.
-When you’re finished, you can check your results against the code in <code>spring-content-gettingstarted/spring-content-fs/complete</code>.</p>
+When you’re finished, you can check your results against the code in <code>spring-content-gettingstarted/spring-content-with-cmis/complete</code>.</p>
 </li>
 </ul>
 <h2 id="build-with-maven">Build with Maven</h2>
@@ -147,7 +147,7 @@ When you’re finished, you can check your results against the code in <code>spr
 </code></pre>
 
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/pom.xml 1-}
+<pre><code>
 </code></pre>
 
 <p>We add several dependencies:-</p>
@@ -156,118 +156,93 @@ When you’re finished, you can check your results against the code in <code>spr
 <p>Spring Boot Starter Web provides the web server framework</p>
 </li>
 <li>
+<p>Spring Security provides the security framework</p>
+</li>
+<li>
 <p>Spring Boot Starter Data JPA will provide a relational database to
-store the metadata of our files.  In this case we are using the H2
+store the metadata of our documents.  In this case we are using the H2
 in-memory database</p>
 </li>
 <li>
-<p>Spring Boot Starter Data REST will provide REST endpoints for our File
-metadata</p>
+<p>Spring Boot Starter Content FS will provide Filesystem-based
+storage for the content of each document and manage its association with a Document Entity</p>
 </li>
 <li>
-<p>Spring Boot Starter Content FS will provide a Filesystem-based
-store for the content of each file and manage the
-association with an Entity</p>
-</li>
-</ul>
-<h2 id="define-a-simple-entity">Define a simple Entity</h2>
-<p>Let's define a simple Entity to represent a File.</p>
-<p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/File.java 1-}
-</code></pre>
-
-<p>As you would expect we created a standard JPA Entity to capture some metadata about our file; <code>name</code> and <code>summary</code>.  In addition, because we will be serving these files over the web, we also record <code>mimeType</code> so that we can instruct the browser correctly.</p>
-<p>We then add two annotated Spring Content fields; <code>@ContentId</code> and <code>@ContentLength</code>.  <code>@ContentId</code> allows us to associate a stream of binary data with an Entity and <code>@ContentLength</code> records the length of that stream.  These will be automatically managed by Spring Content.</p>
-<h2 id="create-a-file-repository">Create a File Repository</h2>
-<p>Next, as you would also expect, we create a <code>CrudRepository</code> for handling File entities and we export it as a <code>@RepositoryRestResource</code> so, for the cost of writing just one interface and annotating it, we get the ability to create, read, update and delete File entities using REST endpoints.</p>
-<blockquote>
-<p>NB. For more information on Spring Data JPA and Spring Data REST see their respective spring.io getting started guides.</p>
-</blockquote>
-<p><code>src/main/java/gettingstated/FileRepository.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileRepository.java 1-}
-</code></pre>
-
-<h2 id="create-a-file-content-store">Create a File Content Store</h2>
-<p>Similarly, we then create a <code>ContentStore</code> for handling content associated with the File entity.</p>
-<p><code>src/main/java/gettngstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
-</code></pre>
-
-<p>Let's investigate this interface:-</p>
-<ul>
-<li>
-<p><code>ContentStore</code> provides several methods for handling content; setContent,
-getContent and unsetContent</p>
+<p>Spring Versions JPA adds the ability to create new versions of a Document</p>
 </li>
 <li>
-<p>The dependency <code>com.github.paulcwarren:spring-content-fs-boot-starter</code>
-provides a Filesystem-based implementation of this interface and Spring
-Content auto-configuration ensures that this implementation will be used
-wherever the <code>FileContentRepository</code> is <code>@Autowired</code>.</p>
-</li>
-</ul>
-<p>However, unlike our <code>FileRepository</code> we haven't annotated this as a
-<code>StoreRestResource</code> and therefore we don't automatically get REST
-endpoints for handling content.  This annotation does exist (and is the
-topic of our <a href="(spring-content-rest-docs.md)">next tutorial</a>) but, for now,
-we have to roll our own REST endpoints.</p>
-<h2 id="create-a-file-controller">Create a File Controller</h2>
-<p>Let's create these endpoints with a simple Controller class.</p>
-<p><code>src/main/java/gettingstarted/FileContentController.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/FileContentController.java 1-}
-</code></pre>
-
-<p>Let's explain this class.  </p>
-<ul>
-<li>
-<p>It's a standard Spring Controller with two request mapped methods, one for setting content and the other for getting content.</p>
-</li>
-<li>
-<p>Both <code>setContent</code> and <code>getContent</code> methods inject themselves into the URI space of the <code>FileRepository</code>, namely <code>/files/{fileId}</code>, but handle all GETs and PUTs that are aplication/hal+json based; i.e. content.</p>
-</li>
-<li>
-<p>We inject our <code>FileRepository</code> and our <code>FileContentStore</code>.  Respectively, Spring Boot will ensure real implementations are injected (based on what Spring Data and Spring Content modules are found on the class path).</p>
-</li>
-<li>
-<p><code>setContent</code> uses the <code>FileRepository</code> to fetch the File entity  using the given <code>fileId</code> and then uses the <code>FileContentStore</code> to save the given file input stream.  </p>
-</li>
-<li>
-<p>Similarly, <code>getContent</code> uses the <code>FileRepository</code> to fetch the File entity using the given <code>fileId</code> and again use the <code>FileContentStore</code> to fetch the associated content and stream it back to the client as the response.  We also use previosuly saved metdata <code>contentLength</code> and <code>mimeType</code> to set http headers appropriately.  This will mean that browsers can handle the content correctly by launching the relevant desktop application.</p>
-</li>
-</ul>
-<h2 id="create-web-client">Create Web Client</h2>
-<p>Now let's create a really simple angular web front-end for our document list.  </p>
-<p><code>src/main/resources/static/index.html</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/resources/static/index.html 1-}
-</code></pre>
-
-<p>This HTML presents a simple list of files using an <code>ng-repeat</code> directive and contains a simple form allowing new files to be uploaded.</p>
-<p>All the interesting code is in the code-behind file so add the following code behind to <code>src/main/resources/static/files.js</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/resources/static/files.js 1-}
-</code></pre>
-
-<p>This angular controller has the following functions:-</p>
-<ul>
-<li>
-<p><code>getFilesList</code> queries our <code>FileRepository</code> via its REST endpoint <code>files/</code>
-and populates <code>filesList.files</code> (presented by the <code>ng-repeat</code> directive
-in the HTML)</p>
-</li>
-<li>
-<p><code>getHref</code> returns a <code>file</code>'s content hyperlink <code>files/{fileId}</code> (that
-ultimately calls <code>FileContentController.getContent</code>)</p>
-</li>
-<li>
-<p><code>upload</code> uploads a new File by first <code>POST</code>ing to the <code>FileRepository</code>
-REST endpoints <code>/files</code> and once created  <code>PUT</code>ing the actual content to
-the Files content REST endpoint <code>files/{fileId}</code> (that ultimately calls
-<code>FileContentController.setContent</code>)</p>
+<p>Spring Content CMIS provides the ability to export Document and Folder Entities via 
+CMIS browser bindings.</p>
 </li>
 </ul>
 <h2 id="create-an-application-class">Create an Application class</h2>
-<p>Our simple document list app is now complete.  All that remains is to add the usual Spring Boot Application class.</p>
+<p>We need to initialize various aspects of our application.  First we'll add the usual Spring Boot Application class.</p>
 <p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-fs/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
+<pre><code>
+</code></pre>
+
+<p>Let's talk through the annotations:</p>
+<ul>
+<li>
+<p><code>@SpringBootApplication</code> needs no explanation</p>
+</li>
+<li>
+<p><code>@EnableCmis</code> enables the cmis bindings.  The most important attribute is basePackages.  This tells the Spring Content CMIS 
+module which packages to scan for Entities with <code>@Cmis</code> annotations.  We'll see these presently.</p>
+</li>
+<li>
+<p><code>@Import</code> imports the Spring Versions JPA standard configuration</p>
+</li>
+<li>
+<p><code>@EnableJpaRepositories</code> tells Spring Data which packages to scan for Spring Data JPA Entities.  We need to add this annotation 
+in order to instruct Spring Data to scan the <code>org.springframework.versions</code> package (where it will find the <code>LockingAndVersioningRepository</code> fragment implementation) in addition to the <code>gettingstarted</code> package.</p>
+</li>
+<li>
+<p><code>@EnableFilesystemStores</code> enables Spring Content Filesystem Storage.  Technically, this is not required but added for clarity.</p>
+</li>
+</ul>
+<p>You will also see that this application enables Spring Security setting up a single user <code>test</code> with a password of <code>test</code>.  As
+well as entity auditing that we use to timestamp entity creation and modification. </p>
+<h2 id="define-a-baseobject">Define a BaseObject</h2>
+<p>We are going to model both Documents and Folders and they share some common characteristics so let's define a BaseObject that 
+they can both inherit from:</p>
+<p><code>src/main/java/gettingstarted/BaseObject.java</code></p>
+<pre><code>
+</code></pre>
+
+<p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code>, <code>description</code>.  Standard audit 
+metadata; createdBy, createdDate, modifiedBy, modifiedDate, and a revision stamp; vstamp.  Lastly, we create a many-to-one relationship to a parent folder.</p>
+<p>You will notice that several of these fields are annotation with <code>@Cmis</code> annotations.  <code>@CmisName</code> and <code>@CmisDescription</code> map
+these fields to their respective cmis fields.  <code>@CmisReference</code> is a special reference that instructs Spring Content CMIS 
+that this is part of a parent/child relationship.  </p>
+<h2 id="create-a-folder-entity">Create a Folder Entity</h2>
+<p>Next, we'll create the Folder entity.  As you would expect a Folder is a containing object allowing users to arrange their
+documents hierarchically.</p>
+<p><code>src/main/java/gettingstarted/Folder.java</code></p>
+<pre><code>
+</code></pre>
+
+<p>Note the <code>@CmisFolder</code> annotation that maps this entity to the cmis:folder object type.  Also note the <code>@CmisReference</code> annotation instructing Spring Content CMIS that this is the other end of the parent/child relationship.</p>
+<h2 id="create-a-document-entity">Create a Document entity</h2>
+<p>Lastly, we'll create the Document entity.  </p>
+<p><code>src/main/java/gettingstarted/Document.java</code></p>
+<pre><code>
+</code></pre>
+
+<p>Again, note the <code>@CmisDocument</code> that maps this entity to the cmis:document object type.  We also see the standard Spring Versions
+JPA annotations allowing entities of this type to be versioned.  </p>
+<h2 id="create-repositories-and-storage">Create Repositories and Storage</h2>
+<p>For both <code>Folder</code> and <code>Document</code> we create Repository interfaces:</p>
+<pre><code>public interface FolderRepository extends JpaRepository&lt;Folder, Long&gt; {
+}
+
+public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository&lt;Document, Long&gt; {
+}
+</code></pre>
+
+<p>We mark the DocumentRepository as a <code>LockingAndVersioningRepository</code>.</p>
+<p>And we create a Storage interface for Documents:  </p>
+<pre><code>public interface DocumentStorage extends ContentStore&lt;Document, UUID&gt; {
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
@@ -275,42 +250,40 @@ the Files content REST endpoint <code>files/{fileId}</code> (that ultimately cal
 <code>mvn spring-boot:run</code>.  Or you can build the JAR file with
 <code>mvn clean package</code> and run the JAR by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-fs-0.0.1.jar</code></p>
-<p>And then point your browser at:-</p>
-<p><code>http://localhost:8080</code></p>
-<p>and you should see something like this:-</p>
-<p><center><img alt="Spring Content Webapp" src="../spring-content-fs-webapp.png" /></center></p>
-<p>Exercise the application by uploading a range of new files and viewing
-them.  Viewed files will be downloaded and open in the appropriate editor.</p>
+<h2 id="use-the-cmis-workbench-to-test-the-application">Use the CMIS Workbench to test the application</h2>
+<p>We'll use the CMIS Workbench from the Apache Chemistry project to test the application.</p>
+<p>The workbench can be downloaded from <a href="https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html">here</a>.</p>
+<p>Due to <a href="https://issues.apache.org/jira/browse/CMIS-1062">this bug</a> Java 8 is required.</p>
+<p>Download and run (<code>./workbench.sh</code>) the workbench.</p>
+<p><center><img alt="Spring Content With CMIS Workbench Login" src="../spring-content-with-cmis-login.png" /></center></p>
+<p>Spring Content CMIS exports the CMIS browser bindings to the <code>/browser</code> endpoint therefore the URL is:</p>
+<p><code>http://localhost:8080/browser</code></p>
+<p>and the binding type is <code>Browser</code>.</p>
+<p>The username and password, as per the <code>SecurityConfig</code> is <code>test/test</code>.</p>
+<p>Click <code>Load Repositores</code>.</p>
+<p><center><img alt="Spring Content With CMIS Workbench Repositories" src="../spring-content-with-cmis-repositories.png" /></center></p>
+<p>This information should match the information provided in the Appliction class.  </p>
+<p>Click <code>Login</code>.</p>
+<p><center><img alt="Spring Content With CMIS Workbench" src="../spring-content-with-cmis-workbench.png" /></center></p>
+<p>Let's create a folder.  Click <code>Create Object</code> -&gt; <code>Folder</code>.  Enter <code>test-folder</code> as the name click <code>Create Folder</code>.</p>
+<p>You'll see the folder in the navigation pane.  Double-click on the folder to navigate into it.  Select the <code>Properties</code> tab
+to view its properties.</p>
+<p><center><img alt="Spring Content With CMIS Folder" src="../spring-content-with-cmis-folder.png" /></center></p>
+<p>Now, let's create a Document in this Folder.  Click <code>Create Object</code> -&gt; <code>Document</code>.  Enter <code>test-document</code> as the name and 
+generate 100 bytes of content.  Click <code>Create Document</code>.</p>
+<p><center><img alt="Spring Content With CMIS Document" src="../spring-content-with-cmis-document.png" /></center></p>
+<p>Let's take a look at its content.  Double-click on the document in the navigator to open the content in a new window.</p>
+<p>Earlier we made our Entity's versionable by having our <code>DocumentRepository</code> extend <code>LockingAndVersioningRepository</code> so let's create a new version of this document.  Make sure the document is selected in the navigator.  Select the <code>Actions</code> tab and <code>Check-out Object</code>.  Now you should see two documents in your navigator.  One blue, the original.  One green, a private working copy of the new version.</p>
+<p><center><img alt="Spring Content With CMIS Private Working Copy" src="../spring-content-with-cmis-pwc.png" /></center></p>
+<p>Usually, a user would iterate on their content and save it by setting the content stream.  All of which is private to them.
+For simplicity we'll skip this step and go straight to checking in.  In the <code>Check-in Object</code> panel select a local file and 
+<code>Check-in</code>.</p>
+<p>Investigate the properties of both version to see how they are related.  You should see that they share the same version series
+id and in fact one of them, the first we created, is that document.  Also note, the content streams IDs are different and when
+content is view you, in fact, do see different content.  </p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations! You’ve written a simple application that uses Spring
-Content to manage streams of binary data - without writing any specific
-file access code.  What's more by just changing the type of the
-spring-content boot-starter project on the classpath you can switch from
-a file-based implementation to a different implementation altogether.</p>
-<p>Spring Content supports the following implementations:-</p>
-<ul>
-<li>
-<p>Spring Content Filesystem; stores content as Files on the Filesystem
-(as used in this tutorial)</p>
-</li>
-<li>
-<p>Spring Content S3; stores content as Objects in Amazon S3</p>
-</li>
-<li>
-<p>Spring Content JPA; stores content as BLOBs in the database</p>
-</li>
-<li>
-<p>Spring Content MongoDB; stores content as Resources in Mongo's GridFS</p>
-</li>
-</ul>
-<h2 id="look-forward">Look Forward</h2>
-<p>In this tutorial we built a simple document list web application using
-Spring Content.</p>
-<p>The majority of the work on the server-side was writing the Spring
-controller for handling the Content.  Check out our next
-<a href="../spring-content-rest-docs/">getting started guide</a> where we'll use the
-companion library Spring Content REST to automatically export these REST
-endpoints for our <code>FileContentStore</code> saving ourselves even more work.</p>
+Content CMIS.</p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -337,7 +310,7 @@ endpoints for our <code>FileContentStore</code> saving ourselves even more work.
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content">Getting Started with Spring Content</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-and-cmis">Getting Started with Spring Content and CMIS</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -351,31 +324,28 @@ endpoints for our <code>FileContentStore</code> saving ourselves even more work.
                     <a href="#build-with-maven" class="nav-link">Build with Maven</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#define-a-simple-entity" class="nav-link">Define a simple Entity</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#create-a-file-repository" class="nav-link">Create a File Repository</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#create-a-file-content-store" class="nav-link">Create a File Content Store</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#create-a-file-controller" class="nav-link">Create a File Controller</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#create-web-client" class="nav-link">Create Web Client</a>
-                </li>
-                <li class="nav-item">
                     <a href="#create-an-application-class" class="nav-link">Create an Application class</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#define-a-baseobject" class="nav-link">Define a BaseObject</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-a-folder-entity" class="nav-link">Create a Folder Entity</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-a-document-entity" class="nav-link">Create a Document entity</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#create-repositories-and-storage" class="nav-link">Create Repositories and Storage</a>
                 </li>
                 <li class="nav-item">
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#summary" class="nav-link">Summary</a>
+                    <a href="#use-the-cmis-workbench-to-test-the-application" class="nav-link">Use the CMIS Workbench to test the application</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#look-forward" class="nav-link">Look Forward</a>
+                    <a href="#summary" class="nav-link">Summary</a>
                 </li>
         </ul>
     </div>

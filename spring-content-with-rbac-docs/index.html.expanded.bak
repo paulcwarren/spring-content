@@ -65,6 +65,8 @@
 <a href="../spring-content-with-versions-docs/" class="dropdown-item">Versions</a>
                   
 <a href="./" class="dropdown-item active">RBAC</a>
+                  
+<a href="../spring-content-with-cmis-docs/" class="dropdown-item">CMIS</a>
                 </div>
               </li>
             </ul>
