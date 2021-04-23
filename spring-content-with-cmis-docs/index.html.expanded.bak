@@ -210,9 +210,9 @@ they can both inherit from:</p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-cmis/complete/src/main/java/gettingstarted/BaseObject.java 1-}
 </code></pre>
 
-<p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code>, <code>description</code>.  Standard audit 
-metadata; createdBy, createdDate, modifiedBy, modifiedDate, and a revision stamp; vstamp.  Lastly, we create a many-to-one relationship to a parent folder.</p>
-<p>You will notice that several of these fields are annotation with <code>@Cmis</code> annotations.  <code>@CmisName</code> and <code>@CmisDescription</code> map
+<p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code> and <code>description</code>.  Standard audit 
+metadata; <code>createdBy</code>, <code>createdDate</code>, <code>modifiedBy</code>, <code>modifiedDate</code>, and a revision stamp; <code>vstamp</code>.  Lastly, we create a many-to-one relationship to a parent folder.</p>
+<p>You will notice that several of these fields are annotated with <code>@Cmis</code> annotations.  <code>@CmisName</code> and <code>@CmisDescription</code> map
 these fields to their respective cmis fields.  <code>@CmisReference</code> is a special reference that instructs Spring Content CMIS 
 that this is part of a parent/child relationship.  </p>
 <h2 id="create-a-folder-entity">Create a Folder Entity</h2>
@@ -230,7 +230,7 @@ documents hierarchically.</p>
 </code></pre>
 
 <p>Again, note the <code>@CmisDocument</code> that maps this entity to the cmis:document object type.  We also see the standard Spring Versions
-JPA annotations allowing entities of this type to be versioned.  </p>
+JPA annotations for capturing version metadata as Documents are versioned.  </p>
 <h2 id="create-repositories-and-storage">Create Repositories and Storage</h2>
 <p>For both <code>Folder</code> and <code>Document</code> we create Repository interfaces:</p>
 <pre><code>public interface FolderRepository extends JpaRepository&lt;Folder, Long&gt; {
@@ -240,32 +240,29 @@ public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;,
 }
 </code></pre>
 
-<p>We mark the DocumentRepository as a <code>LockingAndVersioningRepository</code>.</p>
-<p>And we create a Storage interface for Documents:  </p>
+<p>The <code>DocumentRepository</code> extends <code>LockingAndVersioningRepository</code> making Documents versionable.</p>
+<p>And, of course, we create a Storage interface for Documents:  </p>
 <pre><code>public interface DocumentStorage extends ContentStore&lt;Document, UUID&gt; {
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
-<p>If you are using Maven, you can run the application using
-<code>mvn spring-boot:run</code>.  Or you can build the JAR file with
-<code>mvn clean package</code> and run the JAR by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-fs-0.0.1.jar</code></p>
+<p>That's it.  That's all you need.  So let's take our application for a spin. If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.  Or you can build the JAR file with <code>mvn clean package</code> and run the JAR by typing:</p>
+<p><code>java -jar target/gettingstarted-spring-content-with-cmis-0.0.1.jar</code></p>
 <h2 id="use-the-cmis-workbench-to-test-the-application">Use the CMIS Workbench to test the application</h2>
 <p>We'll use the CMIS Workbench from the Apache Chemistry project to test the application.</p>
 <p>The workbench can be downloaded from <a href="https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html">here</a>.</p>
-<p>Due to <a href="https://issues.apache.org/jira/browse/CMIS-1062">this bug</a> Java 8 is required.</p>
-<p>Download and run (<code>./workbench.sh</code>) the workbench.</p>
+<p>Due to <a href="https://issues.apache.org/jira/browse/CMIS-1062">this bug</a>, Java 8 is required.</p>
+<p>Download and run the workbench; i.e. <code>./workbench.sh</code>.  </p>
+<p>Spring Content CMIS exports the CMIS browser bindings to the <code>/browser</code> endpoint therefore the URL is
+<code>http://localhost:8080/browser</code> and the binding type is <code>Browser</code>.</p>
+<p>The username and password, as per the <code>SecurityConfig</code>, is <code>test/test</code>.</p>
 <p><center><img alt="Spring Content With CMIS Workbench Login" src="../spring-content-with-cmis-login.png" /></center></p>
-<p>Spring Content CMIS exports the CMIS browser bindings to the <code>/browser</code> endpoint therefore the URL is:</p>
-<p><code>http://localhost:8080/browser</code></p>
-<p>and the binding type is <code>Browser</code>.</p>
-<p>The username and password, as per the <code>SecurityConfig</code> is <code>test/test</code>.</p>
-<p>Click <code>Load Repositores</code>.</p>
+<p>Click <code>Load Repositores</code> and you should see this:</p>
 <p><center><img alt="Spring Content With CMIS Workbench Repositories" src="../spring-content-with-cmis-repositories.png" /></center></p>
-<p>This information should match the information provided in the Appliction class.  </p>
-<p>Click <code>Login</code>.</p>
+<p>This information should match the information provided in the Application class.  </p>
+<p>Click <code>Login</code> and you should see something like this:</p>
 <p><center><img alt="Spring Content With CMIS Workbench" src="../spring-content-with-cmis-workbench.png" /></center></p>
-<p>Let's create a folder.  Click <code>Create Object</code> -&gt; <code>Folder</code>.  Enter <code>test-folder</code> as the name click <code>Create Folder</code>.</p>
+<p>Let's create a folder.  Click <code>Create Object</code> -&gt; <code>Folder</code>.  Enter <code>test-folder</code> as the name and click <code>Create Folder</code>.</p>
 <p>You'll see the folder in the navigation pane.  Double-click on the folder to navigate into it.  Select the <code>Properties</code> tab
 to view its properties.</p>
 <p><center><img alt="Spring Content With CMIS Folder" src="../spring-content-with-cmis-folder.png" /></center></p>
@@ -278,9 +275,8 @@ generate 100 bytes of content.  Click <code>Create Document</code>.</p>
 <p>Usually, a user would iterate on their content and save it by setting the content stream.  All of which is private to them.
 For simplicity we'll skip this step and go straight to checking in.  In the <code>Check-in Object</code> panel select a local file and 
 <code>Check-in</code>.</p>
-<p>Investigate the properties of both version to see how they are related.  You should see that they share the same version series
-id and in fact one of them, the first we created, is that document.  Also note, the content streams IDs are different and when
-content is view you, in fact, do see different content.  </p>
+<p>Investigate the properties of both versions to see how they are related.  You should see that they share the same version series
+id and in fact one of them, the first we created, is that document.  Also note, the content streams IDs are different and when viewed you, in fact, do see different content.  </p>
 <h2 id="summary">Summary</h2>
 <p>Congratulations! You’ve written a simple application that uses Spring
 Content CMIS.</p>
