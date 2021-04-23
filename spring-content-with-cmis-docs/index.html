@@ -148,6 +148,107 @@ When you’re finished, you can check your results against the code in <code>spr
 
 <p><code>pom.xml</code></p>
 <pre><code>
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+  &lt;artifactId&gt;spring-content-with-cmis&lt;/artifactId&gt;
+
+ 	&lt;parent&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+		&lt;version&gt;2.4.1&lt;/version&gt;
+	&lt;/parent&gt;
+
+	&lt;properties&gt;
+		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+		&lt;java.version&gt;1.8&lt;/java.version&gt;
+		&lt;ginkgo-version&gt;1.0.12&lt;/ginkgo-version&gt;
+	&lt;/properties&gt;
+
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
+			&lt;artifactId&gt;h2&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;1.2.0&lt;/version&gt;
+		&lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-versions-jpa&lt;/artifactId&gt;
+            &lt;version&gt;1.2.0&lt;/version&gt;
+        &lt;/dependency&gt;
+ 		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-cmis&lt;/artifactId&gt;
+			&lt;version&gt;1.2.0&lt;/version&gt;
+		&lt;/dependency&gt;
+
+		&lt;!-- Test dependencies --&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+            &lt;exclusions&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-api&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+                &lt;exclusion&gt;
+                    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+                    &lt;artifactId&gt;junit-jupiter-engine&lt;/artifactId&gt;
+                &lt;/exclusion&gt;
+            &lt;/exclusions&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
+			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
+			&lt;version&gt;2.9.0&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;ginkgo4j&lt;/artifactId&gt;
+			&lt;version&gt;${ginkgo-version}&lt;/version&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+ 	&lt;/dependencies&gt;
+
+	&lt;build&gt;
+		&lt;plugins&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;/plugin&gt;
+		&lt;/plugins&gt;
+	&lt;/build&gt;
+
+	&lt;repositories&gt;
+		&lt;repository&gt;
+			&lt;id&gt;snapshots&lt;/id&gt;
+			&lt;name&gt;nexus&lt;/name&gt;
+			&lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
+			&lt;snapshots&gt;
+				&lt;enabled&gt;true&lt;/enabled&gt;
+			&lt;/snapshots&gt;
+		&lt;/repository&gt;
+	&lt;/repositories&gt;
+
+&lt;/project&gt;
 </code></pre>
 
 <p>We add several dependencies:-</p>
@@ -179,6 +280,93 @@ CMIS browser bindings.</p>
 <p>We need to initialize various aspects of our application.  First we'll add the usual Spring Boot Application class.</p>
 <p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
 <pre><code>
+package gettingstarted;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.content.cmis.EnableCmis;
+import org.springframework.content.fs.config.EnableFilesystemStores;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.versions.jpa.config.JpaLockingAndVersioningConfig;
+
+@SpringBootApplication
+@EnableCmis(basePackages = "gettingstarted",
+        id = "1",
+        name = "spring-content-with-cmis",
+        description = "Spring Content CMIS Getting Started Guide",
+        vendorName = "Spring Content OSS",
+        productName = "Spring Content CMIS Connector",
+        productVersion = "1.0.0")
+@Import(JpaLockingAndVersioningConfig.class)
+@EnableJpaRepositories(
+        basePackages={  "gettingstarted",
+                        "org.springframework.versions"},
+        considerNestedRepositories=true)
+@EnableFilesystemStores
+public class SpringContentApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringContentApplication.class, args);
+	}
+
+	@Configuration
+	@EnableWebSecurity
+	@EnableJpaAuditing
+	public static class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	    @Autowired
+	    public void configureGlobal(AuthenticationManagerBuilder auth)
+	            throws Exception {
+	        auth.
+	                inMemoryAuthentication()
+	                    .withUser("test")
+	                    .password("{noop}test")
+	                        .roles("USER");
+	    }
+
+	    @Override
+	    protected void configure(HttpSecurity http) throws Exception {
+	        http
+	                .csrf()
+	                    .disable()
+	                .authorizeRequests()
+	                    .anyRequest()
+	                        .authenticated()
+	                    .and()
+	                        .httpBasic();
+	    }
+
+	    @Bean
+	    public AuditorAware&lt;String&gt; objectAuditor() {
+	        return new AuditorAware&lt;String&gt;() {
+	            @Override
+	            public Optional&lt;String&gt; getCurrentAuditor() {
+	                return Optional.ofNullable(SecurityContextHolder.getContext())
+	                        .map(SecurityContext::getAuthentication)
+	                        .filter(Authentication::isAuthenticated)
+	                        .map(Authentication::getPrincipal)
+	                        .map((u) -> ((User)u).getUsername());
+	            }
+	        };
+	    }
+	}
+}
 </code></pre>
 
 <p>Let's talk through the annotations:</p>
