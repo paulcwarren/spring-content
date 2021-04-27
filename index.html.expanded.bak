@@ -235,7 +235,7 @@
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
-            <td><a href="#">n/a</a></td>
+            <td><a href="refs/release/1.2.3/azure-index.html">1.2.3</a></td>
             <td><a href="refs/snapshot/1.2.x/azure-index.html">1.2.4</a></td>
         </tr>
         <tr>
@@ -462,5 +462,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-04-27 04:24:12.317980+00:00
+Build Date UTC : 2021-04-27 04:30:40.945038+00:00
 -->
