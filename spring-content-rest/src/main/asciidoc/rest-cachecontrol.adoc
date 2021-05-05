@@ -1,0 +1,33 @@
+== Cache Control
+
+By using cache control headers effectively, we can instruct the 
+browser to cache resources and avoid network hops. This decreases 
+latency, and also the load on our applications.
+
+Spring Content REST allows us to control these headers by configuring 
+a set of cache control rules applied, in the order they are defined, 
+to all GET requests for content.
+
+One, or more, rules can be configured as follows:
+
+====
+[source, java]
+----
+@Configuration
+class CustomContentRestMvcConfiguration {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config
+                   .cacheControl()
+                       .antMatcher("/testEntities/*", CacheControl.maxAge(Duration.ofSeconds(60)));
+           }
+       };
+   }
+}
+----
+====
