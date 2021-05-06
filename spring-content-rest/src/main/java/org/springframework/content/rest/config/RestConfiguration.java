@@ -12,6 +12,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
+import org.springframework.content.rest.config.StoreCacheControlInterceptor.StoreCacheControlConfigurer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -78,6 +79,10 @@ public class RestConfiguration implements InitializingBean {
 		stores().addStoreResolver(name, resolver);
 	}
 
+	public StoreCacheControlConfigurer cacheControl() {
+	    return storeHandlerInterceptor().configurer();
+	}
+
 	public DomainTypeConfig forDomainType(Class<?> type) {
 		DomainTypeConfig config = domainTypeConfigMap.get(type);
 		if (config  == null) {
@@ -93,9 +98,15 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	@Bean
+	StoreCacheControlInterceptor storeHandlerInterceptor() {
+	    return new StoreCacheControlInterceptor();
+	}
+
+	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
 		ContentHandlerMapping mapping = new ContentHandlerMapping(stores(), this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
+        mapping.setInterceptors(storeHandlerInterceptor());
 		return mapping;
 	}
 
@@ -106,9 +117,12 @@ public class RestConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+
 		for (ContentRestConfigurer configurer : configurers) {
 			configurer.configure(this);
 		}
+
+        storeHandlerInterceptor().setBaseUri(baseUri);
 	}
 
 	@Configuration

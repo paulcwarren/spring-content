@@ -36,6 +36,7 @@ include::{spring-versions-jpa-docs}/jpaversions-rest.adoc[leveloffset=+1]
 include::rest-cors.adoc[leveloffset=+1]
 
 include::rest-baseuri.adoc[leveloffset=+1]
+include::rest-cachecontrol.adoc[leveloffset=+1]
 include::rest-fullyqualifiedlinks.adoc[leveloffset=+1]
 include::rest-storeresolver.adoc[leveloffset=+1]
 include::rest-putpostresolver.adoc[leveloffset=+1]
