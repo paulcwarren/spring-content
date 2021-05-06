@@ -541,13 +541,14 @@ Copies of this document may be made for your own use and for distribution to oth
 </ul>
 </li>
 <li><a href="#_changing_the_base_uri">5.2. Changing the Base URI</a></li>
-<li><a href="#_store_links">5.3. Store Links</a>
+<li><a href="#_cache_control">5.3. Cache Control</a></li>
+<li><a href="#_store_links">5.4. Store Links</a>
 <ul class="sectlevel3">
-<li><a href="#_customizing_the_link_relation">5.3.1. Customizing the link relation</a></li>
+<li><a href="#_customizing_the_link_relation">5.4.1. Customizing the link relation</a></li>
 </ul>
 </li>
-<li><a href="#_store_resolver">5.4. Store Resolver</a></li>
-<li><a href="#_putpost_content_handling">5.5. Put/Post Content Handling</a></li>
+<li><a href="#_store_resolver">5.5. Store Resolver</a></li>
+<li><a href="#_putpost_content_handling">5.6. Put/Post Content Handling</a></li>
 </ul>
 </li>
 </ul>
@@ -603,6 +604,12 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li>
 <p><a href="https://github.com/paulcwarren/spring-content/spring-content-jpa">Spring Content JPA</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-gcs">Spring Content GCS</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-azure-storage">Spring Content Azure Storage</a></p>
 </li>
 </ul>
 </div>
@@ -787,6 +794,9 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
   	@MimeType
   	private String mimeType;
 
+    @OiginalFileName
+    private String originalFileName;
+
   	// getters and setters
   }
 
@@ -820,6 +830,28 @@ HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
 <p>DELETE &#8594; unsetContent</p>
 </li>
 </ul>
+</div>
+<div class="sect4">
+<h5 id="_additional_annotations">Additional Annotations</h5>
+<div class="paragraph">
+<p>Spring Content REST adds two annotations to the core set of
+annotations provided by Spring Content Commons for capturing,
+on the entity, information that is available from the HTTP requests
+made by clients.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>@MimeType</code>; captures the <code>Content-Type</code> header of POST/PUT requests
+and is re-used on subsequent GET request responses</p>
+</li>
+<li>
+<p><code>@OriginalFileName</code>; captures the filename sent by POST/PUT requests,
+if available, and is re-used to set the content dispostion attachment filename
+on subsequent GET requests</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -1557,7 +1589,47 @@ class CustomContentRestMvcConfiguration {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_store_links">5.3. Store Links</h3>
+<h3 id="_cache_control">5.3. Cache Control</h3>
+<div class="paragraph">
+<p>By using cache control headers effectively, we can instruct the
+browser to cache resources and avoid network hops. This decreases
+latency, and also the load on our applications.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content REST allows us to control these headers by configuring
+a set of cache control rules applied, in the order they are defined,
+to all GET requests for content.</p>
+</div>
+<div class="paragraph">
+<p>One, or more, rules can be configured as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+class CustomContentRestMvcConfiguration {
+
+   @Bean
+   public ContentRestConfigurer configurer() {
+
+       return new ContentRestConfigurer() {
+           @Override
+           public void configure(RestConfiguration config) {
+               config
+                   .cacheControl()
+                       .antMatcher("/testEntities/*", CacheControl.maxAge(Duration.ofSeconds(60)));
+           }
+       };
+   }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_store_links">5.4. Store Links</h3>
 <div class="paragraph">
 <p>For each Spring Resource associated with an Entity, Spring Content REST will generate a fully-qualified link and inject it into the Entity&#8217;s
 Spring Data REST HAL response.</p>
@@ -1620,7 +1692,7 @@ Spring Data REST HAL response.</p>
 <p>Where the linkrel is named after the <code>@ContentId</code> property and the link URI is the fully-qualified URI of that content property.</p>
 </div>
 <div class="sect3">
-<h4 id="_customizing_the_link_relation">5.3.1. Customizing the link relation</h4>
+<h4 id="_customizing_the_link_relation">5.4.1. Customizing the link relation</h4>
 <div class="paragraph">
 <p>Sometimes it can be useful to configure the linkrel for a content property.  This is done by specifying the <code>linkRel</code> attribute on
 the StoreRestResource, as follows:</p>
@@ -1660,7 +1732,7 @@ the StoreRestResource, as follows:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_store_resolver">5.4. Store Resolver</h3>
+<h3 id="_store_resolver">5.5. Store Resolver</h3>
 <div class="paragraph">
 <p>Every REST request must map to one store and one store only.  However, it is entirely possible to define an application
 with multiple stores that make this impossible.</p>
@@ -1713,7 +1785,7 @@ on request context.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_putpost_content_handling">5.5. Put/Post Content Handling</h3>
+<h3 id="_putpost_content_handling">5.6. Put/Post Content Handling</h3>
 <div class="paragraph">
 <p>A <code>ContentStore</code> provides two methods for setting content.  Spring Content REST prefers to use
 <code>setContent(S entity, InputStream)</code> over <code>setContent(S entity, Resource)</code> so that content is streamed through
@@ -1811,7 +1883,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 1.2.4-SNAPSHOT<br>
-Last updated 2021-05-06 04:02:40 UTC
+Last updated 2021-05-06 04:30:11 UTC
 </div>
 </div>
 </body>

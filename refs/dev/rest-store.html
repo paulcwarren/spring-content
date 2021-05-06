@@ -466,6 +466,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li>
 <p><a href="https://github.com/paulcwarren/spring-content/spring-content-jpa">Spring Content JPA</a></p>
 </li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-gcs">Spring Content GCS</a></p>
+</li>
+<li>
+<p><a href="https://github.com/paulcwarren/spring-content/spring-content-azure-storage">Spring Content Azure Storage</a></p>
+</li>
 </ul>
 </div>
 </div>
@@ -654,6 +660,9 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
   	@MimeType
   	private String mimeType;
 
+    @OiginalFileName
+    private String originalFileName;
+
   	// getters and setters
   }
 
@@ -687,6 +696,28 @@ HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
 <p>DELETE &#8594; unsetContent</p>
 </li>
 </ul>
+</div>
+<div class="sect3">
+<h4 id="_additional_annotations">Additional Annotations</h4>
+<div class="paragraph">
+<p>Spring Content REST adds two annotations to the core set of
+annotations provided by Spring Content Commons for capturing,
+on the entity, information that is available from the HTTP requests
+made by clients.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>@MimeType</code>; captures the <code>Content-Type</code> header of POST/PUT requests
+and is re-used on subsequent GET request responses</p>
+</li>
+<li>
+<p><code>@OriginalFileName</code>; captures the filename sent by POST/PUT requests,
+if available, and is re-used to set the content dispostion attachment filename
+on subsequent GET requests</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1079,7 +1110,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-05-06 04:02:40 UTC
+Last updated 2021-05-06 04:30:11 UTC
 </div>
 </div>
 </body>
