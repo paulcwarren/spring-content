@@ -10,6 +10,8 @@ Spring Content REST officially supports:
 - https://github.com/paulcwarren/spring-content/spring-content-s3[Spring Content S3]
 - https://github.com/paulcwarren/spring-content/spring-content-mongo[Spring Content Mongo]
 - https://github.com/paulcwarren/spring-content/spring-content-jpa[Spring Content JPA]
+- https://github.com/paulcwarren/spring-content/spring-content-gcs[Spring Content GCS]
+- https://github.com/paulcwarren/spring-content/spring-content-azure-storage[Spring Content Azure Storage]
 
 = Getting Started
 
@@ -143,6 +145,9 @@ Assume the following `Entity` class, `Repository` and `Store` interfaces:
   	
   	@MimeType
   	private String mimeType;
+    
+    @OiginalFileName
+    private String originalFileName;
   	
   	// getters and setters
   }
@@ -165,6 +170,20 @@ HTTP methods map onto the methods of `ContentStore` as follows:-
 - GET -> getContent
 - POST/PUT -> setContent
 - DELETE -> unsetContent
+
+==== Additional Annotations
+
+Spring Content REST adds two annotations to the core set of 
+annotations provided by Spring Content Commons for capturing, 
+on the entity, information that is available from the HTTP requests
+made by clients. 
+
+- `@MimeType`; captures the `Content-Type` header of POST/PUT requests
+and is re-used on subsequent GET request responses
+
+- `@OriginalFileName`; captures the filename sent by POST/PUT requests, 
+if available, and is re-used to set the content dispostion attachment filename 
+on subsequent GET requests 
 
 === Property Resources
 
