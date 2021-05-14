@@ -59,114 +59,112 @@ public class TransactionIT {
             StoreIT.OracleConfig.class
     };
 
-    private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
-    // for postgres (large object api operations must be in a transaction)
-    private PlatformTransactionManager ptm;
+	// for postgres (large object api operations must be in a transaction)
+	private PlatformTransactionManager ptm;
 
-    private TestEntityRepository repo = null;
-    private TestEntityContentRepository store = null;
-    private DbService dbService = null;
+	private TestEntityRepository repo = null;
+	private TestEntityContentRepository store = null;
+	private DbService dbService = null;
 
-    private TestEntity te = null;
-
-
-    {
-        Describe("TransactionTest", () -> {
-
-            for (Class<?> configClass : CONFIG_CLASSES) {
-
-                Context(getContextName(configClass), () -> {
-                    Context("given a context with a repository and a store", () -> {
-                        BeforeEach(() -> {
-                            context = new AnnotationConfigApplicationContext();
-                            context.register(TestConfig.class);
-                            context.register(configClass);
-                            context.refresh();
-
-                            repo = context.getBean(TestEntityRepository.class);
-                            store = context.getBean(TestEntityContentRepository.class);
-                            dbService = context.getBean(DbService.class);
-                            ptm = context.getBean(PlatformTransactionManager.class);
-
-                            te = new TestEntity();
-                            te = repo.save(te);
-                            assertThat(te.getId(), is(not(nullValue())));
-                            assertThat(te.getContentId(), is(nullValue()));
-                        });
-                        AfterEach(() -> {
-                            context.close();
-                        });
-                        Context("given an exception is thrown causing a rollback", () -> {
-                            It("should not commit changes to content", () -> {
-
-                                try {
-                                    te = dbService.doSomeDbStuff(store, te);
-                                } catch (Exception e) {
-                                    ContentStoreIT.doInTransaction(ptm, () -> {
-                                        try (InputStream result = store.getContent(te)) {
-                                            assertThat(result, is(nullValue()));
-                                        } catch (IOException e1) {
-                                        }
-                                        return null;
-                                    });
-                                }
-                            });
-                        });
-                    });
-                });
-            }
-        });
-    }
-
-    @Test
-    public void noop() {
-    }
-
-    private static String getContextName(Class<?> configClass) {
-        return configClass.getSimpleName().replaceAll("Config", "");
-    }
-
-    @Configuration
-    @EnableJpaRepositories(considerNestedRepositories = true)
-    @EnableJpaStores
-    public static class TestConfig {
-
-        @Bean
-        public DbService dbService() {
-            return new DbService();
-        }
-    }
+	private TestEntity te = null;
 
 
-    @Component
-    public static class DbService {
+	{
+		Describe("TransactionTest", () -> {
 
-        @Transactional
-        public TestEntity doSomeDbStuff(TestEntityContentRepository store, TestEntity te) throws Exception {
-            te = store.setContent(te, new ByteArrayInputStream("Spring Content World!".getBytes()));
-            throw new RuntimeException("badness");
-        }
-    }
+			for (Class<?> configClass : CONFIG_CLASSES) {
 
-    @Entity
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @Table(name = "test_entities")
-    public class TestEntity {
+				Context(getContextName(configClass), () -> {
+					Context("given a context with a repository and a store", () -> {
+						BeforeEach(() -> {
+							context = new AnnotationConfigApplicationContext();
+							context.register(TestConfig.class);
+							context.register(configClass);
+							context.refresh();
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
+							repo = context.getBean(TestEntityRepository.class);
+							store = context.getBean(TestEntityContentRepository.class);
+							dbService = context.getBean(DbService.class);
+							ptm = context.getBean(PlatformTransactionManager.class);
 
-        @ContentId
-        private String contentId;
-    }
+							te = new TestEntity();
+							te = repo.save(te);
+							assertThat(te.getId(), is(not(nullValue())));
+							assertThat(te.getContentId(), is(nullValue()));
+						});
+						AfterEach(() -> {
+							context.close();
+						});
+						Context("given an exception is thrown causing a rollback", () -> {
+							It("should not commit changes to content", () -> {
 
-    public interface TestEntityRepository extends JpaRepository<TestEntity, String> {
-    }
+								try {
+									te = dbService.doSomeDbStuff(store, te);
+								} catch (Exception e) {
+									ContentStoreIT.doInTransaction(ptm, () -> {
+										try (InputStream result = store.getContent(te)) {
+											assertThat(result, is(nullValue()));
+										} catch (IOException e1) {}
+										return null;
+									});
+								}
+							});
+						});
+					});
+				});
+			}
+		});
+	}
 
-    public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
-    }
+	@Test
+	public void noop() {}
+
+	private static String getContextName(Class<?> configClass) {
+		return configClass.getSimpleName().replaceAll("Config", "");
+	}
+
+	@Configuration
+	@EnableJpaRepositories(considerNestedRepositories=true)
+	@EnableJpaStores
+	public static class TestConfig {
+
+		@Bean
+		public DbService dbService() {
+			return new DbService();
+		}
+	}
+
+
+	@Component
+	public static class DbService {
+
+		@Transactional
+		public TestEntity doSomeDbStuff(TestEntityContentRepository store, TestEntity te) throws Exception {
+			te = store.setContent(te, new ByteArrayInputStream("Spring Content World!".getBytes()));
+			throw new RuntimeException("badness");
+		}
+	}
+
+	@Entity
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@Table(name="test_entities")
+	public class TestEntity {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
+
+		@ContentId
+		private String contentId;
+	}
+
+	public interface TestEntityRepository extends JpaRepository<TestEntity, String> {
+	}
+
+	public interface TestEntityContentRepository extends ContentStore<TestEntity, String> {
+	}
 }
