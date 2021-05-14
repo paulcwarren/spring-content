@@ -49,7 +49,8 @@ public class ContentStoreIT {
 			HSQLConfig.class,
 			MySqlConfig.class,
 			PostgresConfig.class,
-			SqlServerConfig.class
+			SqlServerConfig.class,
+			StoreIT.OracleConfig.class
 		};
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
