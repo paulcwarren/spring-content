@@ -56,11 +56,11 @@ import net.bytebuddy.utility.RandomString;
 public class StoreIT {
 
 	private static Class<?>[] CONFIG_CLASSES = new Class[]{
-			H2Config.class,
-			HSQLConfig.class,
-			MySqlConfig.class,
-			PostgresConfig.class,
-			SqlServerConfig.class,
+//			H2Config.class,
+//			HSQLConfig.class,
+//			MySqlConfig.class,
+//			PostgresConfig.class,
+//			SqlServerConfig.class,
 			OracleConfig.class
 	};
 

@@ -233,7 +233,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     <configuration>
                      <skipTests>false</skipTests>
                      <includes>
-                       <include>**/*Test.java</include>
+                       <include>**/*TestXXX.java</include>
                      </includes>
                    </configuration>
                   </execution>
@@ -246,8 +246,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     <configuration>
                      <skipTests>false</skipTests>
                      <includes>
-                       <include>**/*IT.*</include>
-                       <include>**/*Tests.*</include>
+                       <include>**/StoreIT.java</include>
+                       <include>**/*TestsXXX.*</include>
                      </includes>
                    </configuration>
                  </execution>
