@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import javax.sql.DataSource;
 
@@ -556,6 +557,9 @@ public class StoreIT {
 
 		@Bean
 		public DataSource dataSource() {
+			// Timezone is not set in github containers, need this for connections to work
+			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
 			DriverManagerDataSource ds = new DriverManagerDataSource();
 			ds.setUrl("jdbc:tc:oracle:///databasename?TC_TMPFS=/testtmpfs:rw?TC_DAEMON=true");
 			ds.setUsername("system");
