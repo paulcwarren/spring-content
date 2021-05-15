@@ -82,7 +82,7 @@ jobs:
       run: |
         echo -n "$GCP_SA_KEY" > /tmp/gcp_sa_key
         export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_sa_key
-        mvn -X -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
+        mvn -X -B -P tests -Doracle.jdbc.timezoneAsRegion=false -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
         bash <(curl -s https://codecov.io/bash)
       env:
         SQLSERVER_USERNAME: "sa"
