@@ -7,7 +7,7 @@ on:
   push:
     branches: [ 1.1.x,1.2.x ]
     tags:
-      - '*'
+    - '*'
 jobs:
 
   build:
@@ -56,105 +56,105 @@ jobs:
           - 27017:27017
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+        server-id: ossrh
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-      - name: Build and test
-        run: |
-          echo -n "$GCP_SA_KEY" > /tmp/gcp_sa_key
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_sa_key
-          mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
-          bash <(curl -s https://codecov.io/bash)
-        env:
-          SQLSERVER_USERNAME: "sa"
-          SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
-          SQLSERVER_DB_NAME: "sc"
-          SQLSERVER_HOST: "localhost"
-          POSTGRESQL_USERNAME: "postgres"
-          POSTGRESQL_PASSWORD: "5F4Dt9ky9dU$"
-          POSTGRESQL_URL: "jdbc:postgresql://localhost:5432/postgres?sslmode=disable"
-          MYSQL_USERNAME: "root"
-          MYSQL_PASSWORD: "5F4Dt9ky9dU$"
-          MYSQL_URL: "jdbc:mysql://localhost:3306/sc?emulateLocators=true&serverTimezone=UTC"
-          MONGODB_URL: "mongodb://localhost:27017/spring-content?retryWrites=false"
-          SOLR_USER: "solr"
-          SOLR_PASSWORD: "SolrRocks"
-          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
-          AWS_BUCKET: ${{secrets.AWS_BUCKET}}
-          AWS_REGION: ${{secrets.AWS_REGION}}
-          AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
-          GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          AZURE_STORAGE_BUCKET: ${{ secrets.AZURE_STORAGE_BUCKET }}
-          AZURE_STORAGE_ENDPOINT: ${{ secrets.AZURE_STORAGE_ENDPOINT }}
-          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+    - name: Build and test
+      run: |
+        echo -n "$GCP_SA_KEY" > /tmp/gcp_sa_key
+        export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_sa_key
+        mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
+        bash <(curl -s https://codecov.io/bash)
+      env:
+        SQLSERVER_USERNAME: "sa"
+        SQLSERVER_PASSWORD: "5F4Dt9ky9dU$"
+        SQLSERVER_DB_NAME: "sc"
+        SQLSERVER_HOST: "localhost"
+        POSTGRESQL_USERNAME: "postgres"
+        POSTGRESQL_PASSWORD: "5F4Dt9ky9dU$"
+        POSTGRESQL_URL: "jdbc:postgresql://localhost:5432/postgres?sslmode=disable"
+        MYSQL_USERNAME: "root"
+        MYSQL_PASSWORD: "5F4Dt9ky9dU$"
+        MYSQL_URL: "jdbc:mysql://localhost:3306/sc?emulateLocators=true&serverTimezone=UTC"
+        MONGODB_URL: "mongodb://localhost:27017/spring-content?retryWrites=false"
+        SOLR_USER: "solr"
+        SOLR_PASSWORD: "SolrRocks"
+        AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+        AWS_BUCKET: ${{secrets.AWS_BUCKET}}
+        AWS_REGION: ${{secrets.AWS_REGION}}
+        AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+        GCP_STORAGE_BUCKET: ${{secrets.GCP_STORAGE_BUCKET}}
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        AZURE_STORAGE_BUCKET: ${{ secrets.AZURE_STORAGE_BUCKET }}
+        AZURE_STORAGE_ENDPOINT: ${{ secrets.AZURE_STORAGE_ENDPOINT }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
 
-      - name: Publish JARs
-        run: |
-          #!/bin/bash
+    - name: Publish JARs
+      run: |
+        #!/bin/bash
 
-          set -eux
+        set -eux
 
-          if [[ "${GITHUB_REF}" == *"tags"* ]]; then
-              TAG="${GITHUB_REF#refs/tags/}"
-              mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
-          fi
+        if [[ "${GITHUB_REF}" == *"tags"* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
+        fi
 
-          mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+        mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
 
-        env:
-          GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
-          GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      env:
+        GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
+        GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
+        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
-      - name: Publish Docs
-        run: |
-          #!/bin/bash
+    - name: Publish Docs
+      run: |
+        #!/bin/bash
 
-          set -eux
+        set -eux
 
-          if [[ "${GITHUB_REF}" == *"tags"* ]]; then
-              TAG="${GITHUB_REF#refs/tags/}"
-              export BUILD_TYPE=release/"${TAG}"
-              mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
-          else
-              export BUILD_TYPE=snapshot/"${GITHUB_REF#refs/heads/}"
-          fi
+        if [[ "${GITHUB_REF}" == *"tags"* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            export BUILD_TYPE=release/"${TAG}"
+            mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
+        else
+            export BUILD_TYPE=snapshot/"${GITHUB_REF#refs/heads/}"
+        fi
 
-          mvn -B -U -P docs generate-resources -DskipTests=true -Dmaven.javadoc.skip=true
+        mvn -B -U -P docs generate-resources -DskipTests=true -Dmaven.javadoc.skip=true
 
-          git config --global user.email "${CI_EMAIL}"
-          git config --global user.name "${CI_USERNAME}"
+        git config --global user.email "${CI_EMAIL}"
+        git config --global user.name "${CI_USERNAME}"
 
-          set +x
-          mkdir -p ~/.ssh
-          echo "${CI_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 700 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-          set -x
+        set +x
+        mkdir -p ~/.ssh
+        echo "${CI_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 700 ~/.ssh/id_rsa
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
+        set -x
 
-          mkdir -p /tmp/spring-content-gh-pages
-          git clone --branch gh-pages git@github.com:paulcwarren/spring-content.git /tmp/spring-content-gh-pages
+        mkdir -p /tmp/spring-content-gh-pages
+        git clone --branch gh-pages git@github.com:paulcwarren/spring-content.git /tmp/spring-content-gh-pages
 
-          cp -R target/generated-docs/refs/* /tmp/spring-content-gh-pages/refs/
+        cp -R target/generated-docs/refs/* /tmp/spring-content-gh-pages/refs/
 
-          pushd /tmp/spring-content-gh-pages
-              git add .
-              git commit -m "Publishing reference guides for ${GITHUB_REF}"
-              git push origin gh-pages
-          popd
-        env:
-          CI_USERNAME: ${{ secrets.CI_USERNAME }}
-          CI_EMAIL: ${{ secrets.CI_EMAIL }}
-          CI_PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}
+        pushd /tmp/spring-content-gh-pages
+            git add .
+            git commit -m "Publishing reference guides for ${GITHUB_REF}"
+            git push origin gh-pages
+        popd
+      env:
+        CI_USERNAME: ${{ secrets.CI_USERNAME }}
+        CI_EMAIL: ${{ secrets.CI_EMAIL }}
+        CI_PRIVATE_KEY: ${{ secrets.CI_PRIVATE_KEY }}

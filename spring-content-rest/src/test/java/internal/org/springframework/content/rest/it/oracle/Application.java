@@ -1,5 +1,6 @@
 package internal.org.springframework.content.rest.it.oracle;
 
+import java.util.TimeZone;
 import javax.sql.DataSource;
 
 import internal.org.springframework.content.rest.it.SecurityConfiguration;
@@ -69,6 +70,9 @@ public class Application {
 
         @Bean
         public DataSource dataSource() {
+            // Timezone is not set in github containers, need this for connections to work
+            TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
             DriverManagerDataSource ds = new DriverManagerDataSource();
             ds.setUrl("jdbc:tc:oracle:///databasename?TC_TMPFS=/testtmpfs:rw?TC_DAEMON=true");
             ds.setUsername("system");
