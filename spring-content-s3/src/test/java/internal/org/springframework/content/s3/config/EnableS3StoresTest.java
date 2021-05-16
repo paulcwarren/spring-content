@@ -14,12 +14,15 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.*;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.io.Resource;
 
@@ -222,6 +225,16 @@ public class EnableS3StoresTest {
 					return client;
 				}
 			};
+		}
+
+		@Bean
+		@Primary
+		public PlacementService s3StorePlacementService() {
+			PlacementService conversion = new PlacementServiceImpl();
+			conversion.addConverter(
+					new S3ObjectIdResolverConverter(
+							new DefaultAssociativeStoreS3ObjectIdResolver(), "aws-test-bucket"));
+			return conversion;
 		}
 	}
 

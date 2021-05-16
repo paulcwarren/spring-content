@@ -26,21 +26,24 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.sql.DataSource;
 
+import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3ObjectIdResolver;
+import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -53,12 +56,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -80,6 +78,7 @@ public class S3StoreIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
+    private AmazonS3 client;
 
     private String resourceLocation;
 
@@ -93,6 +92,9 @@ public class S3StoreIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
+                client = context.getBean(AmazonS3.class);
+
+                client.createBucket("aws-test-bucket");
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -343,24 +345,19 @@ public class S3StoreIT {
     @EnableS3Stores(basePackages="internal.org.springframework.content.s3.it")
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
-
-        @Autowired
-        private Environment env;
-
-        public Region region() {
-            return Region.getRegion(Regions.fromName(System.getenv("AWS_REGION")));
+        @Bean
+        public AmazonS3 client() {
+            return LocalStack.getAmazonS3Client();
         }
 
         @Bean
-        public BasicAWSCredentials basicAWSCredentials() {
-            return new BasicAWSCredentials(env.getProperty("AWS_ACCESS_KEY_ID"), env.getProperty("AWS_SECRET_KEY"));
-        }
-
-        @Bean
-        public AmazonS3 client(AWSCredentials awsCredentials) {
-            AmazonS3Client amazonS3Client = new AmazonS3Client(awsCredentials);
-            amazonS3Client.setRegion(region());
-            return amazonS3Client;
+        @Primary
+        public PlacementService s3StorePlacementService() {
+            PlacementService conversion = new PlacementServiceImpl();
+            conversion.addConverter(
+                    new S3ObjectIdResolverConverter(
+                            new DefaultAssociativeStoreS3ObjectIdResolver(), "aws-test-bucket"));
+            return conversion;
         }
     }
 
