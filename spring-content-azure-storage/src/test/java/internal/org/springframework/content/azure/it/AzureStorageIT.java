@@ -25,20 +25,24 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.sql.DataSource;
 
+import com.azure.storage.blob.BlobContainerClient;
+import internal.org.springframework.content.azure.config.BlobIdResolverConverter;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.azure.config.EnableAzureStorage;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -52,7 +56,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.azure.core.http.rest.PagedIterable;
-import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -76,8 +79,7 @@ public class AzureStorageIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
-    private BlobServiceClientBuilder storage;
-    private BlobServiceClient client;
+    private BlobContainerClient client;
 
     private String resourceLocation;
 
@@ -91,8 +93,7 @@ public class AzureStorageIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
-                storage = context.getBean(BlobServiceClientBuilder.class);
-                client = storage.buildClient();
+                client = context.getBean(BlobContainerClient.class);
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -115,9 +116,9 @@ public class AzureStorageIT {
                             ((DeletableResource)genericResource).delete();
                         }
 
-                        PagedIterable<BlobItem> blobs = client.getBlobContainerClient("test").listBlobs();
+                        PagedIterable<BlobItem> blobs = client.listBlobs();
                         for(BlobItem blob : blobs) {
-                            client.getBlobContainerClient("test").getBlobClient(blob.getName()).delete();
+                            client.getBlobClient(blob.getName()).delete();
                         }
                     });
 
@@ -247,9 +248,9 @@ public class AzureStorageIT {
 
                 AfterEach(() -> {
 
-                    PagedIterable<BlobItem> blobs = client.getBlobContainerClient("test").listBlobs();
+                    PagedIterable<BlobItem> blobs = client.listBlobs();
                     for(BlobItem blob : blobs) {
-                        client.getBlobContainerClient("test").getBlobClient(blob.getName()).delete();
+                        client.getBlobClient(blob.getName()).delete();
                     }
                 });
 
@@ -359,18 +360,28 @@ public class AzureStorageIT {
     @EnableAzureStorage(basePackages="internal.org.springframework.content.azure.it")
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
-
-        @Value("#{environment.AZURE_STORAGE_ENDPOINT}")
-        private String endpoint;
-
-        @Value("#{environment.AZURE_STORAGE_CONNECTION_STRING}")
-        private String connString;
+        @Bean
+        public BlobServiceClientBuilder blobServiceClientBuilder() {
+            return Azurite.getBlobServiceClientBuilder();
+        }
 
         @Bean
-        public BlobServiceClientBuilder storage() {
-                return new BlobServiceClientBuilder()
-                .endpoint(endpoint)
-                .connectionString(connString);
+        public BlobContainerClient blobContainerClient(BlobServiceClientBuilder builder) {
+            BlobContainerClient client = builder.buildClient().getBlobContainerClient("test");
+            // No pre-defined containers at start-up, create it on first bean generation
+            if (!client.exists()) {
+                client.create();
+            }
+            return client;
+        }
+
+        @Bean
+        @Primary
+        public PlacementService azureStoragePlacementService() {
+            // Provide default for tests to cover for missing env.AZURE_STORAGE_BUCKET
+            PlacementService conversion = new PlacementServiceImpl();
+            conversion.addConverter(new BlobIdResolverConverter("azure-test-bucket"));
+            return conversion;
         }
     }
 
