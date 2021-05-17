@@ -50,31 +50,32 @@ import lombok.Setter;
 @Ginkgo4jConfiguration(threads = 1) // required
 public class TransactionIT {
 
-	private static Class<?>[] CONFIG_CLASSES = new Class[]{
-				H2Config.class, 
-				HSQLConfig.class, 
-				MySqlConfig.class, 
-				PostgresConfig.class, 
-				SqlServerConfig.class
-			};
-	
+    private static Class<?>[] CONFIG_CLASSES = new Class[]{
+            H2Config.class,
+            HSQLConfig.class,
+            MySqlConfig.class,
+            PostgresConfig.class,
+            SqlServerConfig.class,
+            StoreIT.OracleConfig.class
+    };
+
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-	
+
 	// for postgres (large object api operations must be in a transaction)
 	private PlatformTransactionManager ptm;
 
 	private TestEntityRepository repo = null;
 	private TestEntityContentRepository store = null;
 	private DbService dbService = null;
-	
+
 	private TestEntity te = null;
 
-	
+
 	{
 		Describe("TransactionTest", () -> {
 
 			for (Class<?> configClass : CONFIG_CLASSES) {
-				
+
 				Context(getContextName(configClass), () -> {
 					Context("given a context with a repository and a store", () -> {
 						BeforeEach(() -> {
@@ -82,12 +83,12 @@ public class TransactionIT {
 							context.register(TestConfig.class);
 							context.register(configClass);
 							context.refresh();
-							
+
 							repo = context.getBean(TestEntityRepository.class);
 							store = context.getBean(TestEntityContentRepository.class);
 							dbService = context.getBean(DbService.class);
 							ptm = context.getBean(PlatformTransactionManager.class);
-							
+
 							te = new TestEntity();
 							te = repo.save(te);
 							assertThat(te.getId(), is(not(nullValue())));
@@ -112,14 +113,14 @@ public class TransactionIT {
 							});
 						});
 					});
-				}); 
+				});
 			}
 		});
 	}
 
 	@Test
 	public void noop() {}
-	
+
 	private static String getContextName(Class<?> configClass) {
 		return configClass.getSimpleName().replaceAll("Config", "");
 	}
@@ -128,14 +129,14 @@ public class TransactionIT {
 	@EnableJpaRepositories(considerNestedRepositories=true)
 	@EnableJpaStores
 	public static class TestConfig {
-		
+
 		@Bean
 		public DbService dbService() {
 			return new DbService();
 		}
 	}
 
-	
+
 	@Component
 	public static class DbService {
 
@@ -145,7 +146,7 @@ public class TransactionIT {
 			throw new RuntimeException("badness");
 		}
 	}
-	
+
 	@Entity
 	@Getter
 	@Setter
@@ -156,7 +157,7 @@ public class TransactionIT {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
-		
+
 		@ContentId
 		private String contentId;
 	}
