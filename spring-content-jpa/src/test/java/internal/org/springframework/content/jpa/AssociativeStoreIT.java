@@ -32,12 +32,13 @@ import internal.org.springframework.content.jpa.testsupport.stores.DocumentAssoc
 public class AssociativeStoreIT {
 
 	private static Class<?>[] CONFIG_CLASSES = new Class[]{
-			H2Config.class, 
-			HSQLConfig.class, 
-			MySqlConfig.class, 
-			PostgresConfig.class, 
-			SqlServerConfig.class
-		};
+			H2Config.class,
+			HSQLConfig.class,
+			MySqlConfig.class,
+			PostgresConfig.class,
+			SqlServerConfig.class,
+			StoreIT.OracleConfig.class
+	};
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 	

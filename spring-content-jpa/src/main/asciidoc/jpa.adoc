@@ -87,7 +87,7 @@ Spring Content JPA is designed to be used with this feature and therefore you mu
 === Postgresql
 
 The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.
+streams it does come with a significant performance disadvantage over bytea fields.
 
 Large Objects *must* be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
 convenience `ContentStore` modification methods are already marked as `@Transactional`.  Note, however query methods are not and
@@ -97,6 +97,14 @@ therefore the transaction must be handled by the consumer.
 
 The SQL Server implementation uses https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering[adaptive buffering]
 to serve BLOBs in a memory efficient way.
+
+=== Oracle
+
+The oracle implementation relies on the ability of the Oracle JDBC driver to perform chunked operations on the
+streams. This functionality has been tested against the com.oracle.database.jdbc ojdbc instance at version 12.2.0.1,
+where the default prefetch size is 4000 bytes. Whilst the driver supports the ability to modify this prefetch size
+for tuning performance, there currently is no way to over-ride this setting via the spring-content API, so the default
+of whatever driver version is in use will apply.
 
 == Persisting Content
 
@@ -121,4 +129,3 @@ Content can be accessed using the `ContentStore.getContent(entity)` method.
 === Unsetting Content
 
 Content can be removed using the `ContentStore.unsetContent(entity)` method.
-

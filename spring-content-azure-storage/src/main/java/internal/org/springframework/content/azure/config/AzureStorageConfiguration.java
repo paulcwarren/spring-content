@@ -21,7 +21,7 @@ public class AzureStorageConfiguration {
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
 
-	@Value("${spring.content.gcp.storage.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
+	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
 	private String bucket;
 
 	@Bean

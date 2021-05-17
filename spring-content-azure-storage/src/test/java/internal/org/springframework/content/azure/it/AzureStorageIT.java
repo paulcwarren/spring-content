@@ -26,7 +26,6 @@ import javax.persistence.Id;
 import javax.sql.DataSource;
 
 import com.azure.storage.blob.BlobContainerClient;
-import internal.org.springframework.content.azure.config.BlobIdResolverConverter;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -36,13 +35,10 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -69,6 +65,10 @@ import net.bytebuddy.utility.RandomString;
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class AzureStorageIT {
+
+    static {
+        System.setProperty("spring.content.azure.bucket", "azure-test-bucket");
+    }
 
     private TestEntity entity;
     private Resource genericResource;
@@ -373,15 +373,6 @@ public class AzureStorageIT {
                 client.create();
             }
             return client;
-        }
-
-        @Bean
-        @Primary
-        public PlacementService azureStoragePlacementService() {
-            // Provide default for tests to cover for missing env.AZURE_STORAGE_BUCKET
-            PlacementService conversion = new PlacementServiceImpl();
-            conversion.addConverter(new BlobIdResolverConverter("azure-test-bucket"));
-            return conversion;
         }
     }
 

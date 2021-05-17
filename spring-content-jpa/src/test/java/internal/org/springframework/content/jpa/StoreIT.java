@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import javax.sql.DataSource;
 
@@ -56,12 +57,13 @@ import net.bytebuddy.utility.RandomString;
 public class StoreIT {
 
 	private static Class<?>[] CONFIG_CLASSES = new Class[]{
-			H2Config.class, 
-			HSQLConfig.class, 
-			MySqlConfig.class, 
-			PostgresConfig.class, 
-			SqlServerConfig.class
-		};
+			H2Config.class,
+			HSQLConfig.class,
+			MySqlConfig.class,
+			PostgresConfig.class,
+			SqlServerConfig.class,
+			OracleConfig.class
+	};
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 	
@@ -493,7 +495,7 @@ public class StoreIT {
 	    private String username; 	
 
 	    @Value("#{environment.SQLSERVER_PASSWORD}")
-	    private String password;	
+	    private String password;
 
 		@Bean
 		public DataSource dataSource() {
@@ -524,6 +526,67 @@ public class StoreIT {
 		public PlatformTransactionManager transactionManager() {
 			JpaTransactionManager txManager = new JpaTransactionManager();
 			txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+			return txManager;
+		}
+	}
+
+	@Configuration
+	@EnableTransactionManagement
+	public static class OracleConfig {
+
+		@Value("/org/springframework/content/jpa/schema-drop-oracle.sql")
+		private Resource dropRepositoryTables;
+
+		@Value("/org/springframework/content/jpa/schema-oracle.sql")
+		private Resource dataRepositorySchema;
+
+		@Bean
+		DataSourceInitializer datasourceInitializer(DataSource dataSource) {
+			ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+
+			databasePopulator.addScript(dropRepositoryTables);
+			databasePopulator.addScript(dataRepositorySchema);
+			databasePopulator.setIgnoreFailedDrops(true);
+
+			DataSourceInitializer initializer = new DataSourceInitializer();
+			initializer.setDataSource(dataSource);
+			initializer.setDatabasePopulator(databasePopulator);
+
+			return initializer;
+		}
+
+		@Bean
+		public DataSource dataSource() {
+			// Timezone is not set in github containers, need this for connections to work
+			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
+			DriverManagerDataSource ds = new DriverManagerDataSource();
+			ds.setUrl("jdbc:tc:oracle:///databasename?TC_TMPFS=/testtmpfs:rw?TC_DAEMON=true");
+			ds.setUsername("system");
+			ds.setPassword("oracle");
+			return ds;
+		}
+
+		@Bean
+		public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+			vendorAdapter.setDatabase(Database.ORACLE);
+			vendorAdapter.setGenerateDdl(true);
+
+			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+			factory.setJpaVendorAdapter(vendorAdapter);
+			factory.setPackagesToScan(getClass().getPackage().getName());
+			factory.setDataSource(dataSource);
+
+			return factory;
+		}
+
+		@Bean
+		public PlatformTransactionManager transactionManager(
+				LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+
+			JpaTransactionManager txManager = new JpaTransactionManager();
+			txManager.setEntityManagerFactory(entityManagerFactory.getObject());
 			return txManager;
 		}
 	}
