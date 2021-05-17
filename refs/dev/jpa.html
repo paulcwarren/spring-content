@@ -552,7 +552,7 @@ that actually does stream the content properly (i.e. in reasonable size chunks) 
 <h3 id="_postgresql">Postgresql</h3>
 <div class="paragraph">
 <p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does comes with a significant performance disadvantage over bytea fields.</p>
+streams it does come with a significant performance disadvantage over bytea fields.</p>
 </div>
 <div class="paragraph">
 <p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
@@ -565,6 +565,16 @@ therefore the transaction must be handled by the consumer.</p>
 <div class="paragraph">
 <p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
 to serve BLOBs in a memory efficient way.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_oracle">Oracle</h3>
+<div class="paragraph">
+<p>The oracle implementation relies on the ability of the Oracle JDBC driver to perform chunked operations on the
+streams. This functionality has been tested against the com.oracle.database.jdbc ojdbc instance at version 12.2.0.1,
+where the default prefetch size is 4000 bytes. Whilst the driver supports the ability to modify this prefetch size
+for tuning performance, there currently is no way to over-ride this setting via the spring-content API, so the default
+of whatever driver version is in use will apply.</p>
 </div>
 </div>
 </div>
@@ -609,7 +619,7 @@ content is initially set.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-05-06 04:30:11 UTC
+Last updated 2021-05-17 04:04:48 UTC
 </div>
 </div>
 </body>
