@@ -17,7 +17,6 @@ import static org.mockito.Mockito.verify;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.azure.config.AzureStorageConfigurer;
 import org.springframework.content.azure.config.BlobId;
 import org.springframework.content.azure.config.EnableAzureStorage;
@@ -30,13 +29,27 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
+import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.azure.it.Azurite;
 import lombok.Data;
 
 @RunWith(Ginkgo4jRunner.class)
 public class EnableAzureStorageTest {
+
+    private static BlobServiceClientBuilder builder = Azurite.getBlobServiceClientBuilder();
+    private static BlobContainerClient client = null;
+
+    static {
+        client = builder.buildClient().getBlobContainerClient("test");
+        if (!client.exists()) {
+            client.create();
+        }
+
+        System.setProperty("spring.content.azure.bucket", "azure-test-bucket");
+    }
 
 	private AnnotationConfigApplicationContext context;
 
@@ -159,17 +172,14 @@ public class EnableAzureStorageTest {
 	@Configuration
 	public static class InfrastructureConfig {
 
-        @Value("#{environment.AZURE_STORAGE_ENDPOINT}")
-        private String endpoint;
-
-        @Value("#{environment.AZURE_STORAGE_CONNECTION_STRING}")
-        private String connString;
+	    @Bean
+	    public BlobServiceClientBuilder builder() {
+	        return builder;
+	    }
 
         @Bean
-        public BlobServiceClientBuilder storage() {
-                return new BlobServiceClientBuilder()
-                .endpoint(endpoint)
-                .connectionString(connString);
+        public BlobContainerClient blobContainerClient() {
+            return client;
         }
 	}
 
