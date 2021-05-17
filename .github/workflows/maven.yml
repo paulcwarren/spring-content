@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      sqlserver: 
+      sqlserver:
         image: exoplatform/sqlserver:2017-CU8
         env:
           SA_PASSWORD: 5F4Dt9ky9dU$
@@ -27,7 +27,7 @@ jobs:
       postgres:
         image: postgres:12.1
         env:
-          POSTGRES_PASSWORD: 5F4Dt9ky9dU$ 
+          POSTGRES_PASSWORD: 5F4Dt9ky9dU$
         ports:
           - 5432:5432
       mysql:
@@ -36,7 +36,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: 5F4Dt9ky9dU$
           MYSQL_DATABASE: sc
         ports:
-          - 3306:3306 
+          - 3306:3306
       elasticsearch:
         image: paulcwarren/elasticsearch:7.6.2
         env:
@@ -45,13 +45,13 @@ jobs:
           - 9200:9200
           - 9300:9300
       solr:
-        image: paulcwarren/solr 
+        image: paulcwarren/solr
         ports:
-          - 8983:8983 
+          - 8983:8983
       mongo:
         image: mongo:3.6.12
         env:
-          MONGO_INITDB_DATABASE: spring-content 
+          MONGO_INITDB_DATABASE: spring-content
         ports:
           - 27017:27017
 
@@ -66,7 +66,7 @@ jobs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
-    
+
     - name: Build and test
       run: |
         echo -n "$GCP_SA_KEY" > /tmp/gcp_sa_key
@@ -107,16 +107,16 @@ jobs:
             TAG="${GITHUB_REF#refs/tags/}"
             mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
         fi
-      
+
         mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
-        
+
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
         GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-        
+
     - name: Publish Docs
       run: |
         #!/bin/bash
