@@ -9,20 +9,18 @@ import org.testcontainers.utility.DockerImageName;
 
 public class SolrTestContainer extends SolrContainer {
 
-    private static final String CONNECTION_URL = "http://%s:%d/solr";
-    private static final DockerImageName IMAGE_NAME = DockerImageName.parse("solr").withTag("8.3.0");
+    private static final String CONNECTION_URL = "http://%s:%d/solr/solr";
+    private static final DockerImageName IMAGE_NAME = DockerImageName.parse("paulcwarren/solr").asCompatibleSubstituteFor("solr");
 
     private SolrTestContainer() {
         super(IMAGE_NAME);
         start();
-        // can use exec in container command here to set things up, e.g.
-//        try {
-//            execInContainer("solr -c create test");
-//            execInContainer("solr command 2");
-//            execInContainer("solr command 3");
-//        } catch (IOException | InterruptedException e) {
-//            throw new RuntimeException("Failed to setup solr container", e);
-//        }
+
+        try {
+            execInContainer("sh", "-c", "solr create_collection -c solr -d /opt/solr/server/solr/configsets/_default/");
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Failed to setup solr container", e);
+        }
     }
 
     public static SolrClient getSolrClient() {

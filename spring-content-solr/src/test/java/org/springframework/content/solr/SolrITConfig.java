@@ -8,7 +8,6 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -69,7 +68,7 @@ public class SolrITConfig {
     public SolrClient solrClient(
             SolrProperties props) {
 
-        return new HttpSolrClient.Builder(props.getUrl()).build();
+        return SolrTestContainer.getSolrClient();
     }
 
     @Bean
