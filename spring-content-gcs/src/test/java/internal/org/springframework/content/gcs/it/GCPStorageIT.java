@@ -79,6 +79,10 @@ public class GCPStorageIT {
 
     private String resourceLocation;
 
+    static {
+        System.setProperty("spring.content.gcp.storage.bucket", "test");
+    }
+
     {
         Describe("DefaultGCPStorageImpl", () -> {
 
@@ -352,29 +356,6 @@ public class GCPStorageIT {
         public static Storage storage() {
             return LocalStorageHelper.getOptions().getService();
         }
-
-//        @Bean
-//        public static Storage storage(CredentialsProvider credentialsProvider,
-//                GcpProjectIdProvider projectIdProvider) throws IOException {
-//            return StorageOptions.newBuilder()
-//                    .setCredentials(credentialsProvider.getCredentials())
-//                    .setProjectId(projectIdProvider.getProjectId()).build().getService();
-//        }
-//
-//        @Bean
-//        public GcpProjectIdProvider gcpProjectIdProvider() {
-//            return new DefaultGcpProjectIdProvider();
-//        }
-//
-//        @Bean
-//        public CredentialsProvider credentialsProvider() {
-//            try {
-//                return new DefaultCredentialsProvider(Credentials::new);
-//            }
-//            catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
-//        }
     }
 
     @Configuration
