@@ -52,6 +52,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
+
+        <test-containers.version>1.15.3</test-containers.version>
     </properties>
 
     <dependencies>
@@ -78,6 +80,11 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>${test-containers.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -23,7 +23,6 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
@@ -47,7 +46,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
@@ -340,19 +338,15 @@ public class MongoStoreIT {
 
 	@Configuration
 	public static class InfrastructureConfig extends AbstractMongoClientConfiguration {
-
-		@Value("#{environment.MONGODB_URL}")
-		private String mongoDbUrl = "mongodb://localhost:27017";
-
 		@Override
 		protected String getDatabaseName() {
-			return "spring-content";
+			return MongoTestContainer.getTestDbName();
 		}
 
 		@Override
         @Bean
 		public MongoClient mongoClient() {
-			return MongoClients.create(mongoDbUrl);
+			return MongoTestContainer.getMongoClient();
 		}
 
 		@Bean
