@@ -52,15 +52,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.paging.Page;
-import com.google.cloud.spring.core.Credentials;
-import com.google.cloud.spring.core.DefaultCredentialsProvider;
-import com.google.cloud.spring.core.DefaultGcpProjectIdProvider;
-import com.google.cloud.spring.core.GcpProjectIdProvider;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -354,27 +349,32 @@ public class GCPStorageIT {
     public static class TestConfig {
 
         @Bean
-        public static Storage storage(CredentialsProvider credentialsProvider,
-                GcpProjectIdProvider projectIdProvider) throws IOException {
-            return StorageOptions.newBuilder()
-                    .setCredentials(credentialsProvider.getCredentials())
-                    .setProjectId(projectIdProvider.getProjectId()).build().getService();
+        public static Storage storage() {
+            return LocalStorageHelper.getOptions().getService();
         }
 
-        @Bean
-        public GcpProjectIdProvider gcpProjectIdProvider() {
-            return new DefaultGcpProjectIdProvider();
-        }
-
-        @Bean
-        public CredentialsProvider credentialsProvider() {
-            try {
-                return new DefaultCredentialsProvider(Credentials::new);
-            }
-            catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
+//        @Bean
+//        public static Storage storage(CredentialsProvider credentialsProvider,
+//                GcpProjectIdProvider projectIdProvider) throws IOException {
+//            return StorageOptions.newBuilder()
+//                    .setCredentials(credentialsProvider.getCredentials())
+//                    .setProjectId(projectIdProvider.getProjectId()).build().getService();
+//        }
+//
+//        @Bean
+//        public GcpProjectIdProvider gcpProjectIdProvider() {
+//            return new DefaultGcpProjectIdProvider();
+//        }
+//
+//        @Bean
+//        public CredentialsProvider credentialsProvider() {
+//            try {
+//                return new DefaultCredentialsProvider(Credentials::new);
+//            }
+//            catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            }
+//        }
     }
 
     @Configuration
