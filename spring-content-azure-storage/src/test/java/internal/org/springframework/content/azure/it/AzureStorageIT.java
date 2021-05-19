@@ -66,7 +66,14 @@ import net.bytebuddy.utility.RandomString;
 @Ginkgo4jConfiguration(threads=1)
 public class AzureStorageIT {
 
+    private static final BlobServiceClientBuilder builder = Azurite.getBlobServiceClientBuilder();
+    private static final BlobContainerClient client = builder.buildClient().getBlobContainerClient("test");
+
     static {
+        if (!client.exists()) {
+            client.create();
+        }
+
         System.setProperty("spring.content.azure.bucket", "azure-test-bucket");
     }
 
@@ -79,7 +86,6 @@ public class AzureStorageIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
-    private BlobContainerClient client;
 
     private String resourceLocation;
 
@@ -93,7 +99,6 @@ public class AzureStorageIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
-                client = context.getBean(BlobContainerClient.class);
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -362,17 +367,7 @@ public class AzureStorageIT {
     public static class TestConfig {
         @Bean
         public BlobServiceClientBuilder blobServiceClientBuilder() {
-            return Azurite.getBlobServiceClientBuilder();
-        }
-
-        @Bean
-        public BlobContainerClient blobContainerClient(BlobServiceClientBuilder builder) {
-            BlobContainerClient client = builder.buildClient().getBlobContainerClient("test");
-            // No pre-defined containers at start-up, create it on first bean generation
-            if (!client.exists()) {
-                client.create();
-            }
-            return client;
+            return builder;
         }
     }
 

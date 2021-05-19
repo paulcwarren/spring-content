@@ -77,8 +77,8 @@ public class SolrIT {
     {
         Describe("Index", () -> {
             BeforeEach(() -> {
-                solrProperties.setUser(System.getenv("SOLR_USER"));
-                solrProperties.setPassword(System.getenv("SOLR_PASSWORD"));
+                solrProperties.setUser("solr");
+                solrProperties.setPassword("SolrRocks");
 
                 doc = new Document();
                 doc.setTitle("title of document 1");

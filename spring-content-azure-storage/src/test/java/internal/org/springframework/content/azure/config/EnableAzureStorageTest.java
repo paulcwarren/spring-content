@@ -39,11 +39,10 @@ import lombok.Data;
 @RunWith(Ginkgo4jRunner.class)
 public class EnableAzureStorageTest {
 
-    private static BlobServiceClientBuilder builder = Azurite.getBlobServiceClientBuilder();
-    private static BlobContainerClient client = null;
+    private static final BlobServiceClientBuilder builder = Azurite.getBlobServiceClientBuilder();
+    private static final BlobContainerClient client = builder.buildClient().getBlobContainerClient("test");
 
     static {
-        client = builder.buildClient().getBlobContainerClient("test");
         if (!client.exists()) {
             client.create();
         }
@@ -55,7 +54,6 @@ public class EnableAzureStorageTest {
 
 	// mocks
 	static AzureStorageConfigurer configurer;
-	static BlobServiceClientBuilder storage;
 
 	{
 		Describe("EnableAzureStorage", () -> {
@@ -171,16 +169,10 @@ public class EnableAzureStorageTest {
 
 	@Configuration
 	public static class InfrastructureConfig {
-
 	    @Bean
 	    public BlobServiceClientBuilder builder() {
 	        return builder;
 	    }
-
-        @Bean
-        public BlobContainerClient blobContainerClient() {
-            return client;
-        }
 	}
 
 	@Data

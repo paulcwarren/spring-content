@@ -347,30 +347,18 @@ public class StoreIT {
 
 	        return initializer;
 	    }
-	    
-	    @Value("#{environment.MYSQL_URL}")
-	    private String url;
-	    @Value("#{environment.MYSQL_USERNAME}")
-	    private String username;			
-	    @Value("#{environment.MYSQL_PASSWORD}")
-	    private String password;				
 
 		@Bean
 		public DataSource dataSource() {
-			Assert.notNull(url, "url not set");
-			Assert.notNull(username, "username not set");
-			Assert.notNull(password, "password not set");
-
 			DriverManagerDataSource ds = new DriverManagerDataSource();
-	        ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
-	        ds.setUrl(url);
-	        ds.setUsername(username);
-	        ds.setPassword(password);
+			ds.setUrl("jdbc:tc:mysql:5.7.34:///databasename?TC_TMPFS=/testtmpfs:rw&TC_DAEMON=true&emulateLocators=true");
+	        ds.setUsername("test");
+	        ds.setPassword("test");
 	        return ds;
 		}
 
 		@Bean
-		public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+		public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
 			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
 			vendorAdapter.setDatabase(Database.MYSQL);
 			vendorAdapter.setGenerateDdl(true);
@@ -378,7 +366,7 @@ public class StoreIT {
 			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 			factory.setJpaVendorAdapter(vendorAdapter);
 			factory.setPackagesToScan(getClass().getPackage().getName());
-			factory.setDataSource(dataSource());
+			factory.setDataSource(dataSource);
 
 			factory.setJpaVendorAdapter(vendorAdapter);
 			HashMap<String, Object> properties = new HashMap<>();
@@ -389,9 +377,11 @@ public class StoreIT {
 		}
 
 		@Bean
-		public PlatformTransactionManager transactionManager() {
+		public PlatformTransactionManager transactionManager(
+				LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+
 			JpaTransactionManager txManager = new JpaTransactionManager();
-			txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+			txManager.setEntityManagerFactory(entityManagerFactory.getObject());
 			return txManager;
 		}
 	}
@@ -420,22 +410,14 @@ public class StoreIT {
 
 	        return initializer;
 	    }
-	    
-	    @Value("#{environment.POSTGRESQL_URL}")
-	    private String url;
-	    @Value("#{environment.POSTGRESQL_USERNAME}")
-	    private String username;
-	    @Value("#{environment.POSTGRESQL_PASSWORD}")
-	    private String password;
 
 		@Bean
 		public DataSource dataSource() {
 	        DriverManagerDataSource ds = new DriverManagerDataSource();
-            ds.setDriverClassName("org.postgresql.Driver");
-	        ds.setUrl(url);
-	        ds.setUsername(username);
-	        ds.setPassword(password);
-	        return ds;
+			ds.setUrl("jdbc:tc:postgresql:12:///databasename?TC_TMPFS=/testtmpfs:rw&TC_DAEMON=true");
+			ds.setUsername("test");
+			ds.setPassword("test");
+			return ds;
 		}
 
 		@Bean
@@ -484,28 +466,14 @@ public class StoreIT {
 
 	        return initializer;
 	    }
-	    
-	    @Value("#{environment.SQLSERVER_HOST}")
-	    private String sqlServerHost;
-
-	    @Value("#{environment.SQLSERVER_DB_NAME}")
-	    private String sqlServerDbName;
-
-	    @Value("#{environment.SQLSERVER_USERNAME}")
-	    private String username; 	
-
-	    @Value("#{environment.SQLSERVER_PASSWORD}")
-	    private String password;
 
 		@Bean
 		public DataSource dataSource() {
-	        DriverManagerDataSource ds = new DriverManagerDataSource();
-	        ds.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-	        String connectionString = String.format("jdbc:sqlserver://%s;databaseName=%s", sqlServerHost, sqlServerDbName);
-	        ds.setUrl(connectionString);
-	        ds.setUsername(username);
-	        ds.setPassword(password);
-	        return ds;
+			DriverManagerDataSource ds = new DriverManagerDataSource();
+			ds.setUrl("jdbc:tc:sqlserver:///databasename?TC_TMPFS=/testtmpfs:rw&TC_DAEMON=true");
+			ds.setUsername("SA");
+			ds.setPassword("A_Str0ng_Required_Password");
+			return ds;
 		}
 
 		@Bean
