@@ -160,7 +160,7 @@ public class ElasticsearchIT {
                         AcknowledgedResponse resp = client.indices().close(new CloseIndexRequest(indexName), RequestOptions.DEFAULT);
                         assertThat(resp.isAcknowledged(), is(true));
 
-                        String command = format("curl -X GET http://localhost:9200/_cat/indices/%s?h=status", indexName);
+                        String command = format("curl -X GET %s/_cat/indices/%s?h=status", ElasticsearchTestContainer.getUrl(), indexName);
                         Process process = Runtime.getRuntime().exec(command);
 
                         InputStream inputStream = process.getInputStream();
