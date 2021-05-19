@@ -7,13 +7,13 @@ import internal.org.springframework.content.rest.it.SecurityConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -27,12 +27,10 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@SpringBootApplication
-@ComponentScan(excludeFilters={
-      @Filter(type = FilterType.REGEX,
-            pattern = {
-                  ".*MongoConfiguration", 
-      })
+@SpringBootApplication(exclude = {
+        MongoAutoConfiguration.class,
+        MongoDataAutoConfiguration.class,
+        MongoRepositoriesAutoConfiguration.class
 })
 public class Application {
 
@@ -67,27 +65,13 @@ public class Application {
 
             return initializer;
         }
-        
-        @Value("#{environment.SQLSERVER_HOST}")
-        private String sqlServerHost;
-
-        @Value("#{environment.SQLSERVER_DB_NAME}")
-        private String sqlServerDbName;
-
-        @Value("#{environment.SQLSERVER_USERNAME}")
-        private String username;    
-
-        @Value("#{environment.SQLSERVER_PASSWORD}")
-        private String password;    
 
         @Bean
         public DataSource dataSource() {
             DriverManagerDataSource ds = new DriverManagerDataSource();
-            ds.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            String connectionString = String.format("jdbc:sqlserver://%s;databaseName=%s", sqlServerHost, sqlServerDbName);
-            ds.setUrl(connectionString);
-            ds.setUsername(username);
-            ds.setPassword(password);
+            ds.setUrl("jdbc:tc:sqlserver:///databasename?TC_TMPFS=/testtmpfs:rw&TC_DAEMON=true");
+            ds.setUsername("SA");
+            ds.setPassword("A_Str0ng_Required_Password");
             return ds;
         }
 

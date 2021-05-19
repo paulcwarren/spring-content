@@ -86,7 +86,6 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.path.json.JsonPath;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -100,9 +99,6 @@ public class LockingAndVersioningRestIT {
 
     @Autowired
     private VersionedDocumentAndVersioningRepository repo;
-
-    @Autowired
-    private VersionedDocumentStore store;
 
     @LocalServerPort
     int port;
@@ -221,19 +217,15 @@ public class LockingAndVersioningRestIT {
 
         @Configuration
         public class VersioningConfig extends AbstractMongoClientConfiguration {
-
-            @Value("#{environment.MONGODB_URL}")
-            private String mongoDbUrl = "mongodb://localhost:27017";
-
             @Override
             protected String getDatabaseName() {
-                return "spring-content";
+                return MongoTestContainer.getTestDbName();
             }
 
             @Override
             @Bean
             public MongoClient mongoClient() {
-                return MongoClients.create(mongoDbUrl);
+                return MongoTestContainer.getMongoClient();
             }
 
             @Bean
