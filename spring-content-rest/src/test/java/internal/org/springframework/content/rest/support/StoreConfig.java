@@ -30,9 +30,9 @@ public class StoreConfig extends JpaInfrastructureConfig {
 	@Bean
 	RepositoryRestConfigurer repositoryRestConfigurer() {
 
-		return RepositoryRestConfigurer.withConfig(config -> {
+		return RepositoryRestConfigurer.withConfig((config, corsRegistry) -> {
 
-			config.getCorsRegistry().addMapping("/**") //
+			corsRegistry.addMapping("/**") //
 					.allowedMethods("GET", "PUT", "POST") //
 					.allowedOrigins("http://far.far.away");
 
