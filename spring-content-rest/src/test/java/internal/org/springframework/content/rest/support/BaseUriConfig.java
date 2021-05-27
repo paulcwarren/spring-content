@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import internal.org.springframework.content.rest.support.config.JpaInfrastructureConfig;
 
@@ -48,7 +49,7 @@ public class BaseUriConfig extends JpaInfrastructureConfig {
 		return new RepositoryRestConfigurer() {
 
 			@Override
-			public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+			public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
 				config.setBasePath("/api");
 			}
 		};
