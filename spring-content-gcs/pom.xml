@@ -102,7 +102,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-nio</artifactId>
-            <version>0.123.2</version>
+            <version>0.123.3</version>
             <scope>test</scope>
         </dependency>
 	</dependencies>
