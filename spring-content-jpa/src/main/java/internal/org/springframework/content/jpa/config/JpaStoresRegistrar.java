@@ -22,4 +22,9 @@ public class JpaStoresRegistrar extends AbstractStoreBeanDefinitionRegistrar {
 	protected Class<?>[] getSignatureTypes() {
 		return new Class[]{JpaContentStore.class};
 	}
+
+	@Override
+	protected String getOverridePropertyValue() {
+		return "jpa";
+	}
 }
