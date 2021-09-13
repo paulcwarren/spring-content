@@ -215,8 +215,8 @@
             <td><a href="refs/snapshot/1.0.x/s3-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/s3-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/s3-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/s3-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/s3-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/s3-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/s3-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content GCS</td>
@@ -225,8 +225,8 @@
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
-            <td><a href="refs/release/1.2.4/gcs-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/gcs-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/gcs-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/gcs-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content Azure Storage</td>
@@ -235,8 +235,8 @@
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
             <td><a href="#">n/a</a></td>
-            <td><a href="refs/release/1.2.4/azure-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/azure-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/azure-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/azure-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content Filesystem</td>
@@ -245,8 +245,8 @@
             <td><a href="refs/snapshot/1.0.x/fs-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/fs-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/fs-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/fs-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/fs-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/fs-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/fs-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content Mongo (GridFS)</td>
@@ -255,8 +255,8 @@
             <td><a href="refs/snapshot/1.0.x/mongo-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/mongo-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/mongo-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/mongo-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/mongo-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/mongo-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/mongo-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content JPA</td>
@@ -265,8 +265,8 @@
             <td><a href="refs/snapshot/1.0.x/jpa-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/jpa-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/jpa-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/jpa-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/jpa-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/jpa-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/jpa-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <th colspan=9>Renditions</th>
@@ -278,8 +278,8 @@
             <td>-</td>
             <td><a href="refs/release/1.1.0.M5/renditions-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/renditions-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/renditions-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/renditions-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/renditions-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/renditions-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <th colspan=9>Versioning</th>
@@ -291,8 +291,8 @@
             <td><a href="refs/snapshot/1.0.x/jpaversions-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/jpaversions-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/jpaversions-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/jpaversions-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/jpaversions-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/jpaversions-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/jpaversions-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <th colspan=9>Fulltext Indexing</th>
@@ -304,8 +304,8 @@
             <td><a href="refs/snapshot/1.0.x/solr-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/solr-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/solr-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/solr-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/solr-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/solr-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/solr-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content Elasticsearch</td>
@@ -314,8 +314,8 @@
             <td><a href="refs/snapshot/1.0.x/elasticsearch-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/elasticsearch-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/elasticsearch-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/elasticsearch-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/elasticsearch-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/elasticsearch-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/elasticsearch-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <th colspan=9>APIs</th>
@@ -327,8 +327,8 @@
             <td><a href="refs/snapshot/1.0.x/rest-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/rest-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/rest-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/rest-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/rest-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/rest-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/rest-index.html">1.2.6</a></td>
         </tr>
         <tr>
             <td>Spring Content CMIS</td>
@@ -337,8 +337,8 @@
             <td><a href="refs/snapshot/1.0.x/cmis-index.html">1.0.0.M11</a></td>
             <td><a href="refs/release/1.1.0.M5/cmis-index.html">1.1.0.M5</a></td>
             <td><a href="refs/snapshot/1.1.x/cmis-index.html">1.1.0.M6</a></td>
-            <td><a href="refs/release/1.2.4/cmis-index.html">1.2.4</a></td>
-            <td><a href="refs/snapshot/1.2.x/cmis-index.html">1.2.5</a></td>
+            <td><a href="refs/release/1.2.5/cmis-index.html">1.2.5</a></td>
+            <td><a href="refs/snapshot/1.2.x/cmis-index.html">1.2.6</a></td>
         </tr>
     </tbody>
 </table>
@@ -462,5 +462,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-09-13 05:28:31.538558+00:00
+Build Date UTC : 2021-09-13 05:34:11.594753+00:00
 -->
