@@ -1,8 +1,8 @@
-name: Branch Build
+name: Main Build
 
 on:
   push:
-    branches: [ 1.1.x,1.2.x ]
+    branches: [ main ]
     tags:
     - '*'
 jobs:
@@ -23,7 +23,7 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: Build and test
+    - name: Build and Test
       run: |
         mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
         bash <(curl -s https://codecov.io/bash)

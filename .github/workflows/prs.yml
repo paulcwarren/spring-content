@@ -2,14 +2,12 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [ 1.1.x,1.2.x ]
+    branches: [ main ]
 
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
       with:
@@ -29,13 +27,13 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
         
-    - name: Build and test
+    - name: Build and Test
       run: |
         pushd spring-content
           mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
         popd
 
-    - name: Validate examples
+    - name: Validate Examples
       run: |
         pushd spring-content-examples
           mvn -B clean install
