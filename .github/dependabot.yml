@@ -5,7 +5,7 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-  target-branch: 1.2.x
+  target-branch: main
   ignore:
   - dependency-name: org.docx4j:docx4j-core
     versions:
