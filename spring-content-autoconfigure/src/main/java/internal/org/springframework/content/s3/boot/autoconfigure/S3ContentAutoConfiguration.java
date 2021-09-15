@@ -25,8 +25,8 @@ public class S3ContentAutoConfiguration {
 	public static class EnableS3StoresConfig {}
 
 	@Bean
-	@ConditionalOnMissingBean
-	public AmazonS3 s3Client() {
+	@ConditionalOnMissingBean()
+	public AmazonS3 amazonS3() {
 		AmazonS3 s3Client = new AmazonS3Client();
 		return s3Client;
 	}
