@@ -38,9 +38,6 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired
 	private AzureStorageProtocolResolver resolver;
 
-	@Value("${spring.content.gcp.storage.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
-	private String bucket;
-
 	public AzureStorageFactoryBean() {
 		// required for bean instantiation
 	}
