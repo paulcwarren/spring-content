@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.controllers.resolvers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.security.Principal;
@@ -31,7 +32,8 @@ import javax.servlet.http.Part;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.support.Repositories;
@@ -64,12 +66,15 @@ public class EntityResolver {
     private Repositories repositories;
     private StoreInfo storeInfo;
     private String[] pathSegments;
+    private ConversionService converters;
 
-    public EntityResolver(ApplicationContext context, Repositories repositories, StoreInfo storeInfo, String[] pathSegments) {
+
+    public EntityResolver(ApplicationContext context, Repositories repositories, StoreInfo storeInfo, String[] pathSegments, ConversionService converters) {
         this.context = context;
         this.repositories = repositories;
         this.storeInfo = storeInfo;
         this.pathSegments = pathSegments;
+        this.converters = converters;
     }
 
     public Object resolve(Map<String,String> variables) {
@@ -105,7 +110,7 @@ public class EntityResolver {
         return findOne(repositories, domainObjClazz, id);
     }
 
-    public Object findOne(Repositories repositories, Class<?> domainObjClass, String id)
+    public Object findOne(Repositories repositories, Class<?> domainObjClass, Serializable id)
             throws HttpRequestMethodNotSupportedException {
 
         Optional<Object> domainObj = null;
@@ -118,31 +123,46 @@ public class EntityResolver {
                 if (invoker != null) {
                     domainObj = invoker.invokeFindById(id);
                 }
+            } catch (ConverterNotFoundException e) {
+
+                domainObj = findOneByReflection(repositories, domainObjClass, id);
             } catch (Exception e) {
+
                 e.printStackTrace();
             }
         } else {
 
-            RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, domainObjClass);
-
-            if (ri == null) {
-                throw new ResourceNotFoundException();
-            }
-
-            Class<?> domainObjClazz = ri.getDomainType();
-            Class<?> idClazz = ri.getIdType();
-
-            Optional<Method> findOneMethod = ri.getCrudMethods().getFindOneMethod();
-            if (!findOneMethod.isPresent()) {
-                throw new HttpRequestMethodNotSupportedException("fineOne");
-            }
-
-            Object oid = new DefaultConversionService().convert(id, idClazz);
-            domainObj = (Optional<Object>) ReflectionUtils.invokeMethod(findOneMethod.get(),
-                    repositories.getRepositoryFor(domainObjClazz).get(),
-                    oid);
+            domainObj = findOneByReflection(repositories, domainObjClass, id);
         }
         return domainObj.orElseThrow(ResourceNotFoundException::new);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Optional<Object> findOneByReflection(Repositories repositories, Class<?> domainObjClass, Serializable id)
+            throws HttpRequestMethodNotSupportedException {
+
+        RepositoryInformation ri = RepositoryUtils.findRepositoryInformation(repositories, domainObjClass);
+
+        if (ri == null) {
+            throw new ResourceNotFoundException();
+        }
+
+        Class<?> domainObjClazz = ri.getDomainType();
+        Class<?> idClazz = ri.getIdType();
+
+        Optional<Method> findOneMethod = ri.getCrudMethods().getFindOneMethod();
+        if (!findOneMethod.isPresent()) {
+            throw new HttpRequestMethodNotSupportedException("fineOne");
+        }
+
+        Serializable oid = id;
+        if (converters.canConvert(String.class, idClazz)) {
+            oid = (Serializable) converters.convert(id, idClazz);
+        }
+
+        return (Optional<Object>) ReflectionUtils.invokeMethod(findOneMethod.get(),
+                repositories.getRepositoryFor(domainObjClazz).get(),
+                oid);
     }
 
     private RepositoryInvoker resolveRootResourceInformation(StoreInfo info, String[] pathSegments, ModelAndViewContainer mavContainer, WebDataBinderFactory binderFactory)
