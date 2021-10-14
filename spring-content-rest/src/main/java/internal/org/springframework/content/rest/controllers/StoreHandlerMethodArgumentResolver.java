@@ -11,6 +11,7 @@ import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -85,7 +86,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
         if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
             if (entityUriTemplate.matches(pathInfo)) {
-                Object entity = new EntityResolver(context, this.getRepositories(), info, pathSegments)
+                Object entity = new EntityResolver(context, this.getRepositories(), info, pathSegments, (ConversionService)config.converters())
                         .resolve(entityUriTemplate.match(pathInfo));
 
                 return this.resolveAssociativeStoreEntityArgument(info, entity);
@@ -95,7 +96,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments, (ConversionService)config.converters())
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
@@ -109,7 +110,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
                 Map<String,String> variables = entityPropertyWithIdUriTemplate.match(pathInfo);
 
-                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments)
+                Object domainObj = new EntityResolver(context, this.getRepositories(), info, pathSegments, (ConversionService)config.converters())
                         .resolve(variables);
 
                 HttpMethod method = HttpMethod.valueOf(webRequest.getNativeRequest(HttpServletRequest.class).getMethod());
