@@ -27,7 +27,7 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
     private BlobServiceClient client;
 
 	@Autowired
-	private PlacementService s3StorePlacementService;
+	private PlacementService storePlacementService;
 
 //	@Autowired(required=false)
 //	private MultiTenantAmazonS3Provider s3Provider = null;
@@ -38,18 +38,15 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired
 	private AzureStorageProtocolResolver resolver;
 
-	@Value("${spring.content.gcp.storage.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
-	private String bucket;
-
 	public AzureStorageFactoryBean() {
 		// required for bean instantiation
 	}
 
 	@Autowired
-	public AzureStorageFactoryBean(ApplicationContext context, BlobServiceClientBuilder client, PlacementService s3StorePlacementService) {
+	public AzureStorageFactoryBean(ApplicationContext context, BlobServiceClientBuilder client, PlacementService storePlacementService) {
 	    this.context = context;
 		this.client = client.buildClient();
-		this.s3StorePlacementService = s3StorePlacementService;
+		this.storePlacementService = storePlacementService;
 	}
 
 	@Override
@@ -69,6 +66,6 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(resolver);
 
-		return new DefaultAzureStorageImpl(context, loader, s3StorePlacementService, client/*, s3Provider*/);
+		return new DefaultAzureStorageImpl(context, loader, storePlacementService, client/*, s3Provider*/);
 	}
 }
