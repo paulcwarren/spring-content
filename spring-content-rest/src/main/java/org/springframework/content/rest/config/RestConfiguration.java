@@ -17,6 +17,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
@@ -48,6 +50,7 @@ public class RestConfiguration implements InitializingBean {
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
 	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
+	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
 
@@ -90,6 +93,10 @@ public class RestConfiguration implements InitializingBean {
 			domainTypeConfigMap.put(type, config);
 		}
 		return config;
+	}
+
+	public ConverterRegistry converters() {
+	    return converters;
 	}
 
 	@Bean
