@@ -1,12 +1,35 @@
 package internal.org.springframework.content.commons.repository.factory;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.commons.config.StoreFragment;
-import internal.org.springframework.content.commons.config.StoreFragments;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
+
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
@@ -20,31 +43,32 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
-import org.springframework.content.commons.repository.events.*;
+import org.springframework.content.commons.repository.events.AfterAssociateEvent;
+import org.springframework.content.commons.repository.events.AfterGetContentEvent;
+import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
+import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
+import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
+import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
+import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.security.util.SimpleMethodInvocation;
 import org.springframework.util.ReflectionUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.*;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+import internal.org.springframework.content.commons.config.StoreFragment;
+import internal.org.springframework.content.commons.config.StoreFragments;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
@@ -96,7 +120,7 @@ public class StoreMethodInterceptorTest {
 
 			JustBeforeEach(() -> {
 				interceptor = new StoreMethodInterceptor();
-				StoreFragments fragments = new StoreFragments(Collections.singletonList(new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher))));
+				StoreFragments fragments = new StoreFragments(Collections.singletonList(new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher, Paths.get(System.getProperty("java.io.tmpdir"))))));
 				interceptor.setStoreFragments(fragments);
 				try {
 					interceptor.invoke(invocation);
@@ -479,7 +503,7 @@ public class StoreMethodInterceptorTest {
 				try {
 					Method m = ReflectionUtils.findMethod(TestContentStore.class, "unsetContent", Object.class);
 					assertThat(m, is(not(nullValue())));
-					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher)));
+					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 					assertThat(actual, is(ReflectionUtils.findMethod(StoreImpl.class, "unsetContent", Object.class)));
 				}
 				catch (Exception invokeException) {
@@ -494,7 +518,7 @@ public class StoreMethodInterceptorTest {
 				try {
 					Method m = ReflectionUtils.findMethod(TestContentStore.class, "setContent", TEntity.class, InputStream.class);
 					assertThat(m, is(not(nullValue())));
-					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher)));
+					Method actual = interceptor.getMethod(m, new StoreFragment(TestContentStore.class, new StoreImpl(store, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 					assertThat(actual, is(ReflectionUtils.findMethod(StoreImpl.class, "setContent", Object.class, InputStream.class)));
 				}
 				catch (Exception invokeException) {
