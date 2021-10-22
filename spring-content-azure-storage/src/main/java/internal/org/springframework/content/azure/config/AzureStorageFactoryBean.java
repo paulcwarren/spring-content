@@ -3,7 +3,6 @@ package internal.org.springframework.content.azure.config;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.context.ApplicationContext;
@@ -38,10 +37,6 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired
 	private AzureStorageProtocolResolver resolver;
 
-	public AzureStorageFactoryBean() {
-		// required for bean instantiation
-	}
-
 	@Autowired
 	public AzureStorageFactoryBean(ApplicationContext context, BlobServiceClientBuilder client, PlacementService storePlacementService) {
 	    this.context = context;
@@ -59,13 +54,9 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Override
 	protected Object getContentStoreImpl() {
 
-//		GoogleStorageProtocolResolver s3Protocol = new GoogleStorageProtocolResolver();
-//		s3Protocol.afterPropertiesSet();
-//		s3Protocol.setBeanFactory(context);
-//
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(resolver);
 
-		return new DefaultAzureStorageImpl(context, loader, storePlacementService, client/*, s3Provider*/);
+		return new DefaultAzureStorageImpl(context, loader, storePlacementService, client);
 	}
 }

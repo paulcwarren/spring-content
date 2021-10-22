@@ -49,15 +49,15 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 	private BlobServiceClient client;
 //	private MultiTenantAmazonS3Provider clientProvider;
 
-	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, BlobServiceClient client2) {
+	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, BlobServiceClient client) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
-//		Assert.notNull(client2, "client must be specified");
+		Assert.notNull(client, "client must be specified");
 		this.context = context;
 		this.loader = loader;
 		this.placementService = placementService;
-		this.client = client2;
+		this.client = client;
 //		this.clientProvider = provider;
 	}
 
@@ -259,7 +259,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;
-		Assert.state(location.startsWith("gs://") == false);
+		Assert.state(location.startsWith("azure-blob://") == false);
 		if (location.startsWith("/")) {
 			locationToUse = location.substring(1);
 		}
