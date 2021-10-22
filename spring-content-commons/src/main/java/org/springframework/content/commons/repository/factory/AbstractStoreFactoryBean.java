@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -182,7 +183,7 @@ public abstract class AbstractStoreFactoryBean
 
 		StoreMethodInterceptor intercepter = new StoreMethodInterceptor();
 
-		storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher)));
+		storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 		intercepter.setStoreFragments(storeFragments);
 
 		result.addAdvice(intercepter);
