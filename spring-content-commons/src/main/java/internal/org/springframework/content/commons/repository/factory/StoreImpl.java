@@ -9,9 +9,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
-import org.springframework.content.commons.io.FileRemover;
-import org.springframework.content.commons.io.ObservableInputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
@@ -33,12 +35,16 @@ import lombok.Getter;
 
 public class StoreImpl implements ContentStore<Object, Serializable> {
 
+    private static Log logger = LogFactory.getLog(StoreImpl.class);
+
     private final ContentStore<Object, Serializable> delegate;
     private final ApplicationEventPublisher publisher;
+    private final Path copyContentRootPath;
 
-    public StoreImpl(ContentStore<Object, Serializable> delegate, ApplicationEventPublisher publisher) {
+    public StoreImpl(ContentStore<Object, Serializable> delegate, ApplicationEventPublisher publisher, Path copyContentRootPath) {
         this.delegate = delegate;
         this.publisher = publisher;
+        this.copyContentRootPath = copyContentRootPath;
     }
 
     @Override
@@ -46,19 +52,20 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
 
         Object result = null;
 
+        File contentCopy = null;
+        TeeInputStream contentCopyStream = null;
         try {
-            File tmpStreamFile = Files.createTempFile("sc", "bsce").toFile();
-            TeeInputStream eventStream = new TeeInputStream(content, new FileOutputStream(tmpStreamFile), true);
-            BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, eventStream);
+            contentCopy = Files.createTempFile(copyContentRootPath, "contentCopy", ".tmp").toFile();
+            contentCopyStream = new TeeInputStream(content, new FileOutputStream(contentCopy), true);
+            BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, contentCopyStream);
             AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
 
             publisher.publishEvent(before);
 
-            if (eventStream != null && eventStream.isDirty()) {
-                while (eventStream.read(new byte[4096]) != -1) {
+            if (contentCopyStream != null && contentCopyStream.isDirty()) {
+                while (contentCopyStream.read(new byte[4096]) != -1) {
                 }
-                eventStream.close();
-                content = new ObservableInputStream(new FileInputStream(tmpStreamFile), new FileRemover(tmpStreamFile));
+                content = new FileInputStream(contentCopy);
             }
 
             try {
@@ -76,6 +83,17 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             fileNotFoundException.printStackTrace();
         } catch (IOException ioException) {
             ioException.printStackTrace();
+        } finally {
+            if (contentCopyStream != null) {
+                IOUtils.closeQuietly(contentCopyStream);
+            }
+            if (contentCopy != null) {
+                try {
+                    Files.deleteIfExists(contentCopy.toPath());
+                } catch (IOException e) {
+                    logger.error(String.format("Unable to delete content copy %s", contentCopy.toPath()), e);
+                }
+            }
         }
 
         return result;
