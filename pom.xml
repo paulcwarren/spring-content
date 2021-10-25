@@ -53,7 +53,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
 
-        <test-containers.version>1.15.3</test-containers.version>
+        <test-containers.version>1.16.2</test-containers.version>
     </properties>
 
     <dependencies>
