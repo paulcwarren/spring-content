@@ -31,6 +31,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -87,13 +88,13 @@ public class ContentJpaAutoConfigurationTest {
 
 	@Configuration
 	@PropertySource("classpath:/default.properties")
-	@EnableAutoConfiguration(exclude= MongoAutoConfiguration.class)
+	@EnableAutoConfiguration(exclude= {MongoAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude=MongoAutoConfiguration.class)
+    @EnableAutoConfiguration(exclude= {MongoAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	public static class CustomBeanConfig extends TestConfig {
 		@Bean
 		public ContentJpaDatabaseInitializer initializer() {
