@@ -30,6 +30,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -79,7 +80,7 @@ public class ContentRestAutoConfigurationTest {
 
 	@Configuration
 	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = S3ContentAutoConfiguration.class)
 	public static class TestConfig {
 	}
 

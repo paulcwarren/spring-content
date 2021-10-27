@@ -15,6 +15,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.jmx.support.RegistrationPolicy;
 
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+
 public class ContentMongoAutoConfigurationTest {
 
 	@Test
@@ -31,7 +33,7 @@ public class ContentMongoAutoConfigurationTest {
 
 	@Configuration
 	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+    @EnableAutoConfiguration(exclude=S3ContentAutoConfiguration.class)
 	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
