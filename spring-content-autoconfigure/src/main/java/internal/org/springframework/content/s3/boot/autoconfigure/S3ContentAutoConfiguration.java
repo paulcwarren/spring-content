@@ -59,17 +59,12 @@ public class S3ContentAutoConfiguration {
     public static class S3Properties {
 
         public String endpoint;
-        public String region;
         public String accessKey;
         public String secretKey;
         public boolean pathStleAccess;
 
         public void setEndpoint(String endpoint) {
             this.endpoint = endpoint;
-        }
-
-        public void setRegion(String region) {
-            this.region = region;
         }
 
         public void setAccessKey(String accessKey) {
