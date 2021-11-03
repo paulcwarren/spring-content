@@ -1,11 +1,21 @@
 package org.springframework.content.cmis.integration;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Setter;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -22,22 +32,21 @@ import org.apache.chemistry.opencmis.commons.enums.BindingType;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.io.IOUtils;
+import org.springframework.content.cmis.support.DocumentRepository;
+import org.springframework.content.cmis.support.FolderRepository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import lombok.Setter;
 
 public class CmisTests {
 
 	@Setter
 	private int port;
+
+	@Setter
+	private DocumentRepository documentRepository;
+
+	@Setter
+	private FolderRepository folderRepository;
 
 	private Session s;
 	private Folder root, folder, subfolder;
@@ -92,9 +101,17 @@ public class CmisTests {
 
 					folder = root.createFolder(properties);
 				});
+
 				It("should be present in the root", () -> {
 					ItemIterable<CmisObject> children = root.getChildren();
 					assertThat(children, hasItem(hasProperty("name", is("folder1"))));
+				});
+
+				It("should be deletable", () -> {
+				    String folderId = folder.getId();
+                    assertThat(folderRepository.existsById(Long.parseLong(folderId)), is(true));
+                    folder.delete();
+                    assertThat(folderRepository.existsById(Long.parseLong(folderId)), is(false));
 				});
 
 				Context("given a subfolder is created", () -> {
@@ -132,7 +149,10 @@ public class CmisTests {
 						});
 
 						It("should be delete-able", () -> {
-							doc.delete();
+		                    String docId = doc.getId();
+		                    assertThat(documentRepository.existsById(Long.parseLong(docId)), is(true));
+		                    doc.delete();
+		                    assertThat(documentRepository.existsById(Long.parseLong(docId)), is(false));
 
 							ItemIterable<CmisObject> children = subfolder.getChildren();
 							assertThat(children, not(hasItem(hasProperty("name", is("doc1")))));
