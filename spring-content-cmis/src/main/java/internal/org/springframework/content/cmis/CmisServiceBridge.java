@@ -1,5 +1,7 @@
 package internal.org.springframework.content.cmis;
 
+import static java.lang.String.format;
+
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -26,9 +28,6 @@ import java.util.Vector;
 import javax.persistence.Id;
 import javax.transaction.Transactional;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.AllowableActions;
@@ -67,15 +66,14 @@ import org.apache.chemistry.opencmis.commons.impl.server.ObjectInfoImpl;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.ObjectInfoHandler;
 import org.apache.chemistry.opencmis.commons.spi.Holder;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.cmis.CmisDescription;
 import org.springframework.content.cmis.CmisDocument;
 import org.springframework.content.cmis.CmisFolder;
 import org.springframework.content.cmis.CmisName;
-import org.springframework.content.cmis.CmisReference;
 import org.springframework.content.cmis.CmisPropertySetter;
+import org.springframework.content.cmis.CmisReference;
 import org.springframework.content.cmis.CmisReferenceType;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -99,7 +97,9 @@ import org.springframework.versions.VersionInfo;
 import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 
-import static java.lang.String.format;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class CmisServiceBridge {
 
@@ -662,11 +662,14 @@ public class CmisServiceBridge {
 			Boolean allVersions,
 			ExtensionsData extension) {
 
-		Object object = getObjectInternal(config, objectId, Collections.EMPTY_SET, false, IncludeRelationships.NONE,
-				"", false, false, extension);
+		Object object = getObjectInternal(config, objectId, Collections.EMPTY_SET, false, IncludeRelationships.NONE, "", false, false, extension);
 		if (object != null) {
-			config.cmisDocumentStorage().unsetContent(object);
-			config.cmisDocumentRepository().delete(object);
+            if (object.getClass().getAnnotation(CmisFolder.class) != null) {
+                config.cmisFolderRepository().delete(object);
+            } else if (object.getClass().getAnnotation(CmisDocument.class) != null) {
+                config.cmisDocumentStorage().unsetContent(object);
+                config.cmisDocumentRepository().delete(object);
+            }
 		}
 	}
 
