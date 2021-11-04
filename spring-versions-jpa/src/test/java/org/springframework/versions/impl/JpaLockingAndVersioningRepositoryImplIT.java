@@ -12,7 +12,10 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -403,10 +406,19 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                         e2v2 = repo.unlock(e2v2);
                     });
 
-                    It("should return the version series", () -> {
+                    It("should return the ordered version series", () -> {
                         List<TestEntity> results = repo.findAllVersions(e1);
                         assertThat(results.size(), is(2));
                         assertThat(results, Matchers.hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
+
+                        // is ordered
+                        {
+                            long lastId = 0;
+                            for (int i=results.size() - 1; i >= 0; i--) {
+                                assertThat(results.get(i).getXid(), is(greaterThan(lastId)));
+                                lastId = results.get(i).getXid();
+                            }
+                        }
                     });
                 });
 
@@ -710,6 +722,125 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                             It("should re-instate the ancestor as the head", () -> {
                                 e1 = repo.findById(e1.getXid()).get();
                                 assertThat(e1.getXSuccessorId(), is(nullValue()));
+                            });
+                        });
+                    });
+                });
+
+                Context("#deleteAllVersions", () -> {
+
+                    BeforeEach(() -> {
+                        setupSecurityContext("some-principal", true);
+
+                        e1 = repo.save(e1);
+                        e1 = repo.lock(e1);
+                        e1v11 = repo.version(e1, new VersionInfo("1.1", "Minor"));
+                        e1v11 = repo.unlock(e1v11);
+                    });
+
+                    Context("given no principal", () -> {
+
+                        BeforeEach(() -> {
+                            setupSecurityContext(null, false);
+                        });
+
+                        It("should throw a SecurityException", () -> {
+                            try {
+                                repo.deleteAllVersions(e1v11);
+                                fail("expected security exception");
+                            } catch (Exception e) {
+                                assertThat(e, is(instanceOf(SecurityException.class)));
+                            }
+                        });
+                    });
+
+                    Context("given an unauthenticated principal", () -> {
+
+                        BeforeEach(() -> {
+                            setupSecurityContext("some-principal", false);
+                        });
+
+                        It("should throw a SecurityException", () -> {
+                            try {
+                                repo.deleteAllVersions(e1v11);
+                                fail("expected security exception");
+                            } catch (Exception e) {
+                                assertThat(e, is(instanceOf(SecurityException.class)));
+                            }
+                        });
+                    });
+
+                    Context("given a principal", () -> {
+
+                        BeforeEach(() -> {
+                            setupSecurityContext("some-principal", true);
+                        });
+
+                        Context("given the entity is not in a version tree", () -> {
+
+                            Context("given the principal is the lock owner", () -> {
+
+                                It("should delete version series", () -> {
+                                    e1v11 = repo.lock(e1v11);
+
+                                    List<Long> ids = new ArrayList<>();
+                                    repo.findAllVersions(e1v11).forEach((doc) -> {
+                                        ids.add(doc.getXid());
+                                    });
+
+                                    repo.deleteAllVersions(e1v11);
+
+                                    ids.forEach((id) -> {
+                                        assertThat(repo.existsById(id), is(false));
+                                    });
+                                });
+                            });
+
+                            Context("given the principal is not the lock owner", () -> {
+
+                                BeforeEach(() -> {
+                                    e1v11 = repo.lock(e1v11);
+                                    setupSecurityContext("some-other-principal", true);
+                                });
+
+                                It("should fail to delete the entity", () -> {
+                                    try {
+                                        repo.deleteAllVersions(e1v11);
+                                        fail("expected lockownerexception");
+                                    } catch (Exception e) {
+                                        assertThat(e, is(instanceOf(LockOwnerException.class)));
+                                        assertThat(e.getMessage(), containsString("not lock owner"));
+                                    }
+                                });
+                            });
+
+                            Context("given there is no lock", () -> {
+
+                                It("should delete version series", () -> {
+                                    List<Long> ids = new ArrayList<>();
+                                    repo.findAllVersions(e1).forEach((doc) -> {
+                                        ids.add(doc.getXid());
+                                    });
+
+                                    repo.deleteAllVersions(e1v11);
+
+                                    ids.forEach((id) -> {
+                                        assertThat(repo.existsById(id), is(false));
+                                    });
+                                });
+                            });
+                        });
+
+                        Context("given the entity is not the head", () -> {
+
+                            It("should fail", () -> {
+                                try {
+                                    repo.deleteAllVersions(e1);
+                                    fail("expected lockingandversioningexception");
+                                } catch (Exception e) {
+                                    assertThat(e, is(instanceOf(LockingAndVersioningException.class)));
+                                    assertThat(e.getMessage(), containsString("not head"));
+                                }
                             });
                         });
                     });

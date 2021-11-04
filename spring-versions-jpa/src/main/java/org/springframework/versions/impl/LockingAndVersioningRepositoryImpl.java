@@ -14,6 +14,7 @@ import java.util.Objects;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.logging.Log;
@@ -315,7 +316,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Override
     public <S extends T> List<S> findAllVersions(S entity) {
 
-        String sql = "select t from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
+        String sql = "select t from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity) + " order by t.${id} desc";
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
         sql = sub.replace(sql);
@@ -380,6 +381,35 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         lockingService.unlock(id, authentication);
 
         em.remove(em.contains(entity) ? entity : em.merge(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllVersions(T entity) {
+
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+
+        Object id = this.getId(entity);
+        if (id == null) return;
+
+        if (!isHead(entity)) {
+            throw new LockingAndVersioningException("not head");
+        }
+
+        if (lockingService.lockOwner(id) != null && !lockingService.isLockOwner(id, authentication)) {
+            throw new LockOwnerException("not lock owner");
+        }
+
+        String sql = "delete from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
+
+        StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
+        sql = sub.replace(sql);
+
+        Query q = em.createQuery(sql);
+        q.executeUpdate();
     }
 
     protected <T> boolean isHead(T entity) {

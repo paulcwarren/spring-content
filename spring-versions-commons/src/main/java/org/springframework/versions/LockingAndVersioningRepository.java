@@ -3,9 +3,6 @@ package org.springframework.versions;
 import java.io.Serializable;
 import java.util.List;
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RestResource;
 
 public interface LockingAndVersioningRepository<T, ID extends Serializable> {
@@ -122,6 +119,13 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @throws SecurityException if no authentication exists
      */
     void delete(T entity);
+
+    /**
+     * Deletes all versions of the given entity.
+     *
+     * @param <T> the entity
+     */
+    void deleteAllVersions(T entity);
 
     /**
      * Returns whether the given entity is a private working copy, or not
