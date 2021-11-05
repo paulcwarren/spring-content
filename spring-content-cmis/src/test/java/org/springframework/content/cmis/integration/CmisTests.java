@@ -13,7 +13,9 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
@@ -151,7 +153,7 @@ public class CmisTests {
 						It("should be delete-able", () -> {
 		                    String docId = doc.getId();
 		                    assertThat(documentRepository.existsById(Long.parseLong(docId)), is(true));
-		                    doc.delete();
+		                    doc.delete(false);
 		                    assertThat(documentRepository.existsById(Long.parseLong(docId)), is(false));
 
 							ItemIterable<CmisObject> children = subfolder.getChildren();
@@ -251,6 +253,20 @@ public class CmisTests {
 										assertThat(doc.isLatestMajorVersion(), is(true));
 										assertThat(doc.isVersionSeriesCheckedOut(), is(false));
 										assertThat(doc.getCheckinComment(), is("a check-in comment"));
+									});
+
+									It("should delete all versions", () -> {
+
+									    List<String> ids = new ArrayList<>();
+									    doc.getAllVersions().forEach((doc) -> {
+									        ids.add(doc.getId());
+									    });
+
+									    doc.delete(true);
+
+									    ids.forEach((id) -> {
+									        assertThat(documentRepository.existsById(new Long(id)), is(false));
+									    });
 									});
 								});
 

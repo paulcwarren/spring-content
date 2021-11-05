@@ -134,7 +134,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				this);
 	}
 
-	public ObjectData getObjectByPath(String repositoryId, String path, String filter, Boolean includeAllowableActions,
+	@Override
+    public ObjectData getObjectByPath(String repositoryId, String path, String filter, Boolean includeAllowableActions,
 			IncludeRelationships includeRelationships, String renditionFilter, Boolean includePolicyIds,
 			Boolean includeAcl, ExtensionsData extension) {
 
@@ -151,7 +152,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				this);
 	}
 
-	public ContentStream getContentStream(String repositoryId, String objectId, String streamId, BigInteger offset,
+	@Override
+    public ContentStream getContentStream(String repositoryId, String objectId, String streamId, BigInteger offset,
 										  BigInteger length, ExtensionsData extension) {
 
 		return bridge.getContentStream(config,
@@ -162,13 +164,15 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public void setContentStream(String repositoryId, Holder<String> objectId, Boolean overwriteFlag, Holder<String> changeToken,
+	@Override
+    public void setContentStream(String repositoryId, Holder<String> objectId, Boolean overwriteFlag, Holder<String> changeToken,
 								 ContentStream contentStream, ExtensionsData extension) {
 
 		bridge.setContentStream(config, objectId, overwriteFlag, changeToken, contentStream, extension);
 	}
 
-	public void deleteContentStream(String repositoryId, Holder<String> objectId, Holder<String> changeToken, ExtensionsData extension) {
+	@Override
+    public void deleteContentStream(String repositoryId, Holder<String> objectId, Holder<String> changeToken, ExtensionsData extension) {
 
 		bridge.deleteContentStream(config,
 				objectId,
@@ -176,7 +180,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public void updateProperties(String repositoryId,
+	@Override
+    public void updateProperties(String repositoryId,
 			Holder<String> objectId,
 			Holder<String> changeToken,
 			Properties properties,
@@ -211,7 +216,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public void checkIn(String repositoryId,
+	@Override
+    public void checkIn(String repositoryId,
 			Holder<String> objectId,
 			Boolean major,
 			Properties properties,
@@ -234,7 +240,25 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public String createDocument(String repositoryId,
+    @Override
+    public List<ObjectData> getAllVersions(String repositoryId,
+            String objectId,
+            String versionSeriesId,
+            String filter,
+            Boolean includeAllowableActions,
+            ExtensionsData extension) {
+        return bridge.getAllVersions(config,
+                objectId,
+                versionSeriesId,
+                filter,
+                includeAllowableActions,
+                extension,
+                this.getCallContext(),
+                this);
+    }
+
+	@Override
+    public String createDocument(String repositoryId,
 			Properties properties,
 			String folderId,
 			ContentStream contentStream,
@@ -255,7 +279,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public void deleteObjectOrCancelCheckOut(String repositoryId,
+	@Override
+    public void deleteObjectOrCancelCheckOut(String repositoryId,
 			String objectId,
 			Boolean allVersions,
 			ExtensionsData extension) {
@@ -266,7 +291,8 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension);
 	}
 
-	public String createFolder(String repositoryId,
+	@Override
+    public String createFolder(String repositoryId,
 			Properties properties,
 			String folderId,
 			List<String> policies,
