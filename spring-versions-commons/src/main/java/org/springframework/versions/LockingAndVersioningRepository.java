@@ -3,9 +3,7 @@ package org.springframework.versions;
 import java.io.Serializable;
 import java.util.List;
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.rest.core.annotation.RestResource;
 
 public interface LockingAndVersioningRepository<T, ID extends Serializable> {
@@ -111,6 +109,16 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
     <S extends T> List<S> findAllVersions(S entity);
 
     /**
+     * Returns a sorted list of all versions for the given entity
+     *
+     * @param <S> the type of entity
+     * @param entity the entity to find versions for
+     * @param sort the sort to apply
+     * @return list of entity versions
+     */
+    <S extends T> List<S> findAllVersions(S entity, Sort sort);
+
+    /**
      * Deletes a given entity version.  The entity must be the head of the version list.
      *
      * If the entity is locked the lock will be carried over to the previous version when
@@ -122,6 +130,13 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @throws SecurityException if no authentication exists
      */
     void delete(T entity);
+
+    /**
+     * Deletes all versions of the given entity.
+     *
+     * @param <T> the entity
+     */
+    void deleteAllVersions(T entity);
 
     /**
      * Returns whether the given entity is a private working copy, or not
@@ -140,4 +155,5 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @return the working copy if it exists, or null
      */
     <S extends T> S findWorkingCopy(S entity);
+
 }

@@ -84,6 +84,8 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -599,6 +601,38 @@ public class CmisServiceBridge {
 		return major + "." + minor;
 	}
 
+    public List<ObjectData> getAllVersions(
+            CmisRepositoryConfiguration config,
+            String objectId,
+            String versionSeriesId,
+            String filter,
+            Boolean includeAllowableActions,
+            ExtensionsData extension,
+            CallContext context,
+            ObjectInfoHandler handler) {
+
+        List<ObjectData> od = new ArrayList<>();
+
+        Long id = conversionService.convert(objectId, Long.class);
+
+        Optional<Object> object = config.cmisDocumentRepository().findById(id);
+
+        if (object.isPresent()) {
+
+            Field f = BeanUtils.findFieldWithAnnotation(object.get(), Id.class);
+            Assert.notNull(f, "illegal state exception - cant find Id property");
+
+            ((LockingAndVersioningRepository)config.cmisDocumentRepository()).findAllVersions(object.get(), Sort.by(Order.desc(f.getName()))).forEach((doc -> {
+                ObjectData result = toObjectData(config, context, getType(doc), doc, false, null, handler);
+                if (result != null) {
+                    od.add(result);
+                }
+            }));
+        }
+
+        return od;
+    }
+
 	@Transactional
 	public String createDocument(CmisRepositoryConfiguration config,
 			Properties properties,
@@ -656,7 +690,6 @@ public class CmisServiceBridge {
 		return id.toString();
 	}
 
-	@Transactional
 	public void deleteObject(CmisRepositoryConfiguration config,
 			String objectId,
 			Boolean allVersions,
@@ -667,8 +700,29 @@ public class CmisServiceBridge {
             if (object.getClass().getAnnotation(CmisFolder.class) != null) {
                 config.cmisFolderRepository().delete(object);
             } else if (object.getClass().getAnnotation(CmisDocument.class) != null) {
-                config.cmisDocumentStorage().unsetContent(object);
-                config.cmisDocumentRepository().delete(object);
+
+                if (!allVersions) {
+                    config.cmisDocumentStorage().unsetContent(object);
+
+                    // re-fetch to ensure we have the latest
+                    object = getObjectInternal(config, objectId, Collections.EMPTY_SET, false, IncludeRelationships.NONE,
+                            "", false, false, extension);
+
+                    config.cmisDocumentRepository().delete(object);
+                } else {
+                    Field f = BeanUtils.findFieldWithAnnotation(object, Id.class);
+                    Assert.notNull(f, "illegal state exception - cant find Id property");
+
+                    ((LockingAndVersioningRepository)config.cmisDocumentRepository()).findAllVersions(object, Sort.by(Order.desc(f.getName()))).forEach((doc) -> {
+                        config.cmisDocumentStorage().unsetContent(doc);
+                    });
+
+                    // re-fetch to ensure we have the latest
+                    object = getObjectInternal(config, objectId, Collections.EMPTY_SET, false, IncludeRelationships.NONE,
+                            "", false, false, extension);
+
+                    ((LockingAndVersioningRepository)config.cmisDocumentRepository()).deleteAllVersions(object);
+                }
             }
 		}
 	}

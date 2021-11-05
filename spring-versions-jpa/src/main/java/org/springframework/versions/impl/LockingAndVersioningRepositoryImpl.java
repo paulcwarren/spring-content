@@ -14,6 +14,7 @@ import java.util.Objects;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.logging.Log;
@@ -21,9 +22,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.versions.AncestorId;
 import org.springframework.versions.AncestorRootId;
 import org.springframework.versions.LockOwner;
@@ -315,7 +318,33 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Override
     public <S extends T> List<S> findAllVersions(S entity) {
 
+        return this.findAllVersions(entity, Sort.unsorted());
+    }
+
+    @Override
+    public <S extends T> List<S> findAllVersions(S entity, Sort sort) {
+
+        StringBuilder builder = new StringBuilder();
+        if (sort.isSorted()) {
+            builder.append("order by ");
+
+            int i=0;
+            sort.forEach((property) -> {
+                if (i > 0) {
+                    builder.append(",");
+                }
+                builder.append("t.");
+                builder.append(property.getProperty());
+                builder.append(" ");
+                builder.append(property.getDirection());
+            });
+        }
+
         String sql = "select t from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
+
+        if (StringUtils.hasText(builder)) {
+            sql = sql + " " + builder.toString();
+        }
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
         sql = sub.replace(sql);
@@ -380,6 +409,35 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         lockingService.unlock(id, authentication);
 
         em.remove(em.contains(entity) ? entity : em.merge(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllVersions(T entity) {
+
+        Authentication authentication = auth.getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+
+        Object id = this.getId(entity);
+        if (id == null) return;
+
+        if (!isHead(entity)) {
+            throw new LockingAndVersioningException("not head");
+        }
+
+        if (lockingService.lockOwner(id) != null && !lockingService.isLockOwner(id, authentication)) {
+            throw new LockOwnerException("not lock owner");
+        }
+
+        String sql = "delete from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
+
+        StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
+        sql = sub.replace(sql);
+
+        Query q = em.createQuery(sql);
+        q.executeUpdate();
     }
 
     protected <T> boolean isHead(T entity) {
