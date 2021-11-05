@@ -37,6 +37,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -406,8 +408,14 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                         e2v2 = repo.unlock(e2v2);
                     });
 
+                    It("should return the version series", () -> {
+                        List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
+                        assertThat(results.size(), is(2));
+                        assertThat(results, Matchers.hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
+                    });
+
                     It("should return the ordered version series", () -> {
-                        List<TestEntity> results = repo.findAllVersions(e1);
+                        List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
                         assertThat(results.size(), is(2));
                         assertThat(results, Matchers.hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
 
