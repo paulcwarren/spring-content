@@ -82,6 +82,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * method would usually be preferred over CrudRepository's findAll that would find all versions
      * of all entities.
      *
+     * @param <S> the type of entity
      * @return list of latest versionWithEntity entities
      * @deprecated
      */
@@ -95,6 +96,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * of all entities.
      *
      * @param <S> the type of entity
+     * @param entityClass the type of the entity to find
      * @return list of latest versionWithEntity entities
      */
     <S extends T> List<S> findAllVersionsLatest(Class<S> entityClass);
@@ -134,7 +136,7 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
     /**
      * Deletes all versions of the given entity.
      *
-     * @param <T> the entity
+     * @param entity the entity to delete
      */
     void deleteAllVersions(T entity);
 
