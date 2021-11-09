@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.github.paulcwarren</groupId>
         <artifactId>spring-content</artifactId>
-        <version>1.2.6-SNAPSHOT</version>
+        <version>1.2.7-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-commons</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.atteo</groupId>
@@ -58,7 +58,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-versions-commons</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
         </dependency>
         <!-- Locking and Versioning -->
 
@@ -193,25 +193,25 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-fs</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-jpa</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-mongo</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-versions-jpa</artifactId>
-            <version>1.2.6-SNAPSHOT</version>
+            <version>1.2.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
