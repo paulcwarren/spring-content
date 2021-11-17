@@ -1,4 +1,4 @@
-package org.springframework.content.jpa.boot;
+package org.springframework.content.jpa.boot.autoconfigure;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;

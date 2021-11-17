@@ -1,4 +1,4 @@
-package org.springframework.content.s3.boot;
+package org.springframework.content.s3.boot.autoconfigure;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
@@ -13,7 +13,6 @@ import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.support.TestEntity;
+import org.springframework.support.TestUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.amazonaws.AmazonWebServiceClient;
@@ -52,7 +52,7 @@ public class ContentS3AutoConfigurationTest {
 		    props.put("AWS_REGION", Regions.US_WEST_1.getName());
 		    props.put("AWS_ACCESS_KEY_ID", "user");
 		    props.put("AWS_SECRET_KEY", "password");
-		    setEnv(props);
+		    TestUtils.setEnv(props);
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
@@ -131,29 +131,28 @@ public class ContentS3AutoConfigurationTest {
                     System.clearProperty("spring.content.s3.secretKey");
                     System.clearProperty("spring.content.s3.pathStyleAccess");
                 });
-                It("should have a filesystem properties bean with the correct root set",
-                        () -> {
-                            AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-                            context.register(TestConfigWithProperties.class);
-                            context.refresh();
+                It("should have a filesystem properties bean with the correct root set", () -> {
+                    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+                    context.register(TestConfigWithProperties.class);
+                    context.refresh();
 
-                            AmazonS3 client = context.getBean(AmazonS3.class);
+                    AmazonS3 client = context.getBean(AmazonS3.class);
 
-                            Field endpointField = getField(AmazonWebServiceClient.class, "endpoint");
-                            URI endpoint = (URI) endpointField.get(client);
-                            assertThat(endpoint.toString(), is("http://some-endpoint"));
+                    Field endpointField = getField(AmazonWebServiceClient.class, "endpoint");
+                    URI endpoint = (URI) endpointField.get(client);
+                    assertThat(endpoint.toString(), is("http://some-endpoint"));
 
-                            Field providerField = getField(AmazonS3Client.class, "awsCredentialsProvider");
-                            AWSCredentialsProvider provider = (AWSCredentialsProvider) providerField.get(client);
-                            assertThat(provider.getCredentials().getAWSAccessKeyId(), is("foo"));
-                            assertThat(provider.getCredentials().getAWSSecretKey(), is("bar"));
+                    Field providerField = getField(AmazonS3Client.class, "awsCredentialsProvider");
+                    AWSCredentialsProvider provider = (AWSCredentialsProvider) providerField.get(client);
+                    assertThat(provider.getCredentials().getAWSAccessKeyId(), is("foo"));
+                    assertThat(provider.getCredentials().getAWSSecretKey(), is("bar"));
 
-                            Field coField = getField(AmazonS3Client.class, "clientOptions");
-                            S3ClientOptions options = (S3ClientOptions) coField.get(client);
-                            assertThat(options.isPathStyleAccess(), is(true));
+                    Field coField = getField(AmazonS3Client.class, "clientOptions");
+                    S3ClientOptions options = (S3ClientOptions) coField.get(client);
+                    assertThat(options.isPathStyleAccess(), is(true));
 
-                            context.close();
-                        });
+                    context.close();
+                });
             });
 		});
 	}
@@ -202,32 +201,5 @@ public class ContentS3AutoConfigurationTest {
         Field f = ReflectionUtils.findField(clazz, field);
         ReflectionUtils.makeAccessible(f);
         return f;
-    }
-
-    private static void setEnv(Map<String, String> newenv) throws Exception {
-        try {
-            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-            theEnvironmentField.setAccessible(true);
-            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-            env.putAll(newenv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
-            theCaseInsensitiveEnvironmentField.setAccessible(true);
-            Map<String, String> cienv = (Map<String, String>)theCaseInsensitiveEnvironmentField.get(null);
-            cienv.putAll(newenv);
-        } catch (NoSuchFieldException e) {
-            Class[] classes = Collections.class.getDeclaredClasses();
-            Map<String, String> env = System.getenv();
-            for(Class cl : classes) {
-                if("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
-                    Field field = cl.getDeclaredField("m");
-                    field.setAccessible(true);
-                    Object obj = field.get(env);
-                    Map<String, String> map = (Map<String, String>) obj;
-                    map.clear();
-                    map.putAll(newenv);
-                }
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-package org.springframework.content.fs.boot;
+package org.springframework.content.fs.boot.autoconfigure;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;

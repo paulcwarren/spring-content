@@ -1,4 +1,4 @@
-package org.springframework.content.jpa.boot;
+package org.springframework.content.jpa.boot.autoconfigure;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
