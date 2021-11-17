@@ -1,4 +1,4 @@
-package org.springframework.content.fs.boot;
+package org.springframework.content.fs.boot.autoconfigure;
 
 import org.junit.runner.RunWith;
 

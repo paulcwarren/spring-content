@@ -3,6 +3,7 @@ package internal.org.springframework.content.s3.boot.autoconfigure;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,11 @@ import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsA
 @Configuration
 @AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
 @ConditionalOnClass(AmazonS3Client.class)
+@ConditionalOnProperty(
+        prefix="spring.content.storage.type",
+        name = "default",
+        havingValue = "s3",
+        matchIfMissing=true)
 public class S3ContentAutoConfiguration {
 
 	@Configuration
