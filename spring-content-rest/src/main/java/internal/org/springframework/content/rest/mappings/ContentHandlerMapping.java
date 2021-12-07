@@ -1,7 +1,16 @@
 package internal.org.springframework.content.rest.mappings;
 
-import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.utils.StoreUtils;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
@@ -17,11 +26,8 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.util.UrlPathHelper;
 
-import javax.servlet.http.HttpServletRequest;
-import java.lang.annotation.*;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.util.List;
+import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
@@ -38,7 +44,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping#
 	 * isHandler(java.lang.Class)
@@ -50,7 +56,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.web.servlet.handler.AbstractHandlerMethodMapping#
 	 * lookupHandlerMethod(java.lang.String, javax.servlet.http.HttpServletRequest)
 	 */
@@ -63,11 +69,16 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		if (storeLookupPath != null) {
 			// is a content property, if so look up a handler method?
 			String[] path = storeLookupPath.split("/");
+
 			if (path.length < 3)
 				return null;
 
+			boolean fullyQualifiedLinks = this.getConfiguration().fullyQualifiedLinks();
+			if (path.length == 3 && fullyQualifiedLinks)
+			    return null;
+
 			StoreInfo info2 = contentStores.getStore(Store.class, StoreUtils.withStorePath(path[1]));
-			if (info2 != null && isHalOrJsonRequest(request) == false) {
+			if (info2 != null && (fullyQualifiedLinks || isHalOrJsonRequest(request) == false)) {
 				return super.lookupHandlerMethod(lookupPath, request);
 			}
 		}

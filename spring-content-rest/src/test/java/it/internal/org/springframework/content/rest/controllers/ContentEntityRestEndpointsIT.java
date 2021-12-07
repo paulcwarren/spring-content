@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
+import internal.org.springframework.content.rest.support.EntityConfig;
 import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
@@ -49,6 +49,7 @@ import internal.org.springframework.content.rest.support.TestStore;
 @WebAppConfiguration
 @ContextConfiguration(classes = {
 		StoreConfig.class,
+		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
@@ -101,7 +102,7 @@ public class ContentEntityRestEndpointsIT {
 	private Cors corsTests;
 
 	{
-		Describe("Content Entity REST Endpoints", () -> {
+        Describe("Content Entity REST Endpoints", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});

@@ -40,11 +40,15 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
     private final Repositories repositories;
     private final Stores stores;
 
+    private boolean fullyQualifiedLinksEnabled = false;
+
     public StoreHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores) {
         this.context = context;
         this.config = config;
         this.repositories = repositories;
         this.stores = stores;
+
+        fullyQualifiedLinksEnabled = config.fullyQualifiedLinks();
     }
 
     RestConfiguration getConfig() {
@@ -85,7 +89,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
 
         if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
-            if (entityUriTemplate.matches(pathInfo)) {
+            if (!fullyQualifiedLinksEnabled && entityUriTemplate.matches(pathInfo)) {
                 Object entity = new EntityResolver(context, this.getRepositories(), info, pathSegments, (ConversionService)config.converters())
                         .resolve(entityUriTemplate.match(pathInfo));
 
@@ -154,7 +158,7 @@ public abstract class StoreHandlerMethodArgumentResolver implements HandlerMetho
             return resolveStoreArgument(webRequest, info);
         }
 
-        throw new IllegalArgumentException();
+        throw new ResourceNotFoundException();
     }
 
     protected abstract Object resolveStoreArgument(NativeWebRequest nativeWebRequest, StoreInfo info);
