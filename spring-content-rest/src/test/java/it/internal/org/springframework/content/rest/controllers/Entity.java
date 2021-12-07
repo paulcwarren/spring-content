@@ -1,32 +1,33 @@
 package it.internal.org.springframework.content.rest.controllers;
 
-import java.io.StringReader;
-import java.util.Optional;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
-import com.theoryinpractise.halbuilder.api.RepresentationFactory;
-import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
-import internal.org.springframework.content.rest.support.ContentEntity;
-import internal.org.springframework.content.rest.support.TestEntity3;
-import lombok.Getter;
-import lombok.Setter;
-
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.StringReader;
+import java.util.Optional;
+
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import com.theoryinpractise.halbuilder.api.RepresentationFactory;
+import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+
+import internal.org.springframework.content.rest.support.ContentEntity;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -95,6 +96,11 @@ public class Entity {
 						.andExpect(status().is2xxSuccessful());
 			});
 		});
-
+		Context("a DELETE to /{store}/{id}/softDelete (custom handler)", () -> {
+            It("should return 200", () -> {
+                mvc.perform(delete(url + "/softDelete"))
+                        .andExpect(status().is2xxSuccessful());
+            });
+		});
 	}
 }
