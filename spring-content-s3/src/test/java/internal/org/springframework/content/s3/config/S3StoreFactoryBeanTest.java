@@ -20,8 +20,9 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.context.support.GenericApplicationContext;
 
-import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import software.amazon.awssdk.services.s3.S3Client;
 
 @RunWith(Ginkgo4jRunner.class)
 public class S3StoreFactoryBeanTest {
@@ -29,7 +30,7 @@ public class S3StoreFactoryBeanTest {
 	private S3StoreFactoryBean factory;
 
 	private GenericApplicationContext context = new GenericApplicationContext();
-	private AmazonS3 client;
+	private S3Client client;
 	private PlacementService placer;
 
 	private Store store;
@@ -37,10 +38,10 @@ public class S3StoreFactoryBeanTest {
 	{
 		Describe("S3StoreFactoryBean", () -> {
 			BeforeEach(() -> {
-				client = mock(AmazonS3.class);
+				client = mock(S3Client.class);
 				placer = mock(PlacementService.class);
 
-				context.registerBean("amazonS3", AmazonS3.class, () -> client);
+				context.registerBean("amazonS3", S3Client.class, () -> client);
 				context.refresh();
 
 				factory = new S3StoreFactoryBean(context, client, placer);

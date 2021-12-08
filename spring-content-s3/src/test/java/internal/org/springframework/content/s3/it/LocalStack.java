@@ -4,11 +4,17 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.apache.http.client.utils.URIBuilder;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.net.URIBuilder;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.services.s3.S3Client;
 
 public class LocalStack extends LocalStackContainer implements Serializable {
 
@@ -24,12 +30,10 @@ public class LocalStack extends LocalStackContainer implements Serializable {
         private static final LocalStack INSTANCE = new LocalStack();
     }
 
-    public static AmazonS3 getAmazonS3Client() {
-        return AmazonS3ClientBuilder
-                .standard()
-                .withEndpointConfiguration(Singleton.INSTANCE.getEndpointConfiguration(Service.S3))
-                .withCredentials(Singleton.INSTANCE.getDefaultCredentialsProvider())
-                .withPathStyleAccessEnabled(true)
+    public static S3Client getAmazonS3Client() throws URISyntaxException {
+        return S3Client.builder()
+                .endpointOverride(new URI(Singleton.INSTANCE.getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
+                .credentialsProvider(new LocalStack.CrossAwsCredentialsProvider(Singleton.INSTANCE.getDefaultCredentialsProvider()))
                 .build();
     }
 
@@ -47,5 +51,19 @@ public class LocalStack extends LocalStackContainer implements Serializable {
     @SuppressWarnings("unused") // Serializable safe singleton usage
     protected LocalStack readResolve() {
         return Singleton.INSTANCE;
+    }
+
+
+    private static class CrossAwsCredentialsProvider implements AwsCredentialsProvider {
+      private final AWSCredentials credentials;
+
+      public CrossAwsCredentialsProvider(AWSCredentialsProvider provider) {
+        this.credentials = provider.getCredentials();
+      }
+
+      @Override
+      public AwsCredentials resolveCredentials() {
+        return AwsBasicCredentials.create(credentials.getAWSAccessKeyId(), credentials.getAWSSecretKey());
+      }
     }
 }

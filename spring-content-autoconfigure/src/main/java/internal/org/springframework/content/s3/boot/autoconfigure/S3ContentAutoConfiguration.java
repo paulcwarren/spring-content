@@ -1,5 +1,7 @@
 package internal.org.springframework.content.s3.boot.autoconfigure;
 
+import java.net.URI;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -11,21 +13,19 @@ import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
 import internal.org.springframework.content.s3.config.S3StoreFactoryBean;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
 @Configuration
 @AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
-@ConditionalOnClass(AmazonS3Client.class)
+@ConditionalOnClass(S3Client.class)
 @ConditionalOnProperty(
         prefix="spring.content.storage.type",
         name = "default",
@@ -40,21 +40,20 @@ public class S3ContentAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean()
-	public AmazonS3 amazonS3(S3Properties props) {
-	    AmazonS3ClientBuilder builder = AmazonS3ClientBuilder
-                .standard();
+	public S3Client amazonS3(S3Properties props) {
+	    S3ClientBuilder builder = S3Client.builder();
 
 		if (StringUtils.hasText(props.endpoint)) {
-		    builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(props.endpoint, null));
+		    builder.endpointOverride(URI.create(props.endpoint));
 		}
 
         if (StringUtils.hasText(props.accessKey) && StringUtils.hasText(props.secretKey)) {
-            AWSCredentialsProvider provider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(props.accessKey, props.secretKey));
-            builder.withCredentials(provider);
+            AwsCredentialsProvider provider = StaticCredentialsProvider.create(AwsBasicCredentials.create(props.accessKey, props.secretKey));
+            builder.credentialsProvider(provider);
         }
 
         if (props.pathStleAccess) {
-            builder.withPathStyleAccessEnabled(true);
+            builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         }
 
 		return builder.build();
