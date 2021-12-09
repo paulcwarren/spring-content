@@ -36,7 +36,6 @@ import java.util.function.Supplier;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.repository.StoreAccessException;
@@ -56,7 +55,6 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.util.Assert;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -64,6 +62,9 @@ import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3O
 import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
 import internal.org.springframework.content.s3.io.S3StoreResource;
+import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 @RunWith(Ginkgo4jRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -76,7 +77,7 @@ public class DefaultS3StoreImplTest {
 	private GenericApplicationContext context = new GenericApplicationContext();
 	private ResourceLoader loader;
 	private PlacementService placementService;
-	private AmazonS3 client, client2;
+	private S3Client client, client2;
 
 	private MultiTenantAmazonS3Provider clientProvider;
 
@@ -95,17 +96,16 @@ public class DefaultS3StoreImplTest {
 	private InputStream result;
 	private Exception e;
 
-
 	{
 		Describe("DefaultS3StoreImpl", () -> {
 			BeforeEach(() -> {
 				resource = mock(WritableResource.class);
 				loader = mock(ResourceLoader.class);
 				placementService = mock(PlacementService.class);
-				client = mock(AmazonS3.class);
+				client = mock(S3Client.class);
 				defaultBucket = null;
 
-				context.registerBean("amazonS3", AmazonS3.class, new Supplier() {
+				context.registerBean("s3Client", S3Client.class, new Supplier() {
 
                     @Override
                     public Object get() {
@@ -127,9 +127,8 @@ public class DefaultS3StoreImplTest {
 								}
 							});
 
-							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 							s3Protocol.afterPropertiesSet();
-							s3Protocol.setBeanFactory(context);
 							loader = new DefaultResourceLoader();
 							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 
@@ -176,9 +175,8 @@ public class DefaultS3StoreImplTest {
 													CustomContentId.class);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
-									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -216,9 +214,8 @@ public class DefaultS3StoreImplTest {
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
-									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -297,10 +294,10 @@ public class DefaultS3StoreImplTest {
 						});
 
 						BeforeEach(() -> {
-							client2 = mock(AmazonS3.class);
-							clientProvider = new MultiTenantAmazonS3Provider(){
+							client2 = mock(S3Client.class);
+							clientProvider = new MultiTenantAmazonS3Provider() {
 								@Override
-								public AmazonS3 getAmazonS3() {
+								public S3Client getS3Client() {
 									return client2;
 								};
 							};
@@ -350,9 +347,8 @@ public class DefaultS3StoreImplTest {
                                         }
                                     });
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
-									s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
                                 });
@@ -372,9 +368,8 @@ public class DefaultS3StoreImplTest {
                                     placementService = new PlacementServiceImpl();
                                     S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
-                                    s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -417,9 +412,8 @@ public class DefaultS3StoreImplTest {
                                         }
                                     });
 
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
-                                    s3Protocol.setBeanFactory(context);
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
@@ -755,7 +749,7 @@ public class DefaultS3StoreImplTest {
 									});
 									Context("when the amazon client throws an AmazonClientException", () -> {
 										BeforeEach(() -> {
-											doThrow(new AmazonClientException("unset-exception")).when(client).deleteObject(anyObject());
+											doThrow(new AmazonClientException("unset-exception")).when(client).deleteObject((DeleteObjectRequest)anyObject());
 										});
 										It("should throw a StoreAccessException", () -> {
 											assertThat(e, is(instanceOf(StoreAccessException.class)));
@@ -776,7 +770,7 @@ public class DefaultS3StoreImplTest {
 										verify(loader).getResource(eq("s3://default-defaultBucket/abcd-efgh"));
 									});
 									It("should unset the content", () -> {
-										verify(client, never()).deleteObject(anyObject());
+										verify(client, never()).deleteObject((DeleteObjectRequest)anyObject());
 										assertThat(entity.getContentId(), is(nullValue()));
 										assertThat(entity.getContentLen(), is(0L));
 									});

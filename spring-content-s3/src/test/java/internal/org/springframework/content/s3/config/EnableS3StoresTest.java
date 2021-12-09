@@ -1,13 +1,23 @@
 package internal.org.springframework.content.s3.config;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.s3.io.S3StoreResource;
-import lombok.Data;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -17,7 +27,11 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.content.s3.config.*;
+import org.springframework.content.s3.config.EnableS3ContentRepositories;
+import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.content.s3.config.S3ObjectIdResolvers;
+import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,13 +40,15 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.io.Resource;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.model.S3ObjectId;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import internal.org.springframework.content.s3.io.S3StoreResource;
+import internal.org.springframework.content.s3.it.S3StoreIT;
+import lombok.Data;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @RunWith(Ginkgo4jRunner.class)
 public class EnableS3StoresTest {
@@ -41,7 +57,19 @@ public class EnableS3StoresTest {
 
 	// mocks
 	static S3StoreConfigurer configurer;
-	static AmazonS3 client;
+	static S3Client client;
+
+    static {
+        try {
+            Map<String,String> props = new HashMap<>();
+            props.put("AWS_REGION", Regions.US_WEST_1.getName());
+            props.put("AWS_ACCESS_KEY_ID", "user");
+            props.put("AWS_SECRET_KEY", "password");
+            S3StoreIT.setEnv(props);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 	{
 		Describe("EnableS3Stores", () -> {
@@ -104,7 +132,7 @@ public class EnableS3StoresTest {
 
 			Context("given a context with a multi-tenant configuration", () -> {
 				BeforeEach(() -> {
-					client = mock(AmazonS3.class);
+					client = mock(S3Client.class);
 
 					context = new AnnotationConfigApplicationContext();
 					context.register(MultiTenantConfig.class);
@@ -221,7 +249,7 @@ public class EnableS3StoresTest {
 		public MultiTenantAmazonS3Provider s3Provider() {
 			return new MultiTenantAmazonS3Provider() {
 				@Override
-				public AmazonS3 getAmazonS3() {
+				public S3Client getS3Client() {
 					return client;
 				}
 			};
@@ -245,12 +273,10 @@ public class EnableS3StoresTest {
 			return Region.getRegion(Regions.US_WEST_1);
 		}
 
-		@Bean
-		public AmazonS3 client() {
-			AmazonS3Client client = new AmazonS3Client();
-			client.setRegion(region());
-			return client;
-		}
+        @Bean
+        public S3Client client() throws URISyntaxException {
+            return S3Client.builder().build();
+        }
 	}
 
 	@Data

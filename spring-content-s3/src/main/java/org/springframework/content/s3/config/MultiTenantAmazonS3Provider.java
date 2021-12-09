@@ -1,6 +1,6 @@
 package org.springframework.content.s3.config;
 
-import com.amazonaws.services.s3.AmazonS3;
+import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * When configured to do so, the S3Store will provide the AmazonS3 client object returned by this function to any
@@ -13,5 +13,5 @@ public interface MultiTenantAmazonS3Provider {
      *
      * @return the AmazonS3 client to use, or null
      */
-    AmazonS3 getAmazonS3();
+    S3Client getS3Client();
 }

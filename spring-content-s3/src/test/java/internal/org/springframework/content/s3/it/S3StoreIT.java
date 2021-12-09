@@ -17,6 +17,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -51,7 +56,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.regions.Regions;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -59,6 +64,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -68,6 +77,16 @@ public class S3StoreIT {
 
     static {
         System.setProperty("spring.content.s3.bucket", BUCKET);
+
+        try {
+            Map<String,String> props = new HashMap<>();
+            props.put("AWS_REGION", Regions.US_WEST_1.getName());
+            props.put("AWS_ACCESS_KEY_ID", "user");
+            props.put("AWS_SECRET_KEY", "password");
+            setEnv(props);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private TestEntity entity;
@@ -79,12 +98,12 @@ public class S3StoreIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
-    private AmazonS3 client;
+    private S3Client client;
 
     private String resourceLocation;
 
     {
-        Describe("DefaultS3StoreImpl", () -> {
+        Describe("S3StoreIT", () -> {
 
             BeforeEach(() -> {
                 context = new AnnotationConfigApplicationContext();
@@ -93,9 +112,21 @@ public class S3StoreIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
-                client = context.getBean(AmazonS3.class);
+                client = context.getBean(S3Client.class);
 
-                client.createBucket("aws-test-bucket");
+                HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
+                        .bucket("aws-test-bucket")
+                        .build();
+
+                try {
+                    client.headBucket(headBucketRequest);
+                } catch (NoSuchBucketException e) {
+
+                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
+                            .bucket("aws-test-bucket")
+                            .build();
+                    client.createBucket(bucketRequest);
+                }
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -347,7 +378,7 @@ public class S3StoreIT {
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
         @Bean
-        public AmazonS3 client() {
+        public S3Client client() throws URISyntaxException {
             return LocalStack.getAmazonS3Client();
         }
     }
@@ -426,6 +457,34 @@ public class S3StoreIT {
 
     public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
     public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
+
+    @SuppressWarnings("unchecked")
+    public static void setEnv(Map<String, String> newenv) throws Exception {
+        try {
+            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
+            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
+            theEnvironmentField.setAccessible(true);
+            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
+            env.putAll(newenv);
+            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
+            theCaseInsensitiveEnvironmentField.setAccessible(true);
+            Map<String, String> cienv = (Map<String, String>)theCaseInsensitiveEnvironmentField.get(null);
+            cienv.putAll(newenv);
+        } catch (NoSuchFieldException e) {
+            Class[] classes = Collections.class.getDeclaredClasses();
+            Map<String, String> env = System.getenv();
+            for(Class cl : classes) {
+                if("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
+                    Field field = cl.getDeclaredField("m");
+                    field.setAccessible(true);
+                    Object obj = field.get(env);
+                    Map<String, String> map = (Map<String, String>) obj;
+                    map.clear();
+                    map.putAll(newenv);
+                }
+            }
+        }
+    }
 
 //    @Entity
 //    @Setter

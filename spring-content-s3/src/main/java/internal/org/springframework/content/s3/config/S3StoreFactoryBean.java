@@ -6,7 +6,6 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectIdResolver;
@@ -15,9 +14,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
 
-import com.amazonaws.services.s3.AmazonS3;
-
+import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @SuppressWarnings("rawtypes")
 public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
@@ -28,7 +27,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
     private ApplicationContext context;
 
 	@Autowired
-	private AmazonS3 client;
+	private S3Client client;
 
 	@Autowired
 	private PlacementService s3StorePlacementService;
@@ -48,7 +47,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	}
 
 	@Autowired
-	public S3StoreFactoryBean(ApplicationContext context, AmazonS3 client, PlacementService s3StorePlacementService) {
+	public S3StoreFactoryBean(ApplicationContext context, S3Client client, PlacementService s3StorePlacementService) {
 	    this.context = context;
 		this.client = client;
 		this.s3StorePlacementService = s3StorePlacementService;
@@ -64,9 +63,8 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Override
 	protected Object getContentStoreImpl() {
 
-		SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+		SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 		s3Protocol.afterPropertiesSet();
-		s3Protocol.setBeanFactory(context);
 
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(s3Protocol);

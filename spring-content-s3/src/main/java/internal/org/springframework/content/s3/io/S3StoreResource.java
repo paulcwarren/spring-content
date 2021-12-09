@@ -1,12 +1,5 @@
 package internal.org.springframework.content.s3.io;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import org.springframework.content.commons.io.DeletableResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.WritableResource;
-import org.springframework.util.Assert;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,13 +7,21 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 
+import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
+import org.springframework.util.Assert;
+
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+
 public class S3StoreResource implements WritableResource, DeletableResource {
 
-	private AmazonS3 client;
+	private S3Client client;
 	private Resource delegate;
 	private String bucket;
 
-	public S3StoreResource(AmazonS3 client, String bucket, Resource delegate) {
+	public S3StoreResource(S3Client client, String bucket, Resource delegate) {
 		Assert.notNull(client, "client must be specified");
 		Assert.hasText(bucket, "bucket must be specified");
 		Assert.isInstanceOf(WritableResource.class, delegate);
@@ -29,7 +30,7 @@ public class S3StoreResource implements WritableResource, DeletableResource {
 		this.delegate = delegate;
 	}
 
-	public AmazonS3 getClient() {
+	public S3Client getClient() {
 		return client;
 	}
 
@@ -96,7 +97,12 @@ public class S3StoreResource implements WritableResource, DeletableResource {
 	@Override
 	public void delete() {
 		if (delegate.exists()) {
-			client.deleteObject(new DeleteObjectRequest(bucket, delegate.getFilename()));
+			DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+	                .bucket(bucket)
+	                .key(delegate.getFilename())
+	                .build();
+
+	        client.deleteObject(deleteObjectRequest);
 		}
 	}
 

@@ -13,7 +13,6 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.aws.core.io.s3.SimpleStorageProtocolResolver;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
@@ -35,10 +34,11 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3ObjectId;
 
 import internal.org.springframework.content.s3.io.S3StoreResource;
+import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Transactional
 public class DefaultS3StoreImpl<S, SID extends Serializable>
@@ -49,10 +49,10 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private ApplicationContext context;
 	private ResourceLoader loader;
 	private PlacementService placementService;
-	private AmazonS3 client;
+	private S3Client client;
 	private MultiTenantAmazonS3Provider clientProvider;
 
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, AmazonS3 client, MultiTenantAmazonS3Provider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantAmazonS3Provider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -113,14 +113,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
             location = absolutify(bucket, location);
         }
 
-        AmazonS3 clientToUse = client;
+        S3Client clientToUse = client;
         ResourceLoader loaderToUse = loader;
         if (clientProvider != null) {
-			AmazonS3 client = clientProvider.getAmazonS3();
+			S3Client client = clientProvider.getS3Client();
 			if (client != null) {
-				SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver();
+				SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 				s3Protocol.afterPropertiesSet();
-				s3Protocol.setBeanFactory(context);
 
 				DefaultResourceLoader loader = new DefaultResourceLoader();
 				loader.addProtocolResolver(s3Protocol);
