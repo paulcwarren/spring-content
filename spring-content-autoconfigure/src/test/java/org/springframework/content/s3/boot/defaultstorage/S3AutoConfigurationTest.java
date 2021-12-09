@@ -32,6 +32,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import software.amazon.awssdk.services.s3.S3Client;
+
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class S3AutoConfigurationTest {
@@ -60,12 +62,12 @@ public class S3AutoConfigurationTest {
                 AfterEach(() -> {
                     System.clearProperty("spring.content.storage.type.default");
                 });
-                It("should create an AmazonS3 bean", () -> {
+                It("should create an S3Client bean", () -> {
                     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
                     context.register(TestConfigWithoutBeans.class);
                     context.refresh();
 
-                    assertThat(context.getBean(AmazonS3.class), is(not(nullValue())));
+                    assertThat(context.getBean(S3Client.class), is(not(nullValue())));
                 });
             });
 
@@ -76,14 +78,14 @@ public class S3AutoConfigurationTest {
                 AfterEach(() -> {
                     System.clearProperty("spring.content.storage.type.default");
                 });
-                It("should not create an AmazonS3 bean", () -> {
+                It("should not create an S3Client bean", () -> {
                     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
                     context.register(TestConfigWithoutBeans.class);
                     context.refresh();
 
                     try {
-                        context.getBean(AmazonS3.class);
-                        fail("expected no AmazonS3 bean but bean found");
+                        context.getBean(S3Client.class);
+                        fail("expected no S3Client bean but bean found");
                     } catch (NoSuchBeanDefinitionException nsbe) {
                     }
                 });
@@ -91,12 +93,12 @@ public class S3AutoConfigurationTest {
 
             Context("given no default storage type", () -> {
 
-                It("should create an AmazonS3 bean", () -> {
+                It("should create an S3Client bean", () -> {
                     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
                     context.register(TestConfigWithoutBeans.class);
                     context.refresh();
 
-                    assertThat(context.getBean(AmazonS3.class), is(not(nullValue())));
+                    assertThat(context.getBean(S3Client.class), is(not(nullValue())));
                 });
             });
 		});
