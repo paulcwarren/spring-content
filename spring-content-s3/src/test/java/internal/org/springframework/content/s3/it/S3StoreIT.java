@@ -56,7 +56,6 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.amazonaws.regions.Regions;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -80,7 +79,7 @@ public class S3StoreIT {
 
         try {
             Map<String,String> props = new HashMap<>();
-            props.put("AWS_REGION", Regions.US_WEST_1.getName());
+            props.put("AWS_REGION", "us-west-1");
             props.put("AWS_ACCESS_KEY_ID", "user");
             props.put("AWS_SECRET_KEY", "password");
             setEnv(props);

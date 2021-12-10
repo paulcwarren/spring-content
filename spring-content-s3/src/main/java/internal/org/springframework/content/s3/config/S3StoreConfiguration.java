@@ -1,17 +1,23 @@
 package internal.org.springframework.content.s3.config;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
-import org.springframework.content.s3.S3ObjectIdResolver;
-import org.springframework.content.s3.config.S3ObjectIdResolvers;
+import org.springframework.content.s3.Bucket;
+import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
-
-import java.util.List;
 
 @Configuration
 public class S3StoreConfiguration {
@@ -23,23 +29,8 @@ public class S3StoreConfiguration {
 	private String bucket;
 
 	@Bean
-	public S3ObjectIdResolvers contentIdResolvers() {
-		S3ObjectIdResolvers resolvers = new S3ObjectIdResolvers();
-		if (configurers != null) {
-			for (S3StoreConfigurer configurer : configurers) {
-				configurer.configureS3ObjectIdResolvers(resolvers);
-			}
-		}
-		return resolvers;
-	}
-
-	@Bean
 	public PlacementService s3StorePlacementService() {
 		PlacementService conversion = new PlacementServiceImpl();
-
-		for (S3ObjectIdResolver resolver : contentIdResolvers()) {
-			conversion.addConverter(new S3ObjectIdResolverConverter(resolver, bucket));
-		}
 
 		addDefaultS3ObjectIdConverters(conversion, bucket);
 		addConverters(conversion);
@@ -49,9 +40,51 @@ public class S3StoreConfiguration {
 
 	public static void addDefaultS3ObjectIdConverters(PlacementService conversion, String bucket) {
 		// Serializable -> S3ObjectId
-		conversion.addConverter(new S3ObjectIdResolverConverter(S3StoreFactoryBean.DEFAULT_S3OBJECTID_RESOLVER_STORE, bucket));
+		conversion.addConverter(new Converter<Serializable, S3ObjectId>() {
+
+		    private String defaultBucket = bucket;
+
+            @Override
+            public S3ObjectId convert(Serializable id) {
+                return new S3ObjectId(defaultBucket, Objects.requireNonNull(id, "ContentId must not be null").toString());
+            }
+
+		});
+
 		// Object -> S3ObjectId
-		conversion.addConverter(new S3ObjectIdResolverConverter(new DefaultAssociativeStoreS3ObjectIdResolver(), bucket));
+        conversion.addConverter(new Converter<Object, S3ObjectId>() {
+
+            private String defaultBucket = bucket;
+
+            @Override
+            public S3ObjectId convert(Object idOrEntity) {
+
+                String strBucket = null;
+                Object bucket = BeanUtils.getFieldWithAnnotation(idOrEntity, Bucket.class);
+                if (bucket == null) {
+                    bucket = defaultBucket;
+                }
+                if (bucket == null) {
+                    throw new StoreAccessException("Bucket not set");
+                } else {
+                    strBucket = bucket.toString();
+                }
+
+
+                // if an entity return @ContentId
+                String key = null;
+                if (BeanUtils.hasFieldWithAnnotation(idOrEntity, ContentId.class)) {
+                    Object contentId = BeanUtils.getFieldWithAnnotation(idOrEntity, ContentId.class);
+                    key = (contentId != null) ? contentId.toString() : null;
+                // otherwise it is the id
+                } else {
+                    key = idOrEntity.toString();
+                }
+
+                return (key != null) ? new S3ObjectId(strBucket, key) : null;
+            }
+
+        });
 	}
 
 	private void addConverters(ConverterRegistry registry) {

@@ -28,8 +28,6 @@ import org.springframework.support.TestEntity;
 import org.springframework.support.TestUtils;
 import org.springframework.util.ReflectionUtils;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -39,14 +37,14 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Ginkgo4jConfiguration(threads = 1)
 public class ContentS3AutoConfigurationTest {
 
-	private static AmazonS3 client;
+	private static S3Client client;
 
 	static {
-		client = mock(AmazonS3.class);
+		client = mock(S3Client.class);
 
 		try {
 		    Map<String,String> props = new HashMap<>();
-		    props.put("AWS_REGION", Regions.US_WEST_1.getName());
+		    props.put("AWS_REGION", "us-west-1");
 		    props.put("AWS_ACCESS_KEY_ID", "user");
 		    props.put("AWS_SECRET_KEY", "password");
 		    TestUtils.setEnv(props);
@@ -65,8 +63,8 @@ public class ContentS3AutoConfigurationTest {
 					context.refresh();
 
 					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(AmazonS3.class), is(not(nullValue())));
-					assertThat(context.getBean(AmazonS3.class), is(client));
+					assertThat(context.getBean(S3Client.class), is(not(nullValue())));
+					assertThat(context.getBean(S3Client.class), is(client));
 
 					context.close();
 				});
@@ -160,7 +158,7 @@ public class ContentS3AutoConfigurationTest {
 	public static class TestConfig {
 
 		@Bean
-		public AmazonS3 s3Client() {
+		public S3Client s3Client() {
 			return client;
 		}
 	}
