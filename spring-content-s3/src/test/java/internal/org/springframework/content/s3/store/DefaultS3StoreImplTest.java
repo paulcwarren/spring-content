@@ -16,14 +16,12 @@ import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.content.s3.S3ObjectIdResolver.createS3ObjectIdResolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -42,7 +40,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.Bucket;
-import org.springframework.content.s3.S3ObjectIdResolver;
+import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
@@ -52,14 +50,9 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
-import org.springframework.util.Assert;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.model.S3ObjectId;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.s3.config.DefaultAssociativeStoreS3ObjectIdResolver;
-import internal.org.springframework.content.s3.config.S3ObjectIdResolverConverter;
 import internal.org.springframework.content.s3.config.S3StoreConfiguration;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
@@ -81,7 +74,6 @@ public class DefaultS3StoreImplTest {
 
 	private MultiTenantAmazonS3Provider clientProvider;
 
-	private S3ObjectIdResolver resolver;
 	private String defaultBucket;
 
 	private CustomContentId customId;
@@ -167,13 +159,13 @@ public class DefaultS3StoreImplTest {
 								BeforeEach(() -> {
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+									placementService.addConverter(new Converter<CustomContentId, S3ObjectId>() {
 
-									S3ObjectIdResolver<CustomContentId> resolver = 	S3ObjectIdResolver.createS3ObjectIdResolver(
-													CustomContentId::getCustomer,
-													CustomContentId::getObjectId,
-													null,
-													CustomContentId.class);
-									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
+                                        @Override
+                                        public S3ObjectId convert(CustomContentId entity) {
+                                            return new S3ObjectId(entity.getCustomer(), entity.getObjectId());
+                                        }
+									});
 
 									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
@@ -194,64 +186,6 @@ public class DefaultS3StoreImplTest {
 									});
 								});
 							});
-							Context("given the resolver is an anonymous class", () -> {
-								BeforeEach(() -> {
-									S3ObjectIdResolver<CustomContentId> resolver = new S3ObjectIdResolver<CustomContentId>() {
-										@Override
-										public String getBucket(
-												CustomContentId idOrEntity,
-												String defaultBucketName) {
-											return idOrEntity.getCustomer();
-										}
-
-										@Override
-										public String getKey(CustomContentId idOrEntity) {
-											return idOrEntity.getObjectId();
-										}
-									};
-
-									placementService = new PlacementServiceImpl();
-									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
-
-									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
-									s3Protocol.afterPropertiesSet();
-									loader = new DefaultResourceLoader();
-									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
-								});
-								Context("given an ID", () -> {
-									BeforeEach(() -> {
-										customId = new CustomContentId("some-customer","some-object-id");
-									});
-									It("should fetch the resource", () -> {
-										assertThat(e, is(nullValue()));
-										assertThat(r, is(instanceOf(S3StoreResource.class)));
-										assertThat(((S3StoreResource)r).getClient(), is(client));
-										assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","some-customer", "some-object-id")));
-									});
-								});
-							});
-							Context("given the resolver is a validating resolver", () -> {
-								BeforeEach(() -> {
-									resolver = createS3ObjectIdResolver(
-													CustomContentId::getCustomer,
-													CustomContentId::getObjectId,
-													id -> {throw new IllegalArgumentException("bad id");},
-													CustomContentId.class);
-
-									placementService = new PlacementServiceImpl();
-									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
-								});
-								Context("given an invalid ID", () -> {
-									BeforeEach(() -> {
-										customId = new CustomContentId("some-bucket", "some-object-id");
-									});
-									It("should throw an error", () -> {
-                                        assertThat(e, is(instanceOf(ConversionFailedException.class)));
-									});
-								});
-							});
 						});
 						Context("given a default bucket is not set", () -> {
 							BeforeEach(() -> {
@@ -259,14 +193,8 @@ public class DefaultS3StoreImplTest {
 							});
 							Context("given a resolver that does not validate", () -> {
 								BeforeEach(() -> {
-									resolver = createS3ObjectIdResolver(
-													CustomContentId::getCustomer,
-													CustomContentId::getObjectId, null,
-													CustomContentId.class);
-
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-									placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
 								});
 								Context("when called with an ID that doesn't specify a bucket either", () -> {
                                     BeforeEach(() -> {
@@ -327,9 +255,6 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 					Context("given the default associative store id resolver", () -> {
-						BeforeEach(() -> {
-							resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-						});
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
@@ -392,9 +317,6 @@ public class DefaultS3StoreImplTest {
 						});
 					});
 					Context("given a custom id resolver", () -> {
-						BeforeEach(() -> {
-							resolver = createS3ObjectIdResolver(id -> "custom-bucket", id -> "custom-object-id",null);
-						});
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
@@ -427,13 +349,6 @@ public class DefaultS3StoreImplTest {
 						});
 					});
 					Context("given a custom id resolver that cannot resolve the bucket", () -> {
-                        BeforeEach(() -> {
-                            resolver = createS3ObjectIdResolver(
-                                    id -> null,
-                                    id -> "custom-object-id",
-                                    null,
-                                    TestEntity.class);
-                        });
                         Context("given the default bucket is not set", () -> {
                             BeforeEach(() -> {
                                 defaultBucket = null;
@@ -444,7 +359,12 @@ public class DefaultS3StoreImplTest {
 
                                     placementService = new PlacementServiceImpl();
                                     S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-                                    placementService.addConverter(new S3ObjectIdResolverConverter(resolver, defaultBucket));
+                                    placementService.addConverter(new Converter<CustomContentId, S3ObjectId>() {
+                                        @Override
+                                        public S3ObjectId convert(CustomContentId entity) {
+                                            return new S3ObjectId(null, entity.getObjectId());
+                                        }
+                                    });
                                 });
                                 It("should throw an exception", () -> {
                                     assertThat(e, is(instanceOf(ConversionFailedException.class)));
@@ -455,8 +375,6 @@ public class DefaultS3StoreImplTest {
 				});
 				Context("associate", () -> {
 					BeforeEach(() -> {
-						resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-
 						id = "12345-67890";
 						entity = new TestEntity();
 					});
@@ -469,8 +387,6 @@ public class DefaultS3StoreImplTest {
 				});
 				Context("#unassociate", () -> {
 					BeforeEach(() -> {
-						resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-
 						entity = new TestEntity();
 						entity.setContentId("12345-67890");
 					});
@@ -501,9 +417,6 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 					Context("given the default associative store id resolver", () -> {
-						BeforeEach(() -> {
-							resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-						});
 						Context("given a default bucket is set", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
@@ -620,9 +533,6 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 					Context("given the default associative store id resolver", () -> {
-						BeforeEach(() -> {
-							resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-						});
 						Context("given a default bucket is set", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
@@ -695,9 +605,6 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 					Context("given the default associative store id resolver", () -> {
-						BeforeEach(() -> {
-							resolver = new DefaultAssociativeStoreS3ObjectIdResolver();
-						});
 						Context("given a default bucket is set", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
@@ -746,15 +653,6 @@ public class DefaultS3StoreImplTest {
 													assertThat(entity.getContentId(), is("abcd-efgh"));
 													assertThat(entity.getContentLen(), is(0L));
 												});
-									});
-									Context("when the amazon client throws an AmazonClientException", () -> {
-										BeforeEach(() -> {
-											doThrow(new AmazonClientException("unset-exception")).when(client).deleteObject((DeleteObjectRequest)anyObject());
-										});
-										It("should throw a StoreAccessException", () -> {
-											assertThat(e, is(instanceOf(StoreAccessException.class)));
-											assertThat(e.getCause().getMessage(), is("unset-exception"));
-										});
 									});
 								});
 								Context("and the content doesn't exist", () -> {
@@ -939,12 +837,4 @@ public class DefaultS3StoreImplTest {
 			this.objectId = objectId;
 		}
 	}
-
-	static S3ObjectIdResolver<CustomContentId> customIdResolver = createS3ObjectIdResolver(CustomContentId::getCustomer,
-					CustomContentId::getObjectId, id -> {
-						Assert.notNull(id.getCustomer(),
-								"Unable to determine defaultBucket.  Customer is null");
-						Assert.notNull(id.getObjectId(),
-								"Unable to determine key.  ObjectId is null");
-					});
 }

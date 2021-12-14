@@ -1,14 +1,11 @@
 package internal.org.springframework.content.s3.config;
 
-import java.io.Serializable;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.s3.S3ObjectIdResolver;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -21,7 +18,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 @SuppressWarnings("rawtypes")
 public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
-	public static final S3ObjectIdResolver<Serializable> DEFAULT_S3OBJECTID_RESOLVER_STORE = S3ObjectIdResolver.createDefaultS3ObjectIdHelper();
+//	public static final S3ObjectIdResolver<Serializable> DEFAULT_S3OBJECTID_RESOLVER_STORE = S3ObjectIdResolver.createDefaultS3ObjectIdHelper();
 
     @Autowired
     private ApplicationContext context;

@@ -27,8 +27,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.support.TestEntity;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
@@ -39,11 +37,11 @@ import software.amazon.awssdk.services.s3.S3Client;
 public class S3AutoConfigurationTest {
 
 	static {
-		mock(AmazonS3.class);
+		mock(S3Client.class);
 
 		try {
 		    Map<String,String> props = new HashMap<>();
-		    props.put("AWS_REGION", Regions.US_WEST_1.getName());
+		    props.put("AWS_REGION", "us-west-1");
 		    props.put("AWS_ACCESS_KEY_ID", "user");
 		    props.put("AWS_SECRET_KEY", "password");
 		    setEnv(props);

@@ -24,30 +24,24 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.commons.utils.PlacementServiceImpl;
-import org.springframework.content.s3.S3ObjectIdResolver;
+import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
-import org.springframework.content.s3.config.S3ObjectIdResolvers;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.io.Resource;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.model.S3ObjectId;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.it.S3StoreIT;
 import lombok.Data;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -62,7 +56,7 @@ public class EnableS3StoresTest {
     static {
         try {
             Map<String,String> props = new HashMap<>();
-            props.put("AWS_REGION", Regions.US_WEST_1.getName());
+            props.put("AWS_REGION", "us-west-1");
             props.put("AWS_ACCESS_KEY_ID", "user");
             props.put("AWS_SECRET_KEY", "password");
             S3StoreIT.setEnv(props);
@@ -106,7 +100,6 @@ public class EnableS3StoresTest {
 				});
 				It("should call that configurer to help setup the store", () -> {
 					verify(configurer).configureS3StoreConverters(anyObject());
-					verify(configurer).configureS3ObjectIdResolvers(anyObject());
 				});
 			});
 
@@ -212,22 +205,6 @@ public class EnableS3StoresTest {
 				@Override
 				public void configureS3StoreConverters(ConverterRegistry registry) {
 				}
-
-				@Override
-				public void configureS3ObjectIdResolvers(S3ObjectIdResolvers resolvers) {
-					resolvers.add(new S3ObjectIdResolver<S3ObjectId>() {
-						@Override
-						public String getBucket(S3ObjectId idOrEntity,
-								String defaultBucketName) {
-							return idOrEntity.getBucket();
-						}
-
-						@Override
-						public String getKey(S3ObjectId idOrEntity) {
-							return idOrEntity.getKey();
-						}
-					});
-				}
 			};
 		}
 	}
@@ -254,23 +231,13 @@ public class EnableS3StoresTest {
 				}
 			};
 		}
-
-		@Bean
-		@Primary
-		public PlacementService s3StorePlacementService() {
-			PlacementService conversion = new PlacementServiceImpl();
-			conversion.addConverter(
-					new S3ObjectIdResolverConverter(
-							new DefaultAssociativeStoreS3ObjectIdResolver(), "aws-test-bucket"));
-			return conversion;
-		}
 	}
 
 	@Configuration
 	public static class InfrastructureConfig {
 
 		public Region region() {
-			return Region.getRegion(Regions.US_WEST_1);
+			return Region.US_WEST_1;
 		}
 
         @Bean
