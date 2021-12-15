@@ -1,22 +1,5 @@
 package org.springframework.versions.interceptors;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.versions.AuthenticationFacade;
-import internal.org.springframework.versions.LockingService;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.junit.runner.RunWith;
-import org.springframework.aop.ProxyMethodInvocation;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.security.core.Authentication;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.versions.LockOwnerException;
-
-import javax.persistence.Id;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
@@ -25,11 +8,31 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import javax.persistence.Id;
+
+import org.junit.runner.RunWith;
+import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.versions.LockOwnerException;
+
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+
+import internal.org.springframework.versions.AuthenticationFacade;
+import internal.org.springframework.versions.LockingService;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @RunWith(Ginkgo4jRunner.class)
 public class PessimisticLockingInterceptorTest {
@@ -91,7 +94,7 @@ public class PessimisticLockingInterceptorTest {
                                 principal = mock(Authentication.class);
                                 when(auth.getAuthentication()).thenReturn(principal);
                                 when(locker.lockOwner(0L)).thenReturn(principal);
-                                when(locker.isLockOwner(eq(0L), anyObject())).thenReturn(true);
+                                when(locker.isLockOwner(eq(0L), any())).thenReturn(true);
                             });
                             It("should proceed", () -> {
                                 verify(locker).lockOwner(0L);
@@ -105,7 +108,7 @@ public class PessimisticLockingInterceptorTest {
                                 principal = mock(Authentication.class);
                                 when(auth.getAuthentication()).thenReturn(principal);
                                 when(locker.lockOwner(0L)).thenReturn(lockOwner);
-                                when(locker.isLockOwner(eq(0L), anyObject())).thenReturn(false);
+                                when(locker.isLockOwner(eq(0L), any())).thenReturn(false);
                             });
                             It("should proceed", () -> {
                                 assertThat(e, is(instanceOf(LockOwnerException.class)));

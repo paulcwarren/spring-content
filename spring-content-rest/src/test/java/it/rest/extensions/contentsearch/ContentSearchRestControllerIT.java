@@ -12,7 +12,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -223,7 +222,7 @@ public class ContentSearchRestControllerIT {
                     Context("given no results are found", () -> {
 
                         BeforeEach(() -> {
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("one"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(Collections.EMPTY_LIST);
                         });
 
@@ -258,7 +257,7 @@ public class ContentSearchRestControllerIT {
                             sharedIds.add(entity.getId());
                             sharedIds.add(entity2.getId());
 
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("two"))).thenReturn(internalResults);
                         });
 
@@ -308,7 +307,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(orphanedContentId); // invalid id
                             contentIds.add(entity2.getContentId());
 
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("else"))).thenReturn(internalResults);
                         });
 
@@ -338,7 +337,7 @@ public class ContentSearchRestControllerIT {
                     Context("given no results are found", () -> {
 
                         BeforeEach(() -> {
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("something"), argThat(instanceOf(Pageable.class)), eq(InternalResult.class))).thenReturn(Collections.EMPTY_LIST);
                         });
 
@@ -373,7 +372,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(entity3.getContentId());
                             contentIds.add(entity4.getContentId());
 
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("else"))).thenReturn(internalResults);
                         });
 
@@ -421,7 +420,7 @@ public class ContentSearchRestControllerIT {
                             contentIds.add(orphanedContentId); // invalid id
                             contentIds.add(entity3.getContentId());
 
-                            when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                            when(reflectionService.invokeMethod(any(), any(),
                                     eq("else"))).thenReturn(internalResults);
                         });
 
@@ -454,7 +453,7 @@ public class ContentSearchRestControllerIT {
                         results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
                         results.add(new CustomResult("67890", "<em>else altogether</em>", "foo2", "bar2"));
 
-                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                        when(reflectionService.invokeMethod(any(), any(),
                                 eq("else"))).thenReturn(results);
                     });
 
@@ -499,7 +498,7 @@ public class ContentSearchRestControllerIT {
 
                         results.add(new CustomResult("12345", "<em>something else</em>", "foo1", "bar1"));
 
-                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                        when(reflectionService.invokeMethod(any(), any(),
                                 eq("else"), argThat(instanceOf(Pageable.class)))).thenReturn(results);
                     });
 
@@ -545,7 +544,7 @@ public class ContentSearchRestControllerIT {
                         contentIds.add(entity5.getContentId());
                         contentIds.add(entity6.getContentId());
 
-                        when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                        when(reflectionService.invokeMethod(any(), any(),
                                 eq("else")  )).thenReturn(internalResults);
                     });
 
@@ -595,7 +594,7 @@ public class ContentSearchRestControllerIT {
                     contentIds.add(entity3.getContentId());
                     contentIds.add(entity4.getContentId());
 
-                    when(reflectionService.invokeMethod(anyObject(), anyObject(),
+                    when(reflectionService.invokeMethod(any(), any(),
                             eq("else"))).thenReturn(internalResults);
                 });
 
