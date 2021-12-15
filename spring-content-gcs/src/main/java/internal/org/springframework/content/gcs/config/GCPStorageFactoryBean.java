@@ -30,7 +30,7 @@ public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 	private PlacementService s3StorePlacementService;
 
 //	@Autowired(required=false)
-//	private MultiTenantAmazonS3Provider s3Provider = null;
+//	private MultiTenantS3ClientProvider s3Provider = null;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;

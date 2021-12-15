@@ -41,7 +41,7 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
@@ -72,7 +72,7 @@ public class DefaultS3StoreImplTest {
 	private PlacementService placementService;
 	private S3Client client, client2;
 
-	private MultiTenantAmazonS3Provider clientProvider;
+	private MultiTenantS3ClientProvider clientProvider;
 
 	private String defaultBucket;
 
@@ -223,7 +223,7 @@ public class DefaultS3StoreImplTest {
 
 						BeforeEach(() -> {
 							client2 = mock(S3Client.class);
-							clientProvider = new MultiTenantAmazonS3Provider() {
+							clientProvider = new MultiTenantS3ClientProvider() {
 								@Override
 								public S3Client getS3Client() {
 									return client2;

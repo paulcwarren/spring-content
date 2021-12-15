@@ -47,7 +47,7 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private Storage client;
-//	private MultiTenantAmazonS3Provider clientProvider;
+//	private MultiTenantS3ClientProvider clientProvider;
 
 	public DefaultGCPStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, Storage client2) {
         Assert.notNull(context, "context must be specified");

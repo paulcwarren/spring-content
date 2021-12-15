@@ -13,14 +13,15 @@ Spring Content S3 is enabled with the following Java Config.
 public static class ApplicationConfig {
 
 	@Bean
-	public AmazonS3 client() {	<1>
-		BasicAWSCredentials creds = new BasicAWSCredentials(...)
-		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
-		return amazonS3Client;
-	}
+	public S3Client client() {	<1>
+        Region region = Region.US_WEST_2;
+        return S3Client.builder()
+                .region(region)
+                .build();
+    }
 }
 ----
-<1> The Amazon S3 client used by the S3 ResourceLoader
+<1> The S3Client bean used by the S3 ResourceLoader
 <2> A default bucket also needs to be set (see Configuring below)
 ====
 
@@ -47,23 +48,23 @@ The module id for the `spring.content.storage.type.default` property is `s3`.
 
 === Multi-tenancy
 
-Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
+Contributing an S3Client bean (as described above) to use as the connection to your amazon account is usually
 sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
-runtime context you can contribute a `MultiTenantAmazonS3Provider` bean, as follows:
+runtime context you can contribute a `MultiTenantS3ClientProvider` bean, as follows:
 
 .Enabling Spring Content S3 using Java Config
 ====
 [source,java]
 ----
-import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;@Configuration
 @EnableS3Stores
 public static class ApplicationConfig {
 
 	@Bean
-	public MultiTenantAmazonS3Provider s3Provider() {
-		return new MultiTenantAmazonS3Provider() {
+	public MultiTenantS3ClientProvider s3Provider() {
+		return new MultiTenantS3ClientProvider() {
             @Override
-            public AmazonS3 getAmazonS3() {
+            public S3Client getS3Client() {
                 /*your implementation*/
             }
         };
@@ -72,7 +73,7 @@ public static class ApplicationConfig {
 ----
 ====
 
-The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
+The S3Store will provide the S3Client object returned by this function to any `Resource`s that it is asked to
 load.
 
 === Storage Model
