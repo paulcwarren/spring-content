@@ -442,7 +442,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.2.7-SNAPSHOT,</span>
-<span id="revdate">2021-12-14</span>
+<span id="revdate">2021-12-15</span>
 </div>
 </div>
 <div id="content">
@@ -1225,18 +1225,19 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 public static class ApplicationConfig {
 
 	@Bean
-	public AmazonS3 client() {	<b class="conum">(1)</b>
-		BasicAWSCredentials creds = new BasicAWSCredentials(...)
-		AmazonS3Client amazonS3Client = new AmazonS3Client(creds);
-		return amazonS3Client;
-	}
+	public S3Client client() {	<b class="conum">(1)</b>
+        Region region = Region.US_WEST_2;
+        return S3Client.builder()
+                .region(region)
+                .build();
+    }
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>The Amazon S3 client used by the S3 ResourceLoader</p>
+<p>The S3Client bean used by the S3 ResourceLoader</p>
 </li>
 <li>
 <p>A default bucket also needs to be set (see Configuring below)</p>
@@ -1294,24 +1295,24 @@ public static class ApplicationConfig {
 <div class="sect3">
 <h4 id="_multi_tenancy">2.3.2. Multi-tenancy</h4>
 <div class="paragraph">
-<p>Contributing an AmazonS3 client bean (as described above) to use as the connection to your amazon account is usually
+<p>Contributing an S3Client bean (as described above) to use as the connection to your amazon account is usually
 sufficient for most use cases.  However, for the times when you need to dynamically determine the connection based on
-runtime context you can contribute a <code>MultiTenantAmazonS3Provider</code> bean, as follows:</p>
+runtime context you can contribute a <code>MultiTenantS3ClientProvider</code> bean, as follows:</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 10. Enabling Spring Content S3 using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;@Configuration
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.content.s3.config.MultiTenantS3ClientProvider;@Configuration
 @EnableS3Stores
 public static class ApplicationConfig {
 
 	@Bean
-	public MultiTenantAmazonS3Provider s3Provider() {
-		return new MultiTenantAmazonS3Provider() {
+	public MultiTenantS3ClientProvider s3Provider() {
+		return new MultiTenantS3ClientProvider() {
             @Override
-            public AmazonS3 getAmazonS3() {
+            public S3Client getS3Client() {
                 /*your implementation*/
             }
         };
@@ -1322,7 +1323,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="paragraph">
-<p>The S3Store will provide the AmazonS3 client object returned by this function to any `Resource`s that it is asked to
+<p>The S3Store will provide the S3Client object returned by this function to any `Resource`s that it is asked to
 load.</p>
 </div>
 </div>
@@ -1599,7 +1600,7 @@ based in <code>java.util.UUID</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.2.7-SNAPSHOT<br>
-Last updated 2021-12-14 05:06:54 UTC
+Last updated 2021-12-15 04:55:26 UTC
 </div>
 </div>
 </body>
