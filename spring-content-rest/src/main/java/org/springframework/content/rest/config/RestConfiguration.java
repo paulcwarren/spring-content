@@ -54,6 +54,8 @@ public class RestConfiguration implements InitializingBean {
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
 
+    private StoreCacheControlInterceptor storeHandlerInterceptor;
+
 	public RestConfiguration() {
 		this.corsRegistry = new StoreCorsRegistry();
 	}
@@ -106,7 +108,7 @@ public class RestConfiguration implements InitializingBean {
 
 	@Bean
 	StoreCacheControlInterceptor storeHandlerInterceptor() {
-	    return new StoreCacheControlInterceptor();
+	    return this.internalStoreHandlerInterceptor();
 	}
 
 	@Bean
@@ -129,8 +131,15 @@ public class RestConfiguration implements InitializingBean {
 			configurer.configure(this);
 		}
 
-        storeHandlerInterceptor().setBaseUri(baseUri);
+        this.internalStoreHandlerInterceptor().setBaseUri(baseUri);
 	}
+
+	private StoreCacheControlInterceptor internalStoreHandlerInterceptor() {
+        if (this.storeHandlerInterceptor == null) {
+            this.storeHandlerInterceptor = new StoreCacheControlInterceptor();
+        }
+        return this.storeHandlerInterceptor;
+    }
 
 	@Configuration
 	public static class WebConfig implements WebMvcConfigurer, InitializingBean {
