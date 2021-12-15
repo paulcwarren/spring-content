@@ -24,6 +24,7 @@ import org.springframework.data.repository.support.DefaultRepositoryInvokerFacto
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.util.Assert;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -55,6 +56,7 @@ public class RestConfiguration implements InitializingBean {
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
 
     private StoreCacheControlInterceptor storeHandlerInterceptor;
+    private StoresImpl stores;
 
 	public RestConfiguration() {
 		this.corsRegistry = new StoreCorsRegistry();
@@ -80,12 +82,27 @@ public class RestConfiguration implements InitializingBean {
 		return corsRegistry;
 	}
 
+    public StoreCacheControlInterceptor getStoreHandlerInterceptor() {
+        if (this.storeHandlerInterceptor == null) {
+            this.storeHandlerInterceptor = new StoreCacheControlInterceptor();
+        }
+        return this.storeHandlerInterceptor;
+    }
+
+    public Stores getStores() {
+        if (this.stores == null) {
+            Assert.notNull(context);
+            this.stores = new StoresImpl(this.context);
+        }
+        return this.stores;
+    }
+
 	public void addStoreResolver(String name, StoreResolver resolver) {
-		stores().addStoreResolver(name, resolver);
+		this.getStores().addStoreResolver(name, resolver);
 	}
 
 	public StoreCacheControlConfigurer cacheControl() {
-	    return this.internalStoreHandlerInterceptor().configurer();
+	    return this.getStoreHandlerInterceptor().configurer();
 	}
 
 	public DomainTypeConfig forDomainType(Class<?> type) {
@@ -103,19 +120,19 @@ public class RestConfiguration implements InitializingBean {
 
 	@Bean
 	Stores stores() {
-	    return new StoresImpl(context);
+	    return this.getStores();
 	}
 
 	@Bean
 	StoreCacheControlInterceptor storeHandlerInterceptor() {
-	    return this.internalStoreHandlerInterceptor();
+	    return this.getStoreHandlerInterceptor();
 	}
 
 	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping() {
 		ContentHandlerMapping mapping = new ContentHandlerMapping(stores(), this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
-        mapping.setInterceptors(this.internalStoreHandlerInterceptor());
+        mapping.setInterceptors(this.getStoreHandlerInterceptor());
 		return mapping;
 	}
 
@@ -131,15 +148,8 @@ public class RestConfiguration implements InitializingBean {
 			configurer.configure(this);
 		}
 
-        this.internalStoreHandlerInterceptor().setBaseUri(baseUri);
+        this.getStoreHandlerInterceptor().setBaseUri(baseUri);
 	}
-
-	private StoreCacheControlInterceptor internalStoreHandlerInterceptor() {
-        if (this.storeHandlerInterceptor == null) {
-            this.storeHandlerInterceptor = new StoreCacheControlInterceptor();
-        }
-        return this.storeHandlerInterceptor;
-    }
 
 	@Configuration
 	public static class WebConfig implements WebMvcConfigurer, InitializingBean {
