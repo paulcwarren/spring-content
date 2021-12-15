@@ -85,7 +85,7 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	public StoreCacheControlConfigurer cacheControl() {
-	    return storeHandlerInterceptor().configurer();
+	    return this.internalStoreHandlerInterceptor().configurer();
 	}
 
 	public DomainTypeConfig forDomainType(Class<?> type) {
@@ -115,7 +115,7 @@ public class RestConfiguration implements InitializingBean {
 	RequestMappingHandlerMapping contentHandlerMapping() {
 		ContentHandlerMapping mapping = new ContentHandlerMapping(stores(), this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
-        mapping.setInterceptors(storeHandlerInterceptor());
+        mapping.setInterceptors(this.internalStoreHandlerInterceptor());
 		return mapping;
 	}
 
