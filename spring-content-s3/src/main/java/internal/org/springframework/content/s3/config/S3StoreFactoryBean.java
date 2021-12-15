@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
-import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
@@ -30,7 +30,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	private PlacementService s3StorePlacementService;
 
 	@Autowired(required=false)
-	private MultiTenantAmazonS3Provider s3Provider = null;
+	private MultiTenantS3ClientProvider s3Provider = null;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;

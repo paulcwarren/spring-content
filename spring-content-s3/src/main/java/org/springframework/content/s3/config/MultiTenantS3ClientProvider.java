@@ -6,12 +6,12 @@ import software.amazon.awssdk.services.s3.S3Client;
  * When configured to do so, the S3Store will provide the AmazonS3 client object returned by this function to any
  * `Resource`s that it is asked to load.
  */
-public interface MultiTenantAmazonS3Provider {
+public interface MultiTenantS3ClientProvider {
 
     /**
-     * The AmazonS3 client to use, or null
+     * The S3Client client to use, or null
      *
-     * @return the AmazonS3 client to use, or null
+     * @return the S3Client client to use, or null
      */
     S3Client getS3Client();
 }

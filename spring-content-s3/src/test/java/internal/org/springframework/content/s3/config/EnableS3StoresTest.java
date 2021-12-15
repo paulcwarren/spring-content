@@ -27,7 +27,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.EnableS3ContentRepositories;
 import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -223,8 +223,8 @@ public class EnableS3StoresTest {
 	@Import(InfrastructureConfig.class)
 	public static class MultiTenantConfig {
 		@Bean
-		public MultiTenantAmazonS3Provider s3Provider() {
-			return new MultiTenantAmazonS3Provider() {
+		public MultiTenantS3ClientProvider s3Provider() {
+			return new MultiTenantS3ClientProvider() {
 				@Override
 				public S3Client getS3Client() {
 					return client;

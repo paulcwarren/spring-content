@@ -25,7 +25,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.s3.config.MultiTenantAmazonS3Provider;
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -49,9 +49,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private S3Client client;
-	private MultiTenantAmazonS3Provider clientProvider;
+	private MultiTenantS3ClientProvider clientProvider;
 
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantAmazonS3Provider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");

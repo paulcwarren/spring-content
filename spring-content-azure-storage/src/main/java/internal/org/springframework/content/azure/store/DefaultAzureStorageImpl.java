@@ -47,7 +47,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 	private ResourceLoader loader;
 	private PlacementService placementService;
 	private BlobServiceClient client;
-//	private MultiTenantAmazonS3Provider clientProvider;
+//	private MultiTenantS3ClientProvider clientProvider;
 
 	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, BlobServiceClient client) {
         Assert.notNull(context, "context must be specified");

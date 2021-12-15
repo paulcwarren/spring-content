@@ -29,7 +29,7 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	private PlacementService storePlacementService;
 
 //	@Autowired(required=false)
-//	private MultiTenantAmazonS3Provider s3Provider = null;
+//	private MultiTenantS3ClientProvider s3Provider = null;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
