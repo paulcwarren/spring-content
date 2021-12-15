@@ -1,7 +1,5 @@
 package internal.org.springframework.content.rest.utils;
 
-import static org.springframework.data.rest.webmvc.ControllerUtils.EMPTY_RESOURCE_LIST;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +42,7 @@ public final class ControllerUtils {
         if (!entities.iterator().hasNext()) {
 
             List<Object> content = Arrays.<Object> asList(WRAPPERS.emptyCollectionOf(domainType));
-            return new CollectionModel<Object>(content, getDefaultSelfLink());
+            return CollectionModel.of(content, getDefaultSelfLink());
         }
 
         List<EntityModel<Object>> resources = new ArrayList<EntityModel<Object>>();
@@ -59,12 +57,11 @@ public final class ControllerUtils {
             }
         }
 
-        return new CollectionModel<EntityModel<Object>>(resources, getDefaultSelfLink());
+        return CollectionModel.of(resources, getDefaultSelfLink());
     }
 
     protected static Link getDefaultSelfLink() {
-        return new Link(
-                ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
+        return Link.of(ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString());
     }
 
     public static CollectionModel<?> toCollectionModel(Iterable<?> source,
@@ -78,7 +75,7 @@ public final class ControllerUtils {
         } else if (source instanceof Iterable) {
             return entitiesToResources((Iterable<Object>) source, assembler, domainType);
         } else {
-            return new CollectionModel(EMPTY_RESOURCE_LIST);
+            return CollectionModel.empty();
         }
     }
 }

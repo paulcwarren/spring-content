@@ -1,8 +1,27 @@
 package org.springframework.versions.interceptors;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import lombok.Getter;
-import lombok.Setter;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.Version;
+
 import org.junit.runner.RunWith;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.content.commons.repository.ContentStore;
@@ -10,27 +29,10 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.ReflectionUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Version;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyObject;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import lombok.Getter;
+import lombok.Setter;
 
 @RunWith(Ginkgo4jRunner.class)
 public class OptimisticLockingInterceptorTest {
@@ -86,7 +88,7 @@ public class OptimisticLockingInterceptorTest {
                     It("should lock the entity and proceed", () -> {
                         assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
-                        verify(mi).setArguments(eq(entity), anyObject());
+                        verify(mi).setArguments(eq(entity), any());
                         verify(mi).proceed();
                         assertThat(((TestEntity)entity).getVersion(), is(1L));
                     });
@@ -113,7 +115,7 @@ public class OptimisticLockingInterceptorTest {
                     It("should lock the entity and proceed", () -> {
                         assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
-                        verify(mi).setArguments(eq(entity), anyObject());
+                        verify(mi).setArguments(eq(entity), any());
                         verify(mi).proceed();
                         assertThat(((TestEntity)entity).getVersion(), is(1L));
                     });
