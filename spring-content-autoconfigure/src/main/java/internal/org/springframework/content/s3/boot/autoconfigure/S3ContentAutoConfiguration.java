@@ -52,7 +52,7 @@ public class S3ContentAutoConfiguration {
             builder.credentialsProvider(provider);
         }
 
-        if (props.pathStleAccess) {
+        if (props.pathStyleAccess) {
             builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         }
 
@@ -66,7 +66,7 @@ public class S3ContentAutoConfiguration {
         public String endpoint;
         public String accessKey;
         public String secretKey;
-        public boolean pathStleAccess;
+        public boolean pathStyleAccess;
 
         public void setEndpoint(String endpoint) {
             this.endpoint = endpoint;
@@ -80,8 +80,8 @@ public class S3ContentAutoConfiguration {
             this.secretKey = secretKey;
         }
 
-        public void setPathStyleAccess(boolean pathStleAccess) {
-            this.pathStleAccess = pathStleAccess;
+        public void setPathStyleAccess(boolean pathStyleAccess) {
+            this.pathStyleAccess = pathStyleAccess;
         }
     }
 }
