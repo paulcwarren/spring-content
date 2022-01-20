@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.controllers;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -16,6 +17,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UrlPathHelper;
 
+import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
 import internal.org.springframework.content.rest.io.AssociatedStorePropertyResourceImpl;
 import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
 import internal.org.springframework.content.rest.io.StoreResourceImpl;
@@ -23,8 +25,8 @@ import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
 
-    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores) {
-        super(context, config, repositories, stores);
+    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores, MappingContext mappingContext, EntityResolvers entityResolvers) {
+        super(context, config, repositories, stores, mappingContext, entityResolvers);
     }
 
     @Override

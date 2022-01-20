@@ -1,15 +1,13 @@
 package it.internal.org.springframework.content.rest.controllers;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+
 import java.util.UUID;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntity7;
-import internal.org.springframework.content.rest.support.TestEntity7Repository;
-import internal.org.springframework.content.rest.support.TestEntity7Store;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -22,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+
+import internal.org.springframework.content.rest.support.StoreConfig;
+import internal.org.springframework.content.rest.support.TestEntity7;
+import internal.org.springframework.content.rest.support.TestEntity7Repository;
+import internal.org.springframework.content.rest.support.TestEntity7Store;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 //@Ginkgo4jConfiguration(threads=1)

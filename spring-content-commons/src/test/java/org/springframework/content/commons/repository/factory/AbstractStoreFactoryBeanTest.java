@@ -119,6 +119,30 @@ public class AbstractStoreFactoryBeanTest {
             // TODO Auto-generated method stub
 
         }
+
+        @Override
+        public Object setContent(Object property, PropertyPath propertyPath, InputStream contentm) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Object setContent(Object property, PropertyPath propertyPath, Resource resourceContent) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Object unsetContent(Object property, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public InputStream getContent(Object property, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
 	}
 
 	public interface TestStore extends ContentStore<String, UUID> {

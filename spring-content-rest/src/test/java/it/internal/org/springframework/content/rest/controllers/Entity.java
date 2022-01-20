@@ -6,7 +6,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -95,12 +94,6 @@ public class Entity {
 				mvc.perform(head(url))
 						.andExpect(status().is2xxSuccessful());
 			});
-		});
-		Context("a DELETE to /{store}/{id}/softDelete (custom handler)", () -> {
-            It("should return 200", () -> {
-                mvc.perform(delete(url + "/softDelete"))
-                        .andExpect(status().is2xxSuccessful());
-            });
 		});
 	}
 }

@@ -31,6 +31,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
@@ -147,19 +148,19 @@ public class MethodNotAllowedExceptionIT {
 
         @RestResource(exported=false)
         @Override
-        public InputStream getContent(TEntity property);
+        public InputStream getContent(TEntity property, PropertyPath path);
 
         @RestResource(exported=false)
         @Override
-        public TEntity setContent(TEntity property, InputStream content);
+        public TEntity setContent(TEntity property, PropertyPath path, InputStream content);
 
         @RestResource(exported=false)
         @Override
-        public TEntity setContent(TEntity property, Resource resourceContent);
+        public TEntity setContent(TEntity property, PropertyPath path, Resource resourceContent);
 
         @RestResource(exported=false)
         @Override
-        public TEntity unsetContent(TEntity property);
+        public TEntity unsetContent(TEntity property, PropertyPath path);
 }
 
     @Entity

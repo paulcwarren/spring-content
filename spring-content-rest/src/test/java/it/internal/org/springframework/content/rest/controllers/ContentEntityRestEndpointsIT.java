@@ -5,6 +5,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -12,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +29,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
+import internal.org.springframework.content.rest.support.EntityConfig;
 import internal.org.springframework.content.rest.support.StoreConfig;
 import internal.org.springframework.content.rest.support.TestEntity;
 import internal.org.springframework.content.rest.support.TestEntity3;
@@ -49,6 +50,7 @@ import internal.org.springframework.content.rest.support.TestStore;
 @WebAppConfiguration
 @ContextConfiguration(classes = {
 		StoreConfig.class,
+		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
@@ -127,6 +129,13 @@ public class ContentEntityRestEndpointsIT {
 					});
 					entityTests = Entity.tests();
 					contentTests = Content.tests();
+
+					Context("a DELETE to /{store}/{id}/softDelete (custom handler)", () -> {
+			           It("should return 200", () -> {
+			                mvc.perform(delete("/testEntity3s/" + testEntity3.id + "/softDelete"))
+			                        .andExpect(status().is2xxSuccessful());
+			            });
+			        });
 				});
 				Context("given the repository and storage are exported to different URIs", () -> {
 					BeforeEach(() -> {

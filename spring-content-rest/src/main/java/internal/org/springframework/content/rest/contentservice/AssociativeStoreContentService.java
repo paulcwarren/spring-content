@@ -17,10 +17,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.rest.RestResource;
@@ -29,6 +31,7 @@ import org.springframework.content.rest.config.RestConfiguration.Resolver;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -44,9 +47,9 @@ import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.io.StoreResource;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
-public class ContentStoreContentService implements ContentService {
+public class AssociativeStoreContentService implements ContentService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ContentStoreContentService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AssociativeStoreContentService.class);
 
     private static final Map<Class<?>, StoreExportedMethodsMap> storeExportedMethods = new HashMap<>();
 
@@ -57,7 +60,7 @@ public class ContentStoreContentService implements ContentService {
     private final Object embeddedProperty;
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public AssociativeStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
         this.config = config;
         this.store = store;
         this.repoInvoker = repoInvoker;
@@ -66,7 +69,7 @@ public class ContentStoreContentService implements ContentService {
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
     }
 
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
+    public AssociativeStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
         this.config = config;
         this.store = store;
         this.repoInvoker = repoInvoker;
@@ -75,7 +78,7 @@ public class ContentStoreContentService implements ContentService {
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
     }
 
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public AssociativeStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
         this.config = config;
         this.store = store;
         this.repoInvoker = repoInvoker;
@@ -88,11 +91,11 @@ public class ContentStoreContentService implements ContentService {
     public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource resource, MediaType resourceType)
             throws ResponseStatusException, MethodNotAllowedException {
 
-        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getResourceMethods();
 
-        if (methodsToUse.length > 1) {
-            throw new IllegalStateException("Too many getContent methods");
-        }
+//        if (methodsToUse.length > 1) {
+//            throw new IllegalStateException("Too many getResource methods");
+//        }
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
@@ -156,54 +159,68 @@ public class ContentStoreContentService implements ContentService {
         ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
 
         Object updateObject = storeResource.getAssociation();
+//        if (storeResource instanceof AssociatedStorePropertyResource) {
+//
+//            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
+//            if (apr.embedded()) {
+//                updateObject = apr.getProperty();
+//            }
+//        }
+
+//        if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
+//            BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, sourceMimeType.toString());
+//        }
         property.setMimeType(updateObject, sourceMimeType.toString());
 
         String originalFilename = source.getFilename();
         if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
+//            if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
+//                BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, originalFilename);
+//            }
             property.setOriginalFileName(updateObject, source.getFilename());
         }
 
-        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)target).getStoreInfo().getInterface()).setContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)target).getStoreInfo().getInterface()).getResourceMethods();
 
-        if (methodsToUse.length > 1) {
-            RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(storeResource.getStoreInfo().getDomainObjectClass());
-            methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver(), headers);
-        }
-
-        if (methodsToUse.length > 1) {
-            throw new UnsupportedOperationException(format("Too many setContent methods exported.  Expected 1.  Got %s", methodsToUse.length));
-        }
+//        if (methodsToUse.length > 1) {
+//            RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(storeResource.getStoreInfo().getDomainObjectClass());
+//            methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver(), headers);
+//        }
+//
+//        if (methodsToUse.length > 1) {
+//            throw new UnsupportedOperationException(format("Too many setContent methods exported.  Expected 1.  Got %s", methodsToUse.length));
+//        }
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
         }
 
         Method methodToUse = methodsToUse[0];
-        Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[indexOfContentArg(methodToUse.getParameterTypes())]);
+//        Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[1]);
 
         try {
-            Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
+//            Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
+//
+//            ReflectionUtils.makeAccessible(methodToUse);
+//
+//            Resource r ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, contentArg);
+//
+//            Object saveObject = updatedDomainObj;
+//            if (storeResource instanceof AssociatedStorePropertyResource) {
+//
+//                AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
+//                if (apr.embedded()) {
+//                    saveObject = apr.getAssociation();
+//                }
+//            }
 
-            ReflectionUtils.makeAccessible(methodToUse);
+            long len = IOUtils.copyLarge(source.getInputStream(), ((WritableResource)target).getOutputStream());
+            property.setContentLength(updateObject, len);
 
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()), contentArg);
-
-            Object saveObject = updatedDomainObj;
-
-            repoInvoker.invokeSave(saveObject);
+            repoInvoker.invokeSave(updateObject);
         } finally {
-            cleanup(contentArg);
+//            cleanup(contentArg);
         }
-    }
-
-    private int indexOfContentArg(Class<?>[] paramTypes) {
-        for (int i=0; i < paramTypes.length; i++) {
-            if (InputStream.class.equals(paramTypes[i]) || Resource.class.equals(paramTypes[i])) {
-                return i;
-            }
-        }
-
-        return 0;
     }
 
     @Override
@@ -213,7 +230,7 @@ public class ContentStoreContentService implements ContentService {
 
         ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
 
-        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).unsetContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getResourceMethods();
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
@@ -224,18 +241,48 @@ public class ContentStoreContentService implements ContentService {
         }
 
         Object updateObject = storeResource.getAssociation();
+//        if (storeResource instanceof AssociatedStorePropertyResource) {
+//
+//            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
+//            if (apr.embedded()) {
+//                updateObject = apr.getProperty();
+//            }
+//        }
 
-        Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
+        AssociativeStore targetObj = storeResource.getStoreInfo().getImplementation(AssociativeStore.class);
 
-        ReflectionUtils.makeAccessible(methodsToUse[0]);
+//        ReflectionUtils.makeAccessible(methodsToUse[0]);
 
-        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()));
+//        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject);
+        try {
+            storeResource.delete();
+            targetObj.unassociate(updateObject, PropertyPath.from(property.getContentPropertyPath()));
+            property.setContentLength(updateObject, 0);
 
-        updateObject = updatedDomainObj;
-        property.setMimeType(updateObject, null);
-        property.setOriginalFileName(updateObject, null);
+//          updateObject = updatedDomainObj;
+//          if (storeResource instanceof AssociatedStorePropertyResource) {
+  //
+//              AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
+//              if (apr.embedded()) {
+//                  updateObject = apr.getAssociation();
+//              }
+//          }
 
-        repoInvoker.invokeSave(updateObject);
+//          if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
+//              BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, null);
+//          }
+            property.setMimeType(updateObject, null);
+
+//            if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
+//                BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, null);
+//            }
+            property.setOriginalFileName(updateObject, null);
+
+            repoInvoker.invokeSave(updateObject);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private void cleanup(Object contentArg) {
@@ -306,35 +353,47 @@ public class ContentStoreContentService implements ContentService {
 
     public static class StoreExportedMethodsMap {
 
+        private static Method[] GETRESOURCE_METHODS = null;
         private static Method[] SETCONTENT_METHODS = null;
         private static Method[] UNSETCONTENT_METHODS = null;
         private static Method[] GETCONTENT_METHODS = null;
 
         static {
+            GETRESOURCE_METHODS = new Method[] {
+//                    ReflectionUtils.findMethod(AssociativeStore.class, "getResource", Object.class),
+                    ReflectionUtils.findMethod(AssociativeStore.class, "getResource", Object.class, PropertyPath.class),
+                };
+
             SETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class),
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class),
             };
 
             UNSETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class, PropertyPath.class),
+                ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class),
             };
 
             GETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class, PropertyPath.class),
+                ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class),
             };
         }
 
         private Class<?> storeInterface;
+        private Method[] getResourceMethods;
         private Method[] getContentMethods;
         private Method[] setContentMethods;
         private Method[] unsetContentMethods;
 
         public StoreExportedMethodsMap(Class<?> storeInterface) {
             this.storeInterface = storeInterface;
+            this.getResourceMethods = calculateExports(GETRESOURCE_METHODS);
             this.getContentMethods = calculateExports(GETCONTENT_METHODS);
             this.setContentMethods = calculateExports(SETCONTENT_METHODS);
             this.unsetContentMethods = calculateExports(UNSETCONTENT_METHODS);
+        }
+
+        public Method[] getResourceMethods() {
+            return this.getResourceMethods;
         }
 
         public Method[] getContentMethods() {
@@ -382,10 +441,6 @@ public class ContentStoreContentService implements ContentService {
         }
 
         private boolean argsMatch(Method dm, Method m) {
-
-            if (m.getParameterTypes().length != dm.getParameterTypes().length) {
-                return false;
-            }
 
             for (int i=0; i < m.getParameterTypes().length; i++) {
 

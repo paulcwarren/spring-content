@@ -115,6 +115,17 @@ public class StoresImpl implements Stores, InitializingBean {
 		return null;
 	}
 
+    @Override
+    public StoreInfo[] getStores(StoreFilter filter) {
+        Set<StoreInfo> storeInfos = new HashSet<>();
+        for (StoreInfo info : this.storeInfos) {
+            if (filter.matches(info)) {
+                storeInfos.add(info);
+            }
+        }
+        return storeInfos.toArray(new StoreInfo[] {});
+    }
+
 	@Override
 	public StoreInfo[] getStores(Class<?> storeType) {
 		return this.getStores(storeType, MATCH_ALL);

@@ -255,5 +255,29 @@ public class EnableJpaStoresTest {
             // TODO Auto-generated method stub
 
         }
+
+        @Override
+        public TestEntity setContent(TestEntity property, PropertyPath propertyPath, InputStream contentm) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public TestEntity setContent(TestEntity property, PropertyPath propertyPath, Resource resourceContent) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public TestEntity unsetContent(TestEntity property, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public InputStream getContent(TestEntity property, PropertyPath propertyPath) {
+            // TODO Auto-generated method stub
+            return null;
+        }
 	}
 }

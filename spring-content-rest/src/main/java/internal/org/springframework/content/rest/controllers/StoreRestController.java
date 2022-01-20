@@ -231,4 +231,4 @@ public class StoreRestController implements InitializingBean  {
 
         contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
     }
-}
+    }

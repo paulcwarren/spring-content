@@ -11,19 +11,19 @@ import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 
 @Embeddable
-public class TestEntityChild {
+public class TestEntity8Child {
 	@ContentId
 	public UUID contentId;
 	@ContentLength
 	public Long contentLen;
 	@MimeType
-	public String mimeType;
+	public String contentMimeType;
 	@OriginalFileName
-	public String fileName = "";
+	public String contentFileName = "";
 
-    // prevent TestEntity8Child from being return by hibernate as null
-    @Formula("1")
-    private int workaroundForBraindeadJpaImplementation;
+	// prevent TestEntity8Child from being return by hibernate as null
+	@Formula("1")
+	private int workaroundForBraindeadJpaImplementation;
 
 	public UUID getContentId() {
 		return contentId;
@@ -41,19 +41,19 @@ public class TestEntityChild {
 		this.contentLen = contentLen;
 	}
 
-	public String getMimeType() {
-		return mimeType;
+	public String getContentMimeType() {
+		return contentMimeType;
 	}
 
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
+	public void setContentMimeType(String mimeType) {
+		this.contentMimeType = mimeType;
 	}
 
-	public String getFileName() {
-		return fileName;
+	public String getContentFileName() {
+		return contentFileName;
 	}
 
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
+	public void setContentFileName(String fileName) {
+		this.contentFileName = fileName;
 	}
 }

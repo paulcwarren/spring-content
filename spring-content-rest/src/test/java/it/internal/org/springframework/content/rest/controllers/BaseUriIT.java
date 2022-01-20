@@ -1,17 +1,12 @@
 package it.internal.org.springframework.content.rest.controllers;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.rest.support.BaseUriConfig;
-import internal.org.springframework.content.rest.support.TestEntity;
-import internal.org.springframework.content.rest.support.TestEntity3;
-import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
-import internal.org.springframework.content.rest.support.TestEntity3Repository;
-import internal.org.springframework.content.rest.support.TestEntity4;
-import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
-import internal.org.springframework.content.rest.support.TestEntity4Repository;
-import internal.org.springframework.content.rest.support.TestEntityContentRepository;
-import internal.org.springframework.content.rest.support.TestEntityRepository;
-import internal.org.springframework.content.rest.support.TestStore;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static java.lang.String.format;
+
+import java.io.ByteArrayInputStream;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +21,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import java.io.ByteArrayInputStream;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static java.lang.String.format;
+import internal.org.springframework.content.rest.support.BaseUriConfig;
+import internal.org.springframework.content.rest.support.EntityConfig;
+import internal.org.springframework.content.rest.support.TestEntity;
+import internal.org.springframework.content.rest.support.TestEntity3;
+import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
+import internal.org.springframework.content.rest.support.TestEntity3Repository;
+import internal.org.springframework.content.rest.support.TestEntity4;
+import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
+import internal.org.springframework.content.rest.support.TestEntity4Repository;
+import internal.org.springframework.content.rest.support.TestEntityContentRepository;
+import internal.org.springframework.content.rest.support.TestEntityRepository;
+import internal.org.springframework.content.rest.support.TestStore;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
 		BaseUriConfig.class,
+		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })

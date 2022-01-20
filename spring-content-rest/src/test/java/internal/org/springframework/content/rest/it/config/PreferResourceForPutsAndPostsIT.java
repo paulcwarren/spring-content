@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.rest.config.ContentRestConfigurer;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -94,7 +95,7 @@ public class PreferResourceForPutsAndPostsIT {
 
                 MockStoreFactoryBean storeFactory = context.getBean(MockStoreFactoryBean.class);
 
-                verify(storeFactory.getMock()).setContent(argThat(isA(TestEntity.class)), (Resource)argThat(isA(Resource.class)));
+                verify(storeFactory.getMock()).setContent(argThat(isA(TestEntity.class)), argThat(isA(PropertyPath.class)), (Resource)argThat(isA(Resource.class)));
             });
         });
     }
@@ -115,7 +116,7 @@ public class PreferResourceForPutsAndPostsIT {
        public static void main(String[] args) {
             SpringApplication.run(Application.class, args);
         }
-       
+
        @Configuration
        @Import({RestConfiguration.class, SecurityConfiguration.class})
        @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.it.config", considerNestedRepositories = true)

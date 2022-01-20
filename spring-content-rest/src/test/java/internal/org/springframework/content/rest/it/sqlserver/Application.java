@@ -2,8 +2,6 @@ package internal.org.springframework.content.rest.it.sqlserver;
 
 import javax.sql.DataSource;
 
-import internal.org.springframework.content.rest.it.SecurityConfiguration;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,6 +25,8 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import internal.org.springframework.content.rest.it.SecurityConfiguration;
+
 @SpringBootApplication(exclude = {
         MongoAutoConfiguration.class,
         MongoDataAutoConfiguration.class,
@@ -37,14 +37,14 @@ public class Application {
    public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
-   
+
    @Configuration
     @Import({RestConfiguration.class, SecurityConfiguration.class})
    @EnableJpaRepositories(basePackages="internal.org.springframework.content.rest.support")
    @EnableTransactionManagement
-   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.it")
+   @EnableJpaStores(basePackages="internal.org.springframework.content.rest.support")
    public static class AppConfig {
-        
+
         @Value("/org/springframework/content/jpa/schema-drop-sqlserver.sql")
         private ClassPathResource dropReopsitoryTables;
 
