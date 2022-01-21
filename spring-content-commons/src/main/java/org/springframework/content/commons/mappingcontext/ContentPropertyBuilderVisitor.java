@@ -130,7 +130,10 @@ public class ContentPropertyBuilderVisitor {
                 }
                 updateContentProperty(property::setOriginalFileNamePropertyPath, fullyQualify(f.getName(), this.getContentPropertySeparator()));
             }
-        } else if (f.getType().isPrimitive() == false && f.getType().equals(String.class) == false && ContentPropertyUtils.isWrapperType(f.getType()) == false) {
+        } else if (f.getType().isPrimitive() == false &&
+                   f.getType().equals(String.class) == false &&
+                   ContentPropertyUtils.isWrapperType(f.getType()) == false &&
+                   ContentPropertyUtils.isRelationshipField(f) == false) {
             ClassWalker subWalker = new ClassWalker(f.getType());
             ContentPropertyBuilderVisitor visitor = new SubClassVisitor(
                     this.keySeparator,
@@ -139,7 +142,6 @@ public class ContentPropertyBuilderVisitor {
                     this instanceof SubClassVisitor ? (String[])ArrayUtils.add(((SubClassVisitor)this).propertyPathPrefix, f.getName()) : new String[] {f.getName()});
             subWalker.accept(visitor);
             for (Entry<String, ContentProperty> entry : visitor.getProperties().entrySet()) {
-//                subProperties.put(f.getName() + this.keySeparator + entry.getKey(), entry.getValue());
                 subProperties.put(entry.getKey().replace(this.getContentPropertySeparator(), this.getKeySeparator()), entry.getValue());
 
                 if (visitor.getProperties().size() == 1) {

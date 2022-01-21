@@ -5,18 +5,24 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
+import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.util.ReflectionUtils;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -114,6 +120,16 @@ public class ClassWalkerTest {
                 assertThat(visitor.getProperties(), hasEntry("child/content", expectedProperty2));
             });
         });
+
+        Context("given a class with relation attributes", () -> {
+            It("should not traverse them", () -> {
+                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
+                ClassWalker walker = new ClassWalker(TestClass3.class);
+                walker.accept(visitor);
+
+                assertThat(visitor.getProperties(), aMapWithSize(0));
+            });
+        });
     }
 
     public static class TestClass {
@@ -166,5 +182,19 @@ public class ClassWalkerTest {
 
     public static class TestClass2 {
         private UncorrelatedAttrClass child;
+    }
+
+    public static class TestClass3 {
+
+        @OneToOne
+        private TestSubClass oneToOne;
+        @OneToMany
+        private TestSubClass oneToMany;
+        @ManyToOne
+        private TestSubClass manyToOne;
+        @ManyToMany
+        private TestSubClass manyToMany;
+        @DBRef
+        private TestSubClass docRef;
     }
 }

@@ -1,6 +1,14 @@
 package org.springframework.content.commons.utils;
 
+import java.lang.reflect.Field;
 import java.util.UUID;
+
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 public final class ContentPropertyUtils {
 
@@ -24,6 +32,19 @@ public final class ContentPropertyUtils {
             return true;
         }
 
+        return false;
+    }
+
+
+    public static boolean isRelationshipField(Field f) {
+
+        if (f.getAnnotation(OneToOne.class) != null ||
+            f.getAnnotation(OneToMany.class) != null ||
+            f.getAnnotation(ManyToOne.class) != null ||
+            f.getAnnotation(ManyToMany.class) != null ||
+            f.getAnnotation(DBRef.class) != null) {
+            return true;
+        }
         return false;
     }
 }
