@@ -64,8 +64,6 @@ public class RestConfiguration implements InitializingBean {
     private StoreCacheControlInterceptor storeHandlerInterceptor;
     private StoresImpl stores;
 
-    private boolean preferAssociativeStore = false;
-
 	public RestConfiguration() {
 		this.corsRegistry = new StoreCorsRegistry();
 	}
@@ -85,14 +83,6 @@ public class RestConfiguration implements InitializingBean {
 	public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
 		this.fullyQualifiedLinks = fullyQualifiedLinks;
 	}
-
-    public boolean preferAssociativeStore() {
-        return this.preferAssociativeStore;
-    }
-
-    public void setPreferAssociativeStore(boolean preferAssociativeStore) {
-        this.preferAssociativeStore = preferAssociativeStore;
-    }
 
 	public StoreCorsRegistry getCorsRegistry() {
 		return corsRegistry;

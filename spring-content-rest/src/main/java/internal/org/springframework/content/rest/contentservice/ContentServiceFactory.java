@@ -29,17 +29,17 @@ public class ContentServiceFactory {
 
     public ContentService getContentService(StoreResource resource) {
 
-        if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface()) &&
-            config.preferAssociativeStore()) {
-
-            Object entity = ((AssociatedStoreResource)resource).getAssociation();
-            return new AssociativeStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
-        }
-        else if (ContentStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
+        if (ContentStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
 
             return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
+
+        } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
+
+            Object entity = ((AssociatedStoreResource)resource).getAssociation();
+            return new AssociativeStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
+
         } else {
 
             return new StoreContentService(byteRangeRestRequestHandler);

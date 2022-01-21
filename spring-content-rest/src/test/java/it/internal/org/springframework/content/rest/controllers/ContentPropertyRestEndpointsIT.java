@@ -31,10 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.rest.config.ContentRestConfigurer;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -60,27 +57,12 @@ import internal.org.springframework.content.rest.support.TestEntity8Store;
 @WebAppConfiguration
 @ContextConfiguration(classes = {
       StoreConfig.class,
-      ContentPropertyRestEndpointsIT.PreferAssociativeStore.class,
       DelegatingWebMvcConfiguration.class,
       RepositoryRestMvcConfiguration.class,
       RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
 public class ContentPropertyRestEndpointsIT {
-
-    @Configuration
-    public static class PreferAssociativeStore {
-
-        @Bean
-        public ContentRestConfigurer configurer() {
-            return new ContentRestConfigurer() {
-                @Override
-                public void configure(RestConfiguration config) {
-                    config.setPreferAssociativeStore(true);
-                }
-            };
-        }
-    }
 
    @Autowired private TestEntity8Repository repository2;
    @Autowired private TestEntity8Store store;
