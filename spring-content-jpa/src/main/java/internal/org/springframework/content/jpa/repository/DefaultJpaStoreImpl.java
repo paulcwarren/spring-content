@@ -76,13 +76,21 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
     @Override
     public void associate(S entity, PropertyPath propertyPath, SID id) {
-        throw new UnsupportedOperationException();
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        property.setContentId(entity, id, null);
     }
 
     @Override
     public void unassociate(S entity, PropertyPath propertyPath) {
+
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        // todo: property == null
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
             @Override
@@ -145,7 +153,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Override
     public InputStream getContent(S entity, PropertyPath propertyPath) {
 
-        Object id = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName()).getContentId(entity);
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+        Object id = property.getContentId(entity);
         if (id == null) {
             return null;
         }
@@ -349,11 +361,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         Assert.notNull(propertyPath, "propertyPath must not be null");
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property != null) {
-            return (SID) property.getContentId(entity);
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        return (SID) property.getContentId(entity);
     }
 
     private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
@@ -363,11 +375,9 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property != null) {
-            property.setContentId(entity, contentId,  null);
-            return;
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        property.setContentId(entity, contentId,  null);
     }
 }

@@ -99,7 +99,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         }
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         SID contentId = (SID) property.getContentId(entity);
 
@@ -118,7 +120,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     public void associate(S entity, PropertyPath propertyPath, SID id) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         Resource resource = this.getResource(id);
 
@@ -150,7 +154,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     public void unassociate(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
             @Override
@@ -217,7 +223,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         Object contentId = property.getContentId(entity);
         if (contentId == null) {
@@ -308,7 +316,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     public InputStream getContent(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         if (entity == null)
             return null;
@@ -379,7 +389,9 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     public S unsetContent(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         if (entity == null)
             return entity;

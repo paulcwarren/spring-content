@@ -207,7 +207,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
     public S setContent(S property, PropertyPath propertyPath, InputStream content) {
 
         ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-        // TODO: property == null
+        if (contentProperty == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         Object contentId = contentProperty.getContentId(property);
         if (contentId == null) {
@@ -351,9 +353,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
     @Override
     public S unsetContent(S property, PropertyPath propertyPath) {
 
-        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-        // TODO: property == null
-
         if (property == null)
             return property;
 
@@ -369,6 +368,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
         // reset content fields
         unassociate(property, propertyPath);
+        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
         contentProperty.setContentLength(property, 0);
 
         return property;
@@ -403,11 +403,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property != null) {
-            return (SID) wrapper.getPropertyValue(property.getContentIdPropertyPath());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        return (SID) wrapper.getPropertyValue(property.getContentIdPropertyPath());
     }
 
     private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
@@ -417,11 +416,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property != null) {
-            wrapper.setPropertyValue(property.getContentIdPropertyPath(), contentId);
-            return;
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        wrapper.setPropertyValue(property.getContentIdPropertyPath(), contentId);
     }
 }

@@ -3,6 +3,7 @@ package internal.org.springframework.content.commons.repository.factory;
 import static java.lang.String.format;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +64,11 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 				ReflectionUtils.invokeMethod(setContentStoreMethod, f.getImplementation(), invocation.getThis());
 			}
 
-			return getMethod(invocation.getMethod(), f).invoke(fragment.get().getImplementation(), invocation.getArguments());
+			try {
+			    return getMethod(invocation.getMethod(), f).invoke(fragment.get().getImplementation(), invocation.getArguments());
+			} catch (InvocationTargetException ite) {
+			    throw ite.getTargetException();
+			}
 		}
 
 		String msg = format("No fragment implementation found for invoked method %s", invocation);

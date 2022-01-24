@@ -107,7 +107,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     public Resource getResource(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         if (entity == null)
             return null;
@@ -167,7 +169,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     public void associate(S entity, PropertyPath propertyPath, SID id) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         property.setContentId(entity, id, null);
     }
@@ -196,7 +200,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     public void unassociate(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
                     @Override
@@ -261,7 +267,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         Object contentId = property.getContentId(entity);
         if (contentId == null) {
@@ -398,7 +406,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     public S unsetContent(S entity, PropertyPath propertyPath) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        //TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         if (entity == null)
             return entity;

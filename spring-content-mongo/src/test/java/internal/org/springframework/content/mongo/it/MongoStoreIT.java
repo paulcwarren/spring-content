@@ -26,7 +26,9 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -49,6 +51,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 import internal.org.springframework.content.mongo.store.DefaultMongoStoreImpl;
+import lombok.Getter;
+import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -57,7 +61,7 @@ public class MongoStoreIT {
 	private GridFsTemplate gridFsTemplate;
 	private GridFSFile gridFSFile;
 	private ObjectId gridFSId;
-	private TestEntity property;
+	private TestEntity entity;
 	private GridFsResource resource;
 	private Resource genericResource;
 	private PlacementService placer;
@@ -176,115 +180,226 @@ public class MongoStoreIT {
 
 			Describe("AssociativeStore", () -> {
 
-				Context("given a new entity", () -> {
+                Context("given a new entity", () -> {
 
-					BeforeEach(() -> {
-						property = new TestEntity();
-						property = repo.save(property);
-					});
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        entity = repo.save(entity);
+                    });
 
-					It("should not have an associated resource", () -> {
-						assertThat(property.getContentId(), is(nullValue()));
-						assertThat(store.getResource(property), is(nullValue()));
-					});
+                    It("should not have an associated resource", () -> {
+                        assertThat(entity.getContentId(), is(nullValue()));
+                        assertThat(store.getResource(entity), is(nullValue()));
+                    });
 
-					Context("given a resource", () -> {
+                    Context("given a resource", () -> {
 
-						BeforeEach(() -> {
-							genericResource = store.getResource(resourceLocation);
-						});
+                        BeforeEach(() -> {
+                            genericResource = store.getResource(resourceLocation);
+                        });
 
-						Context("when the resource is associated", () -> {
+                        Context("when the resource is associated", () -> {
 
-							BeforeEach(() -> {
-								store.associate(property, resourceLocation);
-							});
+                            BeforeEach(() -> {
+                                store.associate(entity, resourceLocation);
+                                store.associate(entity, PropertyPath.from("rendition"), resourceLocation);
+                            });
 
-							It("should be recorded as such on the entity's @ContentId", () -> {
-								assertThat(property.getContentId(), is(resourceLocation));
-							});
+                            It("should be recorded as such on the entity's @ContentId", () -> {
+                                assertThat(entity.getContentId(), is(resourceLocation));
+                                assertThat(entity.getRenditionId(), is(resourceLocation));
+                            });
 
-							Context("when the resource is unassociated", () -> {
+                            Context("when the resource is unassociated", () -> {
 
-								BeforeEach(() -> {
-									store.unassociate(property);
-								});
+                                BeforeEach(() -> {
+                                    store.unassociate(entity);
+                                    store.unassociate(entity, PropertyPath.from("rendition"));
+                                });
 
-								It("should reset the entity's @ContentId", () -> {
-									assertThat(property.getContentId(), is(nullValue()));
-								});
-							});
-						});
-					});
-				});
+                                It("should reset the entity's @ContentId", () -> {
+                                    assertThat(entity.getContentId(), is(nullValue()));
+                                    assertThat(entity.getRenditionId(), is(nullValue()));
+                                });
+                            });
+
+                            Context("when a invalid property path is used to associate a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.associate(entity, PropertyPath.from("does.not.exist"), resourceLocation);
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
+
+                            Context("when a invalid property path is used to load a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.getResource(entity, PropertyPath.from("does.not.exist"));
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
+
+                            Context("when a invalid property path is used to unassociate a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.unassociate(entity, PropertyPath.from("does.not.exist"));
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
+                        });
+                    });
+                });
 			});
 
 			Describe("ContentStore", () -> {
 
-				BeforeEach(() -> {
-					property = new TestEntity();
-					property = repo.save(property);
+                BeforeEach(() -> {
+                    entity = new TestEntity();
+                    entity = repo.save(entity);
 
-					store.setContent(property, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-				});
+                    store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                    store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                });
 
-				It("should be able to store new content", () -> {
-					try (InputStream content = store.getContent(property)) {
-						assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
-					} catch (IOException ioe) {}
-				});
+                It("should be able to store new content", () -> {
+                    // content
+                    try (InputStream content = store.getContent(entity)) {
+                        assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
+                    } catch (IOException ioe) {}
 
-				It("should have content metadata", () -> {
-					Assert.assertThat(property.getContentId(), is(notNullValue()));
-					Assert.assertThat(property.getContentId().trim().length(), greaterThan(0));
-					Assert.assertEquals(property.getContentLen(), 27L);
-				});
+                    //rendition
+                    try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+                        assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
+                    } catch (IOException ioe) {}
+                });
 
-				Context("when content is updated", () -> {
-					BeforeEach(() ->{
-						store.setContent(property, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-						property = repo.save(property);
-					});
+                It("should have content metadata", () -> {
+                    // content
+                    assertThat(entity.getContentId(), is(notNullValue()));
+                    assertThat(entity.getContentId().trim().length(), greaterThan(0));
+                    Assert.assertEquals(entity.getContentLen(), 27L);
 
-					It("should have the updated content", () -> {
-						boolean matches = false;
-						try (InputStream content = store.getContent(property)) {
-							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
-							assertThat(matches, is(true));
-						}
-					});
-				});
+                    //rendition
+                    assertThat(entity.getRenditionId(), is(notNullValue()));
+                    assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
+                    Assert.assertEquals(entity.getRenditionLen(), 27L);
+                });
 
-				Context("when content is updated with shorter content", () -> {
-					BeforeEach(() -> {
-						store.setContent(property, new ByteArrayInputStream("Hello Spring World!".getBytes()));
-						property = repo.save(property);
-					});
-					It("should store only the new content", () -> {
-						boolean matches = false;
-						try (InputStream content = store.getContent(property)) {
-							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
-							assertThat(matches, is(true));
-						}
-					});
-				});
+                Context("when content is updated", () -> {
+                    BeforeEach(() ->{
+                        store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+                        entity = repo.save(entity);
+                    });
 
-				Context("when content is deleted", () -> {
-					BeforeEach(() -> {
-						resourceLocation = property.getContentId();
-						property = store.unsetContent(property);
-						property = repo.save(property);
-					});
+                    It("should have the updated content", () -> {
+                        //content
+                        boolean matches = false;
+                        try (InputStream content = store.getContent(entity)) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
 
-					It("should have no content", () -> {
-						try (InputStream content = store.getContent(property)) {
-							Assert.assertThat(content, is(Matchers.nullValue()));
-						}
+                        //rendition
+                        matches = false;
+                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
+                    });
+                });
 
-						Assert.assertThat(property.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(property.getContentLen(), 0);
-					});
-				});
+                Context("when content is updated with shorter content", () -> {
+                    BeforeEach(() -> {
+                        store.setContent(entity, new ByteArrayInputStream("Hello Spring World!".getBytes()));
+                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Spring World!".getBytes()));
+                        entity = repo.save(entity);
+                    });
+                    It("should store only the new content", () -> {
+                        //content
+                        boolean matches = false;
+                        try (InputStream content = store.getContent(entity)) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
+
+                        //rendition
+                        matches = false;
+                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
+                    });
+                });
+
+                Context("when content is deleted", () -> {
+                    BeforeEach(() -> {
+                        resourceLocation = entity.getContentId().toString();
+                        entity = store.unsetContent(entity);
+                        entity = store.unsetContent(entity, PropertyPath.from("rendition"));
+                        entity = repo.save(entity);
+                    });
+
+                    It("should have no content", () -> {
+                        //content
+                        try (InputStream content = store.getContent(entity)) {
+                            assertThat(content, is(Matchers.nullValue()));
+                        }
+
+                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
+                        Assert.assertEquals(entity.getContentLen(), 0);
+
+                        //rendition
+                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+                            assertThat(content, is(Matchers.nullValue()));
+                        }
+
+                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
+                        Assert.assertEquals(entity.getContentLen(), 0);
+                    });
+                });
+
+                Context("when an invalid property path is used to setContent", () -> {
+                    It("should throw an error", () -> {
+                        try {
+                            store.setContent(entity, PropertyPath.from("does.not.exist"), new ByteArrayInputStream("foo".getBytes()));
+                        } catch (Exception sae) {
+                            this.e = sae;
+                        }
+                        assertThat(e, is(instanceOf(StoreAccessException.class)));
+                    });
+                });
+
+                Context("when an invalid property path is used to getContent", () -> {
+                    It("should throw an error", () -> {
+                        try {
+                            store.getContent(entity, PropertyPath.from("does.not.exist"));
+                        } catch (Exception sae) {
+                            this.e = sae;
+                        }
+                        assertThat(e, is(instanceOf(StoreAccessException.class)));
+                    });
+                });
+
+                Context("when an invalid property path is used to unsetContent", () -> {
+                    It("should throw an error", () -> {
+                        try {
+                            store.unsetContent(entity, PropertyPath.from("does.not.exist"));
+                        } catch (Exception sae) {
+                            this.e = sae;
+                        }
+                        assertThat(e, is(instanceOf(StoreAccessException.class)));
+                    });
+                });
 
 				Context("when content is deleted and the id field is shared with javax id", () -> {
 
@@ -371,6 +486,8 @@ public class MongoStoreIT {
 		void setContentLen(long contentLen);
 	}
 
+	@Getter
+	@Setter
 	public static class TestEntity implements ContentProperty {
 
 		@ContentId
@@ -379,32 +496,18 @@ public class MongoStoreIT {
 		@ContentLength
 		private long contentLen;
 
+        @ContentId
+        private String renditionId;
+
+        @ContentLength
+        private long renditionLen;
+
 		public TestEntity() {
 			this.contentId = null;
 		}
 
 		public TestEntity(String contentId) {
 			this.contentId = new String(contentId);
-		}
-
-		@Override
-        public String getContentId() {
-			return this.contentId;
-		}
-
-		@Override
-        public void setContentId(String contentId) {
-			this.contentId = contentId;
-		}
-
-		@Override
-        public long getContentLen() {
-			return contentLen;
-		}
-
-		@Override
-        public void setContentLen(long contentLen) {
-			this.contentLen = contentLen;
 		}
 	}
 
