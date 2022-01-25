@@ -6,9 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
-import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -26,9 +24,11 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UrlPathHelper;
 
+import internal.org.springframework.content.rest.controllers.resolvers.AssociativeStoreResourceResolver;
 import internal.org.springframework.content.rest.controllers.resolvers.EntityResolution;
 import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyPathResourceImpl;
+import internal.org.springframework.content.rest.controllers.resolvers.ResourceResolver;
+import internal.org.springframework.content.rest.controllers.resolvers.StoreResourceResolver;
 import internal.org.springframework.content.rest.io.StoreResourceImpl;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
@@ -142,37 +142,4 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
 
         return new StoreResourceImpl(info, info.getImplementation(Store.class).getResource(pathToUse));
       }
-
-    private static interface ResourceResolver {
-        public String getMapping();
-        public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, ContentProperty property);
-    }
-
-    public static class StoreResourceResolver implements ResourceResolver {
-
-        @Override
-        public String getMapping() {
-            return "/{repository}/{id}";
-        }
-
-        @Override
-        public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, ContentProperty property) {
-            Resource r = info.getImplementation(AssociativeStore.class).getResource(domainObj, PropertyPath.from(property.getContentPropertyPath()));
-            return new AssociatedStorePropertyPathResourceImpl(info, property, domainObj, r);
-        }
-    }
-
-    public static class AssociativeStoreResourceResolver implements ResourceResolver {
-
-        @Override
-        public String getMapping() {
-            return "/{repository}/{id}/**";
-        }
-
-        @Override
-        public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, ContentProperty property) {
-            Resource r = info.getImplementation(AssociativeStore.class).getResource(domainObj, PropertyPath.from(property.getContentPropertyPath()));
-            return new AssociatedStorePropertyPathResourceImpl(info, property, domainObj, r);
-        }
-    }
 }
