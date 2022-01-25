@@ -38,7 +38,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyPathResourceImpl;
 import internal.org.springframework.content.rest.io.AssociatedStoreResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.io.StoreResource;
@@ -153,7 +152,7 @@ public class ContentStoreContentService implements ContentService {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)target;
 
-        ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
+        ContentProperty property = storeResource.getContentProperty();
 
         Object updateObject = storeResource.getAssociation();
         property.setMimeType(updateObject, sourceMimeType.toString());
@@ -211,7 +210,7 @@ public class ContentStoreContentService implements ContentService {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
 
-        ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
+        ContentProperty property = storeResource.getContentProperty();
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).unsetContentMethods();
 

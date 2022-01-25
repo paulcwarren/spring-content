@@ -2,11 +2,9 @@ package internal.org.springframework.content.rest.contentservice;
 
 import static java.lang.String.format;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,7 +14,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +24,7 @@ import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.content.rest.config.RestConfiguration.Resolver;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.repository.support.RepositoryInvoker;
@@ -41,7 +36,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyPathResourceImpl;
 import internal.org.springframework.content.rest.io.AssociatedStoreResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.io.StoreResource;
@@ -93,9 +87,9 @@ public class AssociativeStoreContentService implements ContentService {
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getResourceMethods();
 
-//        if (methodsToUse.length > 1) {
-//            throw new IllegalStateException("Too many getResource methods");
-//        }
+        if (methodsToUse.length > 1) {
+            throw new IllegalStateException("Too many getResource methods");
+        }
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
@@ -156,70 +150,30 @@ public class AssociativeStoreContentService implements ContentService {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)target;
 
-        ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
+        ContentProperty property = storeResource.getContentProperty();
 
         Object updateObject = storeResource.getAssociation();
-//        if (storeResource instanceof AssociatedStorePropertyResource) {
-//
-//            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-//            if (apr.embedded()) {
-//                updateObject = apr.getProperty();
-//            }
-//        }
-
-//        if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
-//            BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, sourceMimeType.toString());
-//        }
         property.setMimeType(updateObject, sourceMimeType.toString());
 
         String originalFilename = source.getFilename();
         if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
-//            if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
-//                BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, originalFilename);
-//            }
             property.setOriginalFileName(updateObject, source.getFilename());
         }
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)target).getStoreInfo().getInterface()).getResourceMethods();
-
-//        if (methodsToUse.length > 1) {
-//            RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(storeResource.getStoreInfo().getDomainObjectClass());
-//            methodsToUse = filterMethods(methodsToUse, dtConfig.getSetContentResolver(), headers);
-//        }
-//
-//        if (methodsToUse.length > 1) {
-//            throw new UnsupportedOperationException(format("Too many setContent methods exported.  Expected 1.  Got %s", methodsToUse.length));
-//        }
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
         }
 
         Method methodToUse = methodsToUse[0];
-//        Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[1]);
 
         try {
-//            Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
-//
-//            ReflectionUtils.makeAccessible(methodToUse);
-//
-//            Resource r ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, contentArg);
-//
-//            Object saveObject = updatedDomainObj;
-//            if (storeResource instanceof AssociatedStorePropertyResource) {
-//
-//                AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-//                if (apr.embedded()) {
-//                    saveObject = apr.getAssociation();
-//                }
-//            }
-
             long len = IOUtils.copyLarge(source.getInputStream(), ((WritableResource)target).getOutputStream());
             property.setContentLength(updateObject, len);
 
             repoInvoker.invokeSave(updateObject);
         } finally {
-//            cleanup(contentArg);
         }
     }
 
@@ -228,7 +182,7 @@ public class AssociativeStoreContentService implements ContentService {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
 
-        ContentProperty property = ((AssociatedStorePropertyPathResourceImpl)storeResource).getContentProperty();
+        ContentProperty property = storeResource.getContentProperty();
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getResourceMethods();
 
@@ -241,41 +195,16 @@ public class AssociativeStoreContentService implements ContentService {
         }
 
         Object updateObject = storeResource.getAssociation();
-//        if (storeResource instanceof AssociatedStorePropertyResource) {
-//
-//            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-//            if (apr.embedded()) {
-//                updateObject = apr.getProperty();
-//            }
-//        }
 
         AssociativeStore targetObj = storeResource.getStoreInfo().getImplementation(AssociativeStore.class);
 
-//        ReflectionUtils.makeAccessible(methodsToUse[0]);
-
-//        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject);
         try {
             storeResource.delete();
             targetObj.unassociate(updateObject, PropertyPath.from(property.getContentPropertyPath()));
             property.setContentLength(updateObject, 0);
 
-//          updateObject = updatedDomainObj;
-//          if (storeResource instanceof AssociatedStorePropertyResource) {
-  //
-//              AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-//              if (apr.embedded()) {
-//                  updateObject = apr.getAssociation();
-//              }
-//          }
-
-//          if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
-//              BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, null);
-//          }
             property.setMimeType(updateObject, null);
 
-//            if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
-//                BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, null);
-//            }
             property.setOriginalFileName(updateObject, null);
 
             repoInvoker.invokeSave(updateObject);
@@ -283,50 +212,6 @@ public class AssociativeStoreContentService implements ContentService {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
-
-    private void cleanup(Object contentArg) {
-
-        if (contentArg == null) {
-            return;
-        }
-
-        if (FileSystemResource.class.isAssignableFrom(contentArg.getClass())) {
-            ((FileSystemResource)contentArg).getFile().delete();
-        }
-    }
-
-    private Object convertContentArg(Resource resource, Class<?> parameterType) {
-
-        if (InputStream.class.equals(parameterType)) {
-            try {
-                return resource.getInputStream();
-            } catch (IOException e) {
-                throw new IllegalArgumentException(format("Unable to get inputstream from resource %s", resource.getFilename()));
-            }
-        } else if (Resource.class.equals(parameterType)) {
-            try {
-                File f = Files.createTempFile("", "").toFile();
-                FileUtils.copyInputStreamToFile(resource.getInputStream(), f);
-                return new FileSystemResource(f);
-            } catch (IOException e) {
-                throw new IllegalArgumentException(format("Unable to re-purpose resource %s", resource.getFilename()));
-            }
-        } else {
-            throw new IllegalArgumentException(format("Unsupported content type %s", parameterType.getCanonicalName()));
-        }
-    }
-
-    private Method[] filterMethods(Method[] methods, Resolver<Method, HttpHeaders> resolver, HttpHeaders headers) {
-
-        List<Method> resolved = new ArrayList<>();
-        for (Method method : methods) {
-            if (resolver.resolve(method, headers)) {
-                resolved.add(method);
-            }
-        }
-
-        return resolved.toArray(new Method[]{});
     }
 
     private boolean matchParameters(MediaType acceptedMediaType, MediaType producableMediaType) {
@@ -360,7 +245,6 @@ public class AssociativeStoreContentService implements ContentService {
 
         static {
             GETRESOURCE_METHODS = new Method[] {
-//                    ReflectionUtils.findMethod(AssociativeStore.class, "getResource", Object.class),
                     ReflectionUtils.findMethod(AssociativeStore.class, "getResource", Object.class, PropertyPath.class),
                 };
 

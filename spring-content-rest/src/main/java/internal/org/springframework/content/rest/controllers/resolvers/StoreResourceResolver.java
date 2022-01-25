@@ -7,7 +7,7 @@ import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyPathResourceImpl;
+import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
 
 public class StoreResourceResolver implements ResourceResolver {
 
@@ -19,6 +19,6 @@ public class StoreResourceResolver implements ResourceResolver {
     @Override
     public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, ContentProperty property) {
         Resource r = info.getImplementation(AssociativeStore.class).getResource(domainObj, PropertyPath.from(property.getContentPropertyPath()));
-        return new AssociatedStorePropertyPathResourceImpl(info, property, domainObj, r);
+        return new AssociatedStoreResourceImpl(info, property, domainObj, r);
     }
 }
