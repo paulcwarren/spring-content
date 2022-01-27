@@ -11,12 +11,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ContentStoreAware;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreInvoker;
 import org.springframework.content.commons.utils.BeanUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.util.MimeType;
 
 public class RenderableImpl implements Renderable, RenditionService, ContentStoreAware {
@@ -29,7 +33,10 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 	private Class<?> idClass;
 	private StoreInvoker storeInvoker;
 
+    private MappingContext mappingContext;
+
 	public RenderableImpl() {
+       this.mappingContext = new MappingContext(".", ".");
 	}
 
 	@Override
@@ -120,6 +127,38 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
 	}
 
     @Override
+    public InputStream getRendition(Object entity, PropertyPath propertyPath, String mimeType) {
+
+        Object fromMimeType = null;
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        // todo: property == null
+
+        fromMimeType = property.getMimeType(entity);
+
+        if (fromMimeType == null) {
+            return null;
+        }
+
+        if (this.canConvert(fromMimeType.toString(), mimeType)) {
+            InputStream content = null;
+            try {
+                Resource r = contentStore.getResource(entity, propertyPath);
+                if (r != null) {
+                    content = r.getInputStream();
+                    if (content != null) {
+                        return this.convert(fromMimeType.toString(), content, mimeType);
+                    }
+                }
+            }
+            catch (Exception e) {
+                LOGGER.error(String.format("Failed to get rendition from %s to %s", fromMimeType, mimeType), e);
+            }
+        }
+        return null;
+    }
+
+    @Override
     public boolean hasRendition(Object entity, String mimeType) {
 
         String fromMimeType = null;
@@ -129,5 +168,20 @@ public class RenderableImpl implements Renderable, RenditionService, ContentStor
         }
 
         return this.canConvert(fromMimeType, mimeType);
+    }
+
+    @Override
+    public boolean hasRendition(Object entity, PropertyPath propertyPath, String mimeType) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        // todo: property == null
+
+        Object fromMimeType = null;
+        fromMimeType = property.getMimeType(entity);
+        if (fromMimeType == null) {
+            return false;
+        }
+
+        return this.canConvert(fromMimeType.toString(), mimeType);
     }
 }

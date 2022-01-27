@@ -5,11 +5,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static internal.org.springframework.content.jpa.StoreIT.getContextName;
-import static internal.org.springframework.content.jpa.StoreIT.H2Config;
-import static internal.org.springframework.content.jpa.StoreIT.HSQLConfig;
-import static internal.org.springframework.content.jpa.StoreIT.MySqlConfig;
-import static internal.org.springframework.content.jpa.StoreIT.PostgresConfig;
-import static internal.org.springframework.content.jpa.StoreIT.SqlServerConfig;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,12 +13,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.UUID;
 
 import org.junit.runner.RunWith;
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.jpa.StoreIT.H2Config;
+import internal.org.springframework.content.jpa.StoreIT.HSQLConfig;
+import internal.org.springframework.content.jpa.StoreIT.MySqlConfig;
+import internal.org.springframework.content.jpa.StoreIT.PostgresConfig;
+import internal.org.springframework.content.jpa.StoreIT.SqlServerConfig;
 import internal.org.springframework.content.jpa.testsupport.models.Document;
 import internal.org.springframework.content.jpa.testsupport.repositories.DocumentRepository;
 import internal.org.springframework.content.jpa.testsupport.stores.DocumentAssociativeStore;
@@ -41,7 +44,7 @@ public class AssociativeStoreIT {
 	};
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-	
+
     private DocumentRepository repo;
     private DocumentAssociativeStore store;
 
@@ -49,13 +52,15 @@ public class AssociativeStoreIT {
     private Resource resource;
     private String resourceId;
 
+    private Exception e;
+
     {
         Describe("AssociativeStore", () -> {
-        	
+
 			for (Class<?> configClass : CONFIG_CLASSES) {
 
 	        	Context(getContextName(configClass), () -> {
-		        		
+
 	        		BeforeEach(() -> {
 						context = new AnnotationConfigApplicationContext();
 						context.register(StoreIT.TestConfig.class);
@@ -65,9 +70,9 @@ public class AssociativeStoreIT {
 	        			repo = context.getBean(DocumentRepository.class);
 	        			store = context.getBean(DocumentAssociativeStore.class);
 	        		});
-	        		
+
 		            Context("given a new entity", () -> {
-		            	
+
 		                BeforeEach(() -> {
 		                    document = new Document();
 		                    document = repo.save(document);
@@ -84,19 +89,56 @@ public class AssociativeStoreIT {
 		                    Context("when the resource is associated", () -> {
 		                       BeforeEach(() -> {
 		                           store.associate(document, resourceId);
+	                               store.associate(document, PropertyPath.from("rendition"), resourceId);
 		                       });
 		                        It("should be recorded as such on the entity's @ContentId", () -> {
 		                            assertThat(document.getContentId(), is(resourceId));
+                                    assertThat(document.getRenditionId(), is(resourceId));
 		                        });
 		                        Context("when the resource is unassociated", () -> {
 		                            BeforeEach(() -> {
 		                                store.unassociate(document);
+	                                    store.unassociate(document, PropertyPath.from("rendition"));
 		                            });
 		                            It("should reset the entity's @ContentId", () -> {
 		                                assertThat(document.getContentId(), is(nullValue()));
+                                        assertThat(document.getRenditionId(), is(nullValue()));
 		                            });
 		                        });
 		                    });
+
+                            Context("when a invalid property path is used to associate a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.associate(document, PropertyPath.from("does.not.exist"), resourceId);
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
+
+                            Context("when a invalid property path is used to load a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.getResource(document, PropertyPath.from("does.not.exist"));
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
+
+                            Context("when a invalid property path is used to unassociate a resource", () -> {
+                                It("should throw an error", () -> {
+                                    try {
+                                        store.unassociate(document, PropertyPath.from("does.not.exist"));
+                                    } catch (Exception sae) {
+                                        this.e = sae;
+                                    }
+                                    assertThat(e, is(instanceOf(StoreAccessException.class)));
+                                });
+                            });
 		                });
 		            });
 	        	});

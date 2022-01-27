@@ -34,9 +34,12 @@ public class ContentServiceFactory {
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
 
             return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
+
         } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 
-            throw new UnsupportedOperationException("AssociativeStore not supported");
+            Object entity = ((AssociatedStoreResource)resource).getAssociation();
+            return new AssociativeStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
+
         } else {
 
             return new StoreContentService(byteRangeRestRequestHandler);

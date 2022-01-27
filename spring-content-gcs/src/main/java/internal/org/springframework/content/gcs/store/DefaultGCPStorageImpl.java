@@ -16,6 +16,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -48,6 +50,8 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 	private PlacementService placementService;
 	private Storage client;
 //	private MultiTenantS3ClientProvider clientProvider;
+
+    private MappingContext mappingContext = new MappingContext(".", ".");
 
 	public DefaultGCPStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, Storage client2) {
         Assert.notNull(context, "context must be specified");
@@ -97,6 +101,30 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		return this.getResource(contentId);
 	}
 
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        if (entity == null)
+            return null;
+
+        BlobId blobId = null;
+        if (placementService.canConvert(entity.getClass(), BlobId.class)) {
+            blobId = placementService.convert(entity, BlobId.class);
+
+            if (blobId != null) {
+                return this.getResourceInternal(blobId);
+            }
+        }
+
+        SID contentId = (SID) property.getContentId(entity);
+        return this.getResource(contentId);
+    }
+
 	protected Resource getResourceInternal(BlobId id) {
 		String bucket = id.getBucket();
 
@@ -135,6 +163,42 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 	public void associate(Object entity, Serializable id) {
 		BeanUtils.setFieldWithAnnotation(entity, ContentId.class, id);
 	}
+
+    @Override
+    public void associate(S entity, PropertyPath propertyPath, SID id) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        property.setContentId(entity, id, null);
+    }
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+            @Override
+            public boolean matches(TypeDescriptor descriptor) {
+                for (Annotation annotation : descriptor.getAnnotations()) {
+                    if ("javax.persistence.Id".equals(
+                            annotation.annotationType().getCanonicalName())
+                            || "org.springframework.data.annotation.Id"
+                                    .equals(annotation.annotationType()
+                                            .getCanonicalName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    }
 
 	@Override
 	public void unassociate(Object entity) {
@@ -197,6 +261,52 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+
+        ContentProperty property = this.mappingContext .getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        Object contentId = property.getContentId(entity);
+        if (contentId == null) {
+
+            Serializable newId = UUID.randomUUID().toString();
+
+            Object convertedId = placementService.convert(
+                        newId,
+                        TypeDescriptor.forObject(newId),
+                        property.getContentIdType(entity));
+
+            property.setContentId(entity, convertedId, null);
+        }
+
+        Resource resource = this.getResource(entity, propertyPath);
+        if (resource == null) {
+            return entity;
+        }
+
+        if (resource instanceof WritableResource) {
+            try (OutputStream os = ((WritableResource) resource).getOutputStream()) {
+                    IOUtils.copy(content, os);
+            }
+            catch (IOException e) {
+                logger.error(format("Unexpected error setting content for entity %s", entity), e);
+                throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+            }
+        }
+
+        try {
+            property.setContentLength(entity, resource.contentLength());
+        }
+        catch (IOException e) {
+            logger.error(format("Unexpected error setting content length for entity %s", entity), e);
+        }
+        return entity;
+    }
+
 	@Override
 	public S setContent(S property, Resource resourceContent) {
 		try {
@@ -206,6 +316,16 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 			throw new StoreAccessException(format("Setting content for entity %s", property), e);
 		}
 	}
+
+    @Override
+    public S setContent(S property, PropertyPath propertyPath, Resource resourceContent) {
+        try {
+            return setContent(property, propertyPath, resourceContent.getInputStream());
+        } catch (IOException e) {
+            logger.error(format("Unexpected error setting content for entity %s", property), e);
+            throw new StoreAccessException(format("Setting content for entity %s", property), e);
+        }
+    }
 
 	@Transactional
 	@Override
@@ -227,6 +347,33 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 
 		return null;
 	}
+
+    @Transactional
+    @Override
+    public InputStream getContent(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        if (entity == null)
+            return null;
+
+        Resource resource = this.getResource(entity, propertyPath);
+
+        try {
+            if (resource != null && resource.exists()) {
+                return resource.getInputStream();
+            }
+        }
+        catch (IOException e) {
+            logger.error(format("Unexpected error getting content for entity %s", entity), e);
+            throw new StoreAccessException(format("Getting content for entity %s", entity), e);
+        }
+
+        return null;
+    }
 
 	@Transactional
 	@Override
@@ -258,6 +405,50 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        if (entity == null)
+            return entity;
+
+        Resource resource = this.getResource(entity, propertyPath);
+        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
+
+            try {
+                ((DeletableResource)resource).delete();
+            } catch (Exception e) {
+                logger.error(format("Unexpected error unsetting content for entity %s", entity));
+                throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
+            }
+        }
+
+        // reset content fields
+        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+            @Override
+            public boolean matches(TypeDescriptor descriptor) {
+                for (Annotation annotation : descriptor.getAnnotations()) {
+                    if ("javax.persistence.Id".equals(
+                            annotation.annotationType().getCanonicalName())
+                            || "org.springframework.data.annotation.Id"
+                                    .equals(annotation.annotationType()
+                                            .getCanonicalName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+        property.setContentLength(entity, 0);
+
+        return entity;
+    }
+
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;
 		Assert.state(location.startsWith("gs://") == false);
@@ -283,19 +474,4 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 			}
 		}
 	}
-
-    @Override
-    public Resource getResource(S entity, PropertyPath propertyPath) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void associate(S entity, PropertyPath propertyPath, SID id) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void unassociate(S entity, PropertyPath propertyPath) {
-        throw new UnsupportedOperationException();
-    }
 }

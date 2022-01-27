@@ -17,10 +17,9 @@ import java.util.stream.Stream;
 
 import javax.persistence.Version;
 
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -30,7 +29,6 @@ import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.convert.Jsr310Converters;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -58,19 +56,14 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
     private S entity;
     private Resource original;
-    private Object property;
     private StoreInfo info;
 
-    public AssociatedStoreResourceImpl(StoreInfo info, S entity, Resource original) {
-        this.info = info;
-        this.entity = entity;
-        this.original = original;
-    }
+    private ContentProperty contentProperty;
 
-    public AssociatedStoreResourceImpl(StoreInfo info, Object property, S entity, Resource original) {
+    public AssociatedStoreResourceImpl(StoreInfo info, ContentProperty property, S entity, Resource original) {
         this.info = info;
         this.entity = entity;
-        this.property = property;
+        this.contentProperty = property;
         this.original = original;
     }
 
@@ -83,8 +76,12 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     @Override
     public S getAssociation() {
 
-        Object obj = property != null ? property : entity;
-        return (S)obj;
+        return entity;
+    }
+
+    @Override
+    public ContentProperty getContentProperty() {
+        return this.contentProperty;
     }
 
     protected Resource getDelegate() {
@@ -99,10 +96,10 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     @Override
     public boolean isRenderableAs(org.springframework.util.MimeType mimeType) {
 
-        if (Renderable.class.isAssignableFrom(info.getInterface())) {
+        if (Renderable.class.isAssignableFrom(this.getStoreInfo().getInterface())) {
 
-            Renderable renderer = (Renderable)info.getImplementation(AssociativeStore.class);
-            return renderer.hasRendition(entity, mimeType.toString());
+            Renderable renderer = (Renderable)this.getStoreInfo().getImplementation(AssociativeStore.class);
+            return renderer.hasRendition(getAssociation(), PropertyPath.from(contentProperty.getContentPropertyPath()), mimeType.toString());
         }
 
         return false;
@@ -111,10 +108,10 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     @Override
     public InputStream renderAs(org.springframework.util.MimeType mimeType) {
 
-        if (Renderable.class.isAssignableFrom(info.getInterface())) {
+        if (Renderable.class.isAssignableFrom(this.getStoreInfo().getInterface())) {
 
-            Renderable renderer = (Renderable)info.getImplementation(AssociativeStore.class);
-            return renderer.getRendition(entity, mimeType.toString());
+            Renderable renderer = (Renderable)this.getStoreInfo().getImplementation(AssociativeStore.class);
+            return renderer.getRendition(getAssociation(), PropertyPath.from(contentProperty.getContentPropertyPath()), mimeType.toString());
         }
 
         return null;
@@ -125,9 +122,9 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
         Object etag = null;
 
-        if (property != null) {
-            etag = BeanUtils.getFieldWithAnnotation(property, Version.class);
-        }
+    //        if (property != null) {
+    //            etag = BeanUtils.getFieldWithAnnotation(property, Version.class);
+    //        }
 
         if (etag == null) {
             etag = BeanUtils.getFieldWithAnnotation(entity, Version.class);
@@ -145,8 +142,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
         Object mimeType = null;
 
-        Object obj = property != null ? property : entity;
-        mimeType = BeanUtils.getFieldWithAnnotation(obj, MimeType.class);
+        mimeType = this.contentProperty.getMimeType(this.getAssociation());
 
         return MediaType.valueOf(mimeType != null ? mimeType.toString() : MediaType.ALL_VALUE);
     }
@@ -154,30 +150,43 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     @Override
     public long contentLength() throws IOException {
 
-        Object obj = property != null ? property : entity;
-
-        Long contentLength = (Long) BeanUtils.getFieldWithAnnotation(obj, ContentLength.class);
-        if (contentLength == null) {
-            contentLength = original.contentLength();
-        }
-        return contentLength;
+     // TODO: can we remove this is all properties are effectively embedded?
+//      Long contentLength = null; (Long) BeanUtils.getFieldWithAnnotation(property, ContentLength.class);
+      Long contentLength = (Long) this.contentProperty.getContentLength(this.getAssociation());
+      if (contentLength == null) {
+          contentLength = getDelegate().contentLength();
+      }
+      return contentLength;
     }
 
     @Override
     public long lastModified() throws IOException {
 
-        Object obj = property != null ? property : entity;
-
-        Object lastModified = BeanUtils.getFieldWithAnnotation(obj, LastModifiedDate.class);
+     // TODO: can we remove this is all properties are effectively embedded?
+        Object lastModified = null; //BeanUtils.getFieldWithAnnotation(property, LastModifiedDate.class);
         if (lastModified == null) {
-            return original.lastModified();
+            return getDelegate().lastModified();
         }
 
         return Stream.of(lastModified)
-        .map(it -> conversionService.convert(it, Date.class))//
-        .map(it -> conversionService.convert(it, Instant.class))//
+        .map(it -> getConversionService().convert(it, Date.class))//
+        .map(it -> getConversionService().convert(it, Instant.class))//
         .map(it -> it.toEpochMilli())
-        .findFirst().orElseThrow(() -> new IllegalArgumentException(format("Invalid data type for @LastModifiedDate for Entity %s", entity)));
+        .findFirst().orElseThrow(() -> new IllegalArgumentException(format("Invalid data type for @LastModifiedDate on Entity %s", this.getAssociation())));
+    }
+
+    @Override
+    public HttpHeaders getResponseHeaders() {
+
+        HttpHeaders headers = new HttpHeaders();
+
+        // Modified to show download
+        Object originalFileName = this.contentProperty.getOriginalFileName(this.getAssociation());
+        if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
+            ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
+            headers.setContentDisposition(builder.build());
+        }
+        return headers;
     }
 
     @Override
@@ -239,21 +248,6 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     @Override
     public InputStream getInputStream() throws IOException {
         return original.getInputStream();
-    }
-
-    @Override
-    public HttpHeaders getResponseHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-
-        Object obj = property != null ? property : entity;
-
-        // Modified to show download
-        Object originalFileName = BeanUtils.getFieldWithAnnotation(obj, OriginalFileName.class);
-        if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
-            ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
-            headers.setContentDisposition(builder.build());
-        }
-        return headers;
     }
 
     @Override

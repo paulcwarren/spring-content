@@ -19,11 +19,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
-import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.config.RestConfiguration.Resolver;
@@ -39,7 +38,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyResource;
 import internal.org.springframework.content.rest.io.AssociatedStoreResource;
 import internal.org.springframework.content.rest.io.RenderedResource;
 import internal.org.springframework.content.rest.io.StoreResource;
@@ -154,24 +152,14 @@ public class ContentStoreContentService implements ContentService {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)target;
 
+        ContentProperty property = storeResource.getContentProperty();
+
         Object updateObject = storeResource.getAssociation();
-        if (storeResource instanceof AssociatedStorePropertyResource) {
-
-            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-            if (apr.embedded()) {
-                updateObject = apr.getProperty();
-            }
-        }
-
-        if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
-            BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, sourceMimeType.toString());
-        }
+        property.setMimeType(updateObject, sourceMimeType.toString());
 
         String originalFilename = source.getFilename();
         if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
-            if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
-                BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, originalFilename);
-            }
+            property.setOriginalFileName(updateObject, source.getFilename());
         }
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)target).getStoreInfo().getInterface()).setContentMethods();
@@ -190,23 +178,16 @@ public class ContentStoreContentService implements ContentService {
         }
 
         Method methodToUse = methodsToUse[0];
-        Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[1]);
+        Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[indexOfContentArg(methodToUse.getParameterTypes())]);
 
         try {
             Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
 
             ReflectionUtils.makeAccessible(methodToUse);
 
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, contentArg);
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()), contentArg);
 
             Object saveObject = updatedDomainObj;
-            if (storeResource instanceof AssociatedStorePropertyResource) {
-
-                AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-                if (apr.embedded()) {
-                    saveObject = apr.getAssociation();
-                }
-            }
 
             repoInvoker.invokeSave(saveObject);
         } finally {
@@ -214,10 +195,22 @@ public class ContentStoreContentService implements ContentService {
         }
     }
 
+    private int indexOfContentArg(Class<?>[] paramTypes) {
+        for (int i=0; i < paramTypes.length; i++) {
+            if (InputStream.class.equals(paramTypes[i]) || Resource.class.equals(paramTypes[i])) {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
     @Override
     public void unsetContent(Resource resource) throws MethodNotAllowedException {
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
+
+        ContentProperty property = storeResource.getContentProperty();
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).unsetContentMethods();
 
@@ -230,36 +223,16 @@ public class ContentStoreContentService implements ContentService {
         }
 
         Object updateObject = storeResource.getAssociation();
-        if (storeResource instanceof AssociatedStorePropertyResource) {
-
-            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-            if (apr.embedded()) {
-                updateObject = apr.getProperty();
-            }
-        }
 
         Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
 
         ReflectionUtils.makeAccessible(methodsToUse[0]);
 
-        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject);
+        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()));
 
         updateObject = updatedDomainObj;
-        if (storeResource instanceof AssociatedStorePropertyResource) {
-
-            AssociatedStorePropertyResource apr = (AssociatedStorePropertyResource)storeResource;
-            if (apr.embedded()) {
-                updateObject = apr.getAssociation();
-            }
-        }
-
-        if (BeanUtils.hasFieldWithAnnotation(updateObject, MimeType.class)) {
-            BeanUtils.setFieldWithAnnotation(updateObject, MimeType.class, null);
-        }
-
-        if (BeanUtils.hasFieldWithAnnotation(updateObject, OriginalFileName.class)) {
-            BeanUtils.setFieldWithAnnotation(updateObject, OriginalFileName.class, null);
-        }
+        property.setMimeType(updateObject, null);
+        property.setOriginalFileName(updateObject, null);
 
         repoInvoker.invokeSave(updateObject);
     }
@@ -338,16 +311,16 @@ public class ContentStoreContentService implements ContentService {
 
         static {
             SETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class),
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
             };
 
             UNSETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class),
+                ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class, PropertyPath.class),
             };
 
             GETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class),
+                ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class, PropertyPath.class),
             };
         }
 
@@ -408,6 +381,10 @@ public class ContentStoreContentService implements ContentService {
         }
 
         private boolean argsMatch(Method dm, Method m) {
+
+            if (m.getParameterTypes().length != dm.getParameterTypes().length) {
+                return false;
+            }
 
             for (int i=0; i < m.getParameterTypes().length; i++) {
 

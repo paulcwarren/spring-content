@@ -1,7 +1,12 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -11,20 +16,62 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UrlPathHelper;
 
-import internal.org.springframework.content.rest.io.AssociatedStorePropertyResourceImpl;
-import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
+import internal.org.springframework.content.rest.controllers.resolvers.AssociativeStoreResourceResolver;
+import internal.org.springframework.content.rest.controllers.resolvers.EntityResolution;
+import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
+import internal.org.springframework.content.rest.controllers.resolvers.ResourceResolver;
+import internal.org.springframework.content.rest.controllers.resolvers.StoreResourceResolver;
 import internal.org.springframework.content.rest.io.StoreResourceImpl;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
-public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArgumentResolver {
+public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
-    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores) {
-        super(context, config, repositories, stores);
+    private UriTemplate entityUriTemplate = new UriTemplate("/{repository}/{id}");
+    private UriTemplate entityPropertyUriTemplate = new UriTemplate("/{repository}/{id}/{property}");
+    private UriTemplate entityPropertyWithIdUriTemplate = new UriTemplate("/{repository}/{id}/{property}/**");
+    private UriTemplate revisionPropertyUriTemplate = new UriTemplate("/{repository}/{id}/revisions/{revisionId}/{property}");
+    private UriTemplate revisionPropertyWithIdUriTemplate = new UriTemplate("/{repository}/{id}/revisions/{revisionId}/{property}/{contentId}");
+
+    private EntityResolvers entityResolvers;
+    private List<ResourceResolver> resolvers = new ArrayList<>();
+
+    private ApplicationContext context;
+    private final RestConfiguration config;
+    private final Repositories repositories;
+    private final Stores stores;
+    private final MappingContext mappingContext;
+
+    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores, MappingContext mappingContext, EntityResolvers entityResolvers) {
+        this.context = context;
+        this.config = config;
+        this.repositories = repositories;
+        this.stores = stores;
+        this.mappingContext = mappingContext;
+
+        this.entityResolvers = entityResolvers;
+
+        resolvers.add(new StoreResourceResolver());
+        resolvers.add(new AssociativeStoreResourceResolver());
+    }
+
+    RestConfiguration getConfig() {
+        return config;
+    }
+
+    protected Repositories getRepositories() {
+        return repositories;
+    }
+
+    protected Stores getStores() {
+        return stores;
     }
 
     @Override
@@ -33,33 +80,66 @@ public class ResourceHandlerMethodArgumentResolver extends StoreHandlerMethodArg
     }
 
     @Override
-    public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        return super.resolveArgument(methodParameter, modelAndViewContainer, nativeWebRequest, webDataBinderFactory);
+        String pathInfo = webRequest.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        pathInfo = new UrlPathHelper().getPathWithinApplication(webRequest.getNativeRequest(HttpServletRequest.class));
+        pathInfo = StoreUtils.storeLookupPath(pathInfo, this.getConfig().getBaseUri());
+
+        String[] pathSegments = pathInfo.split("/");
+        if (pathSegments.length < 2) {
+            return null;
+        }
+
+        String store = pathSegments[1];
+
+        StoreInfo info = this.getStores().getStore(Store.class, StoreUtils.withStorePath(store));
+        if (info == null) {
+            throw new IllegalArgumentException(String.format("Store for path %s not found", store));
+        }
+
+        if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
+
+            EntityResolution result = this.entityResolvers.resolve(pathInfo);
+
+            AntPathMatcher matcher = new AntPathMatcher();
+            Comparator<String> patternComparator = matcher.getPatternComparator(pathInfo);
+
+            List<String> uriTemplates = new ArrayList<>();
+            for (ResourceResolver resolver : resolvers) {
+                if (matcher.match(resolver.getMapping(), pathInfo)) {
+                    uriTemplates.add(resolver.getMapping());
+                }
+            }
+
+            String bestMatch = null;
+            if (uriTemplates.size() > 1) {
+                uriTemplates.sort(patternComparator);
+            }
+
+            bestMatch = uriTemplates.get(0);
+
+            ResourceResolver matchedResolver = null;
+            for (ResourceResolver resolver : resolvers) {
+                if (bestMatch.equals(resolver.getMapping())) {
+                    matchedResolver = resolver;
+                }
+            }
+
+            return matchedResolver.resolve(webRequest, info, result.getEntity(), result.getContentProperty());
+
+        } else if (Store.class.isAssignableFrom(info.getInterface())) {
+
+            return resolveStoreArgument(webRequest, info);
+        }
+
+        throw new IllegalArgumentException();
     }
 
-    @Override
     protected Object resolveStoreArgument(NativeWebRequest nativeWebRequest, StoreInfo info) {
-      String path = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
-      String pathToUse = path.substring(StoreUtils.storePath(info).length() + 1);
+        String path = new UrlPathHelper().getPathWithinApplication(nativeWebRequest.getNativeRequest(HttpServletRequest.class));
+        String pathToUse = path.substring(StoreUtils.storePath(info).length() + 1);
 
-      return new StoreResourceImpl(info, info.getImplementation(Store.class).getResource(pathToUse));
-    }
-
-    @Override
-    protected Object resolveAssociativeStoreEntityArgument(StoreInfo storeInfo, Object domainObj) {
-
-        Resource r = storeInfo.getImplementation(AssociativeStore.class).getResource(domainObj);
-        r = new AssociatedStoreResourceImpl(storeInfo, domainObj, r);
-        return r;
-    }
-
-    @Override
-    protected Object resolveAssociativeStorePropertyArgument(StoreInfo storeInfo, Object domainObj, Object propertyVal, boolean embeddedProperty) {
-
-        AssociativeStore s = storeInfo.getImplementation(AssociativeStore.class);
-        Resource resource = s.getResource(propertyVal);
-        resource = new AssociatedStorePropertyResourceImpl(storeInfo, propertyVal, embeddedProperty, domainObj, resource);
-        return resource;
-    }
+        return new StoreResourceImpl(info, info.getImplementation(Store.class).getResource(pathToUse));
+      }
 }

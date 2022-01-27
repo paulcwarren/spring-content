@@ -17,7 +17,113 @@ The central interfaces in the Spring Content are `Store`, `AssociativeStore` and
 provide access to content streams through the standard Spring Resource API either directly or through association with
 Spring Data entities.
 
-[[content-repositories.repository]]
+=== Store
+
+The simplest interface is the `Store` interface.  Essentially, it is a Spring `ResourceLoader` that returns instances Spring `Resource`.  It is also generic allowing the Resource's ID (or location) to be specified.  All other Store interfaces extend from `Store`.
+
+[[content-repositories.store]]
+.Store interface
+====
+[source, java]
+----
+public interface Store<SID extends Serializable> {
+
+	Resource getResource(SID id);		<1>
+}
+----
+<1> Returns a Resource handle for the specified `id` 
+====
+
+For example, given a `PictureStore` that extends `Store` it is possible to store (retrieve and delete) pictures.
+
+=== AssociativeStore
+
+`AssociativeStore` extends from `Store` allowing Spring Resource's to be associated with JPA Entities.
+
+[[content-repositories.associativestore]]
+.AssociativeStore interface
+====
+[source, java]
+----
+public interface AssociativeStore<SID extends Serializable> {
+
+	Resource getResource(SID id);								<1>
+	void associate(S entity, PropertyPath path, SID id);		<2>
+    void unassociate(S entity, PropertyPath path);				<3>
+	Resource getResource(S entity, PropertyPath path);			<4>
+}
+----
+<1> Returns a Resource handle for the specified `id` 
+<2> Associates the Resource `id` with the Entity `entity` at the PropertyPath `path`
+<3> Unassociates the Resource at the PropertyPath `path` from the entity  
+<4> Returns a handle for the associated Resource at PropertyPath `path`
+====
+
+For example, given an Entity `User` with Spring Content annotations, a `UserRepository` and the `PictureStore` this time extending `AssociativeStore` it is possible to store and associate a profile picture for each user.
+
+.ContentStore interface
+====
+[source, java]
+----
+@Entity
+@Data
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private String username;
+
+	@ContentId
+	private String contentId;
+
+	@ContentLength
+	private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+public interface PictureStore extends AssociativeStore<User, String> {
+}
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	public CommandLineRunner demo(UserRespository repo, PictureStore store) {
+		return (args) -> {
+			// create a new user
+			User jbauer = new User("jbauer");
+
+			// store a picture
+			WritableResource r = (WritableResource)store.getResource("/some/picture.jpeg");
+
+			try (InputStream is = new FileInputStream("/tmp/jbauer.jpg")) {
+				try (OutputStream os = ((WritableResource)r).getOutputStream()) {
+					IOUtils.copyLarge(is, os);
+				}
+			}
+
+			// associate the Resource with the Entity
+			store.associate(jbauer, PropertyPath("content"), "/some/picture.jpeg");
+
+			// save the user
+			repository.save(jbauer);
+		};
+	}
+}
+----
+====
+
+== ContentStore
+
+Lastly, `ContenStore` extends AssociativeStore and provides a more convenient API for managing associated content based on java `Stream`, rather than `Resource`.
+
+[[content-repositories.contentstore]]
 .ContentStore interface
 ====
 [source, java]
@@ -25,10 +131,8 @@ Spring Data entities.
 public interface ContentStore<E, CID extends Serializable> {
 
 	void setContent(E entity, InputStream content); 	<1>
-
-	InputStream getContent(E entity);			<2>
-
-	void unsetContent(E entity);				<3>
+	InputStream getContent(E entity);					<2>
+	void unsetContent(E entity);						<3>
 }
 ----
 <1> Stores content and associates it with `entity`
@@ -36,8 +140,7 @@ public interface ContentStore<E, CID extends Serializable> {
 <3> Deletes content and unassociates it from `entity`
 ====
 
-For example, given an Entity `User`, a `UserRepository` and a `ProfilePictureStore` it is possible to associate and
-store a profile picture for each user.
+The example above can be refactored as follows:
 
 .ContentStore interface
 ====
@@ -86,6 +189,52 @@ public class Application {
 	}
 }
 ----
+====
+
+=== Content Properties
+
+As we can see above content is "associated" by adding additional metadata about the content to the JPA Entity.  This additional metadata is denoted with Spring Content annotations.  There are several.  The only mandatory annotation is `@ContentId`.  Other optional annotations include `@ContentLength`, `@MimeType` and `@OriginalFileName`.  These may be added to your entities when you need to capture this additional infomation about your associated content. 
+
+When adding these optional annotations it is highly recommended that you correlate the field's name creating a "content property".  This allows for multiple pieces of content to be associated with the same entity, as shown in the following example.  When associating a single piece of content this is not necessary but still recommended.
+
+[[content-repositories.contentproperty]]
+.Content Property
+====
+[source, java]
+----
+@Entity
+@Data
+public class User {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+
+	private String username;
+
+	@ContentId
+	private String contentId;				<1>
+
+	@ContentLength
+	private Long contentLength
+
+	@MimeType
+	private String contentType;
+
+	@OriginalFileName
+	private String contentName;
+
+	@ContentId
+	private String renditionId;				<2>
+
+	@ContentLength
+	private Long renditionLength
+
+	@MimeType
+	private String renditionType;
+}
+----
+<1> Content property "content" with id, length, type and original filename
+<2> Content property "rendition" with id, length and type
 ====
 
 [[content-repositories.multimodule]]

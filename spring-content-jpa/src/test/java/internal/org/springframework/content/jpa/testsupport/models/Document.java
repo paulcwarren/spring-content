@@ -1,14 +1,20 @@
 package internal.org.springframework.content.jpa.testsupport.models;
 
+import java.util.UUID;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 public class Document {
 
     @Id
@@ -22,37 +28,12 @@ public class Document {
     @ContentLength
     private Long contentLen;
 
-    @MimeType String mimeType;
+    @MimeType
+    private String contentMimeType;
 
-    public String getId() {
-        return id;
-    }
+    @ContentId
+    private String renditionId;
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getContentId() {
-        return contentId;
-    }
-
-    public void setContentId(String contentId) {
-        this.contentId = contentId;
-    }
-
-    public Long getContentLen() {
-        return contentLen;
-    }
-
-    public void setContentLen(Long contentLen) {
-        this.contentLen = contentLen;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-    }
+    @ContentLength
+    private long renditionLen;
 }

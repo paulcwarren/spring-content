@@ -1,48 +1,35 @@
 package internal.org.springframework.content.jpa.testsupport.models;
 
+import javax.persistence.Embeddable;
+
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 
-import javax.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
 
 @Embeddable
+@Getter
+@Setter
 public class ClaimForm {
 
 	@ContentId
 	private String contentId;
-	
+
 	@ContentLength
 	private long contentLength = 0L;
-	
+
 	@MimeType
-	private String mimeType = "text/plain";
-	
-	public String getContentId() {
-		return contentId;
-	}
+	private String contentMimeType = "text/plain";
 
-	public void setContentId(String contentId) {
-		this.contentId = contentId;
-	}
+    @ContentId
+    private String renditionId;
 
-	public long getContentLength() {
-		return contentLength;
-	}
+    @ContentLength
+    private long renditionLen;
 
-	public void setContentLength(long contentLength) {
-		this.contentLength = contentLength;
-	}
-
-	public String getMimeType() {
-		return mimeType;
-	}
-
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
-	}
-
-	// Ensure we can handle entities with "computed" getters; i.e. getters that 
+	// Ensure we can handle entities with "computed" getters; i.e. getters that
 	// dont have an associated field
 	public boolean getIsActive() {
 		return true;

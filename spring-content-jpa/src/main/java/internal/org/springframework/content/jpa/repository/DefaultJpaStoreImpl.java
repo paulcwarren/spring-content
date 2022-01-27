@@ -13,9 +13,13 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -31,6 +35,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -38,6 +43,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 	private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
 	private ResourceLoader loader;
+
+    private MappingContext mappingContext = new MappingContext(".", ".");
 
 	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader) {
 		this.loader = blobResourceLoader;
@@ -57,6 +64,50 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 		return loader.getResource(contentId.toString());
 	}
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+        SID contentId = getContentId(entity, propertyPath);
+        if (contentId == null) {
+            return null;
+        }
+        return getResource(contentId);
+    }
+
+    @Override
+    public void associate(S entity, PropertyPath propertyPath, SID id) {
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        property.setContentId(entity, id, null);
+    }
+
+    @Override
+    public void unassociate(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+            @Override
+            public boolean matches(TypeDescriptor descriptor) {
+                for (Annotation annotation : descriptor.getAnnotations()) {
+                    if ("javax.persistence.Id".equals(
+                            annotation.annotationType().getCanonicalName())
+                            || "org.springframework.data.annotation.Id"
+                                    .equals(annotation.annotationType()
+                                            .getCanonicalName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    }
 
 	@Override
 	public void associate(S entity, SID id) {
@@ -85,19 +136,40 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public InputStream getContent(S entity) {
-		Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-		if (id == null) {
-			return null;
-		}
-		Resource resource = loader.getResource(id.toString());
-		try {
-			return resource.getInputStream();
-		}
-		catch (IOException e) {
-			logger.error(format("Unexpected error getting content for entity %s", entity), e);
-			throw new StoreAccessException(format("Getting content for entity %s", entity), e);
-		}
+      Object id = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+      if (id == null) {
+          return null;
+      }
+      Resource resource = loader.getResource(id.toString());
+      try {
+          return resource.getInputStream();
+      }
+      catch (IOException e) {
+          logger.error(format("Unexpected error getting content for entity %s", entity), e);
+          throw new StoreAccessException(format("Getting content for entity %s", entity), e);
+      }
 	}
+
+    @Override
+    public InputStream getContent(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+        Object id = property.getContentId(entity);
+        if (id == null) {
+            return null;
+        }
+        Resource resource = loader.getResource(id.toString());
+        try {
+            return resource.getInputStream();
+        }
+        catch (IOException e) {
+            logger.error(format("Unexpected error getting content for entity %s", entity), e);
+            throw new StoreAccessException(format("Getting content for entity %s", entity), e);
+        }
+    }
 
 	@Transactional
 	@Override
@@ -142,6 +214,52 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        // TODO: property == null?
+
+        SID contentId = getContentId(entity, propertyPath);
+        if (contentId == null) {
+
+            Serializable newId = UUID.randomUUID().toString();
+
+            Object convertedId = convertToExternalContentIdType(newId, property.getContentIdType(entity));
+
+            setContentId(entity, propertyPath, (SID)convertedId, null);
+        }
+
+        Resource resource = getResource(entity, propertyPath);
+        if (resource == null) {
+            return entity;
+        }
+
+        OutputStream os = null;
+        long contentLen = -1L;
+        try {
+            if (resource instanceof WritableResource) {
+                os = ((WritableResource) resource).getOutputStream();
+                contentLen = IOUtils.copyLarge(content, os);
+            }
+        }
+        catch (IOException e) {
+            logger.error(format("Unexpected error setting content for entity %s", entity), e);
+            throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+        }
+        finally {
+            IOUtils.closeQuietly(content);
+            IOUtils.closeQuietly(os);
+        }
+
+        property.setContentId(entity, ((BlobResource) resource).getId(), null);
+
+        property.setContentLength(entity, contentLen);
+
+        return entity;
+    }
+
 	@Transactional
 	@Override
 	public S setContent(S entity, Resource resourceContent) {
@@ -152,6 +270,17 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 	}
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, Resource resourceContent) {
+        try {
+            return this.setContent(entity, propertyPath, resourceContent.getInputStream());
+        } catch (IOException e) {
+            logger.error(format("Unexpected error setting content for entity %s", entity), e);
+            throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+        }
+    }
 
 	@Transactional
 	@Override
@@ -175,6 +304,33 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return metadata;
 	}
 
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            // TODO
+        }
+        Object id = property.getContentId(entity);
+        if (id == null) {
+            id = -1L;
+        }
+        Resource resource = loader.getResource(id.toString());
+        if (resource instanceof DeletableResource) {
+            try {
+                ((DeletableResource) resource).delete();
+            } catch (Exception e) {
+                logger.error(format("Unexpected error unsetting content for entity %s", entity));
+                throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
+            }
+        }
+        unassociate(entity, propertyPath);
+        property.setContentLength(entity, 0);
+
+        return entity;
+    }
+
 	protected Object convertToExternalContentIdType(S property, Object contentId) {
 		ConversionService converter = new DefaultConversionService();
 		if (converter.canConvert(TypeDescriptor.forObject(contentId),
@@ -188,18 +344,40 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		return contentId.toString();
 	}
 
-    @Override
-    public Resource getResource(S entity, PropertyPath propertyPath) {
-        throw new UnsupportedOperationException();
+    private Object convertToExternalContentIdType(Object contentId, TypeDescriptor contentIdType) {
+        ConversionService converter = new DefaultConversionService();
+        if (converter.canConvert(TypeDescriptor.forObject(contentId),
+                contentIdType)) {
+            contentId = converter.convert(contentId, TypeDescriptor.forObject(contentId),
+                    contentIdType);
+            return contentId;
+        }
+        return contentId.toString();
     }
 
-    @Override
-    public void associate(S entity, PropertyPath propertyPath, SID id) {
-        throw new UnsupportedOperationException();
+    private SID getContentId(S entity, PropertyPath propertyPath) {
+
+        Assert.notNull(entity, "entity must not be null");
+        Assert.notNull(propertyPath, "propertyPath must not be null");
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        return (SID) property.getContentId(entity);
     }
 
-    @Override
-    public void unassociate(S entity, PropertyPath propertyPath) {
-        throw new UnsupportedOperationException();
+    private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
+
+        Assert.notNull(entity, "entity must not be null");
+        Assert.notNull(propertyPath, "propertyPath must not be null");
+
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+        property.setContentId(entity, contentId,  null);
     }
 }

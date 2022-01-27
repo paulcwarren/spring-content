@@ -35,6 +35,8 @@ public interface Stores {
 
     StoreInfo getStore(Class<?> storeType, StoreFilter filter);
 
+    StoreInfo[] getStores(StoreFilter filter);
+
     StoreInfo[] getStores(Class<?> storeType);
 
     StoreInfo[] getStores(Class<?> storeType, StoreFilter filter);

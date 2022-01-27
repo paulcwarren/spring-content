@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.StoreCacheControlInterceptor.StoreCacheControlConfigurer;
@@ -17,6 +19,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.Resource;
@@ -31,6 +34,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import internal.org.springframework.content.commons.storeservice.StoresImpl;
 import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
+import internal.org.springframework.content.rest.controllers.resolvers.DefaultEntityResolver;
+import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
+import internal.org.springframework.content.rest.controllers.resolvers.RevisionEntityResolver;
 import internal.org.springframework.content.rest.mappings.ContentHandlerMapping;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 
@@ -128,9 +134,15 @@ public class RestConfiguration implements InitializingBean {
 	    return this.getStoreHandlerInterceptor();
 	}
 
+    @Bean
+    MappingContext mappingContext() {
+        MappingContext context = new MappingContext(stores());
+        return context;
+    }
+
 	@Bean
-	RequestMappingHandlerMapping contentHandlerMapping() {
-		ContentHandlerMapping mapping = new ContentHandlerMapping(stores(), this);
+	RequestMappingHandlerMapping contentHandlerMapping(Stores stores, EntityResolvers entityResolvers) {
+		ContentHandlerMapping mapping = new ContentHandlerMapping(stores, entityResolvers, this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
         mapping.setInterceptors(this.getStoreHandlerInterceptor());
 		return mapping;
@@ -139,6 +151,26 @@ public class RestConfiguration implements InitializingBean {
 	@Bean
 	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
 		return new StoreByteRangeHttpRequestHandler();
+	}
+
+	@Bean
+	EntityResolvers entityResolvers(ApplicationContext context, Stores stores, MappingContext mappingContext) {
+
+	    Repositories repositories = null;
+	    try {
+	        repositories = context.getBean(Repositories.class);
+	    } catch (NoSuchBeanDefinitionException nsbde) {
+	        if (repositories == null) {
+	            repositories = new Repositories(context);
+	        }
+	    }
+
+	    EntityResolvers entityResolvers = new EntityResolvers();
+	    entityResolvers.add(new DefaultEntityResolver(context, repositories, stores, (ConversionService)converters(), "/{repository}/{id}", mappingContext));
+	    entityResolvers.add(new DefaultEntityResolver(context, repositories, stores, (ConversionService)converters(), "/{repository}/{id}/**", mappingContext));
+        entityResolvers.add(new RevisionEntityResolver(repositories, stores, "/{repository}/{id}/revisions/{revisionId}", mappingContext));
+        entityResolvers.add(new RevisionEntityResolver(repositories, stores, "/{repository}/{id}/revisions/{revisionId}/**", mappingContext));
+	    return entityResolvers;
 	}
 
 	@Override
@@ -172,10 +204,16 @@ public class RestConfiguration implements InitializingBean {
 		@Autowired
 		private Stores stores;
 
+		@Autowired
+		private EntityResolvers entityResolvers;
+
+		@Autowired
+		private MappingContext mappingContext;
+
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores));
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, mappingContext, entityResolvers));
 		}
 
 		@Override
@@ -222,22 +260,27 @@ public class RestConfiguration implements InitializingBean {
 		}
 
 		/* package */ boolean preferResource(Method method) {
-			if (Resource.class.equals(method.getParameterTypes()[1])) {
-				return true;
-			}
-			return false;
+            for (Class<?> paramType : method.getParameterTypes()) {
+                if (Resource.class.equals(paramType)) {
+                    return true;
+                }
+            }
+            return false;
 		}
 
 		/* package */ boolean preferInputStream(Method method) {
-			if (InputStream.class.equals(method.getParameterTypes()[1])) {
-				return true;
-			}
+
+		    for (Class<?> paramType : method.getParameterTypes()) {
+	            if (InputStream.class.equals(paramType)) {
+	                return true;
+	            }
+		    }
 			return false;
 		}
 	}
 
 	public interface Resolver<S, C> {
-
 	    boolean resolve(S subject, C context);
 	}
+
 }

@@ -100,6 +100,57 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     }
 
     @Override
+    public Object setContent(Object property, PropertyPath propertyPath, InputStream content) {
+        Object result = null;
+
+        File contentCopy = null;
+        TeeInputStream contentCopyStream = null;
+        try {
+            contentCopy = Files.createTempFile(copyContentRootPath, "contentCopy", ".tmp").toFile();
+            contentCopyStream = new TeeInputStream(content, new FileOutputStream(contentCopy), true);
+            BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, contentCopyStream);
+            AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
+
+            publisher.publishEvent(before);
+
+            if (contentCopyStream != null && contentCopyStream.isDirty()) {
+                while (contentCopyStream.read(new byte[4096]) != -1) {
+                }
+                content = new FileInputStream(contentCopy);
+            }
+
+            try {
+                result = delegate.setContent(property, propertyPath, content);
+            }
+            catch (Exception e) {
+                throw e;
+            }
+
+            if (after != null) {
+                after.setResult(result);
+                publisher.publishEvent(after);
+            }
+        } catch (FileNotFoundException fileNotFoundException) {
+            fileNotFoundException.printStackTrace();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        } finally {
+            if (contentCopyStream != null) {
+                IOUtils.closeQuietly(contentCopyStream);
+            }
+            if (contentCopy != null) {
+                try {
+                    Files.deleteIfExists(contentCopy.toPath());
+                } catch (IOException e) {
+                    logger.error(String.format("Unable to delete content copy %s", contentCopy.toPath()), e);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public Object setContent(Object property, Resource resourceContent) {
 
         BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, resourceContent);
@@ -110,6 +161,30 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         Object result;
         try {
             result = delegate.setContent(property, resourceContent);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            after.setResult(result);
+            publisher.publishEvent(after);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Object setContent(Object property, PropertyPath propertyPath, Resource resourceContent) {
+
+        BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, resourceContent);
+        AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
+
+        publisher.publishEvent(before);
+
+        Object result;
+        try {
+            result = delegate.setContent(property, propertyPath, resourceContent);
         }
         catch (Exception e) {
             throw e;
@@ -146,6 +221,30 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         return result;
     }
 
+
+    @Override
+    public Object unsetContent(Object property, PropertyPath propertyPath) {
+        BeforeUnsetContentEvent before = new BeforeUnsetContentEvent(property, delegate);
+        AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, delegate);
+
+        publisher.publishEvent(before);
+
+        Object result;
+        try {
+            result = delegate.unsetContent(property, propertyPath);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            after.setResult(result);
+            publisher.publishEvent(after);
+        }
+
+        return result;
+    }
+
     @Override
     public InputStream getContent(Object property) {
         BeforeGetContentEvent before = new BeforeGetContentEvent(property, delegate);
@@ -156,6 +255,29 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         InputStream result;
         try {
             result = delegate.getContent(property);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        if (after != null) {
+            after.setResult(result);
+            publisher.publishEvent(after);
+        }
+
+        return result;
+    }
+
+    @Override
+    public InputStream getContent(Object property, PropertyPath propertyPath) {
+        BeforeGetContentEvent before = new BeforeGetContentEvent(property, delegate);
+        AfterGetContentEvent after = new AfterGetContentEvent(property, delegate);
+
+        publisher.publishEvent(before);
+
+        InputStream result;
+        try {
+            result = delegate.getContent(property, propertyPath);
         }
         catch (Exception e) {
             throw e;

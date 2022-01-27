@@ -32,6 +32,6 @@ public class TestEntity2 {
 	private @CreatedDate Date createdDate;
 	private @LastModifiedDate Date modifiedDate;
 
-	private @Embedded TestEntityChild child;
+	private @Embedded TestEntityChild child = new TestEntityChild();
 	private @RestResource @ElementCollection(fetch = FetchType.EAGER) List<TestEntityChild> children = new ArrayList<>();
 }

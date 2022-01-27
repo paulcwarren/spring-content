@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import javax.persistence.Embeddable;
 
+import org.hibernate.annotations.Formula;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -19,6 +20,10 @@ public class TestEntityChild {
 	public String mimeType;
 	@OriginalFileName
 	public String fileName = "";
+
+    // prevent TestEntity8Child from being return by hibernate as null
+    @Formula("1")
+    private int workaroundForBraindeadJpaImplementation;
 
 	public UUID getContentId() {
 		return contentId;

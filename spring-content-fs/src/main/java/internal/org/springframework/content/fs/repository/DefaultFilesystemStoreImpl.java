@@ -19,6 +19,8 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -44,6 +46,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private FileSystemResourceLoader loader;
 	private PlacementService placer;
 	private FileService fileService;
+
+    private MappingContext mappingContext = new MappingContext(".", ".");
 
 	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, PlacementService conversion, FileService fileService) {
 		this.loader = loader;
@@ -87,7 +91,8 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
             Object convertedId = convertToExternalContentIdType(entity, newId);
 
-            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+            contentId = (SID)convertedId;
+            setContentId(entity, propertyPath, contentId, null);
         }
         return getResource(contentId);
     }
@@ -197,6 +202,64 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+    @Transactional
+    @Override
+    public S setContent(S property, PropertyPath propertyPath, InputStream content) {
+
+        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
+        if (contentProperty == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        Object contentId = contentProperty.getContentId(property);
+        if (contentId == null) {
+
+            Serializable newId = UUID.randomUUID().toString();
+
+            Object convertedId = convertToExternalContentIdType(newId, contentProperty.getContentIdType(property));
+
+            contentProperty.setContentId(property, convertedId, null);
+        }
+
+        Resource resource = this.getResource(property, propertyPath);
+        if (resource == null) {
+            return property;
+        }
+
+        OutputStream os = null;
+        try {
+            if (resource.exists() == false) {
+                File resourceFile = resource.getFile();
+                File parent = resourceFile.getParentFile();
+                this.fileService.mkdirs(parent);
+            }
+            if (resource instanceof WritableResource) {
+                os = ((WritableResource) resource).getOutputStream();
+                IOUtils.copy(content, os);
+            }
+        } catch (IOException e) {
+            logger.error(format("Unexpected io error setting content for entity %s", property), e);
+            throw new StoreAccessException(format("Setting content for entity %s", property), e);
+        } catch (Exception e) {
+            logger.error(format("Unexpected error setting content for entity %s", property), e);
+            throw new StoreAccessException(format("Setting content for entity %s", property), e);
+        }
+        finally {
+            IOUtils.closeQuietly(os);
+        }
+
+        try {
+            contentProperty.setContentLength(property, resource.contentLength());
+        }
+        catch (IOException e) {
+            logger.error(format(
+                    "Unexpected error setting content length for content for resource %s",
+                    resource.toString()), e);
+        }
+
+        return property;
+    }
+
 	@Transactional
 	@Override
 	public S setContent(S property, Resource resourceContent) {
@@ -207,6 +270,17 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			throw new StoreAccessException(format("Setting content for entity %s", property), e);
 		}
 	}
+
+    @Transactional
+    @Override
+    public S setContent(S property, PropertyPath propertyPath, Resource resourceContent) {
+        try {
+            return this.setContent(property, propertyPath, resourceContent.getInputStream());
+        } catch (IOException e) {
+            logger.error(format("Unexpected error setting content for entity %s", property), e);
+            throw new StoreAccessException(format("Setting content for entity %s", property), e);
+        }
+    }
 
 	@Override
 	@Transactional
@@ -229,9 +303,32 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return null;
 	}
 
+    @Transactional
+    @Override
+    public InputStream getContent(S property, PropertyPath propertyPath) {
+
+        if (property == null)
+            return null;
+
+        Resource resource = getResource(property, propertyPath);
+
+        try {
+            if (resource != null && resource.exists()) {
+                return resource.getInputStream();
+            }
+        }
+        catch (IOException e) {
+            logger.error(format("Unexpected error getting content for entity %s", property), e);
+            throw new StoreAccessException(format("Getting content for entity %s", property), e);
+        }
+
+        return null;
+    }
+
 	@Override
 	@Transactional
 	public S unsetContent(S entity) {
+
 		if (entity == null)
 			return entity;
 
@@ -252,6 +349,31 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return entity;
 	}
 
+    @Transactional
+    @Override
+    public S unsetContent(S property, PropertyPath propertyPath) {
+
+        if (property == null)
+            return property;
+
+        Resource resource = getResource(property, propertyPath);
+
+        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
+            try {
+                ((DeletableResource) resource).delete();
+            } catch (IOException e) {
+                logger.warn(format("Unable to get file for resource %s", resource));
+            }
+        }
+
+        // reset content fields
+        unassociate(property, propertyPath);
+        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
+        contentProperty.setContentLength(property, 0);
+
+        return property;
+    }
+
 	private Object convertToExternalContentIdType(S property, Object contentId) {
 		if (placer.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
@@ -264,19 +386,27 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return contentId.toString();
 	}
 
+    private Object convertToExternalContentIdType(Object contentId, TypeDescriptor contentIdType) {
+        if (placer.canConvert(TypeDescriptor.forObject(contentId),
+                contentIdType)) {
+            contentId = placer.convert(contentId, TypeDescriptor.forObject(contentId),
+                    contentIdType);
+            return contentId;
+        }
+        return contentId.toString();
+    }
+
     private SID getContentId(S entity, PropertyPath propertyPath) {
 
         Assert.notNull(entity, "entity must not be null");
         Assert.notNull(propertyPath, "propertyPath must not be null");
 
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        Field[] contentIdFields = BeanUtils.findFieldsWithAnnotation(entity.getClass(), ContentId.class, wrapper);
-        for (Field contentIdField : contentIdFields) {
-            if (contentIdField.getName().startsWith(propertyPath.getName())) {
-                return (SID) wrapper.getPropertyValue(contentIdField.getName());
-            }
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        return (SID) wrapper.getPropertyValue(property.getContentIdPropertyPath());
     }
 
     private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
@@ -285,15 +415,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
         Assert.notNull(propertyPath, "propertyPath must not be null");
 
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        Field[] contentIdFields = BeanUtils.findFieldsWithAnnotation(entity.getClass(), ContentId.class, wrapper);
-        for (Field contentIdField : contentIdFields) {
-            if (contentIdField.getName().startsWith(propertyPath.getName())) {
-                if (condition == null || condition.matches(contentIdField)) {
-                    wrapper.setPropertyValue(contentIdField.getName(), contentId);
-                }
-                return;
-            }
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-        throw new IllegalArgumentException(format("Invalid property path '%s'", propertyPath.getName()));
+        wrapper.setPropertyValue(property.getContentIdPropertyPath(), contentId);
     }
 }

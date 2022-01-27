@@ -1,8 +1,18 @@
 package internal.org.springframework.content.rest.mappings;
 
-import internal.org.springframework.content.rest.annotations.ContentRestController;
-import internal.org.springframework.content.rest.utils.StoreUtils;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -17,11 +27,9 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.util.UrlPathHelper;
 
-import javax.servlet.http.HttpServletRequest;
-import java.lang.annotation.*;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.util.List;
+import internal.org.springframework.content.rest.annotations.ContentRestController;
+import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
+import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
@@ -29,16 +37,18 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	private static MediaType json = MediaType.parseMediaType("application/json");
 
 	private Stores contentStores;
+	private EntityResolvers entityResolvers = null;
 
-	public ContentHandlerMapping(Stores contentStores, RestConfiguration config) {
+	public ContentHandlerMapping(Stores contentStores, EntityResolvers entityResolvers, RestConfiguration config) {
 		super(config);
 		this.contentStores = contentStores;
+		this.entityResolvers = entityResolvers;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping#
 	 * isHandler(java.lang.Class)
@@ -50,7 +60,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.web.servlet.handler.AbstractHandlerMethodMapping#
 	 * lookupHandlerMethod(java.lang.String, javax.servlet.http.HttpServletRequest)
 	 */
@@ -67,14 +77,27 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 				return null;
 
 			StoreInfo info2 = contentStores.getStore(Store.class, StoreUtils.withStorePath(path[1]));
-			if (info2 != null && isHalOrJsonRequest(request) == false) {
-				return super.lookupHandlerMethod(lookupPath, request);
+			if (info2 != null) {
+
+			    // if a fully-qualified URL
+			    if (AssociativeStore.class.isAssignableFrom(info2.getInterface()) && path.length >= 4) {
+
+			        if (entityResolvers.hasPropertyFor(storeLookupPath)) {
+    			        return super.lookupHandlerMethod(lookupPath, request);
+    			    }
+
+			    } else {
+    			    // for backward compatibility
+    			    if (info2 != null && isHalOrJsonRequest(request) == false) {
+    	              return super.lookupHandlerMethod(lookupPath, request);
+    			    }
+			    }
 			}
 		}
 		return null;
 	}
 
-	@Override
+    @Override
 	protected boolean hasCorsConfigurationSource(Object handler) {
 		return true;
 	}
@@ -161,7 +184,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		return null;
 	}
 
-	@Target(ElementType.METHOD)
+    @Target(ElementType.METHOD)
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	public static @interface StoreType {
