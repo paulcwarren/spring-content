@@ -442,7 +442,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 1.2.8-SNAPSHOT,</span>
-<span id="revdate">2022-01-18</span>
+<span id="revdate">2022-01-27</span>
 </div>
 </div>
 <div id="content">
@@ -483,10 +483,10 @@ Copies of this document may be made for your own use and for distribution to oth
 <ul class="sectlevel2">
 <li><a href="#_fundamentals">3.1. Fundamentals</a>
 <ul class="sectlevel3">
-<li><a href="#_resources">3.1.1. Resources</a></li>
-<li><a href="#_entity_resources">3.1.2. Entity Resources</a></li>
-<li><a href="#_property_resources">3.1.3. Property Resources</a></li>
-<li><a href="#_property_collection_resources">3.1.4. Property Collection Resources</a></li>
+<li><a href="#_store_resources_2">3.1.1. Store Resources</a></li>
+<li><a href="#_associativestorecontentstore_resources">3.1.2. AssociativeStore/ContentStore Resources</a></li>
+<li><a href="#_multiple_content_properties">3.1.3. Multiple Content Properties</a></li>
+<li><a href="#_nested_properties">3.1.4. Nested Properties</a></li>
 <li><a href="#_search">3.1.5. Search</a></li>
 <li><a href="#_default_status_codes">3.1.6. Default status codes</a></li>
 <li><a href="#_resource_discoverability">3.1.7. Resource Discoverability</a></li>
@@ -742,9 +742,9 @@ for Spring Content stores.  This is often closely related to Spring Data reposit
 <p>The following describes typical store scenarios and how they are exported with Spring Content REST.</p>
 </div>
 <div class="sect3">
-<h4 id="_resources">3.1.1. Resources</h4>
+<h4 id="_store_resources_2">3.1.1. Store Resources</h4>
 <div class="paragraph">
-<p>Spring Content Stores manage Spring Resources that, when exported using Spring Content REST, are accessible by REST
+<p>Spring Content <code>Store</code> manages Spring Resources that, when exported using Spring Content REST, are accessible by REST
 endpoint.</p>
 </div>
 <div class="paragraph">
@@ -768,9 +768,9 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_entity_resources">3.1.2. Entity Resources</h4>
+<h4 id="_associativestorecontentstore_resources">3.1.2. AssociativeStore/ContentStore Resources</h4>
 <div class="paragraph">
-<p>Entity Resources are Spring Resource associated with Spring Data Entities.</p>
+<p><code>AssociativeStore</code> and <code>ContentStore</code> both manage and associate Spring Resources with JPA Entities.  When exported using Spring Content REST these can also be accessed via REST endpoints.</p>
 </div>
 <div class="paragraph">
 <p>Assume the following <code>Entity</code> class, <code>Repository</code> and <code>Store</code> interfaces:</p>
@@ -780,6 +780,7 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  @Data
   public class Dvd {
   	@Id
   	private Long id;
@@ -791,12 +792,10 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
   	private Long contentLength;
 
   	@MimeType
-  	private String mimeType;
+  	private String contentType;
 
     @OiginalFileName
-    private String originalFileName;
-
-  	// getters and setters
+    private String contentName;
   }
 
   public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
@@ -808,27 +807,25 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 </div>
 <div class="paragraph">
 <p>In this example a single Spring Resource (the DVD&#8217;s video stream) is associated with a Dvd Entity by annotating additional
-fields on the Entity using the <code>@ContentId</code>, <code>@ContentLength</code> and <code>@MimeType</code> annotations.   In this example Spring Data
-REST exports a collection  resource to <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class
-name of the domain class.  Item resources are also exported to the URI <code>/dvds/{id}</code>.  The HTTP methods used to request
-this endpoint map onto the methods of <code>CrudRepository</code>.</p>
+fields on the Entity using the <code>@ContentId</code>, <code>@ContentLength</code> and <code>@MimeType</code> annotations.</p>
 </div>
 <div class="paragraph">
-<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}</code>.  In this case the
-HTTP methods map onto the methods of <code>ContentStore</code> as follows:-</p>
+<p>In this example Spring Data REST exports a collection  resource to <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class.  Item resources are also exported to the URI <code>/dvds {id}</code>.  The HTTP methods used to request this endpoint map onto the methods of <code>CrudRepository</code>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>GET &#8594; getContent</p>
-</li>
-<li>
-<p>POST/PUT &#8594; setContent</p>
-</li>
-<li>
-<p>DELETE &#8594; unsetContent</p>
-</li>
-</ul>
+<div class="paragraph">
+<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}/[contentProperty}</code>.  In this case <code>/dvds/{id}/content</code> because the Spring Content metadata is correlated using the prefix <code>content</code>.</p>
+</div>
+<div class="paragraph">
+<p>For an <code>AssociativeStore</code> the HTTP methods are mapped as follows:-
+- GET &#8594; getResource &#8594; getInputStream
+- POST/PUT &#8594; getResource &#8594; getOutputStream, associate
+- DELETE &#8594; unassociate</p>
+</div>
+<div class="paragraph">
+<p>For a <code>ContentStore</code> the HTTP methods are mapped as follows:-
+- GET &#8594; getContent
+- POST/PUT &#8594; setContent
+- DELETE &#8594; unsetContent</p>
 </div>
 <div class="sect4">
 <h5 id="_additional_annotations">Additional Annotations</h5>
@@ -854,144 +851,79 @@ on subsequent GET requests</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_resources">3.1.3. Property Resources</h4>
+<h4 id="_multiple_content_properties">3.1.3. Multiple Content Properties</h4>
 <div class="paragraph">
-<p>Property Resources are associated with the properties of Spring Data Entities, that themselves maybe Spring Data Entities.
-This allows many Resources to be associated with a single Entity.</p>
-</div>
-<div class="paragraph">
-<p>Consider the following <code>Entity</code> model, with <code>Repository</code> and <code>Store</code> interfaces:</p>
+<p>By correlating (i.e. using a common prefix for) the field names of the Spring Content annotations it is possible to associate multiple Spring Resources with a single Entity:-</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
 public class Dvd {
 	private @Id @GeneratedValue Long id;
 	private String title;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "image_id")
-	private Image image;
+	// Content property 'video' storing the DVD video content
+	private @ContentId UUID videoId;
+	private @ContentLength Long videoLen;
+	private @MimeType videoType;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "stream_id")
-	private Stream stream;
+	// Content property 'image' storing the Dvd's image
+	private @ContentId UUID imageId;
+	private @ContentLength Long imageLen;
+	private @MimeType imageType;
 
 	...
-}
-
-@Entity
-public class Image {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	@OneToOne
-	private Dvd dvd;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-@Entity
-public class Stream {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	@OneToOne
-	private Dvd dvd;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
-
-public interface ImageStore extends ContentStore&lt;Image, UUID&gt; {}
-
-public interface StreamStore extends ContentStore&lt;Stream, UUID&gt; {}</code></pre>
+}</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>In this example separate Resources are associated with the <code>image</code> and <code>stream</code> properties of the <code>Dvd</code> Entity.</p>
-</div>
-<div class="paragraph">
-<p>When using JPA and its relational characteristics these associations are typically (but not always) also Entity
-associations as well, as shown here.  However when using NoSQL databases like MongoDB that are capable of storing
-hierarchical data they are true property associations.</p>
-</div>
-<div class="paragraph">
-<p>As before, Spring Data REST will export an item resource under the URI <code>/dvds/{id}</code>.  However, this time Spring Content
-REST will export Property Resources to the URI <code>/dvds/{id}/image/{contentId}</code> and <code>/dvds/{id}/stream/{contentId}</code>
-managed by the respective Store.  A property can be set by POSTing to <code>/dvds/{id}/image</code> (or <code>/dvds/{id}/stream</code>).</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-as these properties are both single values these Resources are also available under the simplified URI
-<code>/dvds/{id}/image</code> and <code>/dvds/{id}/stream</code> where the <code>{contentId}</code> is omitted for convenience.
-</td>
-</tr>
-</table>
+<p>Spring Content REST will export these two associated Spring Resources to the URI <code>/dvds/{id}/video</code> and <code>/dvds/{id}/image</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_collection_resources">3.1.4. Property Collection Resources</h4>
+<h4 id="_nested_properties">3.1.4. Nested Properties</h4>
 <div class="paragraph">
-<p>Property Resources can also target Collections.</p>
-</div>
-<div class="paragraph">
-<p>Consider the following example:-</p>
+<p>With its <code>@Embeddable</code>/<code>@Embedded</code> annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Entity
-public class Dvd {
+@Data
+public class Book {
 	private @Id @GeneratedValue Long id;
 	private String title;
 
-	@OneToMany
-	@JoinColumn(name = "chapter_id")
-	private List&lt;Chapter&gt; chapters;
+	private @ContentId UUID coverId;
+	private @ContentLength Long coverLen;
+	private @MimeType coverType;
 
+	private Chapter chapterOne = new Chapter();
+	private Chapter chapterTwo = new Chapter();
 	...
 }
 
-@Entity
+@Embeddable
+@Data
 public class Chapter {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
 
-	// Spring Content managed attributes
+	// Content property 'video' storing the DVD video content
 	private @ContentId UUID contentId;
 	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
-
-public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code></pre>
+	private @MimeType contentType;
+}</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>In this example many Resources can be associated with the <code>chapters</code> property of the <code>Dvd</code> Entity.</p>
-</div>
-<div class="paragraph">
-<p>As with Property Resources, Property Collection Resources are also exported to the URI <code>/dvds/{id}/chapters</code>.
-However, in this case, POSTing to <code>/dvds/{id}/chapters</code> always <strong>appends</strong> a new Resource to the 'Chapters' Collection.
-This Resource supports both POST and PUT HTTP methods.</p>
+<p>Spring Content REST will export these associated Spring Resources under the URIs; <code>/books/{id}/cover</code>, <code>/books/{id}/chapterOne/content</code> and <code>/books/{id}/chapterTwo/content</code> and so on.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1882,7 +1814,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 1.2.8-SNAPSHOT<br>
-Last updated 2022-01-18 04:24:47 UTC
+Last updated 2022-01-27 04:36:36 UTC
 </div>
 </div>
 </body>
