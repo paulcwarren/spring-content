@@ -45,24 +45,17 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
     </licenses>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        
         <ginkgo4j-version>1.0.14</ginkgo4j-version>
         <springboot-version>2.6.2</springboot-version>
         <spring-cloud.version>2021.0.0</spring-cloud.version>
         <commonsio-version>2.11.0</commonsio-version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
-
         <test-containers.version>1.15.3</test-containers.version>
-    </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.10</version>
-        </dependency>
-    </dependencies>
+        <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
+    </properties>
 
     <dependencyManagement>
         <dependencies>
