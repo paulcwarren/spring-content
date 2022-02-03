@@ -11,5 +11,3 @@ internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfigurati
 internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration,\
 internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration,\
 internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration
-
-
