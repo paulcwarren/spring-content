@@ -130,6 +130,25 @@ public class ContentPropertyRestEndpointsIT {
 					  }
 				  });
 			  });
+			  Context("a PUT to /{store}/{id} with json content", () -> {
+			      It("should set the content and return 201", () -> {
+			          String content = "{\"content\":\"Hello New Spring Content World!\"}";
+			          mvc.perform(
+                            put("/testEntity8s/" + testEntity2.getId() + "/child")
+                            .content(content)
+                            .contentType("application/json"))
+			          .andExpect(status().isCreated());
+
+			          Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
+			          assertThat(fetched.isPresent(), is(true));
+			          assertThat(fetched.get().getChild().getContentId(), is(not(nullValue())));
+			          assertThat(fetched.get().getChild().getContentLen(), is(45L));
+			          assertThat(fetched.get().getChild().getContentMimeType(), is("application/json"));
+                      try (InputStream actual = store.getResource(fetched.get(), PropertyPath.from("child")).getInputStream()) {
+                          IOUtils.contentEquals(actual, new ByteArrayInputStream(content.getBytes()));
+                      }
+			      });
+			  });
 		  });
 		  Context("given that it has content", () -> {
 			  BeforeEach(() -> {
