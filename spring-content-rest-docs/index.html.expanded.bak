@@ -147,7 +147,7 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
 
-<p>The <code>mimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
+<p>The <code>contentMimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
 annotation so that Spring Content REST will update its value on our behalf.</p>
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can perform simple CRUD operations, over a hypermedia-based
@@ -194,14 +194,14 @@ as they did before.</p>
       &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
     },
     &quot;content&quot; : {
-      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+      &quot;href&quot; : &quot;http://localhost:8080/files/1/content&quot;
     }
   }
 }
 </code></pre>
 
 <p>Follow the <code>content</code> link relation to add content either using CURL:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1</code> </p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code> </p>
 <p>Or, if you prefer, by uploading the content via postman:</p>
 <p><center><img alt="Content Upload via Postman" src="../spring-content-rest-postman.png" /></center></p>
 <hr />
@@ -210,7 +210,7 @@ as they did before.</p>
 <p>Spring Content REST supports PUT and POST requests with the Content-Type header set to the actual mimetype of the content, such as <code>text/plain</code> or with a content-type of <code>multipart/form-data</code> and a properly constructed multipart form. </p>
 <hr />
 <p>Lasty, verify the content was uploaded by requesting it again:</p>
-<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1</code></p>
+<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1/content</code></p>
 <p>You should see you content returned as follows:</p>
 <p><code>Hello Spring Content World!</code></p>
 <h2 id="summary">Summary</h2>
