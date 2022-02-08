@@ -235,18 +235,20 @@ will be by Spring Content REST.</p>
 <pre><code>
 package gettingstarted;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
-import org.springframework.content.commons.annotations.MimeType;
+import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.Date;
+
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -263,7 +265,7 @@ public class File {
 
 	@ContentId private String contentId;
 	@ContentLength private long contentLength;
-	@MimeType private String mimeType;
+	@MimeType private String contentMimeType;
 }
 </code></pre>
 
@@ -291,9 +293,9 @@ by typing:</p>
 <p>Create an entity:</p>
 <p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
 <p>Associate content with that entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1</code></p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code></p>
 <p>Fetch the content:</p>
-<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1</code>   </p>
+<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1/content</code>   </p>
 <p>And you should see a response like this:</p>
 <pre><code>Hello Spring Content World!
 </code></pre>
@@ -301,7 +303,7 @@ by typing:</p>
 <p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
 the mime-type <code>image/jpeg</code> as the accept header.  As it is an image let's save it
 to a file:</p>
-<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1 --output /tmp/file-1.jpg</code>   </p>
+<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
 <p>Open <code>/tmp/file-1.jpg</code> and you should see a response like this:</p>
 <p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
