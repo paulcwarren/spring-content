@@ -270,11 +270,11 @@ by typing:</p>
 <p>Create an entity:</p>
 <p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
 <p>Associate content with that entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring World!' http://localhost:8080/files/1</code></p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring World!' http://localhost:8080/files/1/content</code></p>
 <p>Create a second entity:</p>
 <p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
 <p>Associate content with the second entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/2</code></p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/2/content</code></p>
 <p>Perform a fulltext search using the /searchContent endpoint:</p>
 <p><code>curl -H 'Accept:application/hal+json' http://localhost:8080/files/searchContent?queryString=Content</code>   </p>
 <p>And you should see a response like this:</p>
