@@ -159,7 +159,7 @@ When you’re finished, you can check your results against the code in <code>spr
  	&lt;parent&gt;
 		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
 		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;2.6.2&lt;/version&gt;
+		&lt;version&gt;2.6.3&lt;/version&gt;
 	&lt;/parent&gt;
  
 	&lt;properties&gt;
@@ -277,12 +277,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import org.springframework.content.commons.annotations.ContentId;
-import org.springframework.content.commons.annotations.ContentLength;
 
 @Entity
 @Getter
@@ -299,7 +299,7 @@ public class File {
 
 	@ContentId private String contentId;
 	@ContentLength private long contentLength;
-	private String mimeType = "text/plain";
+	private String contentMimeType = "text/plain";
 }
 </code></pre>
 
@@ -379,14 +379,14 @@ public class FileContentController {
 
 	@Autowired private FileRepository filesRepo;
 	@Autowired private FileContentStore contentStore;
-	
+
 	@RequestMapping(value="/files/{fileId}", method = RequestMethod.PUT)
-	public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file) 
+	public ResponseEntity&lt;?&gt; setContent(@PathVariable(&quot;fileId&quot;) Long id, @RequestParam(&quot;file&quot;) MultipartFile file)
 			throws IOException {
 
 		Optional&lt;File&gt; f = filesRepo.findById(id);
 		if (f.isPresent()) {
-			f.get().setMimeType(file.getContentType());
+			f.get().setContentMimeType(file.getContentType());
 
 			contentStore.setContent(f.get(), file.getInputStream());
 
@@ -406,7 +406,7 @@ public class FileContentController {
 			InputStreamResource inputStreamResource = new InputStreamResource(contentStore.getContent(f.get()));
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentLength(f.get().getContentLength());
-			headers.set("Content-Type", f.get().getMimeType());
+			headers.set("Content-Type", f.get().getContentMimeType());
 			return new ResponseEntity&lt;Object&gt;(inputStreamResource, headers, HttpStatus.OK);
 		}
 		return null;
