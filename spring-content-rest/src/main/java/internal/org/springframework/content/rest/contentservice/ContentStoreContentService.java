@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
@@ -124,6 +125,10 @@ public class ContentStoreContentService implements ContentService {
                 }
             }
 
+            if (resource instanceof RangeableResource) {
+                this.configureResourceForByteRangeRequest((RangeableResource)resource, headers);
+            }
+
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
             request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
         } catch (Exception e) {
@@ -193,16 +198,6 @@ public class ContentStoreContentService implements ContentService {
         } finally {
             cleanup(contentArg);
         }
-    }
-
-    private int indexOfContentArg(Class<?>[] paramTypes) {
-        for (int i=0; i < paramTypes.length; i++) {
-            if (InputStream.class.equals(paramTypes[i]) || Resource.class.equals(paramTypes[i])) {
-                return i;
-            }
-        }
-
-        return 0;
     }
 
     @Override
@@ -290,6 +285,22 @@ public class ContentStoreContentService implements ContentService {
             }
         }
         return true;
+    }
+
+    private void configureResourceForByteRangeRequest(RangeableResource resource, HttpHeaders headers) {
+        if (headers.containsKey(HttpHeaders.RANGE)) {
+            resource.setRange(headers.getFirst(HttpHeaders.RANGE));
+        }
+    }
+
+    private int indexOfContentArg(Class<?>[] paramTypes) {
+        for (int i=0; i < paramTypes.length; i++) {
+            if (InputStream.class.equals(paramTypes[i]) || Resource.class.equals(paramTypes[i])) {
+                return i;
+            }
+        }
+
+        return 0;
     }
 
     public static StoreExportedMethodsMap getExportedMethodsFor(Class<?> storeInterfaceClass) {

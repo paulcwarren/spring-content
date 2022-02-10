@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
@@ -120,6 +121,10 @@ public class AssociativeStoreContentService implements ContentService {
                     response.setStatus(HttpStatus.NOT_FOUND.value());
                     return;
                 }
+            }
+
+            if (resource instanceof RangeableResource) {
+                this.configureResourceForByteRangeRequest((RangeableResource)resource, headers);
             }
 
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
@@ -343,5 +348,11 @@ public class AssociativeStoreContentService implements ContentService {
             return true;
         }
         return false;
+    }
+
+    private void configureResourceForByteRangeRequest(RangeableResource resource, HttpHeaders headers) {
+        if (headers.containsKey(HttpHeaders.RANGE)) {
+            resource.setRange(headers.getFirst(HttpHeaders.RANGE));
+        }
     }
 }

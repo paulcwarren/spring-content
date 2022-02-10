@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import javax.persistence.Version;
 
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.renditions.Renderable;
@@ -272,5 +273,12 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     public void delete()
             throws IOException {
         ((DeletableResource)original).delete();
+    }
+
+    @Override
+    public void setRange(String range) {
+        if (original instanceof RangeableResource) {
+            ((RangeableResource)original).setRange(range);
+        }
     }
 }

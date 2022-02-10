@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
@@ -60,6 +61,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import junit.framework.Assert;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -157,6 +159,10 @@ public class S3StoreIT {
                         assertThat(genericResource.exists(), is(false));
                     });
 
+                    It("should be a RangeableResource", () -> {
+                        assertThat(genericResource, is(instanceOf(RangeableResource.class)));
+                    });
+
                     Context("given content is added to that resource", () -> {
 
                         BeforeEach(() -> {
@@ -195,6 +201,21 @@ public class S3StoreIT {
                                 try (InputStream expected = new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes())) {
                                     try (InputStream actual = genericResource.getInputStream()) {
                                         assertThat(IOUtils.contentEquals(expected, actual), is(true));
+                                    }
+                                }
+                            });
+                        });
+
+                        Context("given a byte range is requsted", () -> {
+
+                            It("should return a partial content input stream and the partial content", () -> {
+
+                                ((RangeableResource)genericResource).setRange("bytes=6-19");
+
+                                try (InputStream expected = new ByteArrayInputStream("Spring Content".getBytes())) {
+                                    try (InputStream actual = genericResource.getInputStream()) {
+                                        assertThat(actual, is(instanceOf(SimpleStorageResource.PartialContentInputStream.class)));
+                                        assertThat(IOUtils.toString(expected, "UTF-8"), is(IOUtils.toString(actual, "UTF-8")));
                                     }
                                 }
                             });
