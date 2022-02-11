@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URL;
 
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.util.Assert;
@@ -15,7 +16,7 @@ import org.springframework.util.Assert;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
-public class S3StoreResource implements WritableResource, DeletableResource {
+public class S3StoreResource implements WritableResource, DeletableResource, RangeableResource {
 
 	private S3Client client;
 	private Resource delegate;
@@ -115,4 +116,9 @@ public class S3StoreResource implements WritableResource, DeletableResource {
 	public OutputStream getOutputStream() throws IOException {
 		return ((WritableResource) delegate).getOutputStream();
 	}
+
+    @Override
+    public void setRange(String range) {
+        ((RangeableResource)delegate).setRange(range);
+    }
 }

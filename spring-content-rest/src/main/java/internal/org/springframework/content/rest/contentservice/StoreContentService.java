@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.http.HttpHeaders;
@@ -66,6 +67,10 @@ public class StoreContentService implements ContentService {
                 }
             }
 
+            if (resource instanceof RangeableResource) {
+                this.configureResourceForByteRangeRequest((RangeableResource)resource, headers);
+            }
+
             request.setAttribute("SPRING_CONTENT_RESOURCE", resource);
             request.setAttribute("SPRING_CONTENT_CONTENTTYPE", producedResourceType);
         } catch (Exception e) {
@@ -113,6 +118,12 @@ public class StoreContentService implements ContentService {
             catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void configureResourceForByteRangeRequest(RangeableResource resource, HttpHeaders headers) {
+        if (headers.containsKey(HttpHeaders.RANGE)) {
+            resource.setRange(headers.getFirst(HttpHeaders.RANGE));
         }
     }
 }
