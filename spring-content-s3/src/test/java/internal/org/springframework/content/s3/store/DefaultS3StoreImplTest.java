@@ -124,7 +124,7 @@ public class DefaultS3StoreImplTest {
 							loader = new DefaultResourceLoader();
 							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null, null);
 						});
 						JustBeforeEach(() -> {
 							try {
@@ -142,7 +142,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given the store's ID is a custom ID type", () -> {
 						JustBeforeEach(() -> {
-							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client,null);
+							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null, null);
 
 							try {
 								r = customS3ContentIdBasedStore.getResource(customId);
@@ -211,7 +211,7 @@ public class DefaultS3StoreImplTest {
 						JustBeforeEach(() -> {
 							placementService = new PlacementServiceImpl();
 							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, clientProvider);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null, clientProvider);
 
 							try {
 								r = s3ObjectIdBasedStore.getResource(new S3ObjectId("some-bucket", "some-object-id"));
@@ -243,7 +243,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("AssociativeStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null, null);
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
@@ -401,7 +401,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null));
+					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null,null));
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {

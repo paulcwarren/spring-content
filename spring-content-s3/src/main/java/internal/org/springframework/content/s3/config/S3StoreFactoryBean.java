@@ -13,6 +13,7 @@ import org.springframework.versions.LockingAndVersioningProxyFactory;
 
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import internal.org.springframework.content.s3.store.DefaultS3StoreImpl;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @SuppressWarnings("rawtypes")
@@ -25,6 +26,9 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private S3Client client;
+
+    @Autowired(required=false)
+    private S3AsyncClient asyncClient;
 
 	@Autowired
 	private PlacementService s3StorePlacementService;
@@ -66,6 +70,6 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(s3Protocol);
 
-		return new DefaultS3StoreImpl(context, loader, s3StorePlacementService, client, s3Provider);
+		return new DefaultS3StoreImpl(context, loader, s3StorePlacementService, client, asyncClient, s3Provider);
 	}
 }

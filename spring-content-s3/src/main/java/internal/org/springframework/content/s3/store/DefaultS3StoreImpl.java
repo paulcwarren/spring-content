@@ -8,7 +8,9 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -21,6 +23,7 @@ import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -39,11 +42,20 @@ import org.springframework.util.Assert;
 
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.core.async.AsyncResponseTransformer;
+import software.amazon.awssdk.core.async.SdkPublisher;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Transactional
 public class DefaultS3StoreImpl<S, SID extends Serializable>
-		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID>, ReactiveContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -55,7 +67,11 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
     private MappingContext mappingContext = new MappingContext(".", ".");
 
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
+    // reactive
+    private S3AsyncClient asyncClient;
+    // reactive
+
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -64,6 +80,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		this.loader = loader;
 		this.placementService = placementService;
 		this.client = client;
+		this.asyncClient = asyncClient;
 		this.clientProvider = provider;
 	}
 
@@ -461,4 +478,113 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 		}
 	}
+
+    @Override
+    public Mono<S> setContent(S entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), path.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", path.getName()));
+        }
+
+        Object contentId = property.getContentId(entity);
+        if (contentId == null) {
+
+            Serializable newId = UUID.randomUUID().toString();
+
+            Object convertedId = placementService.convert(
+                        newId,
+                        TypeDescriptor.forObject(newId),
+                        property.getContentIdType(entity));
+
+            property.setContentId(entity, convertedId, null);
+            contentId = convertedId;
+        }
+
+        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
+            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
+        }
+        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+
+        CompletableFuture future = asyncClient.putObject(PutObjectRequest.builder()
+            .bucket(s3ObjectId.getBucket())
+            .contentLength(contentLen)
+            .key(contentId.toString())
+            .build(),
+
+        AsyncRequestBody.fromPublisher(buffer));
+
+        return Mono.fromFuture(future)
+          .map((response) -> {
+            property.setContentId(entity, s3ObjectId.getKey(), null);
+            property.setContentLength(entity, contentLen);
+            return entity;
+          }
+        );
+    }
+
+    @Override
+    public Mono<Flux<ByteBuffer>> getContentAsFlux(S entity, PropertyPath path) {
+
+        if (entity == null)
+            return Mono.from(Flux.empty());
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), path.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", path.getName()));
+        }
+
+        Object contentId = property.getContentId(entity);
+        if (contentId == null) {
+            return Mono.from(Flux.empty());
+        }
+
+        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
+            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
+        }
+        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(s3ObjectId.getBucket())
+                .key(contentId.toString())
+                .build();
+
+        return Mono.fromFuture(asyncClient.getObject(request,new FluxResponseProvider()))
+                .map(response -> {
+                  return response.flux;
+                });
+    }
+
+    static class FluxResponseProvider implements AsyncResponseTransformer<GetObjectResponse,FluxResponse> {
+
+        private FluxResponse response;
+
+        @Override
+        public CompletableFuture<FluxResponse> prepare() {
+            response = new FluxResponse();
+            return response.cf;
+        }
+
+        @Override
+        public void onResponse(GetObjectResponse sdkResponse) {
+            this.response.sdkResponse = sdkResponse;
+        }
+
+        @Override
+        public void onStream(SdkPublisher<ByteBuffer> publisher) {
+            response.flux = Flux.from(publisher);
+            response.cf.complete(response);
+        }
+
+        @Override
+        public void exceptionOccurred(Throwable error) {
+            response.cf.completeExceptionally(error);
+        }
+    }
+
+    static class FluxResponse {
+        final CompletableFuture<FluxResponse> cf = new CompletableFuture<>();
+        GetObjectResponse sdkResponse;
+        Flux<ByteBuffer> flux;
+    }
 }

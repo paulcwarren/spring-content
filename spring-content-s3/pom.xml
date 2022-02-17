@@ -25,6 +25,15 @@
 		    <version>2.17.122</version>
 		</dependency>
 
+        <!-- reactive -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.4.10</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- reactive -->
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
