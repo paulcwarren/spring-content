@@ -2,6 +2,7 @@ package internal.org.springframework.content.s3.store;
 
 import static java.lang.String.format;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +47,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.core.async.SdkPublisher;
+import software.amazon.awssdk.core.async.ResponsePublisher;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -524,10 +525,10 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     }
 
     @Override
-    public Mono<Flux<ByteBuffer>> getContentAsFlux(S entity, PropertyPath path) {
+    public Flux<ByteBuffer> getContentAsFlux(S entity, PropertyPath path) {
 
         if (entity == null)
-            return Mono.from(Flux.empty());
+            return Flux.empty();
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), path.getName());
         if (property == null) {
@@ -536,7 +537,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
         Object contentId = property.getContentId(entity);
         if (contentId == null) {
-            return Mono.from(Flux.empty());
+            return Flux.empty();
         }
 
         if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
@@ -549,42 +550,11 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
                 .key(contentId.toString())
                 .build();
 
-        return Mono.fromFuture(asyncClient.getObject(request,new FluxResponseProvider()))
-                .map(response -> {
-                  return response.flux;
-                });
-    }
+        AsyncResponseTransformer.toFile(new File("/tmp/foo"));
+        CompletableFuture<ResponsePublisher<GetObjectResponse>> responseFuture =
+                asyncClient.getObject(request, AsyncResponseTransformer.toPublisher());
 
-    static class FluxResponseProvider implements AsyncResponseTransformer<GetObjectResponse,FluxResponse> {
-
-        private FluxResponse response;
-
-        @Override
-        public CompletableFuture<FluxResponse> prepare() {
-            response = new FluxResponse();
-            return response.cf;
-        }
-
-        @Override
-        public void onResponse(GetObjectResponse sdkResponse) {
-            this.response.sdkResponse = sdkResponse;
-        }
-
-        @Override
-        public void onStream(SdkPublisher<ByteBuffer> publisher) {
-            response.flux = Flux.from(publisher);
-            response.cf.complete(response);
-        }
-
-        @Override
-        public void exceptionOccurred(Throwable error) {
-            response.cf.completeExceptionally(error);
-        }
-    }
-
-    static class FluxResponse {
-        final CompletableFuture<FluxResponse> cf = new CompletableFuture<>();
-        GetObjectResponse sdkResponse;
-        Flux<ByteBuffer> flux;
+        ResponsePublisher<GetObjectResponse> responsePublisher = responseFuture.join();
+        return Flux.from(responsePublisher);
     }
 }

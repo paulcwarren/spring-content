@@ -488,7 +488,7 @@ public class StoreImpl implements ContentStore<Object, Serializable>, ReactiveCo
     }
 
     @Override
-    public Mono<Flux<ByteBuffer>> getContentAsFlux(Object entity, PropertyPath path) {
+    public Flux<ByteBuffer> getContentAsFlux(Object entity, PropertyPath path) {
         return ((ReactiveContentStore)delegate).getContentAsFlux(entity, path);
     }
 }
