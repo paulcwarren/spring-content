@@ -30,6 +30,7 @@ import org.springframework.util.Assert;
 
 import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
+import internal.org.springframework.content.commons.repository.factory.ReactiveStoreImpl;
 import internal.org.springframework.content.commons.repository.factory.StoreImpl;
 import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
 
@@ -38,6 +39,15 @@ public abstract class AbstractStoreFactoryBean
 		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
 
 	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
+
+	private static boolean REACTIVE_STORAGE = false;
+
+	static {
+	    try {
+	        REACTIVE_STORAGE = Class.forName("org.springframework.web.reactive.config.WebFluxConfigurationSupport") != null;
+	    } catch (ClassNotFoundException e) {
+        }
+    }
 
 	private Class<? extends Store<Serializable>> storeInterface;
 	private ClassLoader classLoader;
@@ -183,7 +193,11 @@ public abstract class AbstractStoreFactoryBean
 
 		StoreMethodInterceptor intercepter = new StoreMethodInterceptor();
 
-		storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
+		if (!REACTIVE_STORAGE) {
+		    storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
+		} else {
+            storeFragments.add(new StoreFragment(storeInterface, new ReactiveStoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
+		}
 		intercepter.setStoreFragments(storeFragments);
 
 		result.addAdvice(intercepter);

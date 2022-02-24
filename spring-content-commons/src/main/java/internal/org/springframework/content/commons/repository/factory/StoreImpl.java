@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -17,7 +16,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
@@ -34,10 +32,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 
 import lombok.Getter;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-public class StoreImpl implements ContentStore<Object, Serializable>, ReactiveContentStore<Object, Serializable> {
+public class StoreImpl implements ContentStore<Object, Serializable> {
 
     private static Log logger = LogFactory.getLog(StoreImpl.class);
 
@@ -473,22 +469,5 @@ public class StoreImpl implements ContentStore<Object, Serializable>, ReactiveCo
             isDirty = true;
             return super.read(bts);
         }
-    }
-
-
-    @Override
-    public Mono<Object> setContent(Object entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
-        try {
-            Mono<Object> result = ((ReactiveContentStore)delegate).setContent(entity, path, contentLen, buffer);
-            return result;
-        }
-        catch (Exception e) {
-            throw e;
-        }
-    }
-
-    @Override
-    public Flux<ByteBuffer> getContentAsFlux(Object entity, PropertyPath path) {
-        return ((ReactiveContentStore)delegate).getContentAsFlux(entity, path);
     }
 }
