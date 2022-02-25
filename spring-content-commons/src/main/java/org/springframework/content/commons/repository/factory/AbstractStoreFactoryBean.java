@@ -40,7 +40,7 @@ public abstract class AbstractStoreFactoryBean
 
 	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
 
-	private static boolean REACTIVE_STORAGE = false;
+	protected static boolean REACTIVE_STORAGE = false;
 
 	static {
 	    try {
