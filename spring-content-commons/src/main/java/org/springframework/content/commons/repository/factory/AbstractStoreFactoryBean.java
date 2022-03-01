@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ParameterTypeAware;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -175,7 +176,11 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-		result.setInterfaces(new Class[] { storeInterface, Store.class, ContentStore.class, ParameterTypeAware.class });
+        if (!REACTIVE_STORAGE) {
+            result.setInterfaces(new Class[] { storeInterface, Store.class, AssociativeStore.class, ContentStore.class, ParameterTypeAware.class });
+        } else {
+            result.setInterfaces(new Class[] { storeInterface, Store.class, ReactiveContentStore.class, ParameterTypeAware.class });
+        }
 
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
 		try {
@@ -196,7 +201,7 @@ public abstract class AbstractStoreFactoryBean
 		if (!REACTIVE_STORAGE) {
 		    storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 		} else {
-            storeFragments.add(new StoreFragment(storeInterface, new ReactiveStoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
+            storeFragments.add(new StoreFragment(storeInterface, new ReactiveStoreImpl((ReactiveContentStore<Object, Serializable>) target, publisher)));
 		}
 		intercepter.setStoreFragments(storeFragments);
 

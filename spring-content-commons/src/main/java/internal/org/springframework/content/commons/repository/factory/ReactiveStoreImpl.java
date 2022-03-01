@@ -2,12 +2,10 @@ package internal.org.springframework.content.commons.repository.factory;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -18,20 +16,18 @@ public class ReactiveStoreImpl implements ReactiveContentStore<Object, Serializa
 
     private static Log logger = LogFactory.getLog(ReactiveStoreImpl.class);
 
-    private final ContentStore<Object, Serializable> delegate;
+    private final ReactiveContentStore<Object, Serializable> delegate;
     private final ApplicationEventPublisher publisher;
-    private final Path copyContentRootPath;
 
-    public ReactiveStoreImpl(ContentStore<Object, Serializable> delegate, ApplicationEventPublisher publisher, Path copyContentRootPath) {
+    public ReactiveStoreImpl(ReactiveContentStore<Object, Serializable> delegate, ApplicationEventPublisher publisher) {
         this.delegate = delegate;
         this.publisher = publisher;
-        this.copyContentRootPath = copyContentRootPath;
     }
 
     @Override
     public Mono<Object> setContent(Object entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
         try {
-            Mono<Object> result = ((ReactiveContentStore)delegate).setContent(entity, path, contentLen, buffer);
+            Mono<Object> result = delegate.setContent(entity, path, contentLen, buffer);
             return result;
         }
         catch (Exception e) {
@@ -40,7 +36,12 @@ public class ReactiveStoreImpl implements ReactiveContentStore<Object, Serializa
     }
 
     @Override
-    public Flux<ByteBuffer> getContentAsFlux(Object entity, PropertyPath path) {
-        return ((ReactiveContentStore)delegate).getContentAsFlux(entity, path);
+    public Flux<ByteBuffer> getContent(Object entity, PropertyPath path) {
+        return delegate.getContent(entity, path);
+    }
+
+    @Override
+    public Mono<Object> unsetContent(Object entity, PropertyPath propertyPath) {
+        return delegate.unsetContent(entity, propertyPath);
     }
 }

@@ -2,6 +2,7 @@ package internal.org.springframework.content.s3.store;
 
 import java.io.File;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -28,10 +29,12 @@ import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.async.ResponsePublisher;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 @Transactional
 public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
@@ -42,28 +45,24 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 	private ApplicationContext context;
 	private ResourceLoader loader;
 	private PlacementService placementService;
-	private S3Client client;
 	private MultiTenantS3ClientProvider clientProvider;
 
     private MappingContext mappingContext = new MappingContext(".", ".");
 
-    // reactive
     private S3AsyncClient asyncClient;
-    // reactive
 
-	public DefaultReactiveS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
+	public DefaultReactiveS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
-		Assert.notNull(client, "client must be specified");
 		this.context = context;
 		this.loader = loader;
 		this.placementService = placementService;
-		this.client = client;
 		this.asyncClient = asyncClient;
 		this.clientProvider = provider;
 	}
 
+    @Transactional
     @Override
     public Mono<S> setContent(S entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
 
@@ -91,7 +90,7 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         }
         final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
 
-        CompletableFuture future = asyncClient.putObject(PutObjectRequest.builder()
+        CompletableFuture<PutObjectResponse> future = asyncClient.putObject(PutObjectRequest.builder()
             .bucket(s3ObjectId.getBucket())
             .contentLength(contentLen)
             .key(contentId.toString())
@@ -109,7 +108,7 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
     }
 
     @Override
-    public Flux<ByteBuffer> getContentAsFlux(S entity, PropertyPath path) {
+    public Flux<ByteBuffer> getContent(S entity, PropertyPath path) {
 
         if (entity == null)
             return Flux.empty();
@@ -140,5 +139,57 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 
         ResponsePublisher<GetObjectResponse> responsePublisher = responseFuture.join();
         return Flux.from(responsePublisher);
+    }
+
+    @Transactional
+    @Override
+    public Mono<S> unsetContent(S entity, PropertyPath propertyPath) {
+
+        if (entity == null)
+            return Mono.just(entity);
+
+        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        Object contentId = property.getContentId(entity);
+        if (contentId == null) {
+            return Mono.just(entity);
+        }
+
+        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
+            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
+        }
+        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+
+        DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                .bucket(s3ObjectId.getBucket())
+                .key(contentId.toString())
+                .build();
+
+        CompletableFuture<DeleteObjectResponse> future = asyncClient.deleteObject(deleteRequest);
+
+        return Mono.fromFuture(future)
+                .map((response) -> {
+                    property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+                        @Override
+                        public boolean matches(TypeDescriptor descriptor) {
+                            for (Annotation annotation : descriptor.getAnnotations()) {
+                                if ("javax.persistence.Id".equals(
+                                        annotation.annotationType().getCanonicalName())
+                                        || "org.springframework.data.annotation.Id"
+                                                .equals(annotation.annotationType()
+                                                        .getCanonicalName())) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+                    });
+                    property.setContentLength(entity, 0);
+                    return entity;
+                }
+              );
     }
 }

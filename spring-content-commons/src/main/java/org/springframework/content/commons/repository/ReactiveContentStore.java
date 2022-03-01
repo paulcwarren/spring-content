@@ -12,5 +12,7 @@ public interface ReactiveContentStore<S, SID extends Serializable> extends Conte
 
     Mono<S> setContent(S entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer);
 
-    Flux<ByteBuffer> getContentAsFlux(S entity, PropertyPath path);
+    Flux<ByteBuffer> getContent(S entity, PropertyPath path);
+
+    Mono<S> unsetContent(S entity, PropertyPath propertyPath);
 }

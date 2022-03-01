@@ -39,7 +39,6 @@ import org.springframework.util.Assert;
 
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Transactional
@@ -56,11 +55,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
     private MappingContext mappingContext = new MappingContext(".", ".");
 
-    // reactive
-    private S3AsyncClient asyncClient;
-    // reactive
-
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -69,7 +64,6 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		this.loader = loader;
 		this.placementService = placementService;
 		this.client = client;
-		this.asyncClient = asyncClient;
 		this.clientProvider = provider;
 	}
 
