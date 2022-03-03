@@ -142,7 +142,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given the store's ID is a custom ID type", () -> {
 						JustBeforeEach(() -> {
-							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client,null);
+							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null);
 
 							try {
 								r = customS3ContentIdBasedStore.getResource(customId);

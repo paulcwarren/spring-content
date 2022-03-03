@@ -27,6 +27,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.context.EnvironmentAware;
@@ -186,7 +187,11 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 						try {
 							types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(Store.class).getTypeArguments();
 						} catch (IllegalArgumentException iae3) {
-							return;
+	                        try {
+	                            types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(ReactiveContentStore.class).getTypeArguments();
+	                        } catch (IllegalArgumentException iae4) {
+	                            return;
+	                        }
 						}
 					}
 				}
@@ -340,6 +345,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			if (Store.class.getName().equals(s) ||
 				AssociativeStore.class.getName().equals(s) ||
 				ContentStore.class.getName().equals(s) ||
+                ReactiveContentStore.class.getName().equals(s) ||
 				s.startsWith("java.")) {
 
 				return false;
