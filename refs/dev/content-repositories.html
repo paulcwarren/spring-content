@@ -609,7 +609,7 @@ public class Application {
 <h2 id="_contentstore">ContentStore</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Lastly, <code>ContenStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
+<p><code>ContenStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
 </div>
 <div id="content-repositories.contentstore" class="exampleblock">
 <div class="title">Example 4. ContentStore interface</div>
@@ -693,6 +693,106 @@ public class Application {
 </div>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reactivecontentstore">ReactiveContentStore</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>ReactiveContenStore</code> is an experimental Store that provides a reactive API for managing associated content based on
+Mono and Flux reactive API.</p>
+</div>
+<div id="content-repositories.reactivecontentstore" class="exampleblock">
+<div class="title">Example 6. ReactiveContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ReactiveContentStore&lt;E, CID extends Serializable&gt; {
+
+    Mono&lt;S&gt; setContent(S entity, PropertyPath path, long contentLen, Flux&lt;ByteBuffer&gt; buffer);  <b class="conum">(1)</b>
+    Flux&lt;ByteBuffer&gt; getContentAsFlux(S entity, PropertyPath path);                             <b class="conum">(2)</b>
+    Mono&lt;E&gt; unsetContent(E entity);                                                             <b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Stores content and associates it with <code>entity</code></p>
+</li>
+<li>
+<p>Returns the content associated with <code>entity</code></p>
+</li>
+<li>
+<p>Deletes content and unassociates it from <code>entity</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The example above can be refactored as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. ReactiveContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class User {
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+
+    private String username;
+
+    @ContentId
+    private String contentId;
+
+    @ContentLength
+    private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
+
+public interface ProfilePictureStore extends ReactiveContentStore&lt;User, String&gt; {
+}
+
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+        return (args) -&gt; {
+            // create a new user
+            User jbauer = new User("jbauer");
+
+            // store profile picture
+            FileInputStream fis = new FileInputStream("/tmp/jbauer.jpg");
+            int len = fis.available();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(len);
+            Channels.newChannel(fis).read(byteBuffer);
+
+            store.setContent(jbauer, PropertyPath.from("content"), len, Flux.just(byteBuffer)))
+                .doOnSuccess(updatedJbauer -&gt; {
+                    // save the user
+                    repository.save(updatedJbauer).block(Duration.ofSeconds(10));
+                }).block(Duration.ofSeconds(10));
+        };
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Currently, S3 is the only storage module that supports this experimental API.</p>
+</div>
 <div class="sect2">
 <h3 id="_content_properties">Content Properties</h3>
 <div class="paragraph">
@@ -702,7 +802,7 @@ public class Application {
 <p>When adding these optional annotations it is highly recommended that you correlate the field&#8217;s name creating a "content property".  This allows for multiple pieces of content to be associated with the same entity, as shown in the following example.  When associating a single piece of content this is not necessary but still recommended.</p>
 </div>
 <div id="content-repositories.contentproperty" class="exampleblock">
-<div class="title">Example 6. Content Property</div>
+<div class="title">Example 8. Content Property</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -829,7 +929,7 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 9. Entity-based AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -905,7 +1005,7 @@ event.  There are twelve handler annotations:</p>
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Entity-based annotated event handler</div>
+<div class="title">Example 10. Entity-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -934,7 +1034,7 @@ public class ExampleAnnotatedEventListener {
 methods returns results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Event-based annotated event handler</div>
+<div class="title">Example 11. Event-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -958,7 +1058,7 @@ stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. 
 declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Handler registration</div>
+<div class="title">Example 12. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -986,7 +1086,7 @@ found by looking inside of it for keywords or phrases, so called full-text searc
 <p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 11. Searchable interface</div>
+<div class="title">Example 13. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1030,7 +1130,7 @@ from one format to another.</p>
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 12. Renderable interface</div>
+<div class="title">Example 14. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1330,7 +1430,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-03 06:02:41 UTC
+Last updated 2022-03-03 15:58:30 UTC
 </div>
 </div>
 </body>
