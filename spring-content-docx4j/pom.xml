@@ -20,12 +20,12 @@
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-core</artifactId>
-			<version>8.3.2</version>
+			<version>8.3.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.docx4j</groupId>
 			<artifactId>docx4j-export-fo</artifactId>
-			<version>8.3.2</version>
+			<version>8.3.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.docx4j</groupId>
