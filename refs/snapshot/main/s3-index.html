@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 2.1.0-SNAPSHOT,</span>
-<span id="revdate">2022-03-03</span>
+<span id="revdate">2022-03-04</span>
 </div>
 </div>
 <div id="content">
@@ -474,8 +474,9 @@ Copies of this document may be made for your own use and for distribution to oth
 <ul class="sectlevel2">
 <li><a href="#content-repositories.core-concepts">1.1. Core concepts</a></li>
 <li><a href="#_contentstore">1.2. ContentStore</a></li>
-<li><a href="#content-repositories.creation">1.3. Creating Content Store Instances</a></li>
-<li><a href="#_patterns_of_content_association">1.4. Patterns of Content Association</a></li>
+<li><a href="#_reactivecontentstore">1.3. ReactiveContentStore</a></li>
+<li><a href="#content-repositories.creation">1.4. Creating Content Store Instances</a></li>
+<li><a href="#_patterns_of_content_association">1.5. Patterns of Content Association</a></li>
 </ul>
 </li>
 <li><a href="#_s3_content_stores">2. S3 Content Stores</a>
@@ -685,7 +686,7 @@ public class Application {
 <div class="sect2">
 <h3 id="_contentstore">1.2. ContentStore</h3>
 <div class="paragraph">
-<p>Lastly, <code>ContenStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
+<p><code>ContenStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
 </div>
 <div id="content-repositories.contentstore" class="exampleblock">
 <div class="title">Example 4. ContentStore interface</div>
@@ -769,8 +770,106 @@ public class Application {
 </div>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_reactivecontentstore">1.3. ReactiveContentStore</h3>
+<div class="paragraph">
+<p><code>ReactiveContenStore</code> is an experimental Store that provides a reactive API for managing associated content based on
+Mono and Flux reactive API.</p>
+</div>
+<div id="content-repositories.reactivecontentstore" class="exampleblock">
+<div class="title">Example 6. ReactiveContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface ReactiveContentStore&lt;E, CID extends Serializable&gt; {
+
+    Mono&lt;S&gt; setContent(S entity, PropertyPath path, long contentLen, Flux&lt;ByteBuffer&gt; buffer);  <b class="conum">(1)</b>
+    Flux&lt;ByteBuffer&gt; getContentAsFlux(S entity, PropertyPath path);                             <b class="conum">(2)</b>
+    Mono&lt;E&gt; unsetContent(E entity);                                                             <b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Stores content and associates it with <code>entity</code></p>
+</li>
+<li>
+<p>Returns the content associated with <code>entity</code></p>
+</li>
+<li>
+<p>Deletes content and unassociates it from <code>entity</code></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The example above can be refactored as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. ReactiveContentStore interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class User {
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+
+    private String username;
+
+    @ContentId
+    private String contentId;
+
+    @ContentLength
+    private Long contentLength
+}
+
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+}
+
+public interface ProfilePictureStore extends ReactiveContentStore&lt;User, String&gt; {
+}
+
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner demo(UserRepository repository, ProfilePictureStore store) {
+        return (args) -&gt; {
+            // create a new user
+            User jbauer = new User("jbauer");
+
+            // store profile picture
+            FileInputStream fis = new FileInputStream("/tmp/jbauer.jpg");
+            int len = fis.available();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(len);
+            Channels.newChannel(fis).read(byteBuffer);
+
+            store.setContent(jbauer, PropertyPath.from("content"), len, Flux.just(byteBuffer)))
+                .doOnSuccess(updatedJbauer -&gt; {
+                    // save the user
+                    repository.save(updatedJbauer).block(Duration.ofSeconds(10));
+                }).block(Duration.ofSeconds(10));
+        };
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Currently, S3 is the only storage module that supports this experimental API.</p>
+</div>
 <div class="sect3">
-<h4 id="_content_properties">1.2.1. Content Properties</h4>
+<h4 id="_content_properties">1.3.1. Content Properties</h4>
 <div class="paragraph">
 <p>As we can see above content is "associated" by adding additional metadata about the content to the JPA Entity.  This additional metadata is denoted with Spring Content annotations.  There are several.  The only mandatory annotation is <code>@ContentId</code>.  Other optional annotations include <code>@ContentLength</code>, <code>@MimeType</code> and <code>@OriginalFileName</code>.  These may be added to your entities when you need to capture this additional infomation about your associated content.</p>
 </div>
@@ -778,7 +877,7 @@ public class Application {
 <p>When adding these optional annotations it is highly recommended that you correlate the field&#8217;s name creating a "content property".  This allows for multiple pieces of content to be associated with the same entity, as shown in the following example.  When associating a single piece of content this is not necessary but still recommended.</p>
 </div>
 <div id="content-repositories.contentproperty" class="exampleblock">
-<div class="title">Example 6. Content Property</div>
+<div class="title">Example 8. Content Property</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -828,7 +927,7 @@ public class User {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.multimodule">1.2.2. Using Stores with Multiple Spring Content Storage Modules</h4>
+<h4 id="content-repositories.multimodule">1.3.2. Using Stores with Multiple Spring Content Storage Modules</h4>
 <div class="paragraph">
 <p>Using a single Spring Content storage module in your application keeps things simple because all Storage beans
 will use to that one Spring Content storage module as their implementation.  Sometimes, applications require
@@ -849,7 +948,7 @@ property to manually set the storage implementation to be injected into your Sto
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.events">1.2.3. Events</h4>
+<h4 id="content-repositories.events">1.3.3. Events</h4>
 <div class="paragraph">
 <p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
 </div>
@@ -905,7 +1004,7 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 7. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 9. Entity-based AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -981,7 +1080,7 @@ event.  There are twelve handler annotations:</p>
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Entity-based annotated event handler</div>
+<div class="title">Example 10. Entity-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1010,7 +1109,7 @@ public class ExampleAnnotatedEventListener {
 methods returns results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Event-based annotated event handler</div>
+<div class="title">Example 11. Event-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1034,7 +1133,7 @@ stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. 
 declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Handler registration</div>
+<div class="title">Example 12. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1053,7 +1152,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.search">1.2.4. Searchable Stores</h4>
+<h4 id="content-repositories.search">1.3.4. Searchable Stores</h4>
 <div class="paragraph">
 <p>Applications that handle documents and other media usually have search capabilities allowing relevant content to be
 found by looking inside of it for keywords or phrases, so called full-text search.</p>
@@ -1062,7 +1161,7 @@ found by looking inside of it for keywords or phrases, so called full-text searc
 <p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 11. Searchable interface</div>
+<div class="title">Example 13. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1097,7 +1196,7 @@ for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.renditions">1.2.5. Renderable Stores</h4>
+<h4 id="content-repositories.renditions">1.3.5. Renderable Stores</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
 from one format to another.</p>
@@ -1106,7 +1205,7 @@ from one format to another.</p>
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 12. Renderable interface</div>
+<div class="title">Example 14. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1128,7 +1227,7 @@ information on how to do this.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="content-repositories.creation">1.3. Creating Content Store Instances</h3>
+<h3 id="content-repositories.creation">1.4. Creating Content Store Instances</h3>
 <div class="paragraph">
 <p>To use these core concepts:</p>
 </div>
@@ -1252,12 +1351,12 @@ public class SomeClass {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_patterns_of_content_association">1.4. Patterns of Content Association</h3>
+<h3 id="_patterns_of_content_association">1.5. Patterns of Content Association</h3>
 <div class="paragraph">
 <p>Content can be associated with a Spring Data Entity in several ways.</p>
 </div>
 <div class="sect3">
-<h4 id="_entity_association">1.4.1. Entity Association</h4>
+<h4 id="_entity_association">1.5.1. Entity Association</h4>
 <div class="paragraph">
 <p>The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.</p>
 </div>
@@ -1289,7 +1388,7 @@ public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_property_association">1.4.2. Property Association</h4>
+<h4 id="_property_association">1.5.2. Property Association</h4>
 <div class="paragraph">
 <p>Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.</p>
 </div>
@@ -1409,7 +1508,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <p>Spring Content S3 is enabled with the following Java Config.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 13. Enabling Spring Content S3 using Java Config</div>
+<div class="title">Example 15. Enabling Spring Content S3 using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1493,7 +1592,7 @@ sufficient for most use cases.  However, for the times when you need to dynamica
 runtime context you can contribute a <code>MultiTenantS3ClientProvider</code> bean, as follows:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 14. Enabling Spring Content S3 using Java Config</div>
+<div class="title">Example 16. Enabling Spring Content S3 using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1578,7 +1677,7 @@ key and bucket respectively to create a new <code>S3ObjectId</code></p>
 instance of S3ObjectId the following approach can be used:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 15. Configuring Spring Content S3 with a custom Spring Converter</div>
+<div class="title">Example 17. Configuring Spring Content S3 with a custom Spring Converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1628,7 +1727,7 @@ it is possible to configure the Store to take advantage of S3&#8217;s console fo
 that will have the effect, in the Amazon S3 console, of organizing content into a distributed set of folders.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 16. Configuring the S3 Store with a custom converter</div>
+<div class="title">Example 18. Configuring the S3 Store with a custom converter</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1793,7 +1892,7 @@ based in <code>java.util.UUID</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 2.1.0-SNAPSHOT<br>
-Last updated 2022-03-03 15:58:04 UTC
+Last updated 2022-03-04 04:23:00 UTC
 </div>
 </div>
 </body>
