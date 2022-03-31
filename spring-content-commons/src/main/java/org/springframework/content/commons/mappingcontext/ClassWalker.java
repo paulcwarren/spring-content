@@ -2,7 +2,12 @@ package org.springframework.content.commons.mappingcontext;
 
 import java.lang.reflect.Field;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class ClassWalker {
+
+    private static final Log LOGGER = LogFactory.getLog(ClassWalker.class);
 
     private Class<?> klazz;
 

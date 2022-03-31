@@ -134,6 +134,8 @@ public class ClassWalkerTest {
 
     public static class TestClass {
 
+        private TestClass circlularRef;
+
         private String str;
         private int i;
         @ContentId

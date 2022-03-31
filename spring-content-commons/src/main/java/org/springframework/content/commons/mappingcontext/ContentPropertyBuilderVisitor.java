@@ -1,14 +1,18 @@
 package org.springframework.content.commons.mappingcontext;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -29,6 +33,8 @@ import lombok.Getter;
 @Getter
 public class ContentPropertyBuilderVisitor {
 
+    private static final Log LOGGER = LogFactory.getLog(ContentPropertyBuilderVisitor.class);
+
     private Set<Field> fields = new HashSet<>();
     private Map<String, ContentProperty> properties = new HashMap<String,ContentProperty>();
     private Map<String, ContentProperty> subProperties = new HashMap<String,ContentProperty>();
@@ -36,6 +42,7 @@ public class ContentPropertyBuilderVisitor {
     private CharSequence contentPropertySeparator;
     private NameProvider nameProvider;
     private boolean looseMode;
+    private List<Class<?>> classesVisited = new ArrayList<>();
 
     public ContentPropertyBuilderVisitor(CharSequence keySeparator, CharSequence contentPropertySeparator, NameProvider nameProvider) {
         this.keySeparator = keySeparator;
@@ -43,7 +50,23 @@ public class ContentPropertyBuilderVisitor {
         this.nameProvider = nameProvider;
     }
 
+    /* package */ ContentPropertyBuilderVisitor(CharSequence keySeparator, CharSequence contentPropertySeparator, NameProvider nameProvider, List<Class<?>> classesVisited) {
+        this.keySeparator = keySeparator;
+        this.contentPropertySeparator = contentPropertySeparator;
+        this.nameProvider = nameProvider;
+        this.classesVisited = classesVisited;
+    }
+
     public boolean visitClass(Class<?> klazz) {
+
+        if (classesVisited.contains(klazz)) {
+            LOGGER.trace(String.format("Class %s already visited", klazz.getCanonicalName()));
+            return false;
+        } else {
+            LOGGER.trace(String.format("Visiting class %s", klazz.getCanonicalName()));
+            classesVisited.add(klazz);
+        }
+
         int numContentIds = 0;
         for (Field field : klazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(ContentId.class)) {
@@ -51,12 +74,15 @@ public class ContentPropertyBuilderVisitor {
             }
         }
         looseMode = numContentIds == 1;
+        LOGGER.trace(String.format("Loose mode enabled: %s", looseMode));
         return true;
     }
 
     public boolean visitClassEnd(Class<?> klazz) {
 
         if (looseMode && properties.size() > 1) {
+
+            LOGGER.trace(String.format("Loose mode enabled. Collapsing properties for %s", klazz.getCanonicalName()));
 
             ContentProperty contentProperty = new ContentProperty();
             for (ContentProperty property : this.properties.values()) {
@@ -88,8 +114,10 @@ public class ContentPropertyBuilderVisitor {
     }
 
     boolean visitField(Field f) {
+        LOGGER.trace(String.format("Visiting %s.%s", f.getDeclaringClass().getCanonicalName(), f.getName()));
 
         if (f.isAnnotationPresent(ContentId.class)) {
+            LOGGER.trace(String.format("%s.%s is @ContentId", f.getDeclaringClass().getCanonicalName(), f.getName()));
             String propertyName = fullyQualify(this.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 ContentProperty property = properties.get(propertyName);
@@ -101,6 +129,7 @@ public class ContentPropertyBuilderVisitor {
                 updateContentProperty(property::setContentIdPropertyPath, fullyQualify(f.getName(), this.getContentPropertySeparator()));
             }
         } else if (f.isAnnotationPresent(ContentLength.class)) {
+            LOGGER.trace(String.format("%s.%s is @ContentLength", f.getDeclaringClass().getCanonicalName(), f.getName()));
             String propertyName = fullyQualify(this.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 ContentProperty property = properties.get(propertyName);
@@ -111,6 +140,7 @@ public class ContentPropertyBuilderVisitor {
                 updateContentProperty(property::setContentLengthPropertyPath, fullyQualify(f.getName(), this.getContentPropertySeparator()));
             }
         } else if (f.isAnnotationPresent(MimeType.class)) {
+            LOGGER.trace(String.format("%s.%s is @MimeType", f.getDeclaringClass().getCanonicalName(), f.getName()));
             String propertyName = fullyQualify(this.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 ContentProperty property = properties.get(propertyName);
@@ -121,6 +151,7 @@ public class ContentPropertyBuilderVisitor {
                 updateContentProperty(property::setMimeTypePropertyPath, fullyQualify(f.getName(), this.getContentPropertySeparator()));
             }
         } else if (f.isAnnotationPresent(OriginalFileName.class)) {
+            LOGGER.trace(String.format("%s.%s is @OriginalFileName", f.getDeclaringClass().getCanonicalName(), f.getName()));
             String propertyName = fullyQualify(this.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 ContentProperty property = properties.get(propertyName);
@@ -134,12 +165,17 @@ public class ContentPropertyBuilderVisitor {
                    f.getType().equals(String.class) == false &&
                    ContentPropertyUtils.isWrapperType(f.getType()) == false &&
                    ContentPropertyUtils.isRelationshipField(f) == false) {
+
+            LOGGER.trace(String.format("%s.%s is subclass", f.getDeclaringClass().getCanonicalName(), f.getName()));
+
             ClassWalker subWalker = new ClassWalker(f.getType());
             ContentPropertyBuilderVisitor visitor = new SubClassVisitor(
                     this.keySeparator,
                     this.contentPropertySeparator,
                     this.nameProvider,
-                    this instanceof SubClassVisitor ? (String[])ArrayUtils.add(((SubClassVisitor)this).propertyPathPrefix, f.getName()) : new String[] {f.getName()});
+                    this instanceof SubClassVisitor ? (String[])ArrayUtils.add(((SubClassVisitor)this).propertyPathPrefix, f.getName()) : new String[] {f.getName()},
+                    this.getClassesVisited());
+
             subWalker.accept(visitor);
             for (Entry<String, ContentProperty> entry : visitor.getProperties().entrySet()) {
                 subProperties.put(entry.getKey().replace(this.getContentPropertySeparator(), this.getKeySeparator()), entry.getValue());
@@ -197,8 +233,8 @@ public class ContentPropertyBuilderVisitor {
 
         private String[] propertyPathPrefix;
 
-        public SubClassVisitor(CharSequence keySeparator, CharSequence contentPropertySeparator, NameProvider nameProvider, String[] propertyPathPrefix) {
-            super(keySeparator, contentPropertySeparator, nameProvider);
+        public SubClassVisitor(CharSequence keySeparator, CharSequence contentPropertySeparator, NameProvider nameProvider, String[] propertyPathPrefix, List<Class<?>> classesVisited) {
+            super(keySeparator, contentPropertySeparator, nameProvider, classesVisited);
             this.propertyPathPrefix = propertyPathPrefix;
         }
 
