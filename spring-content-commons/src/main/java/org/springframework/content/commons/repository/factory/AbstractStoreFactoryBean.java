@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.framework.ProxyFactory;
@@ -176,7 +177,7 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-        if (!REACTIVE_STORAGE) {
+        if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class)) {
             result.setInterfaces(new Class[] { storeInterface, Store.class, AssociativeStore.class, ContentStore.class, ParameterTypeAware.class });
         } else {
             result.setInterfaces(new Class[] { storeInterface, Store.class, ReactiveContentStore.class, ParameterTypeAware.class });
@@ -198,7 +199,7 @@ public abstract class AbstractStoreFactoryBean
 
 		StoreMethodInterceptor intercepter = new StoreMethodInterceptor();
 
-		if (!REACTIVE_STORAGE) {
+		if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class)) {
 		    storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 		} else {
             storeFragments.add(new StoreFragment(storeInterface, new ReactiveStoreImpl((ReactiveContentStore<Object, Serializable>) target, publisher)));

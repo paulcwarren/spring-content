@@ -1,10 +1,12 @@
 package internal.org.springframework.content.s3.config;
 
+import org.apache.commons.lang.ClassUtils;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
@@ -72,7 +74,7 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(s3Protocol);
 
-		if (!REACTIVE_STORAGE) {
+        if (!ClassUtils.getAllInterfaces(getStoreInterface()).contains(ReactiveContentStore.class)) {
 		    if (client == null) {
 		        throw new NoSuchBeanDefinitionException(S3Client.class.getCanonicalName());
 		    }
