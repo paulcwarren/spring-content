@@ -130,6 +130,22 @@ public class ClassWalkerTest {
                 assertThat(visitor.getProperties(), aMapWithSize(0));
             });
         });
+
+        Context("given a class with content properties in its super class", () -> {
+            It("should visit them", () -> {
+                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
+                ClassWalker walker = new ClassWalker(TestClass4.class);
+                walker.accept(visitor);
+
+                ContentProperty expectedProperty = new ContentProperty();
+                expectedProperty.setContentPropertyPath("content");
+                expectedProperty.setContentIdPropertyPath("contentId");
+                expectedProperty.setContentLengthPropertyPath("contentLength");
+                expectedProperty.setMimeTypePropertyPath("contentMimeType");
+                expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("content", expectedProperty));
+            });
+        });
     }
 
     public static class TestClass {
@@ -198,5 +214,8 @@ public class ClassWalkerTest {
         private TestSubClass manyToMany;
         @DBRef
         private TestSubClass docRef;
+    }
+
+    public static class TestClass4 extends TestSubSubClass {
     }
 }
