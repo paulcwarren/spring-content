@@ -1,6 +1,9 @@
 package org.springframework.content.commons.mappingcontext;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,7 +27,8 @@ public class ClassWalker {
             return;
         }
 
-        Field[] fields = this.klazz.getDeclaredFields();
+        List<Field>fields = new ArrayList<>();
+        fields = getAllFields(fields, klazz);
         for (Field field : fields) {
             fContinue &= visitor.visitField(field);
         }
@@ -33,5 +37,15 @@ public class ClassWalker {
         }
 
         visitor.visitClassEnd(klazz);
+    }
+
+    private List<Field> getAllFields(List<Field> fields, Class<?> type) {
+        fields.addAll(Arrays.asList(type.getDeclaredFields()));
+
+        if (type.getSuperclass() != null) {
+            getAllFields(fields, type.getSuperclass());
+        }
+
+        return fields;
     }
 }
