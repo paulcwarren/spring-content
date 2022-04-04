@@ -150,6 +150,8 @@ public class ClassWalkerTest {
 
     public static class TestClass {
 
+        private TestEnum enums;
+
         private TestClass circlularRef;
 
         private String str;
@@ -217,5 +219,9 @@ public class ClassWalkerTest {
     }
 
     public static class TestClass4 extends TestSubSubClass {
+    }
+
+    public static enum TestEnum {
+        A, B, C, D
     }
 }

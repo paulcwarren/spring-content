@@ -163,6 +163,7 @@ public class ContentPropertyBuilderVisitor {
             }
         } else if (f.getType().isPrimitive() == false &&
                    f.getType().equals(String.class) == false &&
+                   f.getType().isEnum() == false &&
                    ContentPropertyUtils.isWrapperType(f.getType()) == false &&
                    ContentPropertyUtils.isRelationshipField(f) == false) {
 
