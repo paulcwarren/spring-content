@@ -176,13 +176,13 @@
 <p>Launch your app and Spring Content (having been autoconfigured by Spring Boot) will automatically craft a concrete set of operations for handling the content associated with this Entity:</p>
 <ul>
 <li>
-<p><code>setContent(S property, InputStream content)</code></p>
+<p><code>S setContent(S entity, InputStream content)</code></p>
 </li>
 <li>
-<p><code>InputStream getContent(S property)</code></p>
+<p><code>InputStream getContent(S entity)</code></p>
 </li>
 <li>
-<p><code>unsetContent(S property)</code></p>
+<p><code>S unsetContent(S entity)</code></p>
 </li>
 </ul>
 <p>For more, check out our initial <a href="spring-content-fs-docs/">Getting Started Guide</a>, or watch one of our SpringOne talks <a href="https://bit.ly/springone-vid">2016</a>, <a href="https://www.youtube.com/watch?v=YtNvHTwHhRY">2017 @11mins</a> and <a href="https://www.youtube.com/watch?v=qyIMHWR40eA&amp;t=52s">2018</a>.</p>
@@ -465,5 +465,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2022-04-06 04:43:43.009221+00:00
+Build Date UTC : 2022-04-07 04:51:40.806448+00:00
 -->
