@@ -192,9 +192,9 @@ public class ContentStoreContentService implements ContentService {
 
             Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()), contentArg);
 
-            Object saveObject = updatedDomainObj;
+            Object savedUpdatedObject = repoInvoker.invokeSave(updatedDomainObj);
 
-            repoInvoker.invokeSave(saveObject);
+            storeResource.setAssociation(savedUpdatedObject);
         } finally {
             cleanup(contentArg);
         }

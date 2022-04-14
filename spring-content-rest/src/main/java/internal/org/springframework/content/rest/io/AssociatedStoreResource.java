@@ -7,6 +7,7 @@ import org.springframework.core.io.WritableResource;
 public interface AssociatedStoreResource<S> extends WritableResource, StoreResource, RangeableResource {
 
     S getAssociation();
+    void setAssociation(S entity);
 
     ContentProperty getContentProperty();
 }

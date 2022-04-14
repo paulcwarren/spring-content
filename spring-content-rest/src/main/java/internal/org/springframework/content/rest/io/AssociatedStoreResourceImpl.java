@@ -81,6 +81,11 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     }
 
     @Override
+    public void setAssociation(S entity) {
+        this.entity = entity;
+    }
+
+    @Override
     public ContentProperty getContentProperty() {
         return this.contentProperty;
     }
