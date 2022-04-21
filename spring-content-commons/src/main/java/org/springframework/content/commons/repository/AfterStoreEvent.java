@@ -16,10 +16,12 @@ public class AfterStoreEvent extends StoreEvent {
         super(source, propertyPath, store);
     }
 
+    @Deprecated
     public void setResult(Object result) {
         this.result = result;
     }
 
+    @Deprecated
     public Object getResult() {
         return result;
     }

@@ -3,6 +3,7 @@ package it.internal.org.springframework.content.rest.controllers;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
@@ -112,7 +113,7 @@ public class ContentPropertyRestEndpointsIT {
 				  });
 			  });
 			  Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
-				  It("should create the content", () -> {
+				  FIt("should create the content", () -> {
 
 					  mvc.perform(
 							  put("/testEntity8s/" + testEntity2.getId() + "/child")

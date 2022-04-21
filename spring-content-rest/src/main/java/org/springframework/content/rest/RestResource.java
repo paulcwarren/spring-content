@@ -17,4 +17,11 @@ public @interface RestResource {
      * @return {@literal true} if the resource is to be exported, {@literal false} otherwise.
      */
     boolean exported() default true;
+
+    /**
+     * The set of paths that are governed by this export
+     *
+     * @return  an array of paths
+     */
+    String[] paths() default {"*"};
 }

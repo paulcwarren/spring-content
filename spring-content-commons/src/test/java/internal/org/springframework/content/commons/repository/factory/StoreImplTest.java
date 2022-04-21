@@ -6,10 +6,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -50,6 +54,10 @@ public class StoreImplTest {
             });
 
             Context("#setContent - inputstream", () -> {
+
+                BeforeEach(() -> {
+                    when(store.setContent(anyObject(), any(InputStream.class))).thenReturn(new Object());
+                });
 
                 JustBeforeEach(() -> {
                     stores.setContent(new Object(), new ByteArrayInputStream("foo".getBytes()));
