@@ -3,7 +3,7 @@ package internal.org.springframework.content.rest.events;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,7 +112,7 @@ public class StoreRestEventsIT {
 
 			  Context("given the content property is accessed via the fully-qualified URL", () -> {
 				  Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-				      FIt("should return the content", () -> {
+				      It("should return the content", () -> {
 				          assertThat(eventHandler.isBeforeGetContentEvent(), is(false));
                           assertThat(eventHandler.isAfterGetContentEvent(), is(false));
 
@@ -127,7 +127,7 @@ public class StoreRestEventsIT {
 					  });
 				  });
 				  Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-					  FIt("should overwrite the content", () -> {
+					  It("should overwrite the content", () -> {
                           assertThat(eventHandler.isBeforeSetContentEvent(), is(false));
                           assertThat(eventHandler.isAfterSetContentEvent(), is(false));
 
@@ -149,7 +149,7 @@ public class StoreRestEventsIT {
 					  });
 				  });
 				  Context("a DELETE to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-					  FIt("should delete the content", () -> {
+					  It("should delete the content", () -> {
                           assertThat(eventHandler.isBeforeUnsetContentEvent(), is(false));
                           assertThat(eventHandler.isAfterUnsetContentEvent(), is(false));
 

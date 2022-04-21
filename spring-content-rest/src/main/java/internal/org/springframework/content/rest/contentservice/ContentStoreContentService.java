@@ -21,13 +21,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.rest.AfterGetContentEvent;
+import org.springframework.content.rest.AfterSetContentEvent;
+import org.springframework.content.rest.AfterUnsetContentEvent;
+import org.springframework.content.rest.BeforeGetContentEvent;
+import org.springframework.content.rest.BeforeSetContentEvent;
+import org.springframework.content.rest.BeforeUnsetContentEvent;
 import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.config.RestConfiguration.Resolver;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvoker;
@@ -53,40 +60,47 @@ public class ContentStoreContentService implements ContentService {
     private final RestConfiguration config;
     private final StoreInfo store;
     private final RepositoryInvoker repoInvoker;
+    private final MappingContext mappingContext;
     private final Object domainObj;
     private final Object embeddedProperty;
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+    private ApplicationEventPublisher publisher;
 
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, MappingContext mappingContext, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationEventPublisher publisher) {
         this.config = config;
         this.store = store;
         this.repoInvoker = repoInvoker;
+        this.mappingContext = mappingContext;
         this.domainObj = domainObj;
         this.embeddedProperty = null;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        this.publisher = publisher;
     }
 
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
-        this.config = config;
-        this.store = store;
-        this.repoInvoker = repoInvoker;
-        this.domainObj = domainObj;
-        this.embeddedProperty = null;
-        this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
-    }
-
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
-        this.config = config;
-        this.store = store;
-        this.repoInvoker = repoInvoker;
-        this.domainObj = domainObj;
-        this.embeddedProperty = embeddedProperty;
-        this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
-    }
+//    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationContext context) {
+//        this.config = config;
+//        this.store = store;
+//        this.repoInvoker = repoInvoker;
+//        this.domainObj = domainObj;
+//        this.embeddedProperty = null;
+//        this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+//    }
+//
+//    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, Object domainObj, Object embeddedProperty, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+//        this.config = config;
+//        this.store = store;
+//        this.repoInvoker = repoInvoker;
+//        this.domainObj = domainObj;
+//        this.embeddedProperty = embeddedProperty;
+//        this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+//    }
 
     @Override
     public void getContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource resource, MediaType resourceType)
             throws ResponseStatusException, MethodNotAllowedException {
+
+        AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
+        ContentProperty property = storeResource.getContentProperty();
 
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)resource).getStoreInfo().getInterface()).getContentMethods();
 
@@ -97,6 +111,14 @@ public class ContentStoreContentService implements ContentService {
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
         }
+
+        this.publisher.publishEvent(
+                new BeforeGetContentEvent(
+                        storeResource.getAssociation(),
+                        PropertyPath.from(property.getContentIdPropertyPath()),
+                        storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                        resource,
+                        resourceType));
 
         try {
             MediaType producedResourceType = null;
@@ -140,6 +162,13 @@ public class ContentStoreContentService implements ContentService {
 
         try {
             byteRangeRestRequestHandler.handleRequest(request, response);
+
+            this.publisher.publishEvent(new AfterGetContentEvent(
+                    storeResource.getAssociation(),
+                    PropertyPath.from(storeResource.getContentProperty().getContentPropertyPath()),
+                    storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                    resource,
+                    null));
         }
         catch (Exception e) {
             if (isClientAbortException(e)) {
@@ -159,14 +188,6 @@ public class ContentStoreContentService implements ContentService {
 
         ContentProperty property = storeResource.getContentProperty();
 
-        Object updateObject = storeResource.getAssociation();
-        property.setMimeType(updateObject, sourceMimeType.toString());
-
-        String originalFilename = source.getFilename();
-        if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
-            property.setOriginalFileName(updateObject, source.getFilename());
-        }
-
         Method[] methodsToUse = getExportedMethodsFor(((StoreResource)target).getStoreInfo().getInterface()).setContentMethods();
 
         if (methodsToUse.length > 1) {
@@ -182,6 +203,22 @@ public class ContentStoreContentService implements ContentService {
             throw new MethodNotAllowedException();
         }
 
+        this.publisher.publishEvent(
+                new BeforeSetContentEvent(
+                        storeResource.getAssociation(),
+                        PropertyPath.from(property.getContentIdPropertyPath()),
+                        storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                        target,
+                        null));
+
+        Object updateObject = storeResource.getAssociation();
+        property.setMimeType(updateObject, sourceMimeType.toString());
+
+        String originalFilename = source.getFilename();
+        if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
+            property.setOriginalFileName(updateObject, source.getFilename());
+        }
+
         Method methodToUse = methodsToUse[0];
         Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[indexOfContentArg(methodToUse.getParameterTypes())]);
 
@@ -195,6 +232,15 @@ public class ContentStoreContentService implements ContentService {
             Object savedUpdatedObject = repoInvoker.invokeSave(updatedDomainObj);
 
             storeResource.setAssociation(savedUpdatedObject);
+
+            this.publisher.publishEvent(
+                    new AfterSetContentEvent(
+                            storeResource.getAssociation(),
+                            PropertyPath.from(property.getContentIdPropertyPath()),
+                            storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                            target,
+                            null));
+
         } finally {
             cleanup(contentArg);
         }
@@ -217,6 +263,15 @@ public class ContentStoreContentService implements ContentService {
             throw new IllegalStateException("Too many unsetContent methods");
         }
 
+        this.publisher.publishEvent(
+                new BeforeUnsetContentEvent(
+                storeResource.getAssociation(),
+                PropertyPath.from(storeResource.getContentProperty().getContentPropertyPath()),
+                storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                resource,
+                null));
+
+
         Object updateObject = storeResource.getAssociation();
 
         Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
@@ -229,7 +284,16 @@ public class ContentStoreContentService implements ContentService {
         property.setMimeType(updateObject, null);
         property.setOriginalFileName(updateObject, null);
 
-        repoInvoker.invokeSave(updateObject);
+        Object savedUpdatedObject = repoInvoker.invokeSave(updateObject);
+
+        storeResource.setAssociation(savedUpdatedObject);
+
+        this.publisher.publishEvent(new AfterUnsetContentEvent(
+                storeResource.getAssociation(),
+                PropertyPath.from(storeResource.getContentProperty().getContentPropertyPath()),
+                storeResource.getStoreInfo().getImplementation(ContentStore.class),
+                resource,
+                null));
     }
 
     private void cleanup(Object contentArg) {
