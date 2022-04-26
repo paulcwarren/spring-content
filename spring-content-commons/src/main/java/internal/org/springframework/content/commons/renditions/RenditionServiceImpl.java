@@ -1,4 +1,4 @@
-package internal.org.springframework.renditions;
+package internal.org.springframework.content.commons.renditions;
 
 import java.io.InputStream;
 import java.util.ArrayList;

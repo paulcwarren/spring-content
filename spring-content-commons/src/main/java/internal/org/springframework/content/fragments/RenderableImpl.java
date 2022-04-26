@@ -2,6 +2,8 @@ package internal.org.springframework.content.fragments;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,10 +13,13 @@ import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.renditions.Renderable;
+import org.springframework.content.commons.renditions.RenditionProvider;
 import org.springframework.content.commons.renditions.RenditionService;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.io.Resource;
+
+import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 
 public class RenderableImpl implements Renderable, ContentStoreAware {
 
@@ -24,11 +29,20 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 
     private MappingContext mappingContext;
 
-    private RenditionService renditionService = new RenderableImpl.NoopRenditionServiceImpl();
+    private RenditionService renditionService = null;
+
+    private List<RenditionProvider> providers = new ArrayList<>();
 
 	public RenderableImpl() {
        this.mappingContext = new MappingContext(".", ".");
 	}
+
+	@Autowired(required=false)
+    public void setRenditionProviders(RenditionProvider... providers) {
+        for (RenditionProvider provider : providers) {
+            this.providers.add(provider);
+        }
+    }
 
 	@Override
 	public void setDomainClass(Class<?> domainClass) {
@@ -41,6 +55,13 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 	@Override
     public void setContentStore(ContentStore store) {
 		this.contentStore = store;
+	}
+
+	public RenditionService getRenditionService() {
+	    if (this.renditionService == null) {
+	        this.renditionService = new RenditionServiceImpl(providers.toArray(new RenditionProvider[0]));
+	    }
+	    return this.renditionService;
 	}
 
 	@Autowired(required = false)
@@ -56,12 +77,12 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 			return null;
 		}
 
-		if (this.renditionService.canConvert(fromMimeType, mimeType)) {
+		if (this.getRenditionService().canConvert(fromMimeType, mimeType)) {
 			InputStream content = null;
 			try {
 				content = contentStore.getContent(entity);
 				if (content != null) {
-					return this.renditionService.convert(fromMimeType, content, mimeType);
+					return this.getRenditionService().convert(fromMimeType, content, mimeType);
 				}
 			}
 			catch (Exception e) {
@@ -87,13 +108,13 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
             return null;
         }
 
-        if (this.renditionService.canConvert(fromMimeType.toString(), mimeType)) {
+        if (this.getRenditionService().canConvert(fromMimeType.toString(), mimeType)) {
             try {
                 Resource r = contentStore.getResource(entity, propertyPath);
                 if (r != null) {
                     try (InputStream content = r.getInputStream()) {
                         if (content != null) {
-                            return this.renditionService.convert(fromMimeType.toString(), content, mimeType);
+                            return this.getRenditionService().convert(fromMimeType.toString(), content, mimeType);
                         }
                     }
                 }
@@ -114,7 +135,7 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
             return false;
         }
 
-        return this.renditionService.canConvert(fromMimeType, mimeType);
+        return this.getRenditionService().canConvert(fromMimeType, mimeType);
     }
 
     @Override
@@ -129,25 +150,6 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
             return false;
         }
 
-        return this.renditionService.canConvert(fromMimeType.toString(), mimeType);
-    }
-
-    public class NoopRenditionServiceImpl implements RenditionService {
-
-        @Override
-        public boolean canConvert(String fromMimeType, String toMimeType) {
-            return false;
-        }
-
-        @Override
-        public String[] conversions(String fromMimeType) {
-            return new String[] {};
-        }
-
-        @Override
-        public InputStream convert(String fromMimeType, InputStream fromInputSource, String toMimeType) {
-            return null;
-        }
-
+        return this.getRenditionService().canConvert(fromMimeType.toString(), mimeType);
     }
 }

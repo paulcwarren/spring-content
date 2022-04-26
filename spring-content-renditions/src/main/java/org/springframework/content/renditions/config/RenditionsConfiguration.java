@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import internal.org.springframework.renditions.RenditionServiceImpl;
+import internal.org.springframework.content.commons.renditions.RenditionServiceImpl;
 
 @Configuration
 @ComponentScan(basePackageClasses=PdfToJpegRenderer.class)
