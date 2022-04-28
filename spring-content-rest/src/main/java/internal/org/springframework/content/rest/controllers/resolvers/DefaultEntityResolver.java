@@ -127,10 +127,15 @@ public class DefaultEntityResolver implements EntityResolver {
         }
 
         String propertyPath = matcher.extractPathWithinPattern(this.mapping, pathInfo);
-        if (propertyPath == null) {
-            propertyPath = "";
+        ContentProperty contentProperty = null;
+        if (propertyPath != null) {
+            contentProperty = mappingContext.getContentProperty(info.getDomainObjectClass(), propertyPath);
+        } else {
+            contentProperty = selectPrimaryContentProperty(info);
         }
-        ContentProperty contentProperty = mappingContext.getContentProperty(info.getDomainObjectClass(), propertyPath);
+        if (contentProperty == null) {
+            throw new ResourceNotFoundException();
+        }
 
         return new EntityResolution(domainObj, contentProperty);
     }
@@ -260,6 +265,12 @@ public class DefaultEntityResolver implements EntityResolver {
         org.springframework.data.rest.webmvc.config.RootResourceInformationHandlerMethodArgumentResolver rootResourceInfoResolver = context.getBean(org.springframework.data.rest.webmvc.config.RootResourceInformationHandlerMethodArgumentResolver.class);
         org.springframework.data.rest.webmvc.RootResourceInformation rri = rootResourceInfoResolver.resolveArgument(repoRequestMethodParameter, mavContainer, repoRequestFacade, binderFactory);
         return rri.getInvoker();
+    }
+
+    private ContentProperty selectPrimaryContentProperty(StoreInfo info) {
+        ContentProperty contentProperty;
+        contentProperty = mappingContext.getContentProperties(info.getDomainObjectClass()).iterator().next();
+        return contentProperty;
     }
 
     public static class FakeWebBinderFactory implements WebDataBinderFactory {

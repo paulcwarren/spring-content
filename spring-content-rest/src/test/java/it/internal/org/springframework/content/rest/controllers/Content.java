@@ -46,6 +46,13 @@ public class Content {
     }
 
     {
+        Context("a GET to /{store}/{id} accepting */*", () -> {
+            It("should return 404", () -> {
+                mvc.perform(get(url)
+                        .accept("*/*"))
+                .andExpect(status().isNotFound());
+            });
+        });
         Context("a GET to /{store}/{id} accepting a content mime-type", () -> {
             It("should return 404", () -> {
                 mvc.perform(get(url)
@@ -134,6 +141,7 @@ public class Content {
                     assertThat(response.getContentAsString(),is("Hello Spring Content World!"));
                 });
             });
+
             Context("a GET to /{store}/{id} with a mime type that matches a renderer", () -> {
                 It("should return the rendition and 200", () -> {
                     MockHttpServletResponse response = mvc

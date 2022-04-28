@@ -1,5 +1,6 @@
 package org.springframework.content.commons.mappingcontext;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +41,14 @@ public class MappingContext {
             properties = resolveProperties(domainClass);
         }
         return properties.get(path);
+    }
+
+    public Collection<ContentProperty> getContentProperties(Class<?> domainClass) {
+        Map<String, ContentProperty> properties = context.get(domainClass);
+        if (properties == null) {
+            properties = resolveProperties(domainClass);
+        }
+        return properties.values();
     }
 
     private Map<String, ContentProperty> resolveProperties(Class<?> domainClass) {
