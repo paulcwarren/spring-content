@@ -113,8 +113,8 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
             return null;
 
         BlobId blobId = null;
-        if (placementService.canConvert(entity.getClass(), BlobId.class)) {
-            blobId = placementService.convert(entity, BlobId.class);
+        if (placementService.canConvert(property.getContentIdType(entity).getClass(), BlobId.class)) {
+            blobId = placementService.convert(property.getContentId(entity), BlobId.class);
 
             if (blobId != null) {
                 return this.getResourceInternal(blobId);
