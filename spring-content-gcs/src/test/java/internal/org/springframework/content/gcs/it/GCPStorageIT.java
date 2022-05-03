@@ -282,7 +282,7 @@ public class GCPStorageIT {
                     entity = repo.save(entity);
 
                     store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                    store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                    store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()));
                 });
 
                 It("should be able to store new content", () -> {
@@ -293,7 +293,7 @@ public class GCPStorageIT {
 
                     //rendition
                     try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                        assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
+                        assertThat(IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()), content), is(true));
                     } catch (IOException ioe) {}
                 });
 
@@ -306,13 +306,13 @@ public class GCPStorageIT {
                     //rendition
                     assertThat(entity.getRenditionId(), is(notNullValue()));
                     assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getRenditionLen(), 27L);
+                    Assert.assertEquals(entity.getRenditionLen(), 40L);
                 });
 
                 Context("when content is updated", () -> {
                     BeforeEach(() ->{
                         store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
                         entity = repo.save(entity);
                     });
 
@@ -327,7 +327,7 @@ public class GCPStorageIT {
                         //rendition
                         matches = false;
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
                             assertThat(matches, is(true));
                         }
                     });
@@ -336,7 +336,7 @@ public class GCPStorageIT {
                 Context("when content is updated with shorter content", () -> {
                     BeforeEach(() -> {
                         store.setContent(entity, new ByteArrayInputStream("Hello Spring World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("Hello Spring World!".getBytes()));
+                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()));
                         entity = repo.save(entity);
                     });
                     It("should store only the new content", () -> {
@@ -350,7 +350,7 @@ public class GCPStorageIT {
                         //rendition
                         matches = false;
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
                             assertThat(matches, is(true));
                         }
                     });

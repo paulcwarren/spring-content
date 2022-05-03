@@ -115,8 +115,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
             return null;
 
         S3ObjectId s3ObjectId = null;
-        if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
-            s3ObjectId = placementService.convert(entity, S3ObjectId.class);
+        if (placementService.canConvert(property.getContentIdType(entity).getClass(), S3ObjectId.class)) {
+            s3ObjectId = placementService.convert(property.getContentId(entity), S3ObjectId.class);
 
             if (s3ObjectId != null) {
                 return this.getResourceInternal(s3ObjectId);
@@ -413,7 +413,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
         if (entity == null)
             return entity;
 
-        deleteIfExists(entity);
+        deleteIfExists(entity, propertyPath);
 
         // reset content fields
         property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
@@ -461,4 +461,18 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 		}
 	}
+
+    private void deleteIfExists(S entity, PropertyPath path) {
+
+        Resource resource = this.getResource(entity, path);
+        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
+
+            try {
+                ((DeletableResource)resource).delete();
+            } catch (Exception e) {
+                logger.error(format("Unexpected error unsetting content for entity %s", entity));
+                throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
+            }
+        }
+    }
 }

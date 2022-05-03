@@ -102,7 +102,7 @@ public class ContentStoreIT {
 							claim = claimRepo.save(claim);
 
 							claimFormStore.setContent(claim, PropertyPath.from("claimForm.content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                            claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                            claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()));
 						});
 
 						It("should be able to store new content", () -> {
@@ -117,7 +117,7 @@ public class ContentStoreIT {
 	                        // rendition
                             doInTransaction(ptm, () -> {
                                 try (InputStream content = claimFormStore.getContent(claim, PropertyPath.from("claimForm.rendition"))) {
-                                    assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
+                                    assertThat(IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()), content), is(true));
                                 } catch (IOException ioe) {}
                                 return null;
                             });
@@ -133,13 +133,13 @@ public class ContentStoreIT {
 							// renditoin
                             Assert.assertThat(claim.getClaimForm().getRenditionId(), is(notNullValue()));
                             Assert.assertThat(claim.getClaimForm().getRenditionId().trim().length(), greaterThan(0));
-                            Assert.assertEquals(claim.getClaimForm().getContentLength(), 27L);
+                            Assert.assertEquals(claim.getClaimForm().getRenditionLen(), 40L);
 						});
 
 						Context("when content is updated", () -> {
 							BeforeEach(() ->{
 								claimFormStore.setContent(claim, PropertyPath.from("claimForm.content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-                                claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+                                claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
 								claim = claimRepo.save(claim);
 							});
 
@@ -159,7 +159,7 @@ public class ContentStoreIT {
                                 doInTransaction(ptm, () -> {
                                     boolean matches = false;
                                     try (InputStream content = claimFormStore.getContent(claim, PropertyPath.from("claimForm.rendition"))) {
-                                        matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                                        matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
                                         assertThat(matches, is(true));
                                     } catch (IOException e) {
                                     }
@@ -171,7 +171,7 @@ public class ContentStoreIT {
 						Context("when content is updated with shorter content", () -> {
 							BeforeEach(() -> {
 								claimFormStore.setContent(claim, PropertyPath.from("claimForm.content"), new ByteArrayInputStream("Hello Spring World!".getBytes()));
-                                claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("Hello Spring World!".getBytes()));
+                                claimFormStore.setContent(claim, PropertyPath.from("claimForm.rendition"), new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()));
 								claim = claimRepo.save(claim);
 							});
 							It("should store only the new content", () -> {
@@ -190,7 +190,7 @@ public class ContentStoreIT {
                                 doInTransaction(ptm, () -> {
                                     boolean matches = false;
                                     try (InputStream content = claimFormStore.getContent(claim, PropertyPath.from("claimForm.rendition"))) {
-                                        matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
+                                        matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
                                         assertThat(matches, is(true));
                                     } catch (IOException e) {
                                     }
