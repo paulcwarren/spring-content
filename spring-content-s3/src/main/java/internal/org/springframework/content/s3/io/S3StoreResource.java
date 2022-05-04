@@ -121,4 +121,26 @@ public class S3StoreResource implements WritableResource, DeletableResource, Ran
     public void setRange(String range) {
         ((RangeableResource)delegate).setRange(range);
     }
+
+	/**
+	 * Set the Content-Type value that will be specified as object metadata when saving resource to the object storage.
+	 * @param contentType Content-Type value or null
+	 */
+	public void setContentType(String contentType) {
+		if (delegate instanceof SimpleStorageResource) {
+			((SimpleStorageResource) delegate).setContentType(contentType);
+		}
+	}
+
+	/**
+	 * Determine the Content-Type value of the resource as saved in object storage.
+	 * @return Content-Type value of the resource
+	 * @throws IOException
+	 */
+	public String contentType() throws IOException {
+		if (delegate instanceof SimpleStorageResource) {
+			return ((SimpleStorageResource) delegate).contentType();
+		}
+		return null;
+	}
 }

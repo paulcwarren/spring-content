@@ -30,12 +30,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.sql.DataSource;
 
+import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.property.PropertyPath;
@@ -325,6 +327,8 @@ public class S3StoreIT {
 
                 BeforeEach(() -> {
                     entity = new TestEntity();
+                    entity.setContentType("text/plain");
+                    entity.setRenditionContentType("text/html");
                     entity = repo.save(entity);
 
                     store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
@@ -353,6 +357,19 @@ public class S3StoreIT {
                     assertThat(entity.getRenditionId(), is(notNullValue()));
                     assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
                     Assert.assertEquals(entity.getRenditionLen(), 40L);
+                });
+
+
+                It("should set Content-Type of stored content to value from field annotated with @MimeType", () -> {
+                    // content
+                    S3StoreResource resource = (S3StoreResource) store.getResource(entity);
+                    assertThat(resource.contentType(), is(notNullValue()));
+                    assertThat(resource.contentType(), is(entity.getContentType()));
+
+                    //rendition
+                    S3StoreResource renditionResource = (S3StoreResource) store.getResource(entity, PropertyPath.from("rendition"));
+                    assertThat(renditionResource.contentType(), is(notNullValue()));
+                    assertThat(renditionResource.contentType(), is(entity.getRenditionContentType()));
                 });
 
                 Context("when content is updated", () -> {
@@ -566,11 +583,17 @@ public class S3StoreIT {
         @ContentLength
         private long contentLen;
 
+        @MimeType
+        private String contentType;
+
         @ContentId
         private String renditionId;
 
         @ContentLength
         private long renditionLen;
+
+        @MimeType
+        private String renditionContentType;
 
         public TestEntity(String contentId) {
             this.contentId = new String(contentId);
