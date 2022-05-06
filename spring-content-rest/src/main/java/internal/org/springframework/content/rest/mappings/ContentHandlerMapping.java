@@ -79,14 +79,12 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 			StoreInfo info2 = contentStores.getStore(Store.class, StoreUtils.withStorePath(path[1]));
 			if (info2 != null) {
 
-			    // if a fully-qualified URL
-			    if (AssociativeStore.class.isAssignableFrom(info2.getInterface()) && path.length >= 4) {
-
+			    if (isFullyQualifiedContentPropertyRequest(path, info2)) {
 			        if (entityResolvers.hasPropertyFor(storeLookupPath)) {
     			        return super.lookupHandlerMethod(lookupPath, request);
     			    }
 
-			    } else {
+			    } else if (this.getConfiguration().shortcutLinks()) {
     			    // for backward compatibility
     			    if (info2 != null && isHalOrJsonRequest(request) == false) {
     	              return super.lookupHandlerMethod(lookupPath, request);
@@ -164,6 +162,10 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		}
 		return false;
 	}
+
+    private boolean isFullyQualifiedContentPropertyRequest(String[] path, StoreInfo info2) {
+        return AssociativeStore.class.isAssignableFrom(info2.getInterface()) && path.length >= 4;
+    }
 
 	@Override
 	protected void detectHandlerMethods(final Object handler) {

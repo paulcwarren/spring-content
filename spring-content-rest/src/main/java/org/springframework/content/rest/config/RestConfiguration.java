@@ -45,6 +45,7 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 public class RestConfiguration implements InitializingBean {
 
     public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
+    public static boolean SHORTCUT_LINKS_DEFAULT = true;
 
 	private static final URI NO_URI = URI.create("");
 
@@ -57,6 +58,7 @@ public class RestConfiguration implements InitializingBean {
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
 	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
+    private boolean shortcutLinks = SHORTCUT_LINKS_DEFAULT;
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
@@ -83,6 +85,14 @@ public class RestConfiguration implements InitializingBean {
 	public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
 		this.fullyQualifiedLinks = fullyQualifiedLinks;
 	}
+
+    public boolean shortcutLinks() {
+        return shortcutLinks;
+    }
+
+    public void setShortcutLinks(boolean shortcutLinks) {
+        this.shortcutLinks = shortcutLinks;
+    }
 
 	public StoreCorsRegistry getCorsRegistry() {
 		return corsRegistry;

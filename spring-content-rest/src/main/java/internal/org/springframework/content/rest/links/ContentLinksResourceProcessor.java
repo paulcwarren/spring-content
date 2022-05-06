@@ -93,7 +93,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 				if (config.fullyQualifiedLinks()) {
 					resource.add(fullyQualifiedLink(config.getBaseUri(), store, entityId, fields[0].getName()));
 				}
-				else {
+				else if (config.shortcutLinks()){
 					// for compatibility with v0.x.0 versions
 					originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> addLink(resource, l));
 

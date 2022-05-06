@@ -9,6 +9,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
@@ -98,9 +99,10 @@ public class ContentLinksResourceProcessorIT {
 					assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999/content"))));
 				});
 
-				Context("when fully qualified links property is false", () -> {
+				Context("when fully qualified links are disabed and shortcut links are enabled", () -> {
 					BeforeEach(() -> {
 						processor.getRestConfiguration().setFullyQualifiedLinks(false);
+                        processor.getRestConfiguration().setShortcutLinks(true);
 					});
 
 					AfterEach(() -> {
@@ -112,6 +114,23 @@ public class ContentLinksResourceProcessorIT {
 						assertThat(resource.getLinks("testEntity4"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999"))));
 					});
 				});
+
+                Context("when fully qualified links are disabed and shortcut links are disabled", () -> {
+                    BeforeEach(() -> {
+                        processor.getRestConfiguration().setFullyQualifiedLinks(false);
+                        processor.getRestConfiguration().setShortcutLinks(false);
+                    });
+
+                    AfterEach(() -> {
+                        processor.getRestConfiguration().setFullyQualifiedLinks(true);
+                        processor.getRestConfiguration().setShortcutLinks(true);
+                    });
+
+                    It("should add original and shortcut links", () -> {
+                        assertThat(resource.getLinks("testEntity4s"), not(hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999")))));
+                        assertThat(resource.getLinks("testEntity4"), not(hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999")))));
+                    });
+                });
 			});
 
 			Context("given an entity with multiple @ContentId properties", () -> {
