@@ -15,6 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
@@ -221,6 +222,24 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
                 });
     }
 
+	private void setResourceContentTypeFromMimeType(S entity, ContentProperty property, Resource resource) {
+		if (resource instanceof S3StoreResource) {
+			Object mimeType;
+			if (property == null) {
+				mimeType = BeanUtils.getFieldWithAnnotation(entity, MimeType.class);
+			}
+			else {
+				mimeType = property.getMimeType(entity);
+			}
+
+			if (mimeType != null) {
+				String strMimeType = mimeType.toString();
+				S3StoreResource s3StoreResource = (S3StoreResource) resource;
+				s3StoreResource.setContentType(strMimeType);
+			}
+		}
+	}
+
 	@Transactional
 	@Override
 	public S setContent(S entity, InputStream content) {
@@ -243,7 +262,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			return entity;
 		}
 
-        if (resource instanceof WritableResource) {
+		setResourceContentTypeFromMimeType(entity, null, resource);
+
+		if (resource instanceof WritableResource) {
             try (OutputStream os = ((WritableResource) resource).getOutputStream()) {
                     IOUtils.copy(content, os);
             }
@@ -288,6 +309,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
         if (resource == null) {
             return entity;
         }
+
+        setResourceContentTypeFromMimeType(entity, property, resource);
 
         if (resource instanceof WritableResource) {
             try (OutputStream os = ((WritableResource) resource).getOutputStream()) {

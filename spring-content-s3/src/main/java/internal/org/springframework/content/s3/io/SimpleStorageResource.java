@@ -67,19 +67,27 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
 
     private String range;
 
+    private String contentType;
+
     public SimpleStorageResource(S3Client amazonS3, String bucketName, String objectName,
             TaskExecutor taskExecutor) {
-        this(amazonS3, bucketName, objectName, taskExecutor, null);
+        this(amazonS3, bucketName, objectName, taskExecutor, null, null);
     }
 
     public SimpleStorageResource(S3Client amazonS3, String bucketName, String objectName,
-            TaskExecutor taskExecutor, String versionId) {
+                                 TaskExecutor taskExecutor, String versionId) {
+        this(amazonS3, bucketName, objectName, taskExecutor, versionId, null);
+    }
+
+    public SimpleStorageResource(S3Client amazonS3, String bucketName, String objectName,
+            TaskExecutor taskExecutor, String versionId, String contentType) {
 //        this.amazonS3 = AmazonS3ProxyFactory.createProxy(amazonS3);
         this.amazonS3 = amazonS3;
         this.bucketName = bucketName;
         this.objectName = objectName;
         this.taskExecutor = taskExecutor;
         this.versionId = versionId;
+        this.contentType = contentType;
     }
 
     @Override
@@ -94,6 +102,23 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
         }
         builder.append("']");
         return builder.toString();
+    }
+
+    /**
+     * Set the Content-Type value that will be specified as object metadata when saving resource to the object storage.
+     * @param contentType Content-Type value or null
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    /**
+     * Determine the Content-Type value of the resource as saved in object storage.
+     * @return Content-Type value of the resource
+     * @throws IOException
+     */
+    public String contentType() throws IOException {
+        return getRequiredObjectMetadata().contentType();
     }
 
     @Override
@@ -281,12 +306,16 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
                         e);
             }
 
-            SimpleStorageResource.this.amazonS3.putObject(
-                    PutObjectRequest.builder()
-                            .bucket(SimpleStorageResource.this.bucketName)
-                            .key(SimpleStorageResource.this.objectName)
-                            .contentMD5(md5Digest).build(),
-                    RequestBody.fromBytes(content));
+            PutObjectRequest.Builder requestBuilder = PutObjectRequest.builder()
+                .bucket(SimpleStorageResource.this.bucketName)
+                .key(SimpleStorageResource.this.objectName)
+                .contentMD5(md5Digest);
+
+            if (SimpleStorageResource.this.contentType != null) {
+                requestBuilder.contentType(SimpleStorageResource.this.contentType);
+            }
+
+            SimpleStorageResource.this.amazonS3.putObject(requestBuilder.build(), RequestBody.fromBytes(content));
 
             // Release the memory early
             this.currentOutputStream = null;
@@ -325,10 +354,16 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
 
         private void initiateMultiPartIfNeeded() {
             if (this.multiPartUploadResult == null) {
+                CreateMultipartUploadRequest.Builder requestBuilder = CreateMultipartUploadRequest.builder()
+                        .bucket(SimpleStorageResource.this.bucketName)
+                        .key(SimpleStorageResource.this.objectName);
+
+                if (SimpleStorageResource.this.contentType != null) {
+                    requestBuilder.contentType(SimpleStorageResource.this.contentType);
+                }
+
                 this.multiPartUploadResult = SimpleStorageResource.this.amazonS3
-                        .createMultipartUpload(CreateMultipartUploadRequest.builder()
-                                .bucket(SimpleStorageResource.this.bucketName)
-                                .key(SimpleStorageResource.this.objectName).build());
+                        .createMultipartUpload(requestBuilder.build());
             }
         }
 

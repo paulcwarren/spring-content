@@ -90,13 +90,21 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         }
         final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
 
-        CompletableFuture<PutObjectResponse> future = asyncClient.putObject(PutObjectRequest.builder()
-            .bucket(s3ObjectId.getBucket())
-            .contentLength(contentLen)
-            .key(contentId.toString())
-            .build(),
+        PutObjectRequest.Builder requestBuilder = PutObjectRequest.builder()
+                .bucket(s3ObjectId.getBucket())
+                .contentLength(contentLen)
+                .key(contentId.toString());
 
-        AsyncRequestBody.fromPublisher(buffer));
+        Object mimeType = property.getMimeType(entity);
+        if (mimeType != null) {
+            String strMimeType = mimeType.toString();
+            requestBuilder.contentType(strMimeType);
+        }
+
+        CompletableFuture<PutObjectResponse> future = asyncClient.putObject(
+                requestBuilder.build(),
+                AsyncRequestBody.fromPublisher(buffer)
+        );
 
         return Mono.fromFuture(future)
           .map((response) -> {
