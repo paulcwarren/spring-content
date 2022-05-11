@@ -27,6 +27,7 @@ import org.springframework.data.repository.support.DefaultRepositoryInvokerFacto
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -62,6 +63,7 @@ public class RestConfiguration implements InitializingBean {
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
+	private Exclusions exclusions = new Exclusions();
 
     private StoreCacheControlInterceptor storeHandlerInterceptor;
     private StoresImpl stores;
@@ -128,6 +130,10 @@ public class RestConfiguration implements InitializingBean {
 			domainTypeConfigMap.put(type, config);
 		}
 		return config;
+	}
+
+	public Exclusions exclusions() {
+	    return this.exclusions;
 	}
 
 	public ConverterRegistry converters() {
@@ -293,4 +299,21 @@ public class RestConfiguration implements InitializingBean {
 	    boolean resolve(S subject, C context);
 	}
 
+	public static class Exclusions extends HashMap<String,List<MediaType>> {
+
+        private static final long serialVersionUID = 5499454344207867070L;
+
+        public Exclusions exclude(String method, MediaType mediaType) {
+            Assert.hasLength(method, "method must not be null or empty");
+
+            List<MediaType> excludes = this.get(method);
+            if (excludes == null) {
+                excludes = new ArrayList<>();
+                this.put(method, excludes);
+            }
+            excludes.add(mediaType);
+
+            return this;
+        }
+    }
 }

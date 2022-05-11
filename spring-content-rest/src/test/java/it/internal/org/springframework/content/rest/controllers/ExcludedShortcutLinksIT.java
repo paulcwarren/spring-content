@@ -3,7 +3,7 @@ package it.internal.org.springframework.content.rest.controllers;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -48,12 +49,12 @@ import internal.org.springframework.content.rest.support.config.JpaInfrastructur
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		ShortcutLinksIT.Config.class,
+		ExcludedShortcutLinksIT.Config.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
 @Transactional
-public class ShortcutLinksIT {
+public class ExcludedShortcutLinksIT {
 
 	@Autowired
 	private TestEntity3Repository repo;
@@ -65,42 +66,29 @@ public class ShortcutLinksIT {
 
 	private TestEntity3 testEntity;
 
-	private Entity entityTests;
-
 	{
-		Describe("ContextPath Content Tests", () -> {
+		Describe("Excluded Shortcut Link Tests", () -> {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
+
+				testEntity = repo.save(new TestEntity3());
+                testEntity = repo.save(testEntity);
 			});
-			Context("given an entity is the subject of a repository and storage", () -> {
-				BeforeEach(() -> {
-					testEntity = repo.save(new TestEntity3());
-					testEntity = repo.save(testEntity);
+			Context("when all content property shortcut GETs are excluded and a non-json request is made", () -> {
+			    It("should return the entity", () -> {
+	                MockHttpServletResponse response = mvc
+	                        .perform(get("/testEntity3s/" + testEntity.getId())
+	                                .accept("*/*"))
+	                        .andExpect(status().isOk())
+	                        .andReturn().getResponse();
 
-					entityTests.setMvc(mvc);
-					entityTests.setUrl("/testEntity3s/" + testEntity.getId());
-					entityTests.setEntity(testEntity);
-					entityTests.setRepository(repo);
-					entityTests.setLinkRel("testEntity3");
-				});
-				entityTests = Entity.tests();
-
-				Context("when a non-json request is made", () -> {
-				    FIt("should return entity", () -> {
-		                MockHttpServletResponse response = mvc
-		                        .perform(get("/testEntity3s/" + testEntity.getId())
-		                                .accept("*/*"))
-		                        .andExpect(status().isOk())
-		                        .andReturn().getResponse();
-
-		                RepresentationFactory representationFactory = new StandardRepresentationFactory();
-		                ReadableRepresentation halResponse = representationFactory
-		                        .readRepresentation("application/hal+json",
-		                                new StringReader(response.getContentAsString()));
-		                assertThat(halResponse.getLinks().size(), is(2));
-		                assertThat(halResponse.getLinksByRel("testEntity3"), is(not(nullValue())));
-				    });
-				});
+	                RepresentationFactory representationFactory = new StandardRepresentationFactory();
+	                ReadableRepresentation halResponse = representationFactory
+	                        .readRepresentation("application/hal+json",
+	                                new StringReader(response.getContentAsString()));
+	                assertThat(halResponse.getLinks().size(), is(2));
+	                assertThat(halResponse.getLinksByRel("testEntity3"), is(not(nullValue())));
+			    });
 			});
 		});
 	}
@@ -121,7 +109,7 @@ public class ShortcutLinksIT {
 
 	            @Override
 	            public void configure(RestConfiguration config) {
-	                config.setShortcutLinks(false);
+	                config.exclusions().exclude("GET", MediaType.parseMediaType("*/*"));
 	            }
 	        };
 	    }
@@ -134,7 +122,7 @@ public class ShortcutLinksIT {
 	    @Bean
 	    public File filesystemRoot() {
 	        File baseDir = new File(System.getProperty("java.io.tmpdir"));
-	        File filesystemRoot = new File(baseDir, "spring-content-controller-tests");
+	        File filesystemRoot = new File(baseDir, "spring-content-excluded-shortcut-links");
 	        filesystemRoot.mkdirs();
 	        return filesystemRoot;
 	    }

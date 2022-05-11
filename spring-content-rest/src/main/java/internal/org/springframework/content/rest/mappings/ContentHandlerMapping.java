@@ -18,9 +18,9 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.content.rest.config.RestConfiguration.Exclusions;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.method.HandlerMethod;
@@ -36,17 +36,36 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	private static MediaType hal = MediaType.parseMediaType("application/hal+json");
 	private static MediaType json = MediaType.parseMediaType("application/json");
 
+    private Exclusions exclusions = null;
 	private Stores contentStores;
 	private EntityResolvers entityResolvers = null;
 
 	public ContentHandlerMapping(Stores contentStores, EntityResolvers entityResolvers, RestConfiguration config) {
 		super(config);
+		initExclusions(exclusions, config);
 		this.contentStores = contentStores;
 		this.entityResolvers = entityResolvers;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
 	}
 
-	/*
+	private void initExclusions(Exclusions exclusions, RestConfiguration config) {
+        this.exclusions = config.exclusions();
+        if (this.exclusions.size() == 0) {
+            this.exclusions
+                .exclude("GET", MediaType.parseMediaType("application/json"))
+                .exclude("GET", MediaType.parseMediaType("application/hal+json"))
+                .exclude("DELETE", MediaType.parseMediaType("application/json"))
+                .exclude("DELETE", MediaType.parseMediaType("application/hal+json"))
+                .exclude("PUT", MediaType.parseMediaType("application/json"))
+                .exclude("PUT", MediaType.parseMediaType("application/hal+json"))
+                .exclude("POST", MediaType.parseMediaType("application/json"))
+                .exclude("POST", MediaType.parseMediaType("application/hal+json"))
+                .exclude("PATCH", MediaType.parseMediaType("*/*"))
+                .exclude("HEAD", MediaType.parseMediaType("*/*"));
+        }
+    }
+
+    /*
 	 * (non-Javadoc)
 	 *
 	 * @see
@@ -86,7 +105,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 			    } else if (this.getConfiguration().shortcutLinks()) {
     			    // for backward compatibility
-    			    if (info2 != null && isHalOrJsonRequest(request) == false) {
+    			    if (info2 != null && isExcludedShortcutContentPropertyRequest(request) == false) {
     	              return super.lookupHandlerMethod(lookupPath, request);
     			    }
 			    }
@@ -125,41 +144,31 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		return corsConfiguration == null ? storeCorsConfiguration : corsConfiguration.combine(storeCorsConfiguration);
 	}
 
-	private boolean isHalOrJsonRequest(HttpServletRequest request) {
+	private boolean isExcludedShortcutContentPropertyRequest(HttpServletRequest request) {
 		String method = request.getMethod();
-		if ("GET".equals(method) || "DELETE".equals(method)) {
-			String accept = request.getHeader("Accept");
-			if (accept != null) {
-				try {
-					List<MediaType> mediaTypes = MediaType.parseMediaTypes(accept);
-					for (MediaType mediaType : mediaTypes) {
-						if (mediaType.equals(hal) || mediaType.equals(json)) {
-							return true;
-						}
-					}
-				}
-				catch (InvalidMediaTypeException imte) {
-					return true;
-				}
-			}
-		} else if ("PUT".equals(method) || "POST".equals(method)) {
-			String contentType = request.getHeader("Content-Type");
-			if (contentType != null) {
-				try {
-					List<MediaType> mediaTypes = MediaType.parseMediaTypes(contentType);
-					for (MediaType mediaType : mediaTypes) {
-						if (mediaType.equals(hal) || mediaType.equals(json)) {
-							return true;
-						}
-					}
-				}
-				catch (InvalidMediaTypeException imte) {
-					return true;
-				}
-			}
-		} else if ("PATCH".equals(method) || "HEAD".equals(method)) {
-			return true;
+
+		List<MediaType> excludedMediaTypes = this.exclusions.get(method);
+		if (excludedMediaTypes == null) {
+		    return false;
 		}
+
+		String mediaTypes = "*/*";
+		if ("GET".equals(method) || "DELETE".equals(method)) {
+		    mediaTypes = request.getHeader("Accept");
+		} else if ("PUT".equals(method) || "POST".equals(method)) {
+            mediaTypes = request.getHeader("Content-Type");
+		}
+
+        List<MediaType> acceptedMediaTypes = MediaType.parseMediaTypes(mediaTypes);
+
+        for (MediaType excludedMediaType : excludedMediaTypes) {
+            for (MediaType acceptedMediaType : acceptedMediaTypes) {
+    		    if (excludedMediaType.includes(acceptedMediaType)) {
+    		        return true;
+    		    }
+    		}
+        }
+
 		return false;
 	}
 
