@@ -11,15 +11,18 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.URI;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.http.MediaType;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration.ContentRestProperties;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration.ContentRestProperties.RequestMappings;
 import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -31,6 +34,7 @@ public class SpringBootContentRestConfigurerTest {
 
     // mocks
     private RestConfiguration restConfig;
+    private RestConfiguration.Exclusions exclusions;
 
     {
         Describe("SpringBootContentRestConfigurer", () -> {
@@ -40,6 +44,8 @@ public class SpringBootContentRestConfigurerTest {
                 BeforeEach(() -> {
                     properties = new ContentRestProperties();
                     restConfig = mock(RestConfiguration.class);
+                    exclusions = mock(RestConfiguration.Exclusions.class);
+                    when(restConfig.exclusions()).thenReturn(exclusions);
                 });
 
                 JustBeforeEach(() -> {
@@ -66,6 +72,60 @@ public class SpringBootContentRestConfigurerTest {
 
                     It("should set the property on the RestConfiguration", () -> {
                         verify(restConfig).setFullyQualifiedLinks(eq(true));
+                    });
+                });
+
+                Context("given excluded request mappings", () -> {
+
+                    BeforeEach(() -> {
+                        RequestMappings mappings = new RequestMappings();
+                        mappings.setExcludes("GET=a/b,c/d:PUT=*/*");
+                        properties.setRequestMappings(mappings);
+                    });
+
+                    It("should set the exclusions property on the RestConfiguration", () -> {
+                        verify(exclusions).exclude("GET", MediaType.parseMediaType("a/b"));
+                        verify(exclusions).exclude("GET", MediaType.parseMediaType("c/d"));
+                        verify(exclusions).exclude("PUT", MediaType.parseMediaType("*/*"));
+                    });
+                });
+
+                Context("given empty excluded request mapping", () -> {
+
+                    BeforeEach(() -> {
+                        RequestMappings mappings = new RequestMappings();
+                        mappings.setExcludes("");
+                        properties.setRequestMappings(mappings);
+                    });
+
+                    It("should not set the exclusions property on the RestConfiguration", () -> {
+                        verify(exclusions, never()).exclude(any(), any());
+                    });
+                });
+
+                Context("given empty excluded GET request mapping", () -> {
+
+                    BeforeEach(() -> {
+                        RequestMappings mappings = new RequestMappings();
+                        mappings.setExcludes("GET=");
+                        properties.setRequestMappings(mappings);
+                    });
+
+                    It("should not set the exclusions property on the RestConfiguration", () -> {
+                        verify(exclusions, never()).exclude(any(), any());
+                    });
+                });
+
+                Context("given invalid excluded request mapping", () -> {
+
+                    BeforeEach(() -> {
+                        RequestMappings mappings = new RequestMappings();
+                        mappings.setExcludes("GET=/");
+                        properties.setRequestMappings(mappings);
+                    });
+
+                    It("should not set the exclusions property on the RestConfiguration", () -> {
+                        verify(exclusions, never()).exclude(any(), any());
                     });
                 });
 

@@ -23,6 +23,7 @@ public class ContentRestAutoConfiguration {
 
 		private URI baseUri;
 		private boolean fullyQualifiedLinks = RestConfiguration.FULLY_QUALIFIED_DEFAULTS_DEFAULT;
+		private RequestMappings requestMappings = new RequestMappings();
 
 		public URI getBaseUri() {
 			return baseUri;
@@ -38,6 +39,27 @@ public class ContentRestAutoConfiguration {
 
 		public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
 			this.fullyQualifiedLinks = fullyQualifiedLinks;
+		}
+
+		public RequestMappings requestMappings() {
+		    return this.requestMappings;
+		}
+
+		public void setRequestMappings(RequestMappings requestMappings) {
+		    this.requestMappings = requestMappings;
+		}
+
+		public static class RequestMappings {
+
+		    private String excludes = null;
+
+		    public String excludes() {
+		        return excludes;
+		    }
+
+		    public void setExcludes(String excludes) {
+		        this.excludes = excludes;
+		    }
 		}
     }
 
