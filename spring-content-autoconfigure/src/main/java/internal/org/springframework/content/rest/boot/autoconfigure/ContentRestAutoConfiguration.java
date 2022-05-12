@@ -51,7 +51,16 @@ public class ContentRestAutoConfiguration {
 
 		public static class ShortcutRequestMappings {
 
+		    private boolean disabled = false;
 		    private String excludes = null;
+
+            public boolean disabled() {
+                return this.disabled;
+            }
+
+            public void setDisabled(boolean disabled) {
+                this.disabled = disabled;
+            }
 
 		    public String excludes() {
 		        return excludes;

@@ -75,7 +75,20 @@ public class SpringBootContentRestConfigurerTest {
                     });
                 });
 
-                Context("given excluded request mappings", () -> {
+                Context("given disabled shortcut request mappings", () -> {
+
+                    BeforeEach(() -> {
+                        ShortcutRequestMappings mappings = new ShortcutRequestMappings();
+                        mappings.setDisabled(true);
+                        properties.setShortcutRequestMappings(mappings);
+                    });
+
+                    It("should diabled the shortcut links", () -> {
+                        verify(restConfig).setShortcutLinks(false);
+                    });
+                });
+
+                Context("given excluded shortcut request mappings", () -> {
 
                     BeforeEach(() -> {
                         ShortcutRequestMappings mappings = new ShortcutRequestMappings();
@@ -90,7 +103,7 @@ public class SpringBootContentRestConfigurerTest {
                     });
                 });
 
-                Context("given empty excluded request mapping", () -> {
+                Context("given empty excluded shortcut request mapping", () -> {
 
                     BeforeEach(() -> {
                         ShortcutRequestMappings mappings = new ShortcutRequestMappings();
@@ -103,7 +116,7 @@ public class SpringBootContentRestConfigurerTest {
                     });
                 });
 
-                Context("given empty excluded GET request mapping", () -> {
+                Context("given empty excluded shortcut GET request mapping", () -> {
 
                     BeforeEach(() -> {
                         ShortcutRequestMappings mappings = new ShortcutRequestMappings();
@@ -116,7 +129,7 @@ public class SpringBootContentRestConfigurerTest {
                     });
                 });
 
-                Context("given invalid excluded request mapping", () -> {
+                Context("given invalid excluded shortcut request mapping", () -> {
 
                     BeforeEach(() -> {
                         ShortcutRequestMappings mappings = new ShortcutRequestMappings();

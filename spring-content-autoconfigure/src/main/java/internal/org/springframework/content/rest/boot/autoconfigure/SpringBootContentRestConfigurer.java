@@ -36,6 +36,8 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
 
         config.setFullyQualifiedLinks(properties.fullyQualifiedLinks());
 
+        config.setShortcutLinks(!properties.shortcutRequestMappings().disabled());
+
         if (properties.shortcutRequestMappings().excludes() != null) {
             String[] exclusions = properties.shortcutRequestMappings().excludes().split(":");
             for (String exclusion : exclusions) {
