@@ -49,12 +49,12 @@ import internal.org.springframework.content.rest.support.config.JpaInfrastructur
 //@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
-		ExcludedShortcutLinksIT.Config.class,
+		ShortcutExclusionsIT.Config.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class })
 @Transactional
-public class ExcludedShortcutLinksIT {
+public class ShortcutExclusionsIT {
 
 	@Autowired
 	private TestEntity3Repository repo;
@@ -109,7 +109,7 @@ public class ExcludedShortcutLinksIT {
 
 	            @Override
 	            public void configure(RestConfiguration config) {
-	                config.exclusions().exclude("GET", MediaType.parseMediaType("*/*"));
+	                config.shortcutExclusions().exclude("GET", MediaType.parseMediaType("*/*"));
 	            }
 	        };
 	    }

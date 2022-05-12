@@ -63,7 +63,7 @@ public class RestConfiguration implements InitializingBean {
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
-	private Exclusions exclusions = new Exclusions();
+	private Exclusions shortcutExclusions = new Exclusions();
 
     private StoreCacheControlInterceptor storeHandlerInterceptor;
     private StoresImpl stores;
@@ -132,8 +132,8 @@ public class RestConfiguration implements InitializingBean {
 		return config;
 	}
 
-	public Exclusions exclusions() {
-	    return this.exclusions;
+	public Exclusions shortcutExclusions() {
+	    return this.shortcutExclusions;
 	}
 
 	public ConverterRegistry converters() {

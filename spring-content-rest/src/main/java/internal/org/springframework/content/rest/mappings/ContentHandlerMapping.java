@@ -49,7 +49,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	}
 
 	private void initExclusions(Exclusions exclusions, RestConfiguration config) {
-        this.exclusions = config.exclusions();
+        this.exclusions = config.shortcutExclusions();
         if (this.exclusions.size() == 0) {
             this.exclusions
                 .exclude("GET", MediaType.parseMediaType("application/json"))

@@ -36,8 +36,8 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
 
         config.setFullyQualifiedLinks(properties.fullyQualifiedLinks());
 
-        if (properties.requestMappings().excludes() != null) {
-            String[] exclusions = properties.requestMappings().excludes().split(":");
+        if (properties.shortcutRequestMappings().excludes() != null) {
+            String[] exclusions = properties.shortcutRequestMappings().excludes().split(":");
             for (String exclusion : exclusions) {
                 String[] segments = exclusion.split("=");
                 if (segments.length != 2) {
@@ -49,7 +49,7 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
                     String[] mediaTypes = values.split(",");
                     for (String mediaType : mediaTypes) {
                         try {
-                            config.exclusions().exclude(method, MediaType.parseMediaType(mediaType));
+                            config.shortcutExclusions().exclude(method, MediaType.parseMediaType(mediaType));
                         } catch (InvalidMediaTypeException imte) {}
                     }
                 }

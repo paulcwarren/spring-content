@@ -22,7 +22,7 @@ import org.springframework.http.MediaType;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration.ContentRestProperties;
-import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration.ContentRestProperties.RequestMappings;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration.ContentRestProperties.ShortcutRequestMappings;
 import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -45,7 +45,7 @@ public class SpringBootContentRestConfigurerTest {
                     properties = new ContentRestProperties();
                     restConfig = mock(RestConfiguration.class);
                     exclusions = mock(RestConfiguration.Exclusions.class);
-                    when(restConfig.exclusions()).thenReturn(exclusions);
+                    when(restConfig.shortcutExclusions()).thenReturn(exclusions);
                 });
 
                 JustBeforeEach(() -> {
@@ -78,9 +78,9 @@ public class SpringBootContentRestConfigurerTest {
                 Context("given excluded request mappings", () -> {
 
                     BeforeEach(() -> {
-                        RequestMappings mappings = new RequestMappings();
+                        ShortcutRequestMappings mappings = new ShortcutRequestMappings();
                         mappings.setExcludes("GET=a/b,c/d:PUT=*/*");
-                        properties.setRequestMappings(mappings);
+                        properties.setShortcutRequestMappings(mappings);
                     });
 
                     It("should set the exclusions property on the RestConfiguration", () -> {
@@ -93,9 +93,9 @@ public class SpringBootContentRestConfigurerTest {
                 Context("given empty excluded request mapping", () -> {
 
                     BeforeEach(() -> {
-                        RequestMappings mappings = new RequestMappings();
+                        ShortcutRequestMappings mappings = new ShortcutRequestMappings();
                         mappings.setExcludes("");
-                        properties.setRequestMappings(mappings);
+                        properties.setShortcutRequestMappings(mappings);
                     });
 
                     It("should not set the exclusions property on the RestConfiguration", () -> {
@@ -106,9 +106,9 @@ public class SpringBootContentRestConfigurerTest {
                 Context("given empty excluded GET request mapping", () -> {
 
                     BeforeEach(() -> {
-                        RequestMappings mappings = new RequestMappings();
+                        ShortcutRequestMappings mappings = new ShortcutRequestMappings();
                         mappings.setExcludes("GET=");
-                        properties.setRequestMappings(mappings);
+                        properties.setShortcutRequestMappings(mappings);
                     });
 
                     It("should not set the exclusions property on the RestConfiguration", () -> {
@@ -119,9 +119,9 @@ public class SpringBootContentRestConfigurerTest {
                 Context("given invalid excluded request mapping", () -> {
 
                     BeforeEach(() -> {
-                        RequestMappings mappings = new RequestMappings();
+                        ShortcutRequestMappings mappings = new ShortcutRequestMappings();
                         mappings.setExcludes("GET=/");
-                        properties.setRequestMappings(mappings);
+                        properties.setShortcutRequestMappings(mappings);
                     });
 
                     It("should not set the exclusions property on the RestConfiguration", () -> {
