@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
@@ -61,6 +62,9 @@ public class StoreRestController implements InitializingBean  {
 
     @Autowired
     private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
     private ContentServiceFactory contentServiceFactory;
 
@@ -229,6 +233,6 @@ public class StoreRestController implements InitializingBean  {
             this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
         }
 
-        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
+        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler, publisher);
     }
     }

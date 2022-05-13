@@ -33,6 +33,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import internal.org.springframework.content.commons.storeservice.StoresImpl;
+import internal.org.springframework.content.rest.contentservice.AnnotatedStoreRestEventInvoker;
 import internal.org.springframework.content.rest.controllers.ResourceHandlerMethodArgumentResolver;
 import internal.org.springframework.content.rest.controllers.resolvers.DefaultEntityResolver;
 import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
@@ -171,6 +172,11 @@ public class RestConfiguration implements InitializingBean {
         entityResolvers.add(new RevisionEntityResolver(repositories, stores, "/{repository}/{id}/revisions/{revisionId}", mappingContext));
         entityResolvers.add(new RevisionEntityResolver(repositories, stores, "/{repository}/{id}/revisions/{revisionId}/**", mappingContext));
 	    return entityResolvers;
+	}
+
+	@Bean
+	AnnotatedStoreRestEventInvoker storeRestEventInvoker() {
+	    return new AnnotatedStoreRestEventInvoker();
 	}
 
 	@Override

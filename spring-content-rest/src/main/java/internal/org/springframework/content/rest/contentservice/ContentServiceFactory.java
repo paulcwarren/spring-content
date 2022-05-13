@@ -4,6 +4,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 
@@ -18,13 +19,15 @@ public class ContentServiceFactory {
     private final RepositoryInvokerFactory repoInvokerFactory;
     private final Stores stores;
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+    private final ApplicationEventPublisher publisher;
 
-    public ContentServiceFactory(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public ContentServiceFactory(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, ApplicationEventPublisher publisher) {
         this.config = config;
         this.repositories = repositories;
         this.repoInvokerFactory = repoInvokerFactory;
         this.stores = stores;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        this.publisher = publisher;
     }
 
     public ContentService getContentService(StoreResource resource) {
@@ -33,7 +36,7 @@ public class ContentServiceFactory {
 
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
 
-            return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
+            return new EventingContentService(publisher, new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler));
 
         } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 
