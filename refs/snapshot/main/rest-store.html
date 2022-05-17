@@ -918,13 +918,84 @@ Allowed</code>.</p>
 <h2 id="_the_entity_resource">The Entity Resource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Content REST exports Entity Resources to <code>/{store}/{id}</code>.  The resource path can be customized using the
-<code>@StoreRestResource</code> annotation on the Store interface.</p>
+<p>Requests to <code>Store Resource</code> exists (partially) in the same URL space as Spring Data&#8217;s Entity Resource.
+For example, "shortcut" requests to <code>/{store}/{id}</code> will return content (or 404 is no content is set)
+instead of the entity&#8217;s json.</p>
+</div>
+<div class="paragraph">
+<p>This behavior can be customized by preventing the Store Resource from responding to shortcut requests
+with certain media types using exclusions, or by completely disabling the Store Resource for all shortcut
+requests.</p>
+</div>
+<div class="paragraph">
+<p>With Spring Boot 1.2 and later, you can customize the exclusions by setting the following property in
+application.properties:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.shortcut-request-mappings.excludes=&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[,&lt;MEDIA_TYPE&gt;][:&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[,&lt;MEDIA_TYPE&gt;]]
+spring.content.rest.shortcut-request-mappings.disabled=true|false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>VERB is <code>GET</code>, <code>PUT</code>, <code>POST</code> or <code>DELETE</code></p>
+</li>
+<li>
+<p>MEDIA_TYPE is any valid media type including <code>*/*</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Or if you&#8217;re not using Spring Boot, you can customize as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+class CustomContentRestMvcConfiguration {
+
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
+
+    return new ContentRestConfigurer() {
+
+      @Override
+      public void configure(RestConfiguration config) {
+        config.shortcutExclusions().exclude("GET", "*/*");
+
+        // or
+        // config.setShortcutLinks(false)
+      }
+    };
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_property_resource">The Property Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
+The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
 <div class="sect2">
 <h3 id="_supported_http_methods_2">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>Entity Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
+<p>Property Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
 Allowed</code>.</p>
 </div>
 <div class="sect3">
@@ -956,58 +1027,6 @@ Allowed</code>.</p>
 <div class="paragraph">
 <p>Removes the Resource&#8217;s content</p>
 </div>
-<div class="sect4">
-<h5 id="_supported_media_types_6">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_property_resource">The Property Resource</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
-The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
-<div class="paragraph">
-<p>Property Resources support <code>GET</code>, <code>PUT</code>, <code>POST</code>, and <code>DELETE</code>.  All other HTTP methods will cause a <code>405 Method Not
-Allowed</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="_get_3">GET</h4>
-<div class="paragraph">
-<p>Returns the Resource&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_7">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_putpost_3">PUT/POST</h4>
-<div class="paragraph">
-<p>Sets the Resources&#8217;s content</p>
-</div>
-<div class="sect4">
-<h5 id="_supported_media_types_8">Supported media types</h5>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_delete_3">DELETE</h4>
-<div class="paragraph">
-<p>Removes the Resource&#8217;s content</p>
-</div>
 </div>
 </div>
 </div>
@@ -1020,17 +1039,17 @@ Allowed</code>.</p>
 customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
 </div>
 <div class="sect2">
-<h3 id="_supported_http_methods_4">Supported HTTP Methods</h3>
+<h3 id="_supported_http_methods_3">Supported HTTP Methods</h3>
 <div class="paragraph">
 <p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="_putpost_4">PUT/POST</h4>
+<h4 id="_putpost_3">PUT/POST</h4>
 <div class="paragraph">
 <p>Appends new content to the collection of Resources</p>
 </div>
 <div class="sect4">
-<h5 id="_supported_media_types_9">Supported media types</h5>
+<h5 id="_supported_media_types_6">Supported media types</h5>
 <div class="paragraph">
 <p>All content types except <code>application/json</code></p>
 </div>
@@ -1042,7 +1061,7 @@ customized using the <code>@StoreRestResource</code> annotation on the Store int
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-05-06 04:54:41 UTC
+Last updated 2022-05-17 03:46:52 UTC
 </div>
 </div>
 </body>
