@@ -333,21 +333,23 @@ All content types except `application/json`
 
 == The Entity Resource
 
-Requests to `Store Resource` exists (partially) in the same URL space as Spring Data's Entity Resource.
-For example, "shortcut" requests to `/{store}/{id}` will return content (or 404 is no content is set) 
-instead of the entity's json.
+Requests to `Store Resource` exist (partially) in the same URL space as Spring Data's Entity Resource.
+When a single piece of content is associated with an entity then "shortcut" requests to `/{store}/{id}` 
+will return content (or 404 if no content is set) instead of the entity's json.
 
 This behavior can be customized by preventing the Store Resource from responding to shortcut requests
-with certain media types using exclusions, or by completely disabling the Store Resource for all shortcut 
-requests.
+with certain media types using exclusions, or by completely disabling the Store Resource from responding 
+to all shortcut requests, forcing full qualified requests only.  Note, this is likely to become the default
+in future versions of Spring Content REST.
 
-With Spring Boot 1.2 and later, you can customize the exclusions by setting the following property in 
-application.properties:
+With Spring Boot 1.2 and later, you can customize the exclusions or disable shortcut requests entirely by 
+setting either of the following properties in application.properties:
 
 ====
 [source, java]
 ----
-spring.content.rest.shortcut-request-mappings.excludes=<VERB>=<MEDIA_TYPE>[,<MEDIA_TYPE>][:<VERB>=<MEDIA_TYPE>[,<MEDIA_TYPE>]]
+spring.content.rest.shortcut-request-mappings.excludes=<VERB>=<MEDIA_TYPE>[[,<MEDIA_TYPE>]:<VERB>=<MEDIA_TYPE>[,<MEDIA_TYPE>]]
+
 spring.content.rest.shortcut-request-mappings.disabled=true|false
 ----
 where:
