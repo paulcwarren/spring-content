@@ -1044,24 +1044,26 @@ Allowed</code>.</p>
 <div class="sect2">
 <h3 id="_the_entity_resource">3.3. The Entity Resource</h3>
 <div class="paragraph">
-<p>Requests to <code>Store Resource</code> exists (partially) in the same URL space as Spring Data&#8217;s Entity Resource.
-For example, "shortcut" requests to <code>/{store}/{id}</code> will return content (or 404 is no content is set)
-instead of the entity&#8217;s json.</p>
+<p>Requests to <code>Store Resource</code> exist (partially) in the same URL space as Spring Data&#8217;s Entity Resource.
+When a single piece of content is associated with an entity then "shortcut" requests to <code>/{store}/{id}</code>
+will return content (or 404 if no content is set) instead of the entity&#8217;s json.</p>
 </div>
 <div class="paragraph">
 <p>This behavior can be customized by preventing the Store Resource from responding to shortcut requests
-with certain media types using exclusions, or by completely disabling the Store Resource for all shortcut
-requests.</p>
+with certain media types using exclusions, or by completely disabling the Store Resource from responding
+to all shortcut requests, forcing full qualified requests only.  Note, this is likely to become the default
+in future versions of Spring Content REST.</p>
 </div>
 <div class="paragraph">
-<p>With Spring Boot 1.2 and later, you can customize the exclusions by setting the following property in
-application.properties:</p>
+<p>With Spring Boot 1.2 and later, you can customize the exclusions or disable shortcut requests entirely by
+setting either of the following properties in application.properties:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.shortcut-request-mappings.excludes=&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[,&lt;MEDIA_TYPE&gt;][:&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[,&lt;MEDIA_TYPE&gt;]]
+<pre class="highlight"><code class="language-java" data-lang="java">spring.content.rest.shortcut-request-mappings.excludes=&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[[,&lt;MEDIA_TYPE&gt;]:&lt;VERB&gt;=&lt;MEDIA_TYPE&gt;[,&lt;MEDIA_TYPE&gt;]]
+
 spring.content.rest.shortcut-request-mappings.disabled=true|false</code></pre>
 </div>
 </div>
@@ -1830,7 +1832,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 2.4.0-SNAPSHOT<br>
-Last updated 2022-05-17 03:47:23 UTC
+Last updated 2022-05-17 04:27:31 UTC
 </div>
 </div>
 </body>
