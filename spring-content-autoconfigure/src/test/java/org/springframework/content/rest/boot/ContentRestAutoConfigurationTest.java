@@ -56,10 +56,14 @@ public class ContentRestAutoConfigurationTest {
 				BeforeEach(() -> {
 					System.setProperty("spring.content.rest.base-uri", "/contentApi");
 					System.setProperty("spring.content.rest.fully-qualified-links", "false");
+                    System.setProperty("spring.content.rest.shortcut-request-mappings.disabled", "true");
+					System.setProperty("spring.content.rest.shortcut-request-mappings.excludes", "GET=a/b,c/d:PUT=*/*");
 				});
 				AfterEach(() -> {
 					System.clearProperty("spring.content.rest.base-uri");
                     System.clearProperty("spring.content.rest.fully-qualified-links");
+                    System.clearProperty("spring.content.rest.shortcut-request-mappings.disabled");
+                    System.clearProperty("spring.content.rest.shortcut-request-mappings.excludes");
 				});
 				It("should have a filesystem properties bean with the correct properties set", () -> {
 					AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
@@ -69,6 +73,8 @@ public class ContentRestAutoConfigurationTest {
 
 					assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).getBaseUri(), is(URI.create("/contentApi")));
 					assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).fullyQualifiedLinks(), is(false));
+                    assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).shortcutRequestMappings().disabled(), is(true));
+                    assertThat(context.getBean(ContentRestAutoConfiguration.ContentRestProperties.class).shortcutRequestMappings().excludes(), is("GET=a/b,c/d:PUT=*/*"));
 
 					assertThat(context.getBean(SpringBootContentRestConfigurer.class), is(not(nullValue())));
 

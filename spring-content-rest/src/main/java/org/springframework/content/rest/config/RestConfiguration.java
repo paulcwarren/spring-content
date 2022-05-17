@@ -27,6 +27,7 @@ import org.springframework.data.repository.support.DefaultRepositoryInvokerFacto
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -45,6 +46,7 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 public class RestConfiguration implements InitializingBean {
 
     public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
+    public static boolean SHORTCUT_LINKS_DEFAULT = true;
 
 	private static final URI NO_URI = URI.create("");
 
@@ -57,9 +59,11 @@ public class RestConfiguration implements InitializingBean {
 	private URI baseUri = NO_URI;
 	private StoreCorsRegistry corsRegistry;
 	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
+    private boolean shortcutLinks = SHORTCUT_LINKS_DEFAULT;
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
+	private Exclusions shortcutExclusions = new Exclusions();
 
     private StoreCacheControlInterceptor storeHandlerInterceptor;
     private StoresImpl stores;
@@ -83,6 +87,14 @@ public class RestConfiguration implements InitializingBean {
 	public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
 		this.fullyQualifiedLinks = fullyQualifiedLinks;
 	}
+
+    public boolean shortcutLinks() {
+        return shortcutLinks;
+    }
+
+    public void setShortcutLinks(boolean shortcutLinks) {
+        this.shortcutLinks = shortcutLinks;
+    }
 
 	public StoreCorsRegistry getCorsRegistry() {
 		return corsRegistry;
@@ -118,6 +130,10 @@ public class RestConfiguration implements InitializingBean {
 			domainTypeConfigMap.put(type, config);
 		}
 		return config;
+	}
+
+	public Exclusions shortcutExclusions() {
+	    return this.shortcutExclusions;
 	}
 
 	public ConverterRegistry converters() {
@@ -283,4 +299,21 @@ public class RestConfiguration implements InitializingBean {
 	    boolean resolve(S subject, C context);
 	}
 
+	public static class Exclusions extends HashMap<String,List<MediaType>> {
+
+        private static final long serialVersionUID = 5499454344207867070L;
+
+        public Exclusions exclude(String method, MediaType mediaType) {
+            Assert.hasLength(method, "method must not be null or empty");
+
+            List<MediaType> excludes = this.get(method);
+            if (excludes == null) {
+                excludes = new ArrayList<>();
+                this.put(method, excludes);
+            }
+            excludes.add(mediaType);
+
+            return this;
+        }
+    }
 }

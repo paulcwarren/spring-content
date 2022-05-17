@@ -23,6 +23,7 @@ public class ContentRestAutoConfiguration {
 
 		private URI baseUri;
 		private boolean fullyQualifiedLinks = RestConfiguration.FULLY_QUALIFIED_DEFAULTS_DEFAULT;
+		private ShortcutRequestMappings requestMappings = new ShortcutRequestMappings();
 
 		public URI getBaseUri() {
 			return baseUri;
@@ -38,6 +39,36 @@ public class ContentRestAutoConfiguration {
 
 		public void setFullyQualifiedLinks(boolean fullyQualifiedLinks) {
 			this.fullyQualifiedLinks = fullyQualifiedLinks;
+		}
+
+		public ShortcutRequestMappings shortcutRequestMappings() {
+		    return this.requestMappings;
+		}
+
+		public void setShortcutRequestMappings(ShortcutRequestMappings requestMappings) {
+		    this.requestMappings = requestMappings;
+		}
+
+		public static class ShortcutRequestMappings {
+
+		    private boolean disabled = false;
+		    private String excludes = null;
+
+            public boolean disabled() {
+                return this.disabled;
+            }
+
+            public void setDisabled(boolean disabled) {
+                this.disabled = disabled;
+            }
+
+		    public String excludes() {
+		        return excludes;
+		    }
+
+		    public void setExcludes(String excludes) {
+		        this.excludes = excludes;
+		    }
 		}
     }
 

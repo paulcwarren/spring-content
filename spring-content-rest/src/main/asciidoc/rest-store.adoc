@@ -333,37 +333,54 @@ All content types except `application/json`
 
 == The Entity Resource
 
-Spring Content REST exports Entity Resources to `/{store}/{id}`.  The resource path can be customized using the
-`@StoreRestResource` annotation on the Store interface.
- 
-=== Supported HTTP Methods
+Requests to `Store Resource` exists (partially) in the same URL space as Spring Data's Entity Resource.
+For example, "shortcut" requests to `/{store}/{id}` will return content (or 404 is no content is set) 
+instead of the entity's json.
 
-Entity Resources support `GET`, `PUT`, `POST`, and `DELETE`.  All other HTTP methods will cause a `405 Method Not
-Allowed`.
+This behavior can be customized by preventing the Store Resource from responding to shortcut requests
+with certain media types using exclusions, or by completely disabling the Store Resource for all shortcut 
+requests.
 
-==== GET
+With Spring Boot 1.2 and later, you can customize the exclusions by setting the following property in 
+application.properties:
 
-Returns the Resource's content 
+====
+[source, java]
+----
+spring.content.rest.shortcut-request-mappings.excludes=<VERB>=<MEDIA_TYPE>[,<MEDIA_TYPE>][:<VERB>=<MEDIA_TYPE>[,<MEDIA_TYPE>]]
+spring.content.rest.shortcut-request-mappings.disabled=true|false
+----
+where:
 
-===== Supported media types
+- VERB is `GET`, `PUT`, `POST` or `DELETE`
+- MEDIA_TYPE is any valid media type including `\*/*`
+====
 
-All content types except `application/json`
+Or if you're not using Spring Boot, you can customize as follows:
 
-==== PUT/POST
+====
+[source, java]
+----
+@Configuration
+class CustomContentRestMvcConfiguration {
 
-Sets the Resources's content
+  @Bean
+  public ContentRestConfigurer contentRestConfigurer() {
 
-===== Supported media types
+    return new ContentRestConfigurer() {
 
-All content types except `application/json`
- 
-==== DELETE
-
-Removes the Resource's content
-
-===== Supported media types
-
-All content types except `application/json`
+      @Override
+      public void configure(RestConfiguration config) {
+        config.shortcutExclusions().exclude("GET", "*/*");
+        
+        // or
+        // config.setShortcutLinks(false)
+      }
+    };
+  }
+}
+----
+====
 
 == The Property Resource
 
