@@ -52,7 +52,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <springboot-version>2.6.7</springboot-version>
         <spring-cloud.version>2021.0.2</spring-cloud.version>
         <commonsio-version>2.11.0</commonsio-version>
-        <test-containers.version>1.15.3</test-containers.version>
+        <test-containers.version>1.17.2</test-containers.version>
 
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
     </properties>
