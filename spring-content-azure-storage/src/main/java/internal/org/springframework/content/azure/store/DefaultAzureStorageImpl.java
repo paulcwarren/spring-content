@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.content.azure.Bucket;
 import org.springframework.content.azure.config.BlobId;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -113,10 +114,15 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             return null;
 
         BlobId blobId = null;
-        if (placementService.canConvert(property.getContentIdType(entity).getClass(), BlobId.class)) {
+        if (placementService.canConvert(property.getContentIdType(entity).getObjectType(), BlobId.class)) {
             blobId = placementService.convert(property.getContentId(entity), BlobId.class);
 
             if (blobId != null) {
+                Object bucket = BeanUtils.getFieldWithAnnotation(entity, Bucket.class);
+                if (bucket != null) {
+                    // override bucket with value defined on Entity level
+                    blobId = new BlobId(bucket.toString(), blobId.getName());
+                }
                 return this.getResourceInternal(blobId);
             }
         }

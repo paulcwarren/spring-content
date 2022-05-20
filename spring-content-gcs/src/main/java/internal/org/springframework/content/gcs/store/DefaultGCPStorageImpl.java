@@ -26,6 +26,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.gcs.Bucket;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
@@ -113,10 +114,15 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
             return null;
 
         BlobId blobId = null;
-        if (placementService.canConvert(property.getContentIdType(entity).getClass(), BlobId.class)) {
+        if (placementService.canConvert(property.getContentIdType(entity).getObjectType(), BlobId.class)) {
             blobId = placementService.convert(property.getContentId(entity), BlobId.class);
 
             if (blobId != null) {
+				Object bucket = BeanUtils.getFieldWithAnnotation(entity, Bucket.class);
+				if (bucket != null) {
+					// override bucket with value defined on Entity level
+					blobId = BlobId.of(bucket.toString(), blobId.getName(), blobId.getGeneration());
+				}
                 return this.getResourceInternal(blobId);
             }
         }

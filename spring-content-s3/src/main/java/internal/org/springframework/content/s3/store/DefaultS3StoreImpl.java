@@ -27,6 +27,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
@@ -116,10 +117,15 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
             return null;
 
         S3ObjectId s3ObjectId = null;
-        if (placementService.canConvert(property.getContentIdType(entity).getClass(), S3ObjectId.class)) {
+        if (placementService.canConvert(property.getContentIdType(entity).getObjectType(), S3ObjectId.class)) {
             s3ObjectId = placementService.convert(property.getContentId(entity), S3ObjectId.class);
 
             if (s3ObjectId != null) {
+				Object bucket = BeanUtils.getFieldWithAnnotation(entity, Bucket.class);
+				if (bucket != null) {
+					// override bucket with value defined on Entity level
+					s3ObjectId = new S3ObjectId(bucket.toString(), s3ObjectId.getKey(), s3ObjectId.getVersionId());
+				}
                 return this.getResourceInternal(s3ObjectId);
             }
         }
