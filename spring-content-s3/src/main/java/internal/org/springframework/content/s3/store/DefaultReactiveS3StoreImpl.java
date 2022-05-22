@@ -14,7 +14,9 @@ import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
@@ -62,6 +64,15 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 		this.clientProvider = provider;
 	}
 
+    private S3ObjectId overrideBucketWithAnnotatedField(S entity, S3ObjectId s3ObjectId) {
+        Object bucket = BeanUtils.getFieldWithAnnotation(entity, Bucket.class);
+        if (bucket != null) {
+            // override bucket with value defined on Entity level
+            s3ObjectId = new S3ObjectId(bucket.toString(), s3ObjectId.getKey(), s3ObjectId.getVersionId());
+        }
+        return s3ObjectId;
+    }
+
     @Transactional
     @Override
     public Mono<S> setContent(S entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
@@ -88,7 +99,8 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
             throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
         }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        S3ObjectId draftS3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        final S3ObjectId s3ObjectId = overrideBucketWithAnnotatedField(entity, draftS3ObjectId);
 
         PutObjectRequest.Builder requestBuilder = PutObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
@@ -134,7 +146,8 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
             throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
         }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        s3ObjectId = overrideBucketWithAnnotatedField(entity, s3ObjectId);
 
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
@@ -169,7 +182,8 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
             throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
         }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        s3ObjectId = overrideBucketWithAnnotatedField(entity, s3ObjectId);
 
         DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
