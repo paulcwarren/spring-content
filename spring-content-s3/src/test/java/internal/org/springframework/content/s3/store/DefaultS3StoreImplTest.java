@@ -246,7 +246,7 @@ public class DefaultS3StoreImplTest {
 				JustBeforeEach(() -> {
 					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null);
 				});
-				Context("#getResource(entity)", () -> {
+				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
 						try {
 							r = s3StoreImpl.getResource(entity);
@@ -374,7 +374,7 @@ public class DefaultS3StoreImplTest {
                         });
                     });
 				});
-				Context("#getResource(entity, propertyPath)", () -> {
+				Context("#getResource with PropertyPath", () -> {
 					JustBeforeEach(() -> {
 						try {
 							r = s3StoreImpl.getResource(entity, PropertyPath.from("content"));
@@ -384,7 +384,7 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 
-					// the following context is exactly the same as for "#getResource(entity)" above
+					// the following context is exactly the same as for "#getResource" above
 					Context("given the default associative store id resolver", () -> {
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
@@ -453,7 +453,7 @@ public class DefaultS3StoreImplTest {
 							placementService = new PlacementServiceImpl();
 							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 							placementService.addConverter(new Converter<String, S3ObjectId>() {
-								// instead of Converter<TestEntity, S3ObjectId> for #getResource(entity)
+								// instead of Converter<TestEntity, S3ObjectId> for #getResource
 								@Override
 								public S3ObjectId convert(String source) {
 									return new S3ObjectId( "custom-bucket", "custom-object-id");
@@ -516,7 +516,7 @@ public class DefaultS3StoreImplTest {
 						});
 					});
 				});
-				Context("associate", () -> {
+				Context("#associate", () -> {
 					BeforeEach(() -> {
 						id = "12345-67890";
 						entity = new TestEntity();
