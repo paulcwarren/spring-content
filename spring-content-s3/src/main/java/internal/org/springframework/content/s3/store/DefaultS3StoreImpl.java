@@ -116,10 +116,14 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
             return null;
 
         S3ObjectId s3ObjectId = null;
-        if (placementService.canConvert(property.getContentIdType(entity).getClass(), S3ObjectId.class)) {
-            s3ObjectId = placementService.convert(property.getContentId(entity), S3ObjectId.class);
+        if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
+            s3ObjectId = placementService.convert(entity, S3ObjectId.class);
 
             if (s3ObjectId != null) {
+
+                // ensure the object id has the content id from the property path
+                s3ObjectId = new S3ObjectId(s3ObjectId.getBucket(), property.getContentId(entity).toString());
+
                 return this.getResourceInternal(s3ObjectId);
             }
         }

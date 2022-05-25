@@ -3,6 +3,7 @@ package internal.org.springframework.content.s3.store;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static java.lang.String.format;
@@ -12,10 +13,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -32,7 +34,6 @@ import java.io.Serializable;
 import java.util.function.Supplier;
 
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -58,6 +59,7 @@ import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @RunWith(Ginkgo4jRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -444,7 +446,7 @@ public class DefaultS3StoreImplTest {
 								});
 								It("should write to the resource's outputstream", () -> {
 									verify(resource).getOutputStream();
-									verify(output, times(1)).write(Matchers.<byte[]>any(),
+									verify(output, times(1)).write(any(byte[].class),
 											eq(0), eq(20));
 								});
 								Context("when the resource output stream throws an IOException", () -> {
@@ -484,9 +486,26 @@ public class DefaultS3StoreImplTest {
 								});
 								It("should write to the resource's outputstream", () -> {
 									verify(resource).getOutputStream();
-									verify(output, times(1)).write(Matchers.<byte[]>any(),
+									verify(output, times(1)).write(any(byte[].class),
 											eq(0), eq(20));
 								});
+							});
+							Context("when s3 throws an S3Exception", () -> {
+							    BeforeEach(() -> {
+                                    assertThat(entity.getContentId(), is(nullValue()));
+
+                                    placementService = new PlacementServiceImpl();
+                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+
+                                    when(loader.getResource(matches("^s3://.*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))).thenReturn(resource);
+                                    output = mock(OutputStream.class);
+                                    when(resource.getOutputStream()).thenReturn(output);
+
+                                    doThrow(S3Exception.builder().message("no such upload").build()).when(output).close();
+							    });
+							    FIt("should do something", () -> {
+							        assertThat(e, is(instanceOf(S3Exception.class)));
+							    });
 							});
 						});
 					});
@@ -668,7 +687,7 @@ public class DefaultS3StoreImplTest {
 										verify(loader).getResource(eq("s3://default-defaultBucket/abcd-efgh"));
 									});
 									It("should unset the content", () -> {
-										verify(client, never()).deleteObject((DeleteObjectRequest)anyObject());
+										verify(client, never()).deleteObject(any(DeleteObjectRequest.class));
 										assertThat(entity.getContentId(), is(nullValue()));
 										assertThat(entity.getContentLen(), is(0L));
 									});
