@@ -30,7 +30,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.sql.DataSource;
 
-import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -63,6 +62,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import junit.framework.Assert;
 import lombok.Getter;
