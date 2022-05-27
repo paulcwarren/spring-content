@@ -39,6 +39,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
+import org.springframework.content.s3.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -62,6 +63,8 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import junit.framework.Assert;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -84,6 +87,8 @@ public class S3StoreWithEntityConverterIT {
     private static final String OTHER_BUCKET = "other-bucket";
     private static final String OTHER_OTHER_BUCKET = "other-other-bucket";
 
+    private static TestData[] testDataSets = null;
+
     static {
         System.setProperty("spring.content.s3.bucket", BUCKET);
 
@@ -96,6 +101,20 @@ public class S3StoreWithEntityConverterIT {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        testDataSets = new TestData[] {
+                new TestData("Default Converter", new Class[] {TestConfig.class}, OTHER_BUCKET),
+                new TestData("Custom Converter", new Class[] {CustomConverterConfig.class, TestConfig.class}, OTHER_OTHER_BUCKET),
+
+        };
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class TestData {
+        private String name;
+        private Class[] config;
+        private String bucket;
     }
 
     private TestEntity entity;
@@ -114,226 +133,98 @@ public class S3StoreWithEntityConverterIT {
     private String resourceLocation;
 
     {
-        Describe("S3StoreDefaultEntityConverterIT", () -> {
+        for (TestData testDataSet : testDataSets) {
 
-            BeforeEach(() -> {
-                context = new AnnotationConfigApplicationContext();
-                context.register(TestConfig.class);
-                context.refresh();
-
-                repo = context.getBean(TestEntityRepository.class);
-                store = context.getBean(TestEntityStore.class);
-                client = context.getBean(S3Client.class);
-
-                try {
-                    HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
-                            .bucket(BUCKET)
-                            .build();
-
-                    client.headBucket(headBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(BUCKET)
-                            .build();
-                    client.createBucket(bucketRequest);
-                }
-
-                try {
-                    HeadBucketRequest otherBucketRequest = HeadBucketRequest.builder()
-                            .bucket(OTHER_BUCKET)
-                            .build();
-
-                    client.headBucket(otherBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(OTHER_BUCKET)
-                            .build();
-                    client.createBucket(bucketRequest);
-                }
-
-                RandomString random  = new RandomString(5);
-                resourceLocation = random.nextString();
-            });
-
-            AfterEach(() -> {
-                context.close();
-            });
-
-            Describe("ContentStore", () -> {
+            Describe(testDataSet.getName(), () -> {
 
                 BeforeEach(() -> {
-                    entity = new TestEntity();
-                    entity.setContentType("text/plain");
-                    entity = repo.save(entity);
+                    context = new AnnotationConfigApplicationContext();
+                    context.register(testDataSet.getConfig());
+                    context.refresh();
 
-                    store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                });
+                    repo = context.getBean(TestEntityRepository.class);
+                    store = context.getBean(TestEntityStore.class);
+                    client = context.getBean(S3Client.class);
 
-                It("should be able to store new content in other-bucket", () -> {
-                    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-                    verify(s3ClientSpy).putObject(captor.capture(), any(RequestBody.class));
-                    assertThat(captor.getValue().bucket(), is(OTHER_BUCKET));
-
-                    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                            .bucket(OTHER_BUCKET)
-                            .key(entity.getContentId())
-                            .build();
-
-                    client.headObject(headObjectRequest);
-                });
-
-                It("should have content metadata", () -> {
-                    // content
-                    assertThat(entity.getContentId(), is(notNullValue()));
-                    assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
-                });
-
-                Context("when content is deleted", () -> {
-                    BeforeEach(() -> {
-                        resourceLocation = entity.getContentId().toString();
-                        entity = store.unsetContent(entity);
-                        entity = repo.save(entity);
-                    });
-
-                    It("should have no content", () -> {
-                        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
-                        verify(s3ClientSpy).deleteObject(captor.capture());
-                        assertThat(captor.getValue().bucket(), is(OTHER_BUCKET));
-
-                        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                                .bucket(OTHER_BUCKET)
-                                .key(resourceLocation)
+                    try {
+                        HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
+                                .bucket(testDataSet.getBucket())
                                 .build();
 
-                        try {
-                            client.headObject(headObjectRequest);
-                            fail("expected object not to exist");
-                        } catch (NoSuchKeyException  e) {}
-                    });
-                });
-            });
-        });
+                        client.headBucket(headBucketRequest);
+                    } catch (NoSuchBucketException e) {
 
-        Describe("S3StoreEntityConverterIT", () -> {
+                        CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
+                                .bucket(testDataSet.getBucket())
+                                .build();
+                        client.createBucket(bucketRequest);
+                    }
 
-            BeforeEach(() -> {
-                context = new AnnotationConfigApplicationContext();
-                context.register(CustomConverterConfig.class, TestConfig.class);
-                context.refresh();
-
-                repo = context.getBean(TestEntityRepository.class);
-                store = context.getBean(TestEntityStore.class);
-                client = context.getBean(S3Client.class);
-
-                try {
-                    HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
-                            .bucket(BUCKET)
-                            .build();
-
-                    client.headBucket(headBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(BUCKET)
-                            .build();
-                    client.createBucket(bucketRequest);
-                }
-
-                try {
-                    HeadBucketRequest otherBucketRequest = HeadBucketRequest.builder()
-                            .bucket(OTHER_BUCKET)
-                            .build();
-
-                    client.headBucket(otherBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(OTHER_BUCKET)
-                            .build();
-                    client.createBucket(bucketRequest);
-                }
-
-
-                try {
-                    HeadBucketRequest otherBucketRequest = HeadBucketRequest.builder()
-                            .bucket(OTHER_OTHER_BUCKET)
-                            .build();
-
-                    client.headBucket(otherBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(OTHER_OTHER_BUCKET)
-                            .build();
-                    client.createBucket(bucketRequest);
-                }
-
-                RandomString random  = new RandomString(5);
-                resourceLocation = random.nextString();
-            });
-
-            AfterEach(() -> {
-                context.close();
-            });
-
-            Describe("ContentStore", () -> {
-
-                BeforeEach(() -> {
-                    entity = new TestEntity();
-                    entity.setContentType("text/plain");
-                    entity = repo.save(entity);
-
-                    store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                    RandomString random  = new RandomString(5);
+                    resourceLocation = random.nextString();
                 });
 
-                It("should be able to store new content in other-bucket", () -> {
-                    ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
-                    verify(s3ClientSpy).putObject(captor.capture(), any(RequestBody.class));
-                    assertThat(captor.getValue().bucket(), is(OTHER_OTHER_BUCKET));
-
-                    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                            .bucket(OTHER_OTHER_BUCKET)
-                            .key(entity.getContentId())
-                            .build();
-
-                    client.headObject(headObjectRequest);
+                AfterEach(() -> {
+                    context.close();
                 });
 
-                It("should have content metadata", () -> {
-                    // content
-                    assertThat(entity.getContentId(), is(notNullValue()));
-                    assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
-                });
+                Describe("given an entity with content", () -> {
 
-                Context("when content is deleted", () -> {
                     BeforeEach(() -> {
-                        resourceLocation = entity.getContentId().toString();
-                        entity = store.unsetContent(entity);
+                        entity = new TestEntity();
+                        entity.setContentType("text/plain");
                         entity = repo.save(entity);
+
+                        store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
                     });
 
-                    It("should have no content", () -> {
-                        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
-                        verify(s3ClientSpy).deleteObject(captor.capture());
-                        assertThat(captor.getValue().bucket(), is(OTHER_OTHER_BUCKET));
+                    It("should store new content in bucket '" + testDataSet.getBucket() + "'", () -> {
+                        ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+                        verify(s3ClientSpy).putObject(captor.capture(), any(RequestBody.class));
+                        assertThat(captor.getValue().bucket(), is(testDataSet.getBucket()));
 
                         HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                                .bucket(OTHER_OTHER_BUCKET)
-                                .key(resourceLocation)
+                                .bucket(testDataSet.getBucket())
+                                .key(entity.getContentId().toString())
                                 .build();
 
-                        try {
-                            client.headObject(headObjectRequest);
-                            fail("expected object not to exist");
-                        } catch (NoSuchKeyException  e) {}
+                        client.headObject(headObjectRequest);
+                    });
+
+                    It("should have content metadata", () -> {
+                        // content
+                        assertThat(entity.getContentId(), is(notNullValue()));
+                        assertThat(entity.getContentId().toString().trim().length(), greaterThan(0));
+                        Assert.assertEquals(entity.getContentLen(), 27L);
+                    });
+
+                    Context("when content is deleted", () -> {
+                        BeforeEach(() -> {
+                            resourceLocation = entity.getContentId().toString();
+                            entity = store.unsetContent(entity, PropertyPath.from("content"));
+                            entity = repo.save(entity);
+                        });
+
+                        It("should delete content from bucket '" + testDataSet.getBucket() + "'", () -> {
+                            ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+                            verify(s3ClientSpy).deleteObject(captor.capture());
+                            assertThat(captor.getValue().bucket(), is(testDataSet.getBucket()));
+
+                            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                                    .bucket(testDataSet.getBucket())
+                                    .key(resourceLocation)
+                                    .build();
+
+                            try {
+                                client.headObject(headObjectRequest);
+                                fail("expected object not to exist");
+                            } catch (NoSuchKeyException  e) {}
+                        });
                     });
                 });
             });
-        });    }
+        }
+    }
 
     @Test
     public void test() {
@@ -362,10 +253,11 @@ public class S3StoreWithEntityConverterIT {
 
               @Override
               public void configureS3StoreConverters(ConverterRegistry registry) {
-                  registry.addConverter(new Converter<TestEntity, S3ObjectId>() {
+
+                  registry.addConverter(new Converter<ContentPropertyInfo<TestEntity>, S3ObjectId>() {
                       @Override
-                      public S3ObjectId convert(TestEntity entity) {
-                          return new S3ObjectId(OTHER_OTHER_BUCKET, entity.getContentId());
+                      public S3ObjectId convert(ContentPropertyInfo<TestEntity> info) {
+                          return new S3ObjectId(OTHER_OTHER_BUCKET, info.contentProperty().getContentId(info.entity()).toString());
                       }
                   });
               }
@@ -421,7 +313,7 @@ public class S3StoreWithEntityConverterIT {
         private String bucket = "other-bucket";
 
         @ContentId
-        private String contentId;
+        private UUID contentId;
 
         @ContentLength
         private long contentLen;
@@ -430,7 +322,7 @@ public class S3StoreWithEntityConverterIT {
         private String contentType;
 
         @ContentId
-        private String renditionId;
+        private UUID renditionId;
 
         @ContentLength
         private long renditionLen;
@@ -438,8 +330,8 @@ public class S3StoreWithEntityConverterIT {
         @MimeType
         private String renditionContentType;
 
-        public TestEntity(String contentId) {
-            this.contentId = new String(contentId);
+        public TestEntity(UUID contentId) {
+            this.contentId = contentId;
         }
     }
 
