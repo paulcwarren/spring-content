@@ -28,6 +28,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
+import org.springframework.content.s3.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
@@ -38,6 +39,7 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import internal.org.springframework.content.s3.config.ContentPropertyInfoImpl;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -91,6 +93,10 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		if (entity == null)
 			return null;
 
+		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		if (contentId == null)
+		    return null;
+
 		S3ObjectId s3ObjectId = null;
 		if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
 			s3ObjectId = placementService.convert(entity, S3ObjectId.class);
@@ -100,7 +106,6 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			}
 		}
 
-		SID contentId = (SID) BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
 		return this.getResource(contentId);
 	}
 
@@ -115,17 +120,13 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
         if (entity == null)
             return null;
 
+        if (property.getContentId(entity) == null)
+            return null;
+
         S3ObjectId s3ObjectId = null;
-        if (placementService.canConvert(entity.getClass(), S3ObjectId.class)) {
-            s3ObjectId = placementService.convert(entity, S3ObjectId.class);
-
-            if (s3ObjectId != null) {
-
-                // ensure the object id has the content id from the property path
-                s3ObjectId = new S3ObjectId(s3ObjectId.getBucket(), property.getContentId(entity).toString());
-
-                return this.getResourceInternal(s3ObjectId);
-            }
+        if (placementService.canConvert(ContentPropertyInfo.class, S3ObjectId.class)) {
+            s3ObjectId = placementService.convert(new ContentPropertyInfoImpl(entity, property), S3ObjectId.class);
+            return this.getResourceInternal(s3ObjectId);
         }
 
         SID contentId = (SID) property.getContentId(entity);
