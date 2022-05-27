@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.junit.runner.RunWith;
@@ -36,6 +37,7 @@ import org.mockito.Matchers;
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.mappingcontext.ContentPropertyInfo;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
@@ -384,7 +386,7 @@ public class DefaultS3StoreImplTest {
 						}
 					});
 
-					// the following context is exactly the same as for "#getResource" above
+					// the following context is (and should be) exactly the same as for "#getResource" above
 					Context("given the default associative store id resolver", () -> {
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
@@ -449,44 +451,65 @@ public class DefaultS3StoreImplTest {
 					});
 
 					Context("given a custom id resolver", () -> {
-						BeforeEach(() -> {
-							placementService = new PlacementServiceImpl();
-							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-							placementService.addConverter(new Converter<String, S3ObjectId>() {
-								// instead of Converter<TestEntity, S3ObjectId> for #getResource
-								@Override
-								public S3ObjectId convert(String source) {
-									return new S3ObjectId( "custom-bucket", "custom-object-id");
-								}
-							});
-
-							SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
-							s3Protocol.afterPropertiesSet();
-							loader = new DefaultResourceLoader();
-							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
-						});
 						Context("given a default bucket", () -> {
 							BeforeEach(() -> {
 								defaultBucket = "default-defaultBucket";
 							});
-							Context("when called with an entity in which contentId is not null", () -> {
+							Context("when called with an entity", () -> {
 								BeforeEach(() -> {
-									entity = new TestEntity("ignored-id");
+									entity = new TestEntity();
+
+									placementService = new PlacementServiceImpl();
+									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+
+									// Converter that matches Entity and content Id types. Expected to be invoked.
+									// Converter<ContentPropertyInfo<TestEntity, String>, S3ObjectId> instead of Converter<TestEntity, S3ObjectId> for #getResource
+									placementService.addConverter(new Converter<ContentPropertyInfo<TestEntity, String>, S3ObjectId>() {
+										@Override
+										public S3ObjectId convert(ContentPropertyInfo<TestEntity, String> source) {
+											return new S3ObjectId( "custom-bucket", "test-entity/custom-object-id-string-based");
+										}
+									});
+
+									// Converter that does not match content Id type. Should not be invoked.
+									placementService.addConverter(new Converter<ContentPropertyInfo<Object, UUID>, S3ObjectId>() {
+										@Override
+										public S3ObjectId convert(ContentPropertyInfo<Object, UUID> source) {
+											return new S3ObjectId( "custom-bucket", "object/custom-object-id-uuid-based");
+										}
+									});
+									// Converter that does not match Entity type. Should not be invoked.
+									placementService.addConverter(new Converter<ContentPropertyInfo<TestEntityWithBucketAnnotation, String>, S3ObjectId>() {
+										@Override
+										public S3ObjectId convert(ContentPropertyInfo<TestEntityWithBucketAnnotation, String> source) {
+											return new S3ObjectId( "custom-bucket", "test-entity-with-bucket/custom-object-id-string-based");
+										}
+									});
+
+									// solution with base converter class:
+//									placementService.addConverter(new ContentPropertyInfoConverter<TestEntity, String, S3ObjectId>(TestEntity.class, String.class, S3ObjectId.class) {
+//										@Override
+//										public S3ObjectId convert(ContentPropertyInfo<TestEntity, String> source) {
+//											return new S3ObjectId( "custom-bucket", "test-entity/custom-object-id-string-based");
+//										}
+//									});
+//									placementService.addConverter(new ContentPropertyInfoConverter<Object, UUID, S3ObjectId>(Object.class, Long.class, S3ObjectId.class) {
+//										@Override
+//										public S3ObjectId convert(ContentPropertyInfo<Object,UUID> source) {
+//											return new S3ObjectId( "custom-bucket", "object/custom-object-id-uuid-based");
+//										}
+//									});
+
+									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
+									s3Protocol.afterPropertiesSet();
+									loader = new DefaultResourceLoader();
+									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 								});
 								It("should fetch the resource", () -> {
 									assertThat(e, is(nullValue()));
 									assertThat(r, is(instanceOf(S3StoreResource.class)));
 									assertThat(((S3StoreResource)r).getClient(), is(client));
-									assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","custom-bucket", "custom-object-id")));
-								});
-							});
-							Context("when called with an entity in which contentId is null", () -> {
-								BeforeEach(() -> {
-									entity = new TestEntity();
-								});
-								It("should return null", () -> {
-									assertThat(e, is(nullValue()));
-									assertThat(r, is(nullValue()));
+									assertThat(r.getDescription(), is(format("Amazon s3 resource [bucket='%s' and object='%s']","custom-bucket", "test-entity/custom-object-id-string-based")));
 								});
 							});
 						});
@@ -496,15 +519,15 @@ public class DefaultS3StoreImplTest {
 							BeforeEach(() -> {
 								defaultBucket = null;
 							});
-							Context("when called with an entity in which contentId is not null", () -> {
+							Context("when called with an entity", () -> {
 								BeforeEach(() -> {
-									entity = new TestEntity("12345-67890");
+									entity = new TestEntity();
 
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-									placementService.addConverter(new Converter<String, S3ObjectId>() {
+									placementService.addConverter(new Converter<ContentPropertyInfo<TestEntity, String>, S3ObjectId>() {
 										@Override
-										public S3ObjectId convert(String entity) {
+										public S3ObjectId convert(ContentPropertyInfo<TestEntity, String> source) {
 											return new S3ObjectId(null, "custom-object-id");
 										}
 									});

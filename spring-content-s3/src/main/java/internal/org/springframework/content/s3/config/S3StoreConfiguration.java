@@ -7,6 +7,8 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.ContentPropertyInfo;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.PlacementService;
@@ -79,6 +81,39 @@ public class S3StoreConfiguration {
                 // otherwise it is the id
                 } else {
                     key = idOrEntity.toString();
+                }
+
+                return (key != null) ? new S3ObjectId(strBucket, key) : null;
+            }
+
+        });
+
+        // ContentPropertyInfo -> S3ObjectId
+        conversion.addConverter(new Converter<ContentPropertyInfo<Object, Serializable>, S3ObjectId>() {
+
+            private String defaultBucket = bucket;
+
+            @Override
+            public S3ObjectId convert(ContentPropertyInfo<Object, Serializable> info) {
+                // Object entity = info.getEntity();
+                Serializable contentId = info.getContentId();
+                // ContentProperty contentProperty = info.getContentProperty();
+
+                String strBucket = null;
+                // @Bucket can be only on entity level, not per content property
+                Object bucket = BeanUtils.getFieldWithAnnotation(info.getEntity(), Bucket.class);
+                if (bucket == null) {
+                    bucket = defaultBucket;
+                }
+                if (bucket == null) {
+                    throw new StoreAccessException("Bucket not set");
+                } else {
+                    strBucket = bucket.toString();
+                }
+
+                String key = null;
+                if (contentId != null) {
+                    key = contentId.toString();
                 }
 
                 return (key != null) ? new S3ObjectId(strBucket, key) : null;
