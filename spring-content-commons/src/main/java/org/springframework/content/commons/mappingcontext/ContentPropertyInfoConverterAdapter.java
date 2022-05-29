@@ -20,12 +20,15 @@ public class ContentPropertyInfoConverterAdapter implements ConditionalGenericCo
 
     private final ConvertiblePair typeInfo;
 
+    private final ResolvableType targetType;
+
     private final Class<?> entityClass;
     private final Class<?> contentIdClass;
 
     public ContentPropertyInfoConverterAdapter(Converter<?, ?> converter, ResolvableType sourceType, ResolvableType targetType, Class<?> entityClass, Class<?> contentIdClass) {
         this.converter = (Converter<Object, Object>) converter;
         this.typeInfo = new ConvertiblePair(sourceType.toClass(), targetType.toClass());
+        this.targetType = targetType;
         this.entityClass = entityClass;
         this.contentIdClass = contentIdClass;
     }
@@ -37,17 +40,19 @@ public class ContentPropertyInfoConverterAdapter implements ConditionalGenericCo
 
     @Override
     public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+        // targetType checks (same as in GenericConversionService.ConverterAdapter)
         // Check raw type first...
         if (this.typeInfo.getTargetType() != targetType.getObjectType()) {
             return false;
         }
         // Full check for complex generic type match required?
-//        ResolvableType rt = targetType.getResolvableType();
-//        if (!(rt.getType() instanceof Class) && !rt.isAssignableFrom(this.targetType) &&
-//                !this.targetType.hasUnresolvableGenerics()) {
-//            return false;
-//        }
+        ResolvableType rt = targetType.getResolvableType();
+        if (!(rt.getType() instanceof Class) && !rt.isAssignableFrom(this.targetType) &&
+                !this.targetType.hasUnresolvableGenerics()) {
+            return false;
+        }
 
+        // sourceType (ContentPropertyInfo) checks
         ResolvableType[] generics = sourceType.getResolvableType().getGenerics();
         Class<?> sourceEntityClass  = generics[0].resolve();
         if (!entityClass.isAssignableFrom(sourceEntityClass)){
