@@ -260,6 +260,14 @@ public class S3StoreWithEntityConverterIT {
                           return new S3ObjectId(OTHER_OTHER_BUCKET, info.contentProperty().getContentId(info.entity()).toString());
                       }
                   });
+
+
+                  registry.addConverter(new Converter<ContentPropertyInfo<FakeEntity>, S3ObjectId>() {
+                      @Override
+                      public S3ObjectId convert(ContentPropertyInfo<FakeEntity> info) {
+                          throw new IllegalStateException("wrong converter called");
+                      }
+                  });
               }
           };
        }
@@ -296,6 +304,9 @@ public class S3StoreWithEntityConverterIT {
             txManager.setEntityManagerFactory(entityManagerFactory().getObject());
             return txManager;
         }
+    }
+
+    public static class FakeEntity {
     }
 
     @Entity
