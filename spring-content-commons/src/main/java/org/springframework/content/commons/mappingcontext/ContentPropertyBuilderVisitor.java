@@ -80,7 +80,7 @@ public class ContentPropertyBuilderVisitor {
 
     public boolean visitClassEnd(Class<?> klazz) {
 
-        if (looseMode && properties.size() > 1) {
+        if (looseMode && properties.size() >= 1) {
 
             LOGGER.trace(String.format("Loose mode enabled. Collapsing properties for %s", klazz.getCanonicalName()));
 

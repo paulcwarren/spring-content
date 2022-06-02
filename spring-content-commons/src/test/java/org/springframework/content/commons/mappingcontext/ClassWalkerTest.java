@@ -97,6 +97,30 @@ public class ClassWalkerTest {
             });
         });
 
+        Context("given a class with correlated attributes", () -> {
+            It("should return two content properties", () -> {
+                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
+                ClassWalker walker = new ClassWalker(CorrelatedAttrClass.class);
+                walker.accept(visitor);
+
+                ContentProperty expectedProperty = new ContentProperty();
+                expectedProperty.setContentPropertyPath("content");
+                expectedProperty.setContentIdPropertyPath("contentId");
+                expectedProperty.setContentLengthPropertyPath("contentLen");
+                expectedProperty.setMimeTypePropertyPath("contentMimeType");
+                expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("", expectedProperty));
+
+                ContentProperty expectedProperty2 = new ContentProperty();
+                expectedProperty2.setContentPropertyPath("content");
+                expectedProperty2.setContentIdPropertyPath("contentId");
+                expectedProperty2.setContentLengthPropertyPath("contentLen");
+                expectedProperty2.setMimeTypePropertyPath("contentMimeType");
+                expectedProperty2.setOriginalFileNamePropertyPath("contentOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("content", expectedProperty2));
+            });
+        });
+
         Context("given a class with a child with uncorrelated attributes", () -> {
             It("should return two content properties", () -> {
                 ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
@@ -197,6 +221,16 @@ public class ClassWalkerTest {
         private @ContentLength Long len;
         private @MimeType String mimeType;
         private @OriginalFileName String originalFileName;
+        private String title;
+    }
+
+    public static class CorrelatedAttrClass {
+        private @Id @GeneratedValue Long id;
+        private String name;
+        private @ContentId UUID contentId;
+        private @ContentLength Long contentLen;
+        private @MimeType String contentMimeType;
+        private @OriginalFileName String contentOriginalFileName;
         private String title;
     }
 
