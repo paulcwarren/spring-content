@@ -5,19 +5,28 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
+import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -41,6 +50,9 @@ import internal.org.springframework.content.rest.support.TestEntity4Repository;
 import internal.org.springframework.content.rest.support.TestEntity6;
 import internal.org.springframework.content.rest.support.TestEntity6Repository;
 import internal.org.springframework.content.rest.support.TestEntity6Store;
+import internal.org.springframework.content.rest.support.TestEntity9;
+import internal.org.springframework.content.rest.support.TestEntity9Repository;
+import internal.org.springframework.content.rest.support.TestEntity9Store;
 import internal.org.springframework.content.rest.support.TestEntityContentRepository;
 import internal.org.springframework.content.rest.support.TestEntityRepository;
 import internal.org.springframework.content.rest.support.TestStore;
@@ -82,6 +94,12 @@ public class ContentEntityRestEndpointsIT {
 	@Autowired
 	TestEntity6Store store6;
 
+    // single content property, correlated attributes
+    @Autowired
+    TestEntity9Repository repo9;
+    @Autowired
+    TestEntity9Store store9;
+
 	@Autowired
 	TestStore store;
 
@@ -94,6 +112,7 @@ public class ContentEntityRestEndpointsIT {
 	private TestEntity3 testEntity3;
 	private TestEntity4 testEntity4;
 	private TestEntity6 testEntity6;
+    private TestEntity9 testEntity9;
 
 	private Version version;
 	private LastModifiedDate lastModifiedDate;
@@ -220,6 +239,38 @@ public class ContentEntityRestEndpointsIT {
 					});
 				});
 			});
+
+            Context("given an entity with a single content property of correlated attributes", () -> {
+                BeforeEach(() -> {
+                    testEntity9 = repo9.save(new TestEntity9());
+                });
+                It("should support content operations", () -> {
+                    String content = "Hello Spring Content World!";
+                    mvc.perform(
+                            put("/testEntity9s/" + testEntity9.id)
+                            .contextPath("")
+                            .content(content)
+                            .contentType("text/plain"))
+                    .andExpect(status().isCreated());
+
+                    Optional<TestEntity9> fetched = repo9.findById(testEntity9.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getContentId(), is(not(nullValue())));
+                    assertThat(fetched.get().getContentLen(), is(27L));
+                    assertThat(fetched.get().getContentMimeType(), is("text/plain"));
+                    assertThat(IOUtils.toString(store9.getContent(fetched.get()), Charset.defaultCharset()), is(content));
+
+                    MockHttpServletResponse response = mvc
+                            .perform(get("/testEntity9s/" + testEntity9.id)
+                                    .contextPath("")
+                                    .accept("text/plain"))
+                            .andExpect(status().isOk()).andReturn().getResponse();
+
+                    assertThat(response, is(not(nullValue())));
+                    assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
+
+                });
+            });
 		});
 	}
 
