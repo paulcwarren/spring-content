@@ -22,7 +22,7 @@
 		<dependency>
 		    <groupId>software.amazon.awssdk</groupId>
 		    <artifactId>s3</artifactId>
-		    <version>2.17.179</version>
+		    <version>2.17.204</version>
 		</dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
@@ -98,7 +98,7 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>localstack</artifactId>
-			<version>1.17.1</version>
+			<version>1.17.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
