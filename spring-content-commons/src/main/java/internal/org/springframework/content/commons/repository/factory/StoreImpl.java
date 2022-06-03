@@ -58,7 +58,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             contentCopy = Files.createTempFile(copyContentRootPath, "contentCopy", ".tmp").toFile();
             contentCopyStream = new TeeInputStream(content, new FileOutputStream(contentCopy), true);
             BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, contentCopyStream);
-            AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
 
             publisher.publishEvent(before);
 
@@ -75,10 +74,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
                 throw e;
             }
 
-            if (after != null) {
-                after.setResult(result);
-                publisher.publishEvent(after);
-            }
+            AfterSetContentEvent after = new AfterSetContentEvent(result, delegate);
+            after.setResult(result);
+            publisher.publishEvent(after);
         } catch (FileNotFoundException fileNotFoundException) {
             fileNotFoundException.printStackTrace();
         } catch (IOException ioException) {
@@ -109,7 +107,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             contentCopy = Files.createTempFile(copyContentRootPath, "contentCopy", ".tmp").toFile();
             contentCopyStream = new TeeInputStream(content, new FileOutputStream(contentCopy), true);
             BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, contentCopyStream);
-            AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
 
             publisher.publishEvent(before);
 
@@ -126,10 +123,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
                 throw e;
             }
 
-            if (after != null) {
-                after.setResult(result);
-                publisher.publishEvent(after);
-            }
+            AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
+            after.setResult(result);
+            publisher.publishEvent(after);
         } catch (FileNotFoundException fileNotFoundException) {
             fileNotFoundException.printStackTrace();
         } catch (IOException ioException) {
@@ -154,7 +150,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     public Object setContent(Object property, Resource resourceContent) {
 
         BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, resourceContent);
-        AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -166,10 +161,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -178,7 +172,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     public Object setContent(Object property, PropertyPath propertyPath, Resource resourceContent) {
 
         BeforeSetContentEvent before = new BeforeSetContentEvent(property, delegate, resourceContent);
-        AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -190,10 +183,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterSetContentEvent after = new AfterSetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -201,7 +193,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     @Override
     public Object unsetContent(Object property) {
         BeforeUnsetContentEvent before = new BeforeUnsetContentEvent(property, delegate);
-        AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -213,10 +204,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -225,7 +215,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     @Override
     public Object unsetContent(Object property, PropertyPath propertyPath) {
         BeforeUnsetContentEvent before = new BeforeUnsetContentEvent(property, delegate);
-        AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -237,10 +226,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -248,7 +236,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     @Override
     public InputStream getContent(Object property) {
         BeforeGetContentEvent before = new BeforeGetContentEvent(property, delegate);
-        AfterGetContentEvent after = new AfterGetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -260,10 +247,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterGetContentEvent after = new AfterGetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -271,7 +257,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     @Override
     public InputStream getContent(Object property, PropertyPath propertyPath) {
         BeforeGetContentEvent before = new BeforeGetContentEvent(property, delegate);
-        AfterGetContentEvent after = new AfterGetContentEvent(property, delegate);
 
         publisher.publishEvent(before);
 
@@ -283,10 +268,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterGetContentEvent after = new AfterGetContentEvent(property, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -295,7 +279,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     public Resource getResource(Object entity) {
 
         BeforeGetResourceEvent before = new BeforeGetResourceEvent(entity, delegate);
-        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, delegate);
 
         publisher.publishEvent(before);
 
@@ -307,10 +290,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -319,7 +301,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     public Resource getResource(Object entity, PropertyPath propertyPath) {
 
         BeforeGetResourceEvent before = new BeforeGetResourceEvent(entity, propertyPath, delegate);
-        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, propertyPath, delegate);
 
         publisher.publishEvent(before);
 
@@ -331,10 +312,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, propertyPath, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -343,7 +323,6 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
     public Resource getResource(Serializable id) {
 
         BeforeGetResourceEvent before = new BeforeGetResourceEvent(id, delegate);
-        AfterGetResourceEvent after = new AfterGetResourceEvent(id, delegate);
 
         publisher.publishEvent(before);
 
@@ -355,10 +334,9 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
             throw e;
         }
 
-        if (after != null) {
-            after.setResult(result);
-            publisher.publishEvent(after);
-        }
+        AfterGetResourceEvent after = new AfterGetResourceEvent(id, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
 
         return result;
     }
@@ -468,6 +446,15 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         public int read(byte[] bts) throws IOException {
             isDirty = true;
             return super.read(bts);
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } catch (Throwable t) {
+                throw t;
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -61,6 +62,9 @@ public class StoreRestController implements InitializingBean  {
 
     @Autowired
     private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
+
+    @Autowired
+    private MappingContext mappingContext;
 
     private ContentServiceFactory contentServiceFactory;
 
@@ -229,6 +233,6 @@ public class StoreRestController implements InitializingBean  {
             this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
         }
 
-        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, byteRangeRestRequestHandler);
+        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, mappingContext, byteRangeRestRequestHandler);
     }
     }
