@@ -13,7 +13,7 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.s3.config.ContentPropertyInfo;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -87,14 +87,16 @@ public class S3StoreConfiguration {
 
         });
 
-        conversion.addConverter(new Converter<ContentPropertyInfo<Object>, S3ObjectId>() {
+        // ContentPropertyInfo -> S3ObjectId
+        conversion.addConverter(new Converter<ContentPropertyInfo<Object, Serializable>, S3ObjectId>() {
 
             private String defaultBucket = bucket;
 
             @Override
-            public S3ObjectId convert(ContentPropertyInfo<Object> info) {
+            public S3ObjectId convert(ContentPropertyInfo<Object, Serializable> info) {
 
                 String strBucket = null;
+                // @Bucket can be only on entity level, not per content property
                 Object bucket = BeanUtils.getFieldWithAnnotation(info.entity(), Bucket.class);
                 if (bucket == null) {
                     bucket = defaultBucket;
@@ -105,7 +107,7 @@ public class S3StoreConfiguration {
                     strBucket = bucket.toString();
                 }
 
-                Object key = info.contentProperty().getContentId(info.entity());
+                Serializable key = info.contentId();
 
                 return (key != null) ? new S3ObjectId(strBucket, key.toString()) : null;
             }

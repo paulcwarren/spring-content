@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +29,7 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.s3.config.ContentPropertyInfo;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
@@ -39,7 +40,6 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import internal.org.springframework.content.s3.config.ContentPropertyInfoImpl;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -124,8 +124,11 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
             return null;
 
         S3ObjectId s3ObjectId = null;
-        if (placementService.canConvert(ContentPropertyInfo.class, S3ObjectId.class)) {
-            s3ObjectId = placementService.convert(new ContentPropertyInfoImpl(entity, property), S3ObjectId.class);
+		TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
+        if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
+			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
+					(SID) property.getContentId(entity), propertyPath, property);
+            s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
             return this.getResourceInternal(s3ObjectId);
         }
 

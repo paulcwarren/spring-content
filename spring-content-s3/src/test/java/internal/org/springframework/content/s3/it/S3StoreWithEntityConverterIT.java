@@ -15,6 +15,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -39,7 +40,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.s3.config.ContentPropertyInfo;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -254,17 +255,17 @@ public class S3StoreWithEntityConverterIT {
               @Override
               public void configureS3StoreConverters(ConverterRegistry registry) {
 
-                  registry.addConverter(new Converter<ContentPropertyInfo<TestEntity>, S3ObjectId>() {
+                  registry.addConverter(new Converter<ContentPropertyInfo<TestEntity, Serializable>, S3ObjectId>() {
                       @Override
-                      public S3ObjectId convert(ContentPropertyInfo<TestEntity> info) {
-                          return new S3ObjectId(OTHER_OTHER_BUCKET, info.contentProperty().getContentId(info.entity()).toString());
+                      public S3ObjectId convert(ContentPropertyInfo<TestEntity, Serializable> info) {
+                          return new S3ObjectId(OTHER_OTHER_BUCKET, info.contentId().toString());
                       }
                   });
 
 
-                  registry.addConverter(new Converter<ContentPropertyInfo<FakeEntity>, S3ObjectId>() {
+                  registry.addConverter(new Converter<ContentPropertyInfo<FakeEntity, Serializable>, S3ObjectId>() {
                       @Override
-                      public S3ObjectId convert(ContentPropertyInfo<FakeEntity> info) {
+                      public S3ObjectId convert(ContentPropertyInfo<FakeEntity, Serializable> info) {
                           throw new IllegalStateException("wrong converter called");
                       }
                   });
