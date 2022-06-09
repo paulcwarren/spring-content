@@ -10,11 +10,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
@@ -112,14 +114,17 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
         if (entity == null)
             return null;
 
-        BlobId blobId = null;
-        if (placementService.canConvert(property.getContentIdType(entity).getClass(), BlobId.class)) {
-            blobId = placementService.convert(property.getContentId(entity), BlobId.class);
+		BlobId blobId = null;
+		TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
+		if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class))) {
+			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
+					(SID) property.getContentId(entity), propertyPath, property);
+			blobId = placementService.convert(contentPropertyInfo, BlobId.class);
 
-            if (blobId != null) {
-                return this.getResourceInternal(blobId);
-            }
-        }
+			if (blobId != null) {
+				return this.getResourceInternal(blobId);
+			}
+		}
 
         SID contentId = (SID) property.getContentId(entity);
         return this.getResource(contentId);
