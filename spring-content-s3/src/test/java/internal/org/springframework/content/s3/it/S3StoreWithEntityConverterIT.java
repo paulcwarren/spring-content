@@ -21,13 +21,11 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.sql.DataSource;
 
 import org.junit.Test;
@@ -36,11 +34,11 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.s3.Bucket;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.config.S3StoreConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -314,7 +312,6 @@ public class S3StoreWithEntityConverterIT {
     @Setter
     @Getter
     @NoArgsConstructor
-    @Table(name="test_entity")
     public static class TestEntity {
 
         @Id
@@ -325,7 +322,7 @@ public class S3StoreWithEntityConverterIT {
         private String bucket = "other-bucket";
 
         @ContentId
-        private UUID contentId;
+        private String contentId;
 
         @ContentLength
         private long contentLen;
@@ -334,7 +331,7 @@ public class S3StoreWithEntityConverterIT {
         private String contentType;
 
         @ContentId
-        private UUID renditionId;
+        private String renditionId;
 
         @ContentLength
         private long renditionLen;
@@ -342,30 +339,13 @@ public class S3StoreWithEntityConverterIT {
         @MimeType
         private String renditionContentType;
 
-        public TestEntity(UUID contentId) {
+        public TestEntity(String contentId) {
             this.contentId = contentId;
         }
     }
 
     public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {}
     public interface TestEntityStore extends ContentStore<TestEntity, String> {}
-
-    @Entity
-    @Setter
-    @Getter
-    @NoArgsConstructor
-    public static class SharedIdContentIdEntity {
-
-        @javax.persistence.Id
-        @ContentId
-        private String contentId = UUID.randomUUID().toString();
-
-        @ContentLength
-        private long contentLen;
-    }
-
-    public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
-    public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
 
     @SuppressWarnings("unchecked")
     public static void setEnv(Map<String, String> newenv) throws Exception {

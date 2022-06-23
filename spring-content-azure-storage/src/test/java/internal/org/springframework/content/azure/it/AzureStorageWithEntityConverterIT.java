@@ -12,7 +12,6 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
-import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -260,7 +259,7 @@ public class AzureStorageWithEntityConverterIT {
         private String bucket = "other-bucket";
 
         @ContentId
-        private UUID contentId;
+        private String contentId;
 
         @ContentLength
         private long contentLen;
@@ -269,7 +268,7 @@ public class AzureStorageWithEntityConverterIT {
         private String contentType;
 
         @ContentId
-        private UUID renditionId;
+        private String renditionId;
 
         @ContentLength
         private long renditionLen;
@@ -277,7 +276,7 @@ public class AzureStorageWithEntityConverterIT {
         @MimeType
         private String renditionContentType;
 
-        public TestEntity(UUID contentId) {
+        public TestEntity(String contentId) {
             this.contentId = contentId;
         }
     }

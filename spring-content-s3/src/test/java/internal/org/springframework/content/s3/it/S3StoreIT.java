@@ -27,7 +27,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
@@ -570,7 +569,6 @@ public class S3StoreIT {
     @Setter
     @Getter
     @NoArgsConstructor
-    @Table(name="test_entity")
     public static class TestEntity {
 
         @Id
