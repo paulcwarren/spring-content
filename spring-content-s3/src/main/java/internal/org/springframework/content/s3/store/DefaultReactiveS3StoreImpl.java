@@ -7,8 +7,10 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
@@ -62,6 +64,17 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 		this.clientProvider = provider;
 	}
 
+    private S3ObjectId getS3ObjectId(S entity, PropertyPath path, ContentProperty property) {
+        TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
+        if (!placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
+            throw new IllegalStateException(String.format("Unable to convert %s to an S3ObjectId", contentPropertyInfoType));
+        }
+        ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
+                (SID) property.getContentId(entity), path, property);
+        S3ObjectId s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
+        return s3ObjectId;
+    }
+
     @Transactional
     @Override
     public Mono<S> setContent(S entity, PropertyPath path, long contentLen, Flux<ByteBuffer> buffer) {
@@ -85,15 +98,12 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
             contentId = convertedId;
         }
 
-        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
-            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
-        }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        final S3ObjectId s3ObjectId = getS3ObjectId(entity, path, property);
 
         PutObjectRequest.Builder requestBuilder = PutObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
                 .contentLength(contentLen)
-                .key(contentId.toString());
+                .key(s3ObjectId.getKey());
 
         Object mimeType = property.getMimeType(entity);
         if (mimeType != null) {
@@ -131,14 +141,11 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
             return Flux.empty();
         }
 
-        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
-            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
-        }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        final S3ObjectId s3ObjectId = getS3ObjectId(entity, path, property);
 
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
-                .key(contentId.toString())
+                .key(s3ObjectId.getKey())
                 .build();
 
         AsyncResponseTransformer.toFile(new File("/tmp/foo"));
@@ -166,14 +173,11 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
             return Mono.just(entity);
         }
 
-        if (placementService.canConvert(contentId.getClass(), S3ObjectId.class) == false) {
-            throw new IllegalStateException(String.format("Unable to convert contentId %s to an S3ObjectId", contentId.toString()));
-        }
-        final S3ObjectId s3ObjectId = placementService.convert(contentId, S3ObjectId.class);
+        final S3ObjectId s3ObjectId = getS3ObjectId(entity, propertyPath, property);
 
         DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                 .bucket(s3ObjectId.getBucket())
-                .key(contentId.toString())
+                .key(s3ObjectId.getKey())
                 .build();
 
         CompletableFuture<DeleteObjectResponse> future = asyncClient.deleteObject(deleteRequest);

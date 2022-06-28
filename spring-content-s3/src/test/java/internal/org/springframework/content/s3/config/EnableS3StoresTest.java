@@ -10,7 +10,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -99,7 +99,7 @@ public class EnableS3StoresTest {
 					context.close();
 				});
 				It("should call that configurer to help setup the store", () -> {
-					verify(configurer).configureS3StoreConverters(anyObject());
+					verify(configurer).configureS3StoreConverters(any(ConverterRegistry.class));
 				});
 			});
 

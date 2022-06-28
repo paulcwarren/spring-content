@@ -27,10 +27,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.sql.DataSource;
 
-import internal.org.springframework.content.s3.io.S3StoreResource;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -63,6 +61,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import junit.framework.Assert;
 import lombok.Getter;
@@ -570,7 +569,6 @@ public class S3StoreIT {
     @Setter
     @Getter
     @NoArgsConstructor
-    @Table(name="test_entity")
     public static class TestEntity {
 
         @Id
