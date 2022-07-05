@@ -124,11 +124,11 @@ public class ContentSearchRestControllerIT {
 
     private TestEntityWithSharedId entity;
     private TestEntityWithSharedId entity2;
-    private List<UUID> sharedIds;
+    private List<String> sharedIds;
 
     private TestEntityWithSeparateId entity3;
     private TestEntityWithSeparateId entity4;
-    private List<UUID> contentIds;
+    private List<String> contentIds;
 
     private TestEntity2 entity5;
     private TestEntity2 entity6;
@@ -283,8 +283,8 @@ public class ContentSearchRestControllerIT {
                             String id2 = halResponse
                                     .getResourcesByRel("testEntityWithSharedIds").get(1)
                                     .getValue("contentId").toString();
-                            assertThat(sharedIds, hasItem(UUID.fromString(id1)));
-                            assertThat(sharedIds, hasItem(UUID.fromString(id2)));
+                            assertThat(sharedIds, hasItem(id1));
+                            assertThat(sharedIds, hasItem(id2));
                             assertThat(id1, is(not(id2)));
                         });
 
@@ -297,7 +297,7 @@ public class ContentSearchRestControllerIT {
                             entity2 = new TestEntityWithSharedId();
                             repository.save(entity2);
 
-                            UUID orphanedContentId = UUID.randomUUID();
+                            String orphanedContentId = UUID.randomUUID().toString();
 
                             internalResults = new ArrayList<>();
                             internalResults.add(new InternalResult(null, orphanedContentId));
@@ -327,7 +327,7 @@ public class ContentSearchRestControllerIT {
                             String id1 = halResponse
                                     .getResourcesByRel("testEntityWithSharedIds").get(0)
                                     .getValue("contentId").toString();
-                            assertThat(contentIds, hasItem(UUID.fromString(id1)));
+                            assertThat(contentIds, hasItem(id1));
                         });
                     });
                 });
@@ -398,8 +398,8 @@ public class ContentSearchRestControllerIT {
                             String id2 = halResponse
                                     .getResourcesByRel("testEntityWithSeparateIds").get(1)
                                     .getValue("contentId").toString();
-                            assertThat(contentIds, hasItem(UUID.fromString(id1)));
-                            assertThat(contentIds, hasItem(UUID.fromString(id2)));
+                            assertThat(contentIds, hasItem(id1));
+                            assertThat(contentIds, hasItem(id2));
                             assertThat(id1, is(not(id2)));
                         });
                     });
@@ -410,7 +410,7 @@ public class ContentSearchRestControllerIT {
                             entity3 = new TestEntityWithSeparateId();
                             entityWithSeparateRepository.save(entity3);
 
-                            UUID orphanedContentId = UUID.randomUUID();
+                            String orphanedContentId = UUID.randomUUID().toString();
 
                             internalResults = new ArrayList<>();
                             internalResults.add(new InternalResult(null, orphanedContentId));
@@ -440,7 +440,7 @@ public class ContentSearchRestControllerIT {
                             String id1 = halResponse
                                     .getResourcesByRel("testEntityWithSeparateIds").get(0)
                                     .getValue("contentId").toString();
-                            assertThat(contentIds, hasItem(UUID.fromString(id1)));
+                            assertThat(contentIds, hasItem(id1));
                         });
                     });
                 });
@@ -541,11 +541,11 @@ public class ContentSearchRestControllerIT {
                         internalResults.add(new InternalResult(entity6.getId(), entity6.getContentId()));
 
                         contentIds = new ArrayList<>();
-                        contentIds.add(entity5.getContentId());
-                        contentIds.add(entity6.getContentId());
+                        contentIds.add(entity5.getContentId().toString());
+                        contentIds.add(entity6.getContentId().toString());
 
                         when(reflectionService.invokeMethod(any(), any(),
-                                eq("else")  )).thenReturn(internalResults);
+                                eq("else"))).thenReturn(internalResults);
                     });
 
                     It("should return a response with the entity", () -> {
@@ -570,8 +570,8 @@ public class ContentSearchRestControllerIT {
                         String id2 = halResponse
                                 .getResourcesByRel("testEntity2s").get(1)
                                 .getValue("contentId").toString();
-                        assertThat(contentIds, hasItem(UUID.fromString(id1)));
-                        assertThat(contentIds, hasItem(UUID.fromString(id2)));
+                        assertThat(contentIds, hasItem(id1));
+                        assertThat(contentIds, hasItem(id2));
                         assertThat(id1, is(not(id2)));
                     });
                 });
@@ -620,8 +620,8 @@ public class ContentSearchRestControllerIT {
                             .getResourcesByRel("testEntityWithSeparateIds").get(1)
                             .getValue("contentId").toString();
 
-                    assertThat(contentIds, hasItem(UUID.fromString(id1)));
-                    assertThat(contentIds, hasItem(UUID.fromString(id2)));
+                    assertThat(contentIds, hasItem(id1));
+                    assertThat(contentIds, hasItem(id2));
                     assertThat(id1, is(not(id2)));
                 });
             });
@@ -630,7 +630,7 @@ public class ContentSearchRestControllerIT {
 
                 It("should batch queries appropriately", () -> {
 
-                    List<UUID> ids = new ArrayList<>();
+                    List<String> ids = new ArrayList<>();
                     for (int i=0; i < 500; i++) {
                         TestEntityWithSeparateId entity = new TestEntityWithSeparateId();
                         entity = entityWithSeparateRepository.save(entity);
@@ -688,21 +688,21 @@ public class ContentSearchRestControllerIT {
     public static class AbstractTestEntity {
         @Id
         @ContentId
-        private UUID id = UUID.randomUUID();
+        private String id = UUID.randomUUID().toString();
 
-        public UUID getId() {
+        public String getId() {
             return id;
         }
 
-        public void setId(UUID id) {
+        public void setId(String id) {
             this.id = id;
         }
 
-        public UUID getContentId() {
+        public String getContentId() {
             return id;
         }
 
-        public void setContentId(UUID id) {
+        public void setContentId(String id) {
             this.id = id;
         }
     }
@@ -711,76 +711,76 @@ public class ContentSearchRestControllerIT {
     public static class TestEntityNoContent extends AbstractTestEntity {
     }
 
-    public interface TestEntityNoContentRepository extends CrudRepository<TestEntityNoContent, UUID> {
+    public interface TestEntityNoContentRepository extends CrudRepository<TestEntityNoContent, String> {
     }
 
     @Entity(name = "testentitynotsearchable")
     public static class TestEntityNotSearchable extends AbstractTestEntity {
     }
 
-    public interface TestEntityNotSearchableRepository extends CrudRepository<TestEntityNotSearchable, UUID> {
+    public interface TestEntityNotSearchableRepository extends CrudRepository<TestEntityNotSearchable, String> {
     }
 
-    public interface TestEntityNotSearchableStore extends FilesystemContentStore<TestEntityNotSearchable, UUID> {
+    public interface TestEntityNotSearchableStore extends FilesystemContentStore<TestEntityNotSearchable, String> {
     }
 
     @Entity(name = "testentitysharedid")
     public static class TestEntityWithSharedId extends AbstractTestEntity {
     }
 
-    public interface TestEntityWithSharedIdsRepository extends CrudRepository<TestEntityWithSharedId, UUID> {
+    public interface TestEntityWithSharedIdsRepository extends CrudRepository<TestEntityWithSharedId, String> {
     }
 
-    public interface TestEntityWithSharedIdsSearchableStore extends FilesystemContentStore<TestEntityWithSharedId, UUID>, Searchable<UUID> {
+    public interface TestEntityWithSharedIdsSearchableStore extends FilesystemContentStore<TestEntityWithSharedId, String>, Searchable<String> {
     }
 
     // stub out a Searchable implementation so that the content store can be instantiated
     // this wont actually get called because the test intercepts calls to the Searchable by mocking the reflection
     // service
-    public static class SearchableImpl implements Searchable<UUID> {
+    public static class SearchableImpl implements Searchable<String> {
 
         @Override
-        public Iterable<UUID> search(String queryString) {
+        public Iterable<String> search(String queryString) {
             return null;
         }
 
         @Override
-        public Page<UUID> search(String queryString, Pageable pageable) {
+        public Page<String> search(String queryString, Pageable pageable) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findKeyword(String query) {
+        public Iterable<String> findKeyword(String query) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findAllKeywords(String... terms) {
+        public Iterable<String> findAllKeywords(String... terms) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findAnyKeywords(String... terms) {
+        public Iterable<String> findAnyKeywords(String... terms) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findKeywordsNear(int proximity, String... terms) {
+        public Iterable<String> findKeywordsNear(int proximity, String... terms) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findKeywordStartsWith(String term) {
+        public Iterable<String> findKeywordStartsWith(String term) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findKeywordStartsWithAndEndsWith(String a, String b) {
+        public Iterable<String> findKeywordStartsWithAndEndsWith(String a, String b) {
             return null;
         }
 
         @Override
-        public Iterable<UUID> findAllKeywordsWithWeights(String[] terms, double[] weights) {
+        public Iterable<String> findAllKeywordsWithWeights(String[] terms, double[] weights) {
             return null;
         }
     }
@@ -788,39 +788,39 @@ public class ContentSearchRestControllerIT {
     @Entity(name = "testentityseparateid")
     public static class TestEntityWithSeparateId {
         @Id
-        private UUID id = UUID.randomUUID();
+        private String id = UUID.randomUUID().toString();
         @ContentId
-        private UUID contentId = UUID.randomUUID();
+        private String contentId = UUID.randomUUID().toString();
 
-        public UUID getId() {
+        public String getId() {
             return id;
         }
 
-        public void setId(UUID id) {
+        public void setId(String id) {
             this.id = id;
         }
 
-        public UUID getContentId() {
+        public String getContentId() {
             return contentId;
         }
 
-        public void setContentId(UUID id) {
+        public void setContentId(String id) {
             this.contentId = id;
         }
     }
 
     public interface TestEntityWithSeparateIdsRepository
-        extends CrudRepository<TestEntityWithSeparateId, UUID> {
+        extends CrudRepository<TestEntityWithSeparateId, String> {
 
         @Query("select e from it.rest.extensions.contentsearch.ContentSearchRestControllerIT$TestEntityWithSeparateId e")
         List<TestEntityWithSeparateId> randomQueryMethod();
 
         @FulltextEntityLookupQuery
-        List<TestEntityWithSeparateId> findAllByContentIdIn(@Param("contentIds") List<UUID> contentIds);
+        List<TestEntityWithSeparateId> findAllByContentIdIn(@Param("contentIds") List<String> contentIds);
     }
 
     public interface TestEntityWithSeparateIdsSearchableStore
-        extends FilesystemContentStore<TestEntityWithSeparateId, UUID>, Searchable<UUID> {
+        extends FilesystemContentStore<TestEntityWithSeparateId, String>, Searchable<String> {
     }
 
     @Entity
@@ -829,18 +829,18 @@ public class ContentSearchRestControllerIT {
     @NoArgsConstructor
     public static class TestEntity2 {
         @Id
-        private UUID id = UUID.randomUUID();
+        private String id = UUID.randomUUID().toString();
         @ContentId
-        private UUID contentId = UUID.randomUUID();
+        private String contentId = UUID.randomUUID().toString();
     }
 
     @RepositoryRestResource(path="repoWithNoLookupStrategy")
     public interface RepositoryWithNoLookupStrategy
-        extends CrudRepository<TestEntity2, UUID> {
+        extends CrudRepository<TestEntity2, String> {
     }
 
     public interface TestEntity2SearchableStore
-        extends FilesystemContentStore<TestEntity2, UUID>, Searchable<UUID> {
+        extends FilesystemContentStore<TestEntity2, String>, Searchable<String> {
     }
 
     @Entity
@@ -849,18 +849,18 @@ public class ContentSearchRestControllerIT {
     @NoArgsConstructor
     public static class TestEntity3 {
         @Id
-        private UUID id = UUID.randomUUID();
+        private String id = UUID.randomUUID().toString();
         @ContentId
-        private UUID contentId = UUID.randomUUID();
+        private String contentId = UUID.randomUUID().toString();
     }
 
     @RepositoryRestResource(path="repoWithCustomSearchReturnType")
     public interface RepositoryWithCustomSearchReturnType
-        extends CrudRepository<TestEntity3, UUID> {
+        extends CrudRepository<TestEntity3, String> {
     }
 
     public interface TestEntity3SearchableStore
-        extends FilesystemContentStore<TestEntity3, UUID>, Searchable<CustomResult> {
+        extends FilesystemContentStore<TestEntity3, String>, Searchable<CustomResult> {
     }
 
     @Getter

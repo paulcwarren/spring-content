@@ -36,5 +36,7 @@ jobs:
     - name: Validate Examples
       run: |
         pushd spring-content-examples
+          git fetch --all
+          git checkout bump/spring-boot-2.7.1
           mvn -B clean install
         popd
