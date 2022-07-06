@@ -146,6 +146,16 @@ public class ContentStoreContentService implements ContentService {
         AssociatedStoreResource storeResource = (AssociatedStoreResource)target;
         ContentProperty property = storeResource.getContentProperty();
 
+        // Update mimeType and originalFilename before setContent-method invocation,
+        // because this information may be needed during setting of content.
+        Object domainObject = storeResource.getAssociation();
+        property.setMimeType(domainObject, sourceMimeType.toString());
+
+        String originalFilename = source.getFilename();
+        if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
+            property.setOriginalFileName(domainObject, source.getFilename());
+        }
+
         Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), PropertyPath.from(property.getContentPropertyPath())).setContentMethods();
 
         if (methodsToUse.length > 1) {
@@ -166,17 +176,8 @@ public class ContentStoreContentService implements ContentService {
 
         try {
             Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
-
             ReflectionUtils.makeAccessible(methodToUse);
-
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, storeResource.getAssociation(), PropertyPath.from(property.getContentPropertyPath()), contentArg);
-
-            property.setMimeType(updatedDomainObj, sourceMimeType.toString());
-
-            String originalFilename = source.getFilename();
-            if (source.getFilename() != null && StringUtils.hasText(originalFilename)) {
-                property.setOriginalFileName(updatedDomainObj, source.getFilename());
-            }
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, domainObject, PropertyPath.from(property.getContentPropertyPath()), contentArg);
 
             repoInvoker.invokeSave(updatedDomainObj);
         } finally {
