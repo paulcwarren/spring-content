@@ -2,8 +2,9 @@ package internal.org.springframework.content.azure.it;
 
 import java.io.Serializable;
 
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import org.testcontainers.containers.GenericContainer;
+
+import com.azure.storage.blob.BlobServiceClientBuilder;
 
 /**
  * This class provides a TestContainers implementation of Azure storage via
@@ -33,6 +34,7 @@ public class Azurite extends GenericContainer<Azurite> implements Serializable {
 
     private Azurite() {
         super(DOCKER_IMAGE_NAME);
+        this.addExposedPort(10000);
         this.start();
     }
 
