@@ -131,7 +131,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 </ul>
 <p>When you’re finished, you can check your results against the code in
 <code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
-<h3 id="update-dependencies">Update dependencies</h3>
+<h2 id="update-dependencies">Update dependencies</h2>
 <p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
 <pre><code>
@@ -143,7 +143,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
         &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.6.7&lt;/version&gt;
+        &lt;version&gt;2.7.1&lt;/version&gt;
     &lt;/parent&gt;
 
     &lt;artifactId&gt;spring-content-with-renditions&lt;/artifactId&gt;
@@ -173,17 +173,17 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.3.0&lt;/version&gt;
+            &lt;version&gt;2.4.0&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.3.0&lt;/version&gt;
+            &lt;version&gt;2.4.0&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-renditions-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.3.0&lt;/version&gt;
+            &lt;version&gt;2.4.0&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -235,11 +235,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p>To be able to return renditions we need to know the mime-type of the existing
 content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
 will be by Spring Content REST.</p>
-<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
+<p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>
 package gettingstarted;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -269,8 +270,6 @@ public class File {
 
 	@ContentId private String contentId;
 	@ContentLength private long contentLength;
-	@MimeType private String contentMimeType;
-}
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
@@ -305,16 +304,170 @@ by typing:</p>
 </code></pre>
 
 <p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
-the mime-type <code>image/jpeg</code> as the accept header.  As it is an image let's save it
-to a file:</p>
-<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
-<p>Open <code>/tmp/file-1.jpg</code> and you should see a response like this:</p>
+the mime-type <code>image/jpeg</code> as the accept header.  Let's time the operation too.  We'll use this later.  As 
+it is an image let's save it to a file:</p>
+<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
+<p>Note the time the operation tookk and inspect the image <code>open /tmp/file-1.jpg</code> and you should see an image like this:</p>
 <p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
+<h2 id="stored-renditions">Stored Renditions</h2>
+<p>This is useful but rendering content on-demand everytime is unnecessary.  Let's store the rendition instead.</p>
+<h3 id="update-file_1">Update File</h3>
+<p>Add a second content property to store the rendition.</p>
+<p><code>src/main/java/gettingstarted/File.java</code></p>
+<pre><code>
+package gettingstarted;
+
+import java.util.Date;
+import java.util.UUID;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class File {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private String name;
+	private Date created = new Date();
+	private String summary;
+
+	@ContentId private String contentId;
+	@ContentLength private long contentLength;
+	@MimeType private String contentMimeType;
+
+	@ContentId private UUID renditionId;
+	@ContentLength private Long renditionLen;
+	@MimeType private String renditionMimeType;
+}
+</code></pre>
+
+<h3 id="add-event-handler">Add Event Handler</h3>
+<p>Next let's add an event handler that uses the rendition service to convert the <code>text/plain</code> content to <code>image/jpeg</code> and store
+it in the second content property we just created.  Then remove it again when the content is also removed.</p>
+<p><code>src/main/java/gettingstarted/StoredRenditionsEventHandler.java</code></p>
+<pre><code>
+package gettingstarted;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.annotations.HandleAfterSetContent;
+import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
+import org.springframework.content.commons.annotations.StoreEventHandler;
+import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.renditions.RenditionService;
+import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.core.io.WritableResource;
+
+@StoreEventHandler
+public class StoredRenditionsEventHandler {
+
+    @Autowired
+    private FileRepository repo;
+
+    @Autowired
+    private FileContentStore store;
+
+    @Autowired
+    private RenditionService renditionService;
+
+    @HandleAfterSetContent
+    public void onAfterSetContent(AfterSetContentEvent event)
+            throws IOException {
+
+        File entity = (File)event.getSource();
+
+        long renderedLength = 0;
+
+
+
+        try (InputStream originalInputStream = store.getContent(entity, PropertyPath.from("content"))) {
+
+            InputStream renderedContent = renditionService.convert("text/plain", originalInputStream, "image/jpeg");
+
+            try (OutputStream renditionPropertyStream = ((WritableResource)store.getResource(entity, PropertyPath.from("rendition"))).getOutputStream()) {
+                renderedLength = IOUtils.copyLarge(
+                        renderedContent,
+                        renditionPropertyStream);
+            }
+        }
+
+        entity.setRenditionLen(renderedLength);
+        entity.setRenditionMimeType("image/jpeg");
+    }
+
+    @HandleBeforeUnsetContent
+    public void onBeforeUnsetContent(BeforeUnsetContentEvent event) throws IOException {
+
+        File entity = (File)event.getSource();
+
+        ((DeletableResource)store.getResource(entity, PropertyPath.from("rendition"))).delete();
+
+        entity.setRenditionId(null);
+        entity.setRenditionLen(0L);
+        entity.setRenditionMimeType(null);
+    }
+}
+</code></pre>
+
+<p>and register it.</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<pre><code>
+package gettingstarted;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class SpringContentApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringContentApplication.class, args);
+    }
+
+    @Bean
+    public StoredRenditionsEventHandler storedRenditionsEventHandler() {
+        return new StoredRenditionsEventHandler();
+    }
+}
+
+</code></pre>
+
+<h2 id="test-store-renditions">Test Store Renditions</h2>
+<p>Rebuild and restart your application and let's replay the operations we performed earlier.</p>
+<p>Create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with that entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Stored Renditions World!' http://localhost:8080/files/1/content</code></p>
+<p>Fetch the content again specifying that we want a jpeg rendition of the content by specifying
+the mime-type <code>image/jpeg</code> as the accept header.  Note, we are still addressing the 'content' property.  Let's time the operation again.  We can compare this to our previous timing.  And for ease save it to a file:</p>
+<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
+<p>Note the time completed quicker (roughly twice as fast) as it was returning the previous stored rendition rather than converting it on the fly.  Inspect the image by opening <code>/tmp/file-2.jpg</code> and you should see an image like this:</p>
+<p><center><img alt="Spring Content Rendition" src="../spring-content-with-stored-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've just written a simple application that uses Spring
-Content and Spring Content Renditions to be able to transform contnet from one format to another.</p>
-<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also
-add your own renderers using the RenditionProvider extension point.  For more details
+<p>Congratulations!  You've just written a simple application that uses Spring Content and Spring Content Renditions to be able to transform content from one format to another and to store that rendered content for quicker access later on.</p>
+<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also add your own renderers using the RenditionProvider extension point.  For more details
 see the Spring Content Renditions reference guide.  </p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
@@ -353,6 +506,9 @@ see the Spring Content Renditions reference guide.  </p>
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
+                    <a href="#update-dependencies" class="nav-link">Update dependencies</a>
+                </li>
+                <li class="nav-item">
                     <a href="#update-file" class="nav-link">Update File</a>
                 </li>
                 <li class="nav-item">
@@ -363,6 +519,12 @@ see the Spring Content Renditions reference guide.  </p>
                 </li>
                 <li class="nav-item">
                     <a href="#test-renditions" class="nav-link">Test renditions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#stored-renditions" class="nav-link">Stored Renditions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#test-store-renditions" class="nav-link">Test Store Renditions</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>

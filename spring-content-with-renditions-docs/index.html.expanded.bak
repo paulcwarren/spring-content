@@ -131,7 +131,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 </ul>
 <p>When you’re finished, you can check your results against the code in
 <code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
-<h3 id="update-dependencies">Update dependencies</h3>
+<h2 id="update-dependencies">Update dependencies</h2>
 <p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/pom.xml 1-}
@@ -141,8 +141,8 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p>To be able to return renditions we need to know the mime-type of the existing
 content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
 will be by Spring Content REST.</p>
-<p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
+<p><code>src/main/java/gettingstarted/File.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-33}
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
@@ -168,16 +168,45 @@ by typing:</p>
 </code></pre>
 
 <p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
-the mime-type <code>image/jpeg</code> as the accept header.  As it is an image let's save it
-to a file:</p>
-<p><code>curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
-<p>Open <code>/tmp/file-1.jpg</code> and you should see a response like this:</p>
+the mime-type <code>image/jpeg</code> as the accept header.  Let's time the operation too.  We'll use this later.  As 
+it is an image let's save it to a file:</p>
+<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
+<p>Note the time the operation tookk and inspect the image <code>open /tmp/file-1.jpg</code> and you should see an image like this:</p>
 <p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
+<h2 id="stored-renditions">Stored Renditions</h2>
+<p>This is useful but rendering content on-demand everytime is unnecessary.  Let's store the rendition instead.</p>
+<h3 id="update-file_1">Update File</h3>
+<p>Add a second content property to store the rendition.</p>
+<p><code>src/main/java/gettingstarted/File.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
+</code></pre>
+
+<h3 id="add-event-handler">Add Event Handler</h3>
+<p>Next let's add an event handler that uses the rendition service to convert the <code>text/plain</code> content to <code>image/jpeg</code> and store
+it in the second content property we just created.  Then remove it again when the content is also removed.</p>
+<p><code>src/main/java/gettingstarted/StoredRenditionsEventHandler.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/StoredRenditionsEventHandler.java 1-}
+</code></pre>
+
+<p>and register it.</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
+</code></pre>
+
+<h2 id="test-store-renditions">Test Store Renditions</h2>
+<p>Rebuild and restart your application and let's replay the operations we performed earlier.</p>
+<p>Create an entity:</p>
+<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p>Associate content with that entity:</p>
+<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Stored Renditions World!' http://localhost:8080/files/1/content</code></p>
+<p>Fetch the content again specifying that we want a jpeg rendition of the content by specifying
+the mime-type <code>image/jpeg</code> as the accept header.  Note, we are still addressing the 'content' property.  Let's time the operation again.  We can compare this to our previous timing.  And for ease save it to a file:</p>
+<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
+<p>Note the time completed quicker (roughly twice as fast) as it was returning the previous stored rendition rather than converting it on the fly.  Inspect the image by opening <code>/tmp/file-2.jpg</code> and you should see an image like this:</p>
+<p><center><img alt="Spring Content Rendition" src="../spring-content-with-stored-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've just written a simple application that uses Spring
-Content and Spring Content Renditions to be able to transform contnet from one format to another.</p>
-<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also
-add your own renderers using the RenditionProvider extension point.  For more details
+<p>Congratulations!  You've just written a simple application that uses Spring Content and Spring Content Renditions to be able to transform content from one format to another and to store that rendered content for quicker access later on.</p>
+<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also add your own renderers using the RenditionProvider extension point.  For more details
 see the Spring Content Renditions reference guide.  </p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
@@ -216,6 +245,9 @@ see the Spring Content Renditions reference guide.  </p>
                     <a href="#how-to-complete-this-guide" class="nav-link">How to complete this guide</a>
                 </li>
                 <li class="nav-item">
+                    <a href="#update-dependencies" class="nav-link">Update dependencies</a>
+                </li>
+                <li class="nav-item">
                     <a href="#update-file" class="nav-link">Update File</a>
                 </li>
                 <li class="nav-item">
@@ -226,6 +258,12 @@ see the Spring Content Renditions reference guide.  </p>
                 </li>
                 <li class="nav-item">
                     <a href="#test-renditions" class="nav-link">Test renditions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#stored-renditions" class="nav-link">Stored Renditions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#test-store-renditions" class="nav-link">Test Store Renditions</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>
