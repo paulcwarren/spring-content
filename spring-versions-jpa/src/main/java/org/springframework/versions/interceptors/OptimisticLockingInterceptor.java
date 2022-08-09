@@ -12,6 +12,7 @@ import javax.persistence.Version;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.core.io.Resource;
@@ -21,19 +22,31 @@ import org.springframework.util.ReflectionUtils;
 public class OptimisticLockingInterceptor implements MethodInterceptor {
 
     private static Method getContentMethod;
+    private static Method getContentPropertyPathMethod;
     private static Method setContentMethod;
+    private static Method setContentPropertyPathMethod;
     private static Method setContentMethodWithResource;
+    private static Method setContentMethodWithPropertyPathAndResource;
     private static Method unsetContentMethod;
+    private static Method unsetContentPropertyPathMethod;
 
     static {
         getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class);
         Assert.notNull(getContentMethod);
+        getContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class, PropertyPath.class);
+        Assert.notNull(getContentPropertyPathMethod);
         setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class);
         Assert.notNull(setContentMethod);
+        setContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class);
+        Assert.notNull(setContentPropertyPathMethod);
         setContentMethodWithResource = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class);
         Assert.notNull(setContentMethodWithResource);
+        setContentMethodWithPropertyPathAndResource = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class);
+        Assert.notNull(setContentMethodWithPropertyPathAndResource);
         unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class);
         Assert.notNull(unsetContentMethod);
+        unsetContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class, PropertyPath.class);
+        Assert.notNull(unsetContentPropertyPathMethod);
     }
 
     private final EntityManager em;
@@ -46,40 +59,26 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
         Object rc = null;
 
-        if (getContentMethod.equals(methodInvocation.getMethod())) {
+        if (getContentMethod.equals(methodInvocation.getMethod()) ||
+            getContentPropertyPathMethod.equals(methodInvocation.getMethod())) {
             if (methodInvocation.getArguments().length > 0) {
-                Object entity = methodInvocation.getArguments()[0];
-                entity = lock(entity);
-                ((ProxyMethodInvocation)methodInvocation).setArguments(entity);
+                Object[] args = methodInvocation.getArguments();
+                args[0] = lock(args[0]);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(args);
                 rc = methodInvocation.proceed();
             }
         }
-        else if (setContentMethod.equals(methodInvocation.getMethod())) {
+        else if (setContentMethod.equals(methodInvocation.getMethod()) ||
+                 setContentPropertyPathMethod.equals(methodInvocation.getMethod()) ||
+                 setContentMethodWithResource.equals(methodInvocation.getMethod()) ||
+                 setContentMethodWithPropertyPathAndResource.equals(methodInvocation.getMethod()) ||
+                 unsetContentMethod.equals(methodInvocation.getMethod()) ||
+                 unsetContentPropertyPathMethod.equals(methodInvocation.getMethod())) {
             if (methodInvocation.getArguments().length > 0) {
-                Object entity = methodInvocation.getArguments()[0];
-                entity = lock(entity);
-                ((ProxyMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
-                entity = methodInvocation.proceed();
-                touch(entity, Version.class);
-                return entity;
-            }
-        }
-        else if (setContentMethodWithResource.equals(methodInvocation.getMethod())) {
-            if (methodInvocation.getArguments().length > 0) {
-                Object entity = methodInvocation.getArguments()[0];
-                entity = lock(entity);
-                ((ProxyMethodInvocation)methodInvocation).setArguments(entity, methodInvocation.getArguments()[1]);
-                entity = methodInvocation.proceed();
-                touch(entity, Version.class);
-                return entity;
-            }
-        }
-        else if (unsetContentMethod.equals(methodInvocation.getMethod())) {
-            if (methodInvocation.getArguments().length > 0) {
-                Object entity = methodInvocation.getArguments()[0];
-                entity = lock(entity);
-                ((ProxyMethodInvocation)methodInvocation).setArguments(entity);
-                entity = methodInvocation.proceed();
+                Object[] args = methodInvocation.getArguments();
+                args[0] = lock(args[0]);
+                ((ProxyMethodInvocation)methodInvocation).setArguments(args);
+                Object entity = methodInvocation.proceed();
                 touch(entity, Version.class);
                 return entity;
             }

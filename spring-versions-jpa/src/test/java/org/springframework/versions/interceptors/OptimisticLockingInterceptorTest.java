@@ -24,6 +24,7 @@ import javax.persistence.Version;
 
 import org.junit.runner.RunWith;
 import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -74,6 +75,22 @@ public class OptimisticLockingInterceptorTest {
                         verify(mi).proceed();
                     });
                 });
+                Context("when the method invocation is getContent with PropertyPath", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class, PropertyPath.class));
+                        when(mi.getArguments()).thenReturn(new Object[]{entity, PropertyPath.from("foo")});
+                        when(em.merge(entity)).thenReturn(entity);
+                    });
+                    JustBeforeEach(() -> {
+                        result = interceptor.invoke(mi);
+                    });
+                    It("should lock the entity and proceed", () -> {
+                        verify(em).lock(entity, LockModeType.OPTIMISTIC);
+                        verify(mi).setArguments(entity, PropertyPath.from("foo"));
+                        verify(mi).proceed();
+                    });
+                });
                 Context("when the method invocation is setContent", () -> {
                     BeforeEach(() -> {
                         entity = new TestEntity();
@@ -101,7 +118,34 @@ public class OptimisticLockingInterceptorTest {
                         });
                     });
                 });
-                Context("when the method invocation is setContent (with resource)", () -> {
+                Context("when the method invocation is setContent with PropertyPath", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class));
+                        when(mi.getArguments()).thenReturn(new Object[]{entity, PropertyPath.from("foo"), new ByteArrayInputStream("".getBytes())});
+                        when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
+                    });
+                    JustBeforeEach(() -> {
+                        result = interceptor.invoke(mi);
+                    });
+                    It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
+                        verify(em).lock(entity, LockModeType.OPTIMISTIC);
+                        verify(mi).setArguments(eq(entity), eq(PropertyPath.from("foo")), any(ByteArrayInputStream.class));
+                        verify(mi).proceed();
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
+                    });
+                });
+                Context("when the method invocation is setContent with Resource", () -> {
                     BeforeEach(() -> {
                         entity = new TestEntity();
                         when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class));
@@ -116,6 +160,33 @@ public class OptimisticLockingInterceptorTest {
                         assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity), any());
+                        verify(mi).proceed();
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
+                    });
+                });
+                Context("when the method invocation is setContent with PropertyPath and Resource", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class));
+                        when(mi.getArguments()).thenReturn(new Object[]{entity, PropertyPath.from("foo"), new FileSystemResource("")});
+                        when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
+                    });
+                    JustBeforeEach(() -> {
+                        result = interceptor.invoke(mi);
+                    });
+                    It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
+                        verify(em).lock(entity, LockModeType.OPTIMISTIC);
+                        verify(mi).setArguments(eq(entity), eq(PropertyPath.from("foo")), any(FileSystemResource.class));
                         verify(mi).proceed();
                         assertThat(((TestEntity)entity).getVersion(), is(1L));
                     });
@@ -143,6 +214,33 @@ public class OptimisticLockingInterceptorTest {
                         assertThat(result, is(not(nullValue())));
                         verify(em).lock(entity, LockModeType.OPTIMISTIC);
                         verify(mi).setArguments(eq(entity));
+                        verify(mi).proceed();
+                        assertThat(((TestEntity)entity).getVersion(), is(1L));
+                    });
+                    Context("when the entity is not @Versioned", () -> {
+                        BeforeEach(() -> {
+                            entity = new TestEntityUnversionsed();
+                        });
+                        It("should still proceed", () -> {
+                            verify(mi).proceed();
+                        });
+                    });
+                });
+                Context("when the method invocation is unsetContent with PropertyPath", () -> {
+                    BeforeEach(() -> {
+                        entity = new TestEntity();
+                        when(mi.getMethod()).thenReturn(ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class, PropertyPath.class));
+                        when(mi.getArguments()).thenReturn(new Object[]{entity, PropertyPath.from("foo")});
+                        when(em.merge(entity)).thenReturn(entity);
+                        when(mi.proceed()).thenReturn(entity);
+                    });
+                    JustBeforeEach(() -> {
+                        result = interceptor.invoke(mi);
+                    });
+                    It("should lock the entity and proceed", () -> {
+                        assertThat(result, is(not(nullValue())));
+                        verify(em).lock(entity, LockModeType.OPTIMISTIC);
+                        verify(mi).setArguments(eq(entity), eq(PropertyPath.from("foo")));
                         verify(mi).proceed();
                         assertThat(((TestEntity)entity).getVersion(), is(1L));
                     });
