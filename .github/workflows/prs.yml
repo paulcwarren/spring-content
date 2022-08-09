@@ -37,6 +37,6 @@ jobs:
       run: |
         pushd spring-content-examples
           git fetch --all
-          git checkout bump/spring-boot-2.7.1
+          git checkout main
           mvn -B clean install
         popd
