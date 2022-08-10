@@ -98,7 +98,7 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
             return entity;
         }
 
-        entity = em.merge(entity);
+//        entity = em.merge(entity);
         em.lock(entity, LockModeType.OPTIMISTIC);
         return entity;
     }
