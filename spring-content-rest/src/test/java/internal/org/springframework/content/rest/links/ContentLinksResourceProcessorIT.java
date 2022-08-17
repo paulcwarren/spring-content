@@ -13,6 +13,8 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntityChild;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -152,6 +154,28 @@ public class ContentLinksResourceProcessorIT {
 					assertThat(resource.getLinks("content"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity5s/999/content"))));
 					assertThat(resource.getLinks("rendition"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity5s/999/rendition"))));
 				});
+			});
+
+			Context("given an entity with an embedded object containing @ContentId properties", () -> {
+				BeforeEach(() -> {
+					PersistentEntity<?, ?> persistentEntity = repositories.getPersistentEntity(TestEntity2.class);
+
+					TestEntity2 obj = new TestEntity2();
+					obj.setId(999L);
+					UUID contentId = UUID.randomUUID();
+					TestEntityChild child = new TestEntityChild();
+					child.setContentId(contentId);
+					obj.setChild(child);
+
+					PersistentEntityResource.Builder build = PersistentEntityResource.build(obj, persistentEntity);
+					resource = build.build();
+				});
+
+				It("should add content property links", () -> {
+					assertThat(resource.getLinks("child"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child"))));
+					assertThat(resource.getLinks("child/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child/content"))));
+				});
+
 			});
 		});
 	}

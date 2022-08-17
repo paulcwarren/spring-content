@@ -51,6 +51,14 @@ public class MappingContext {
         return properties.values();
     }
 
+    public Collection<String> getContentPaths(Class<?> domainClass) {
+        Map<String, ContentProperty> properties = context.get(domainClass);
+        if (properties == null) {
+            properties = resolveProperties(domainClass);
+        }
+        return properties.keySet();
+    }
+
     private Map<String, ContentProperty> resolveProperties(Class<?> domainClass) {
         ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor(this.keySeparator, this.contentPropertySeparator, new ContentPropertyBuilderVisitor.CanonicalName());
         ClassWalker walker = new ClassWalker(domainClass);
