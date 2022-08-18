@@ -82,9 +82,17 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
         }
 
 		Object entityId = DomainObjectUtils.getId(object);
+		if(entityId == null) {
+			// If there is no entity ID, we can't have content links (because they reference the entity ID)
+			return resource;
+		}
 
 		Class<?> persistentEntityType = resource.getPersistentEntity().getType();
 		StoreInfo store = stores.getStore(AssociativeStore.class, Stores.withDomainClass(persistentEntityType));
+		if(store == null) {
+			// If there is no store, this PersistentEntityResource can't have content links
+			return resource;
+		}
 		Collection<String> contentPropertyPaths = mappingContext.getContentPaths(persistentEntityType);
 
 		ContentProperty singleContentProperty = mappingContext.getContentProperty(persistentEntityType, "");
