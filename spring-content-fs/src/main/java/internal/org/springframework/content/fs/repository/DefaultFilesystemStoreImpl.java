@@ -85,14 +85,14 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
 
-        SID contentId = getContentId(entity, propertyPath);
+        ContentProperty contentProperty = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+        if (contentProperty == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        SID contentId = (SID) contentProperty.getContentId(entity);
         if (contentId == null) {
-            UUID newId = UUID.randomUUID();
-
-            Object convertedId = convertToExternalContentIdType(entity, newId);
-
-            contentId = (SID)convertedId;
-            setContentId(entity, propertyPath, contentId, null);
+            return null;
         }
         return getResource(contentId);
     }
@@ -216,7 +216,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
             Serializable newId = UUID.randomUUID().toString();
 
-            Object convertedId = convertToExternalContentIdType(newId, contentProperty.getContentIdType(property));
+            Object convertedId = placer.convert(
+                    newId,
+                    TypeDescriptor.forObject(newId),
+                    contentProperty.getContentIdType(property));
 
             contentProperty.setContentId(property, convertedId, null);
         }
@@ -385,29 +388,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 		return contentId.toString();
 	}
-
-    private Object convertToExternalContentIdType(Object contentId, TypeDescriptor contentIdType) {
-        if (placer.canConvert(TypeDescriptor.forObject(contentId),
-                contentIdType)) {
-            contentId = placer.convert(contentId, TypeDescriptor.forObject(contentId),
-                    contentIdType);
-            return contentId;
-        }
-        return contentId.toString();
-    }
-
-    private SID getContentId(S entity, PropertyPath propertyPath) {
-
-        Assert.notNull(entity, "entity must not be null");
-        Assert.notNull(propertyPath, "propertyPath must not be null");
-
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-        return (SID) wrapper.getPropertyValue(property.getContentIdPropertyPath());
-    }
 
     private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
 

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -225,6 +226,11 @@ public class StoredRenditionsRestIT {
             try (InputStream inputStream = store.getContent(entity, PropertyPath.from("content"))) {
 
                 String renderedContent = IOUtils.toString(inputStream);
+
+                // create and associate resource
+                UUID resourceId = UUID.randomUUID();
+                Resource r = store.getResource(resourceId);
+                store.associate(entity, PropertyPath.from("rendition"), resourceId);
 
                 try (OutputStream stream = ((WritableResource)store.getResource(entity, PropertyPath.from("rendition"))).getOutputStream()) {
                     renderedLength = IOUtils.copyLarge(
