@@ -13,6 +13,8 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.TestEntityChild;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -58,6 +61,9 @@ public class ContentLinksResourceProcessorIT {
 
 	@Autowired
 	private Repositories repositories;
+
+	@Autowired
+	private PersistentEntities persistentEntities;
 
 	@Autowired
 	private ContentLinksResourceProcessor processor;
@@ -151,6 +157,45 @@ public class ContentLinksResourceProcessorIT {
 				It("should add content property links", () -> {
 					assertThat(resource.getLinks("content"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity5s/999/content"))));
 					assertThat(resource.getLinks("rendition"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity5s/999/rendition"))));
+				});
+			});
+
+			Context("given an entity with an embedded object containing @ContentId properties", () -> {
+				BeforeEach(() -> {
+					PersistentEntity<?, ?> persistentEntity = repositories.getPersistentEntity(TestEntity2.class);
+
+					TestEntity2 obj = new TestEntity2();
+					obj.setId(999L);
+					UUID contentId = UUID.randomUUID();
+					TestEntityChild child = new TestEntityChild();
+					child.setContentId(contentId);
+					obj.setChild(child);
+
+					PersistentEntityResource.Builder build = PersistentEntityResource.build(obj, persistentEntity);
+					resource = build.build();
+				});
+
+				It("should add content property links", () -> {
+					assertThat(resource.getLinks("child"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child"))));
+					assertThat(resource.getLinks("child/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child/content"))));
+				});
+
+			});
+
+			Context("given the embedded object in an entity containing @ContentId properties", () -> {
+				BeforeEach(() -> {
+					PersistentEntity<?, ?> persistentEntity = persistentEntities.getRequiredPersistentEntity(TestEntityChild.class);
+
+					UUID contentId = UUID.randomUUID();
+					TestEntityChild child = new TestEntityChild();
+					child.setContentId(contentId);
+
+					PersistentEntityResource.Builder build = PersistentEntityResource.build(child, persistentEntity);
+					resource = build.buildNested();
+				});
+
+				It("should not try to generate content property links for the embedded object", () -> {
+					assertThat(resource.getLinks().isEmpty(), is(true));
 				});
 			});
 		});
