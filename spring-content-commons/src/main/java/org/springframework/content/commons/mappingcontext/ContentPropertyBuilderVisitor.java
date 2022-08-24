@@ -175,7 +175,7 @@ public class ContentPropertyBuilderVisitor {
                     this.contentPropertySeparator,
                     this.nameProvider,
                     this instanceof SubClassVisitor ? (String[])ArrayUtils.add(((SubClassVisitor)this).propertyPathPrefix, f.getName()) : new String[] {f.getName()},
-                    this.getClassesVisited());
+                    new ArrayList<>(this.getClassesVisited()));
 
             subWalker.accept(visitor);
             for (Entry<String, ContentProperty> entry : visitor.getProperties().entrySet()) {
