@@ -1,6 +1,6 @@
 package internal.org.springframework.content.rest.controllers.resolvers;
 
-import org.springframework.content.commons.mappingcontext.ContentProperty;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -11,14 +11,20 @@ import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
 
 public class StoreResourceResolver implements ResourceResolver {
 
+    private MappingContext mappingContext;
+
+    public StoreResourceResolver(MappingContext mappingContext) {
+        this.mappingContext = mappingContext;
+    }
+
     @Override
     public String getMapping() {
         return "/{repository}/{id}";
     }
 
     @Override
-    public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, ContentProperty property) {
-        Resource r = info.getImplementation(AssociativeStore.class).getResource(domainObj, PropertyPath.from(property.getContentPropertyPath()));
-        return new AssociatedStoreResourceImpl(info, property, domainObj, r);
+    public Resource resolve(NativeWebRequest nativeWebRequest, StoreInfo info, Object domainObj, PropertyPath property) {
+        Resource r = info.getImplementation(AssociativeStore.class).getResource(domainObj, property);
+        return new AssociatedStoreResourceImpl(info, domainObj, property, mappingContext.getContentProperty(domainObj.getClass(), property.getName()), r);
     }
 }

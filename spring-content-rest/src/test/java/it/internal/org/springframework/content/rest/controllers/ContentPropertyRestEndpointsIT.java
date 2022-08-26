@@ -12,7 +12,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,7 +31,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.rest.config.RestConfiguration;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -175,166 +173,84 @@ public class ContentPropertyRestEndpointsIT {
 				  lastModifiedDateTests.setEtag(testEntity2.getVersion().toString());
 				  lastModifiedDateTests.setContent(content);
 			  });
-			  Context("given the content property is accessed via the /{repository}/{id}/{contentProperty} endpoint", () -> {
-				  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
-					  It("should return the content", () -> {
-						  MockHttpServletResponse response = mvc
-								  .perform(get("/testEntity8s/" + testEntity2.getId() + "/child")
-										  .accept("text/plain"))
-								  .andExpect(status().isOk())
-								  .andExpect(header().string("etag", is("\"1\"")))
-								  .andExpect(header().string("last-modified", LastModifiedDate
-										  .isWithinASecond(testEntity2.getModifiedDate())))
-								  .andReturn().getResponse();
+			  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
+				  It("should return the content", () -> {
+					  MockHttpServletResponse response = mvc
+							  .perform(get("/testEntity8s/" + testEntity2.getId() + "/child")
+									  .accept("text/plain"))
+							  .andExpect(status().isOk())
+							  .andExpect(header().string("etag", is("\"1\"")))
+							  .andExpect(header().string("last-modified", LastModifiedDate
+									  .isWithinASecond(testEntity2.getModifiedDate())))
+							  .andReturn().getResponse();
 
-						  assertThat(response, is(not(nullValue())));
-						  assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
-					  });
+					  assertThat(response, is(not(nullValue())));
+					  assertThat(response.getContentAsString(), is("Hello Spring Content World!"));
 				  });
-				  Context("a GET to /{repository}/{id}/{contentProperty} with a mime type that matches a renderer", () -> {
-					  It("should return the rendition and 200", () -> {
-						  MockHttpServletResponse response = mvc
-								  .perform(get(
-										  "/testEntity8s/" + testEntity2.getId()
-												  + "/child")
-										  .accept("text/html"))
-								  .andExpect(status().isOk()).andReturn()
-								  .getResponse();
+			  });
+			  Context("a GET to /{repository}/{id}/{contentProperty} with a mime type that matches a renderer", () -> {
+				  It("should return the rendition and 200", () -> {
+					  MockHttpServletResponse response = mvc
+							  .perform(get(
+									  "/testEntity8s/" + testEntity2.getId()
+											  + "/child")
+									  .accept("text/html"))
+							  .andExpect(status().isOk()).andReturn()
+							  .getResponse();
 
-						  assertThat(response, is(not(nullValue())));
-						  assertThat(response.getContentAsString(), is(
-								  "<html><body>Hello Spring Content World!</body></html>"));
-					  });
+					  assertThat(response, is(not(nullValue())));
+					  assertThat(response.getContentAsString(), is(
+							  "<html><body>Hello Spring Content World!</body></html>"));
 				  });
-				  Context("a GET to /{repository}/{id}/{contentProperty} with multiple mime types the last of which matches the content", () -> {
-					  It("should return the original content and 200", () -> {
-						  MockHttpServletResponse response = mvc
-								  .perform(get("/testEntity8s/"
-										  + testEntity2.getId()
-										  + "/child").accept(
-										  new String[] {"text/xml",
-												  "text/plain"}))
-								  .andExpect(status().isOk()).andReturn()
-								  .getResponse();
+			  });
+			  Context("a GET to /{repository}/{id}/{contentProperty} with multiple mime types the last of which matches the content", () -> {
+				  It("should return the original content and 200", () -> {
+					  MockHttpServletResponse response = mvc
+							  .perform(get("/testEntity8s/"
+									  + testEntity2.getId()
+									  + "/child").accept(
+									  new String[] {"text/xml",
+											  "text/plain"}))
+							  .andExpect(status().isOk()).andReturn()
+							  .getResponse();
 
-						  assertThat(response, is(not(nullValue())));
-						  assertThat(response.getContentAsString(),
-								  is("Hello Spring Content World!"));
-					  });
+					  assertThat(response, is(not(nullValue())));
+					  assertThat(response.getContentAsString(),
+							  is("Hello Spring Content World!"));
 				  });
-				  Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
-					  It("should create the content", () -> {
-						  mvc.perform(
-								  put("/testEntity8s/" + testEntity2.getId() + "/child")
-										  .content("Hello New Spring Content World!")
-										  .contentType("text/plain"))
-								  .andExpect(status().is2xxSuccessful());
+			  });
+			  Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
+				  It("should create the content", () -> {
+					  mvc.perform(
+							  put("/testEntity8s/" + testEntity2.getId() + "/child")
+									  .content("Hello New Spring Content World!")
+									  .contentType("text/plain"))
+							  .andExpect(status().is2xxSuccessful());
 
-						  Optional<TestEntity8> fetched = repository2
-								  .findById(testEntity2.getId());
-						  assertThat(fetched.isPresent(), is(true));
-						  assertThat(fetched.get().getChild().contentId,is(not(nullValue())));
-						  assertThat(fetched.get().getChild().contentLen, is(31L));
-						  assertThat(fetched.get().getChild().contentMimeType, is("text/plain"));
-					  });
+					  Optional<TestEntity8> fetched = repository2
+							  .findById(testEntity2.getId());
+					  assertThat(fetched.isPresent(), is(true));
+					  assertThat(fetched.get().getChild().contentId,is(not(nullValue())));
+					  assertThat(fetched.get().getChild().contentLen, is(31L));
+					  assertThat(fetched.get().getChild().contentMimeType, is("text/plain"));
 				  });
-				  Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
-					  It("should delete the content", () -> {
-						  mvc.perform(delete(
-								  "/testEntity8s/" + testEntity2.getId() + "/child"))
-								  .andExpect(status().isNoContent());
+			  });
+			  Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
+				  It("should delete the content", () -> {
+					  mvc.perform(delete(
+							  "/testEntity8s/" + testEntity2.getId() + "/child"))
+							  .andExpect(status().isNoContent());
 
-						  Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
-						  assertThat(fetched.isPresent(), is(true));
-						  assertThat(fetched.get().getChild().contentId, is(nullValue()));
-						  assertThat(fetched.get().getChild().contentLen, is(0L));
-                          assertThat(fetched.get().getChild().contentMimeType, is(nullValue()));
-					  });
+					  Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
+					  assertThat(fetched.isPresent(), is(true));
+					  assertThat(fetched.get().getChild().contentId, is(nullValue()));
+					  assertThat(fetched.get().getChild().contentLen, is(0L));
+                      assertThat(fetched.get().getChild().contentMimeType, is(nullValue()));
 				  });
-
-				  versionTests = Version.tests();
-				  lastModifiedDateTests = LastModifiedDate.tests();
 			  });
 
-			  Context("given the content property is accessed via the fully-qualified URL", () -> {
-				  BeforeEach(() -> {
-					  versionTests.setUrl("/testEntity8s/" + testEntity2.getId() + "/child/content");
-					  lastModifiedDateTests.setUrl("/testEntity8s/" + testEntity2.getId() + "/child/content");
-				  });
-				  Context("a GET to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-				      It("should return the content", () -> {
-						  mvc.perform(get("/testEntity8s/" + testEntity2.getId() + "/child/content")
-								  .accept("text/plain"))
-								  .andExpect(status().isOk())
-								  .andExpect(header().string("etag", is("\"1\"")))
-								  .andExpect(header().string("last-modified", LastModifiedDate
-										  .isWithinASecond(testEntity2.getModifiedDate())))
-								  .andExpect(content().string(is("Hello Spring Content World!")));
-					  });
-				  });
-				  Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with a mime type that matches a renderer", () -> {
-					  It("should return the rendition and 200", () -> {
-						  MockHttpServletResponse response = mvc
-								  .perform(get(
-										  "/testEntity8s/" + testEntity2.getId() + "/child/content")
-										  .accept("text/html"))
-								  .andExpect(status().isOk()).andReturn()
-								  .getResponse();
-
-						  assertThat(response, is(not(nullValue())));
-						  assertThat(response.getContentAsString(), is(
-								  "<html><body>Hello Spring Content World!</body></html>"));
-					  });
-				  });
-				  Context("a GET to /{repository}/{id}/{contentProperty}/{contentId} with multiple mime types the last of which matches the content", () -> {
-					  It("should return the original content and 200", () -> {
-						  MockHttpServletResponse response = mvc
-								  .perform(get("/testEntity8s/"
-										  + testEntity2.getId() + "/child/content")
-										  .accept(new String[]
-										          {"text/xml",
-												  "text/plain"}))
-								  .andExpect(status().isOk()).andReturn()
-								  .getResponse();
-
-						  assertThat(response, is(not(nullValue())));
-						  assertThat(response.getContentAsString(),
-								  is("Hello Spring Content World!"));
-					  });
-				  });
-				  Context("a PUT to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-					  It("should overwrite the content", () -> {
-						  mvc.perform(put("/testEntity8s/"
-								  + testEntity2.getId() + "/child/content")
-						          .content("Hello Modified Spring Content World!")
-								  .contentType("text/plain"))
-								  .andExpect(status().isOk());
-
-
-						  Resource r = store.getResource(testEntity2, PropertyPath.from("child.content"));
-						  try (InputStream actual = r.getInputStream()) {
-						      assertThat(IOUtils.toString(actual),
-    				              is("Hello Modified Spring Content World!"));
-						  }
-					  });
-				  });
-				  Context("a DELETE to /{repository}/{id}/{contentProperty}/{contentId}", () -> {
-					  It("should delete the content", () -> {
-						  mvc.perform(delete("/testEntity8s/"
-								  + testEntity2.getId() + "/child/content"))
-								  .andExpect(status().isNoContent());
-
-                          Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
-                          assertThat(fetched.isPresent(), is(true));
-                          assertThat(fetched.get().getChild().contentId, is(nullValue()));
-                          assertThat(fetched.get().getChild().contentLen, is(0L));
-                          assertThat(fetched.get().getChild().contentMimeType, is(nullValue()));
-					  });
-				  });
-
-				  versionTests = Version.tests();
-				  lastModifiedDateTests = LastModifiedDate.tests();
-			  });
+			  versionTests = Version.tests();
+			  lastModifiedDateTests = LastModifiedDate.tests();
 		  });
 		});
       });

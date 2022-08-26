@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -95,8 +94,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		}
 		Collection<String> contentPropertyPaths = mappingContext.getContentPaths(persistentEntityType);
 
-		ContentProperty singleContentProperty = mappingContext.getContentProperty(persistentEntityType, "");
-		if(singleContentProperty != null && config.shortcutLinks() && !config.fullyQualifiedLinks()) {
+		if(contentPropertyPaths.size() == 1 && config.shortcutLinks() && !config.fullyQualifiedLinks()) {
 			// for compatibility with v0.x.0 versions
 			originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> addLink(resource, l));
 

@@ -61,9 +61,13 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
     private ContentProperty contentProperty;
 
-    public AssociatedStoreResourceImpl(StoreInfo info, ContentProperty property, S entity, Resource original) {
+    private PropertyPath propertyPath;
+
+
+    public AssociatedStoreResourceImpl(StoreInfo info, S entity, PropertyPath propertyPath, ContentProperty property, Resource original) {
         this.info = info;
         this.entity = entity;
+        this.propertyPath = propertyPath;
         this.contentProperty = property;
         this.original = original;
     }
@@ -78,6 +82,11 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
     public S getAssociation() {
 
         return entity;
+    }
+
+    @Override
+    public PropertyPath getPropertyPath() {
+        return this.propertyPath;
     }
 
     @Override
@@ -100,7 +109,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
         if (Renderable.class.isAssignableFrom(this.getStoreInfo().getInterface())) {
 
             Renderable renderer = (Renderable)this.getStoreInfo().getImplementation(AssociativeStore.class);
-            return renderer.hasRendition(getAssociation(), PropertyPath.from(contentProperty.getContentPropertyPath()), mimeType.toString());
+            return renderer.hasRendition(getAssociation(), this.getPropertyPath(), mimeType.toString());
         }
 
         return false;
@@ -112,7 +121,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
         if (Renderable.class.isAssignableFrom(this.getStoreInfo().getInterface())) {
 
             Renderable renderer = (Renderable)this.getStoreInfo().getImplementation(AssociativeStore.class);
-            return renderer.getRendition(getAssociation(), PropertyPath.from(contentProperty.getContentPropertyPath()), mimeType.toString());
+            return renderer.getRendition(getAssociation(), this.getPropertyPath(), mimeType.toString());
         }
 
         return null;
@@ -143,7 +152,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
         Object mimeType = null;
 
-        mimeType = this.contentProperty.getMimeType(this.getAssociation());
+        mimeType = this.getContentProperty().getMimeType(this.getAssociation());
 
         return MediaType.valueOf(mimeType != null ? mimeType.toString() : MediaType.ALL_VALUE);
     }
@@ -153,7 +162,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
      // TODO: can we remove this is all properties are effectively embedded?
 //      Long contentLength = null; (Long) BeanUtils.getFieldWithAnnotation(property, ContentLength.class);
-      Long contentLength = (Long) this.contentProperty.getContentLength(this.getAssociation());
+      Long contentLength = (Long) this.getContentProperty().getContentLength(this.getAssociation());
       if (contentLength == null) {
           contentLength = getDelegate().contentLength();
       }
@@ -182,7 +191,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
         HttpHeaders headers = new HttpHeaders();
 
         // Modified to show download
-        Object originalFileName = this.contentProperty.getOriginalFileName(this.getAssociation());
+        Object originalFileName = this.getContentProperty().getOriginalFileName(this.getAssociation());
         if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
             ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
             headers.setContentDisposition(builder.build());

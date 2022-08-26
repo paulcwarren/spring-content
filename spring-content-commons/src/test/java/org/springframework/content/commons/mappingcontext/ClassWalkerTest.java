@@ -60,7 +60,7 @@ public class ClassWalkerTest {
                 expectedSubClassProperty.setContentLengthPropertyPath("child.contentLength");
                 expectedSubClassProperty.setMimeTypePropertyPath("child.contentMimeType");
                 expectedSubClassProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
-                assertThat(visitor.getProperties(), hasEntry("child/content", expectedSubClassProperty));
+                assertThat(visitor.getProperties(), hasEntry("child", expectedSubClassProperty));
 
                 ContentProperty expectedSubSubClassProperty = new ContentProperty();
                 expectedSubSubClassProperty.setContentPropertyPath("child.subChild.content");
@@ -69,7 +69,6 @@ public class ClassWalkerTest {
                 expectedSubSubClassProperty.setMimeTypePropertyPath("child.subChild.contentMimeType");
                 expectedSubSubClassProperty.setOriginalFileNamePropertyPath("child.subChild.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/subChild", expectedSubSubClassProperty));
-                assertThat(visitor.getProperties(), hasEntry("child/subChild/content", expectedSubSubClassProperty));
             });
         });
 
@@ -78,14 +77,6 @@ public class ClassWalkerTest {
                 ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
                 ClassWalker walker = new ClassWalker(UncorrelatedAttrClass.class);
                 walker.accept(visitor);
-
-                ContentProperty expectedProperty = new ContentProperty();
-                expectedProperty.setContentPropertyPath("content");
-                expectedProperty.setContentIdPropertyPath("contentId");
-                expectedProperty.setContentLengthPropertyPath("len");
-                expectedProperty.setMimeTypePropertyPath("mimeType");
-                expectedProperty.setOriginalFileNamePropertyPath("originalFileName");
-                assertThat(visitor.getProperties(), hasEntry("", expectedProperty));
 
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
@@ -102,14 +93,6 @@ public class ClassWalkerTest {
                 ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
                 ClassWalker walker = new ClassWalker(CorrelatedAttrClass.class);
                 walker.accept(visitor);
-
-                ContentProperty expectedProperty = new ContentProperty();
-                expectedProperty.setContentPropertyPath("content");
-                expectedProperty.setContentIdPropertyPath("contentId");
-                expectedProperty.setContentLengthPropertyPath("contentLen");
-                expectedProperty.setMimeTypePropertyPath("contentMimeType");
-                expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
-                assertThat(visitor.getProperties(), hasEntry("", expectedProperty));
 
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
@@ -134,14 +117,6 @@ public class ClassWalkerTest {
                 expectedProperty.setMimeTypePropertyPath("child.mimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child", expectedProperty));
-
-                ContentProperty expectedProperty2 = new ContentProperty();
-                expectedProperty2.setContentPropertyPath("child.content");
-                expectedProperty2.setContentIdPropertyPath("child.contentId");
-                expectedProperty2.setContentLengthPropertyPath("child.len");
-                expectedProperty2.setMimeTypePropertyPath("child.mimeType");
-                expectedProperty2.setOriginalFileNamePropertyPath("child.originalFileName");
-                assertThat(visitor.getProperties(), hasEntry("child/content", expectedProperty2));
             });
         });
 
@@ -185,14 +160,6 @@ public class ClassWalkerTest {
                 expectedProperty.setOriginalFileNamePropertyPath("child1.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child1", expectedProperty));
 
-                ContentProperty expectedProperty2 = new ContentProperty();
-                expectedProperty2.setContentPropertyPath("child1.content");
-                expectedProperty2.setContentIdPropertyPath("child1.contentId");
-                expectedProperty2.setContentLengthPropertyPath("child1.len");
-                expectedProperty2.setMimeTypePropertyPath("child1.mimeType");
-                expectedProperty2.setOriginalFileNamePropertyPath("child1.originalFileName");
-                assertThat(visitor.getProperties(), hasEntry("child1/content", expectedProperty2));
-
                 ContentProperty expectedProperty3 = new ContentProperty();
                 expectedProperty3.setContentPropertyPath("child2.content");
                 expectedProperty3.setContentIdPropertyPath("child2.contentId");
@@ -200,14 +167,6 @@ public class ClassWalkerTest {
                 expectedProperty3.setMimeTypePropertyPath("child2.mimeType");
                 expectedProperty3.setOriginalFileNamePropertyPath("child2.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child2", expectedProperty3));
-
-                ContentProperty expectedProperty4 = new ContentProperty();
-                expectedProperty4.setContentPropertyPath("child2.content");
-                expectedProperty4.setContentIdPropertyPath("child2.contentId");
-                expectedProperty4.setContentLengthPropertyPath("child2.len");
-                expectedProperty4.setMimeTypePropertyPath("child2.mimeType");
-                expectedProperty4.setOriginalFileNamePropertyPath("child2.originalFileName");
-                assertThat(visitor.getProperties(), hasEntry("child2/content", expectedProperty4));
             });
         });
     }

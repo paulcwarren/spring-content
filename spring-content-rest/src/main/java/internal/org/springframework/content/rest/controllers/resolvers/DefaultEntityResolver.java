@@ -12,6 +12,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import javax.servlet.AsyncContext;
@@ -31,6 +32,7 @@ import javax.servlet.http.Part;
 
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
@@ -46,6 +48,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,18 +74,9 @@ public class DefaultEntityResolver implements EntityResolver {
     private ApplicationContext context;
     private Repositories repositories;
     private Stores stores;
-//    private StoreInfo storeInfo;
     private ConversionService converters;
     private String mapping;
     private MappingContext mappingContext;
-
-//    public DefaultEntityResolver(ApplicationContext context, Repositories repositories, StoreInfo storeInfo, String[] pathSegments, ConversionService converters) {
-//        this.context = context;
-//        this.repositories = repositories;
-//        this.storeInfo = storeInfo;
-//        this.pathSegments = pathSegments;
-//        this.converters = converters;
-//    }
 
     public DefaultEntityResolver(ApplicationContext context, Repositories repositories, Stores stores, ConversionService converters, String mapping, MappingContext mappingContext) {
         this.context = context;
@@ -127,17 +121,12 @@ public class DefaultEntityResolver implements EntityResolver {
         }
 
         String propertyPath = matcher.extractPathWithinPattern(this.mapping, pathInfo);
-        ContentProperty contentProperty = null;
-        if (propertyPath != null) {
-            contentProperty = mappingContext.getContentProperty(info.getDomainObjectClass(), propertyPath);
-        } else {
-            contentProperty = selectPrimaryContentProperty(info);
-        }
-        if (contentProperty == null) {
-            throw new ResourceNotFoundException();
+        if (!StringUtils.hasText(propertyPath)) {
+            ContentProperty property = selectPrimaryContentProperty(info);
+            propertyPath = property.getContentPropertyPath();
         }
 
-        return new EntityResolution(domainObj, contentProperty);
+        return new EntityResolution(domainObj, PropertyPath.from(propertyPath));
     }
 
     @Override
@@ -268,8 +257,10 @@ public class DefaultEntityResolver implements EntityResolver {
     }
 
     private ContentProperty selectPrimaryContentProperty(StoreInfo info) {
-        ContentProperty contentProperty;
-        contentProperty = mappingContext.getContentProperties(info.getDomainObjectClass()).iterator().next();
+        ContentProperty contentProperty = null;
+        try {
+            contentProperty = mappingContext.getContentProperties(info.getDomainObjectClass()).iterator().next();
+        } catch (NoSuchElementException nsee) {}
         return contentProperty;
     }
 
