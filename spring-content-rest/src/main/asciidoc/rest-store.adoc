@@ -413,20 +413,3 @@ All content types except `application/json`
 ==== DELETE
 
 Removes the Resource's content
-
-== The Collection Property Resource
-
-Spring Content REST exports Property Collection Resources to `/{store}/{id}/{property}`.  The resource path can be
-customized using the `@StoreRestResource` annotation on the Store interface.
- 
-=== Supported HTTP Methods
-
-Content collection resources support `PUT` and `POST`.
-
-==== PUT/POST
-
-Appends new content to the collection of Resources
-
-===== Supported media types
-
-All content types except `application/json`

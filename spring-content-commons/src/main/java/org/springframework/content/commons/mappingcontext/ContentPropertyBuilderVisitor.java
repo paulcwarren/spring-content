@@ -25,8 +25,6 @@ import lombok.Getter;
 /**
  * Returns a map of "path"'s to content properties for the given class.
  *
- *
- *
  * @author warrenpa
  *
  */
@@ -102,8 +100,11 @@ public class ContentPropertyBuilderVisitor {
             }
 
             this.properties = new HashMap<String,ContentProperty>();
-            this.properties.put(fullyQualify(propertyName(""), this.getKeySeparator()), contentProperty);
-            this.properties.put(contentProperty.getContentPropertyPath().replace(this.getContentPropertySeparator(), this.getKeySeparator()), contentProperty);
+            if (isNotRootContentProperty()) {
+                this.properties.put(fullyQualify(propertyName(""), this.getKeySeparator()), contentProperty);
+            } else {
+                this.properties.put(contentProperty.getContentPropertyPath().replace(this.getContentPropertySeparator(), this.getKeySeparator()), contentProperty);
+            }
         }
 
         for (Entry<String, ContentProperty> entry : subProperties.entrySet()) {
@@ -212,6 +213,10 @@ public class ContentPropertyBuilderVisitor {
         }
         String[] segments = split(name);
         return segments[0];
+    }
+
+    private boolean isNotRootContentProperty() {
+        return StringUtils.hasLength(fullyQualify(propertyName(""), this.getKeySeparator()));
     }
 
     private static String[] split(String name) {

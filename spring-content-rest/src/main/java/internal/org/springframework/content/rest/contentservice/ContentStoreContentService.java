@@ -71,7 +71,7 @@ public class ContentStoreContentService implements ContentService {
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
         ContentProperty property = storeResource.getContentProperty();
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), PropertyPath.from(property.getContentPropertyPath())).getContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).getContentMethods();
 
         if (methodsToUse.length > 1) {
             throw new IllegalStateException("Too many getContent methods");
@@ -156,7 +156,7 @@ public class ContentStoreContentService implements ContentService {
             property.setOriginalFileName(domainObject, source.getFilename());
         }
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), PropertyPath.from(property.getContentPropertyPath())).setContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).setContentMethods();
 
         if (methodsToUse.length > 1) {
             RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(storeResource.getStoreInfo().getDomainObjectClass());
@@ -177,7 +177,7 @@ public class ContentStoreContentService implements ContentService {
         try {
             Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
             ReflectionUtils.makeAccessible(methodToUse);
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, domainObject, PropertyPath.from(property.getContentPropertyPath()), contentArg);
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, domainObject, storeResource.getPropertyPath(), contentArg);
 
             repoInvoker.invokeSave(updatedDomainObj);
         } finally {
@@ -191,7 +191,7 @@ public class ContentStoreContentService implements ContentService {
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
         ContentProperty property = storeResource.getContentProperty();
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), PropertyPath.from(property.getContentPropertyPath())).unsetContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).unsetContentMethods();
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
@@ -207,7 +207,7 @@ public class ContentStoreContentService implements ContentService {
 
         ReflectionUtils.makeAccessible(methodsToUse[0]);
 
-        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject, PropertyPath.from(property.getContentPropertyPath()));
+        Object updatedDomainObj = ReflectionUtils.invokeMethod(methodsToUse[0], targetObj, updateObject, storeResource.getPropertyPath());
 
         updateObject = updatedDomainObj;
         property.setMimeType(updateObject, null);

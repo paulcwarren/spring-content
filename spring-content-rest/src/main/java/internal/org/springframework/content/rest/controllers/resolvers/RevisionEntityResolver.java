@@ -6,8 +6,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
@@ -76,9 +76,8 @@ public class RevisionEntityResolver implements EntityResolver {
         if (propertyPath == null) {
             propertyPath = "";
         }
-        ContentProperty property = mappingContext.getContentProperty(info.getDomainObjectClass(), propertyPath);
 
-        return new EntityResolution(domainObj, property);
+        return new EntityResolution(domainObj, PropertyPath.from(propertyPath));
     }
 
 

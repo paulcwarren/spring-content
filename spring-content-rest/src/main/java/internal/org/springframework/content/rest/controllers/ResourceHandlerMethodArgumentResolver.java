@@ -58,8 +58,8 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
 
         this.entityResolvers = entityResolvers;
 
-        resolvers.add(new StoreResourceResolver());
-        resolvers.add(new AssociativeStoreResourceResolver());
+        resolvers.add(new StoreResourceResolver(this.mappingContext));
+        resolvers.add(new AssociativeStoreResourceResolver(this.mappingContext));
     }
 
     RestConfiguration getConfig() {
@@ -126,7 +126,7 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
                 }
             }
 
-            return matchedResolver.resolve(webRequest, info, result.getEntity(), result.getContentProperty());
+            return matchedResolver.resolve(webRequest, info, result.getEntity(), result.getProperty());
 
         } else if (Store.class.isAssignableFrom(info.getInterface())) {
 

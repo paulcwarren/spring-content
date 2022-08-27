@@ -1,9 +1,17 @@
 package internal.org.springframework.content.rest.storeresolver;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
-import internal.org.springframework.content.rest.support.TestEntity2;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.jayway.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+
+import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
@@ -13,12 +21,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.server.LocalServerPort;
 
-import java.io.InputStream;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import com.jayway.restassured.RestAssured;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
+import internal.org.springframework.content.rest.support.TestEntity2;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)

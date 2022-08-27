@@ -13,8 +13,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
-import internal.org.springframework.content.rest.support.TestEntity2;
-import internal.org.springframework.content.rest.support.TestEntityChild;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -43,8 +41,10 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
 import internal.org.springframework.content.rest.support.BaseUriConfig;
+import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity4;
 import internal.org.springframework.content.rest.support.TestEntity5;
+import internal.org.springframework.content.rest.support.TestEntityChild;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -177,7 +177,6 @@ public class ContentLinksResourceProcessorIT {
 
 				It("should add content property links", () -> {
 					assertThat(resource.getLinks("child"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child"))));
-					assertThat(resource.getLinks("child/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child/content"))));
 				});
 
 			});
