@@ -504,11 +504,6 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_supported_http_methods_2">3.4.1. Supported HTTP Methods</a></li>
 </ul>
 </li>
-<li><a href="#_the_collection_property_resource">3.5. The Collection Property Resource</a>
-<ul class="sectlevel3">
-<li><a href="#_supported_http_methods_3">3.5.1. Supported HTTP Methods</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a href="#_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</a>
@@ -1156,31 +1151,6 @@ Allowed</code>.</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_the_collection_property_resource">3.5. The Collection Property Resource</h3>
-<div class="paragraph">
-<p>Spring Content REST exports Property Collection Resources to <code>/{store}/{id}/{property}</code>.  The resource path can be
-customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
-</div>
-<div class="sect3">
-<h4 id="_supported_http_methods_3">3.5.1. Supported HTTP Methods</h4>
-<div class="paragraph">
-<p>Content collection resources support <code>PUT</code> and <code>POST</code>.</p>
-</div>
-<div class="sect4">
-<h5 id="_putpost_3">PUT/POST</h5>
-<div class="paragraph">
-<p>Appends new content to the collection of Resources</p>
-</div>
-<div class="sect5">
-<h6 id="_supported_media_types_6">Supported media types</h6>
-<div class="paragraph">
-<p>All content types except <code>application/json</code></p>
-</div>
-</div>
-</div>
-</div>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -1204,13 +1174,13 @@ available at the <code>/{store}/searchContent</code> URI.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_supported_http_methods_4">Supported HTTP Methods</h5>
+<h5 id="_supported_http_methods_3">Supported HTTP Methods</h5>
 <div class="paragraph">
 <p>As the SearchContent resource is read-only it supports <code>GET</code> only.  All other HTTP methods will
 cause a <code>405 Method Not Allowed</code>.</p>
 </div>
 <div class="sect5">
-<h6 id="_supported_media_types_7">Supported media types</h6>
+<h6 id="_supported_media_types_6">Supported media types</h6>
 <div class="ulist">
 <ul>
 <li>
@@ -1273,7 +1243,7 @@ will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_supported_http_methods_5">Supported HTTP Methods</h5>
+<h5 id="_supported_http_methods_4">Supported HTTP Methods</h5>
 <div class="paragraph">
 <p>The Lock resource supports <code>PUT</code> and <code>DELETE</code>.  All other HTTP methods will cause a
 <code>405 Method Not Allowed</code>.</p>
@@ -1290,7 +1260,7 @@ will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 <p>If held, releases the pessimistic lock on the resource.</p>
 </div>
 <div class="sect6">
-<h7 id="_supported_media_types_8">Supported media types</h7>
+<h7 id="_supported_media_types_7">Supported media types</h7>
 <div class="paragraph">
 <p>Not applicable.</p>
 </div>
@@ -1314,7 +1284,7 @@ endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</
 </div>
 </div>
 <div class="sect4">
-<h5 id="_supported_http_methods_6">Supported HTTP Methods</h5>
+<h5 id="_supported_http_methods_5">Supported HTTP Methods</h5>
 <div class="paragraph">
 <p>The version resource supports <code>PUT</code>.  All other HTTP methods will cause a <code>405 Method
 Not Allowed</code>.</p>
@@ -1325,7 +1295,7 @@ Not Allowed</code>.</p>
 <p>Creates a new version of the entity.</p>
 </div>
 <div class="sect6">
-<h7 id="_supported_media_types_9">Supported media types</h7>
+<h7 id="_supported_media_types_8">Supported media types</h7>
 <div class="paragraph">
 <p>application/json</p>
 </div>
@@ -1349,7 +1319,7 @@ endpoint will be available at the <code>/{repository}/findAllVersionsLatest</cod
 </div>
 </div>
 <div class="sect4">
-<h5 id="_supported_http_methods_7">Supported HTTP Methods</h5>
+<h5 id="_supported_http_methods_6">Supported HTTP Methods</h5>
 <div class="paragraph">
 <p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
 Not Allowed</code>.</p>
@@ -1360,7 +1330,7 @@ Not Allowed</code>.</p>
 <p>Returns the latest version of all entities.</p>
 </div>
 <div class="sect6">
-<h7 id="_supported_media_types_10">Supported media types</h7>
+<h7 id="_supported_media_types_9">Supported media types</h7>
 <div class="paragraph">
 <p>Not applicable.</p>
 </div>
@@ -1384,7 +1354,7 @@ endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code
 </div>
 </div>
 <div class="sect4">
-<h5 id="_supported_http_methods_8">Supported HTTP Methods</h5>
+<h5 id="_supported_http_methods_7">Supported HTTP Methods</h5>
 <div class="paragraph">
 <p>The version resource supports <code>GET</code>.  All other HTTP methods will cause a <code>405 Method
 Not Allowed</code>.</p>
@@ -1395,7 +1365,7 @@ Not Allowed</code>.</p>
 <p>Returns all versions of the given entity.</p>
 </div>
 <div class="sect6">
-<h7 id="_supported_media_types_11">Supported media types</h7>
+<h7 id="_supported_media_types_10">Supported media types</h7>
 <div class="paragraph">
 <p>Not applicable.</p>
 </div>
@@ -1832,7 +1802,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 2.5.0-SNAPSHOT<br>
-Last updated 2022-08-27 03:38:38 UTC
+Last updated 2022-08-27 04:26:09 UTC
 </div>
 </div>
 </body>
