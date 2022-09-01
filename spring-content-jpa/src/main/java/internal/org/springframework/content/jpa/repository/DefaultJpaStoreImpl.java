@@ -44,7 +44,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 	private ResourceLoader loader;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext = new MappingContext("/", ".");
 
 	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader) {
 		this.loader = blobResourceLoader;

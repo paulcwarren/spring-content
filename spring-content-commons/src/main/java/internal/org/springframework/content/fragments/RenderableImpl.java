@@ -34,7 +34,7 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
     private List<RenditionProvider> providers = new ArrayList<>();
 
 	public RenderableImpl() {
-       this.mappingContext = new MappingContext(".", ".");
+       this.mappingContext = new MappingContext("/", ".");
 	}
 
 	@Autowired(required=false)

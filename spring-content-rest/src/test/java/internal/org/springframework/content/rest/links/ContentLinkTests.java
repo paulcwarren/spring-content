@@ -1,23 +1,5 @@
 package internal.org.springframework.content.rest.links;
 
-import java.io.ByteArrayInputStream;
-import java.io.StringReader;
-import java.util.List;
-import java.util.regex.Matcher;
-
-import com.theoryinpractise.halbuilder.api.Link;
-import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
-import com.theoryinpractise.halbuilder.api.RepresentationFactory;
-import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
-import lombok.Setter;
-import org.hamcrest.beans.HasPropertyWithValue;
-
-
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
@@ -29,6 +11,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
+
+import org.hamcrest.beans.HasPropertyWithValue;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import com.theoryinpractise.halbuilder.api.RepresentationFactory;
+import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+
+import lombok.Setter;
 
 @Setter
 public class ContentLinkTests {

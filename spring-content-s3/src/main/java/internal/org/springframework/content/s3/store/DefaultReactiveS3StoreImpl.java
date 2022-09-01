@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.config.ContentPropertyInfo;
@@ -25,6 +24,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
@@ -49,7 +49,7 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 	private PlacementService placementService;
 	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext = new MappingContext("/", ".");
 
     private S3AsyncClient asyncClient;
 

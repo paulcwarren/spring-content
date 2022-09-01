@@ -51,7 +51,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		this.gridFs = gridFs;
 		this.placer = placer;
 
-		this.mappingContext = new MappingContext(".", ".");
+		this.mappingContext = new MappingContext("/", ".");
 	}
 
 	@Override

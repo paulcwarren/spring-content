@@ -169,6 +169,54 @@ public class ClassWalkerTest {
                 assertThat(visitor.getProperties(), hasEntry("child2", expectedProperty3));
             });
         });
+
+        Context("given a class with a child with multiple content property objects", () -> {
+            It("should return two content properties", () -> {
+                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
+                ClassWalker walker = new ClassWalker(TestClass6.class);
+                walker.accept(visitor);
+
+                ContentProperty expectedProperty = new ContentProperty();
+                expectedProperty.setContentPropertyPath("child.content");
+                expectedProperty.setContentIdPropertyPath("child.contentId");
+                expectedProperty.setContentLengthPropertyPath("child.contentLen");
+                expectedProperty.setMimeTypePropertyPath("child.contentMimeType");
+                expectedProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("child/content", expectedProperty));
+
+                ContentProperty expectedProperty3 = new ContentProperty();
+                expectedProperty3.setContentPropertyPath("child.preview");
+                expectedProperty3.setContentIdPropertyPath("child.previewId");
+                expectedProperty3.setContentLengthPropertyPath("child.previewLen");
+                expectedProperty3.setMimeTypePropertyPath("child.previewMimeType");
+                expectedProperty3.setOriginalFileNamePropertyPath("child.previewOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("child/preview", expectedProperty3));
+            });
+        });
+
+        Context("given a class with a child with a child with multiple content property objects", () -> {
+            It("should return two content properties", () -> {
+                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
+                ClassWalker walker = new ClassWalker(TestClass7.class);
+                walker.accept(visitor);
+
+                ContentProperty expectedProperty = new ContentProperty();
+                expectedProperty.setContentPropertyPath("child.child.content");
+                expectedProperty.setContentIdPropertyPath("child.child.contentId");
+                expectedProperty.setContentLengthPropertyPath("child.child.contentLen");
+                expectedProperty.setMimeTypePropertyPath("child.child.contentMimeType");
+                expectedProperty.setOriginalFileNamePropertyPath("child.child.contentOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("child/child/content", expectedProperty));
+
+                ContentProperty expectedProperty2 = new ContentProperty();
+                expectedProperty2.setContentPropertyPath("child.child.preview");
+                expectedProperty2.setContentIdPropertyPath("child.child.previewId");
+                expectedProperty2.setContentLengthPropertyPath("child.child.previewLen");
+                expectedProperty2.setMimeTypePropertyPath("child.child.previewMimeType");
+                expectedProperty2.setOriginalFileNamePropertyPath("child.child.previewOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("child/child/preview", expectedProperty2));
+            });
+        });
     }
 
     public static class TestClass {
@@ -257,6 +305,26 @@ public class ClassWalkerTest {
     public static class TestClass5 {
         private UncorrelatedAttrClass child1;
         private UncorrelatedAttrClass child2;
+    }
+
+    public static class TestClass6 {
+        private TestMultipleAttrs child;
+    }
+
+    public static class TestMultipleAttrs {
+        private @ContentId UUID contentId;
+        private @ContentLength Long contentLen;
+        private @MimeType String contentMimeType;
+        private @OriginalFileName String contentOriginalFileName;
+
+        private @ContentId UUID previewId;
+        private @ContentLength Long previewLen;
+        private @MimeType String previewMimeType;
+        private @OriginalFileName String previewOriginalFileName;
+    }
+
+    public static class TestClass7 {
+        private TestClass6 child;
     }
 
     public static enum TestEnum {

@@ -1,6 +1,5 @@
 package internal.org.springframework.content.fs.config;
 
-import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,8 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
+
+import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 
 @SuppressWarnings("rawtypes")
 public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
