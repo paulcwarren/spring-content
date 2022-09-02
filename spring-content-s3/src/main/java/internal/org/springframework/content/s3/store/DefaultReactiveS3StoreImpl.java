@@ -49,11 +49,11 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 	private PlacementService placementService;
 	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext("/", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
     private S3AsyncClient asyncClient;
 
-	public DefaultReactiveS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
+	public DefaultReactiveS3StoreImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, S3AsyncClient asyncClient, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -62,6 +62,10 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.asyncClient = asyncClient;
 		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
     private S3ObjectId getS3ObjectId(S entity, PropertyPath path, ContentProperty property) {

@@ -53,9 +53,9 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 	private BlobServiceClient client;
 //	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext("/", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, BlobServiceClient client) {
+	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, BlobServiceClient client) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -65,6 +65,10 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client;
 //		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

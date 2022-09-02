@@ -56,9 +56,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private S3Client client;
 	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext("/", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -68,6 +68,10 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client;
 		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

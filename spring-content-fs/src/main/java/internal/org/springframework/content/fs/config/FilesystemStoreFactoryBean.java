@@ -3,6 +3,7 @@ package internal.org.springframework.content.fs.config;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.commons.utils.PlacementService;
@@ -24,6 +25,9 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
 
+    @Autowired(required=false)
+    private MappingContext mappingContext;
+
 	@Override
 	protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
 		if (versioning != null) {
@@ -41,6 +45,6 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultFilesystemStoreImpl(loader, filesystemStorePlacementService, new FileServiceImpl());
+		return new DefaultFilesystemStoreImpl(loader, mappingContext, filesystemStorePlacementService, new FileServiceImpl());
 	}
 }
