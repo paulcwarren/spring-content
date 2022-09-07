@@ -15,13 +15,13 @@ Given the following domain model, Repository and Store:
     private Long id;
 
     @ContentId
-    private UUID contentId;
+    private UUID videoId;
 
     @ContentLength
-    private Long contentLength;
+    private Long videoLength;
 
     @MimeType
-    private String mimeType;
+    private String videoMimeType;
 
     // getters and setters
   }
@@ -44,14 +44,14 @@ Spring Content REST will inject the following link:
     "dvd" : {
       ...
     },
-    "content" : {
-      "href" : "http://localhost:8080/dvds/1/content"
+    "video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
     }
   }
 ----
 ====
 
-Where the linkrel is named after the `@ContentId` property and the link URI is the fully-qualified URI of that content property.
+Where the linkrel is named after the content property and the link URI is the fully-qualified URI of that content property.
 
 === Customizing the link relation
 
@@ -61,7 +61,7 @@ the StoreRestResource, as follows:
 ====
 [source, java]
 ----
-  @StoreRestResource(linkRel="custom-content")
+  @StoreRestResource(linkRel="custom-linkrel")
   public interface DvdStore extends ContentStore<Dvd, UUID> {}
 ----
 ====
@@ -78,8 +78,8 @@ This will result in the following linkrel instead:
     "dvd" : {
       ...
     },
-    "custom-content" : {
-      "href" : "http://localhost:8080/dvds/1/content"
+    "custom-linkrel/video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
     }
   }
 ----

@@ -491,7 +491,7 @@ class CustomContentRestMvcConfiguration {
 ----
 ====
 
-== The Contentn Property Resource
+== The Content Property Resource
 
 Spring Content REST exports Property Resources to `/{store}/{id}/{contentPropertyPath}`.
 The resource path and link relation prefix can be customized using the `@StoreRestResource` 
