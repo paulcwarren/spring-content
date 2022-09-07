@@ -632,10 +632,10 @@ public class User {
 	private String username;
 
 	@ContentId
-	private String contentId;
+	private String profilePictureId;
 
 	@ContentLength
-	private Long contentLength
+	private Long profilePictureLength
 }
 
 public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
@@ -666,7 +666,7 @@ public class Application {
 			}
 
 			// associate the Resource with the Entity
-			store.associate(jbauer, PropertyPath("content"), "/some/picture.jpeg");
+			store.associate(jbauer, PropertyPath("profilePicture"), "/some/picture.jpeg");
 
 			// save the user
 			repository.save(jbauer);
@@ -682,7 +682,7 @@ public class Application {
 <div class="sect2">
 <h3 id="_contentstore">1.2. ContentStore</h3>
 <div class="paragraph">
-<p><code>ContenStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
+<p><code>ContentStore</code> extends AssociativeStore and provides a more convenient API for managing associated content based on java <code>Stream</code>, rather than <code>Resource</code>.</p>
 </div>
 <div id="content-repositories.contentstore" class="exampleblock">
 <div class="title">Example 4. ContentStore interface</div>
@@ -730,10 +730,10 @@ public class User {
 	private String username;
 
 	@ContentId
-	private String contentId;
+	private String profilePictureId;
 
 	@ContentLength
-	private Long contentLength
+	private Long profilePictureLength
 }
 
 public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
@@ -755,7 +755,7 @@ public class Application {
 			User jbauer = new User("jbauer");
 
 			// store profile picture
-			store.setContent(jbauer, new FileInputStream("/tmp/jbauer.jpg"));
+			store.setContent(jbauer, PropertyPath.from("profilePicture"), new FileInputStream("/tmp/jbauer.jpg"));
 
 			// save the user
 			repository.save(jbauer);
@@ -770,7 +770,7 @@ public class Application {
 <div class="sect2">
 <h3 id="_reactivecontentstore">1.3. ReactiveContentStore</h3>
 <div class="paragraph">
-<p><code>ReactiveContenStore</code> is an experimental Store that provides a reactive API for managing associated content based on
+<p><code>ReactiveContentStore</code> is an experimental Store that provides a reactive API for managing associated content based on
 Mono and Flux reactive API.</p>
 </div>
 <div id="content-repositories.reactivecontentstore" class="exampleblock">
@@ -819,10 +819,10 @@ public class User {
     private String username;
 
     @ContentId
-    private String contentId;
+    private String profilePictureId;
 
     @ContentLength
-    private Long contentLength
+    private Long profilePictureLength
 }
 
 public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
@@ -849,7 +849,7 @@ public class Application {
             ByteBuffer byteBuffer = ByteBuffer.allocate(len);
             Channels.newChannel(fis).read(byteBuffer);
 
-            store.setContent(jbauer, PropertyPath.from("content"), len, Flux.just(byteBuffer)))
+            store.setContent(jbauer, PropertyPath.from("profilePicture"), len, Flux.just(byteBuffer)))
                 .doOnSuccess(updatedJbauer -&gt; {
                     // save the user
                     repository.save(updatedJbauer).block(Duration.ofSeconds(10));
@@ -867,7 +867,7 @@ public class Application {
 <div class="sect3">
 <h4 id="_content_properties">1.3.1. Content Properties</h4>
 <div class="paragraph">
-<p>As we can see above content is "associated" by adding additional metadata about the content to the JPA Entity.  This additional metadata is denoted with Spring Content annotations.  There are several.  The only mandatory annotation is <code>@ContentId</code>.  Other optional annotations include <code>@ContentLength</code>, <code>@MimeType</code> and <code>@OriginalFileName</code>.  These may be added to your entities when you need to capture this additional infomation about your associated content.</p>
+<p>As we can see above content is "associated" by adding additional metadata about the content to the Entity.  This additional metadata is annotated with Spring Content annotations.  There are several.  The only mandatory annotation is <code>@ContentId</code>.  Other optional annotations include <code>@ContentLength</code>, <code>@MimeType</code> and <code>@OriginalFileName</code>.  These may be added to your entities when you need to capture this additional infomation about your associated content.</p>
 </div>
 <div class="paragraph">
 <p>When adding these optional annotations it is highly recommended that you correlate the field&#8217;s name creating a "content property".  This allows for multiple pieces of content to be associated with the same entity, as shown in the following example.  When associating a single piece of content this is not necessary but still recommended.</p>
@@ -887,43 +887,121 @@ public class User {
 	private String username;
 
 	@ContentId
-	private String contentId;				<b class="conum">(1)</b>
+	private String profilePictureId;			<b class="conum">(1)</b>
 
 	@ContentLength
-	private Long contentLength
+	private Long profilePictureLength
 
 	@MimeType
-	private String contentType;
+	private String profilePictureType;
 
 	@OriginalFileName
-	private String contentName;
+	private String profilePictureName;
 
 	@ContentId
-	private String renditionId;				<b class="conum">(2)</b>
+	private String avatarId;				   <b class="conum">(2)</b>
 
 	@ContentLength
-	private Long renditionLength
+	private Long avatarLength
 
 	@MimeType
-	private String renditionType;
+	private String avatarType;
 }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>Content property "content" with id, length, type and original filename</p>
+<p>Content property "profilePicture" with id, length, type and original filename</p>
 </li>
 <li>
-<p>Content property "rendition" with id, length and type</p>
+<p>Content property "avatar" with id, length and type</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>When modeled thus these can then be managed as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">InputStream profilePicture = store.getContent(user, PropertyPath.from("profilePicture"));
+
+store.setContent(user, PropertyPath.from("avatar"), avatarStream);</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.multimodule">1.3.2. Using Stores with Multiple Spring Content Storage Modules</h4>
+<h4 id="_nested_content_properties">1.3.2. Nested Content Properties</h4>
+<div class="paragraph">
+<p>If desired content properties can also be nested, as the following JPA example shows:</p>
+</div>
+<div id="content-repositories.nestedcontentproperty" class="exampleblock">
+<div class="title">Example 9. Nested Content Properties</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class User {
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+
+    private String username;
+
+    private @Embedded Images images = new Images();
+}
+
+@Embeddable
+public class Images {
+    @ContentId
+    private String profilePictureId;
+
+    @ContentLength
+    private Long profilePictureLength
+
+    @MimeType
+    private String profilePictureType;
+
+    @OriginalFileName
+    private String profileName;
+
+    @ContentId
+    private String avatarId;
+
+    @ContentLength
+    private Long avatarLength
+
+    @MimeType
+    private String avatarType;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>These can then be managed with forward slash (<code>/</code>) separated property paths:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">InputStream profilePicture = store.getContent(user, PropertyPath.from("images/profilePicture"));
+
+store.setContent(user, PropertyPath.from("images/avatar"), avatarStream);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="content-repositories.multimodule">1.3.3. Using Stores with Multiple Spring Content Storage Modules</h4>
 <div class="paragraph">
 <p>Using a single Spring Content storage module in your application keeps things simple because all Storage beans
 will use to that one Spring Content storage module as their implementation.  Sometimes, applications require
@@ -944,7 +1022,7 @@ property to manually set the storage implementation to be injected into your Sto
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.events">1.3.3. Events</h4>
+<h4 id="content-repositories.events">1.3.4. Events</h4>
 <div class="paragraph">
 <p>Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:</p>
 </div>
@@ -1000,7 +1078,7 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 9. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 10. Entity-based AbstractContentRepositoryEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1076,7 +1154,7 @@ event.  There are twelve handler annotations:</p>
 </ul>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Entity-based annotated event handler</div>
+<div class="title">Example 11. Entity-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1105,7 +1183,7 @@ public class ExampleAnnotatedEventListener {
 methods returns results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 11. Event-based annotated event handler</div>
+<div class="title">Example 12. Event-based annotated event handler</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1129,7 +1207,7 @@ stereotypes so it can be picked up by @SpringBootApplication or @ComponentScan. 
 declare an instance of your annotated bean in your ApplicationContext.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 12. Handler registration</div>
+<div class="title">Example 13. Handler registration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1148,7 +1226,7 @@ public class ContentStoreConfiguration {
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.search">1.3.4. Searchable Stores</h4>
+<h4 id="content-repositories.search">1.3.5. Searchable Stores</h4>
 <div class="paragraph">
 <p>Applications that handle documents and other media usually have search capabilities allowing relevant content to be
 found by looking inside of it for keywords or phrases, so called full-text search.</p>
@@ -1157,7 +1235,7 @@ found by looking inside of it for keywords or phrases, so called full-text searc
 <p>Spring Content is able to support this capability with it&#8217;s <code>Searchable&lt;CID&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 13. Searchable interface</div>
+<div class="title">Example 14. Searchable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1192,7 +1270,7 @@ for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="content-repositories.renditions">1.3.5. Renderable Stores</h4>
+<h4 id="content-repositories.renditions">1.3.6. Renderable Stores</h4>
 <div class="paragraph">
 <p>Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
 from one format to another.</p>
@@ -1201,7 +1279,7 @@ from one format to another.</p>
 <p>Content stores can therefore optionally also be given rendition capabilities by extending the <code>Renderable&lt;E&gt;</code> interface.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 14. Renderable interface</div>
+<div class="title">Example 15. Renderable interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1548,7 +1626,7 @@ version must be compatible with this.</p>
 <p>And the following Java Config:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 15. Enabling Spring Content Solr with Java Config</div>
+<div class="title">Example 16. Enabling Spring Content Solr with Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1766,7 +1844,7 @@ that highlighters usually analyze the stored field value so you may have to ensu
 <div id="footer">
 <div id="footer-text">
 Version 2.5.0-SNAPSHOT<br>
-Last updated 2022-09-07 04:31:04 UTC
+Last updated 2022-09-07 04:44:19 UTC
 </div>
 </div>
 </body>

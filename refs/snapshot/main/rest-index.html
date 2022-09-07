@@ -487,10 +487,11 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_store_resources_2">3.1.1. Store Resources</a></li>
 <li><a href="#_associativestorecontentstore_resources">3.1.2. AssociativeStore/ContentStore Resources</a></li>
 <li><a href="#_multiple_content_properties">3.1.3. Multiple Content Properties</a></li>
-<li><a href="#_nested_properties">3.1.4. Nested Properties</a></li>
-<li><a href="#_search">3.1.5. Search</a></li>
-<li><a href="#_default_status_codes">3.1.6. Default status codes</a></li>
-<li><a href="#_resource_discoverability">3.1.7. Resource Discoverability</a></li>
+<li><a href="#_nested_content_properties">3.1.4. Nested Content Properties</a></li>
+<li><a href="#_nested_multiple_content_properties">3.1.5. Nested Multiple Content Properties</a></li>
+<li><a href="#_search">3.1.6. Search</a></li>
+<li><a href="#_default_status_codes">3.1.7. Default status codes</a></li>
+<li><a href="#_resource_discoverability">3.1.8. Resource Discoverability</a></li>
 </ul>
 </li>
 <li><a href="#_the_store_resource">3.2. The Store Resource</a>
@@ -499,7 +500,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </ul>
 </li>
 <li><a href="#_the_entity_resource">3.3. The Entity Resource</a></li>
-<li><a href="#_the_property_resource">3.4. The Property Resource</a>
+<li><a href="#_the_content_property_resource">3.4. The Content Property Resource</a>
 <ul class="sectlevel3">
 <li><a href="#_supported_http_methods_2">3.4.1. Supported HTTP Methods</a></li>
 </ul>
@@ -805,7 +806,7 @@ fields on the Entity using the <code>@ContentId</code>, <code>@ContentLength</co
 <p>In this example Spring Data REST exports a collection  resource to <code>/dvds</code>.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class.  Item resources are also exported to the URI <code>/dvds {id}</code>.  The HTTP methods used to request this endpoint map onto the methods of <code>CrudRepository</code>.</p>
 </div>
 <div class="paragraph">
-<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}/[contentProperty}</code>.  In this case <code>/dvds/{id}/content</code> because the Spring Content metadata is correlated using the prefix <code>content</code>.</p>
+<p>Similarly, Spring Content REST also exports any associated Spring Resources to the URI <code>/dvds/{id}/{contentPropertyPath}</code>.  In this case <code>/dvds/{id}/content</code> because the Spring Content metadata is correlated using the prefix <code>content</code>.</p>
 </div>
 <div class="paragraph">
 <p>For an <code>AssociativeStore</code> the HTTP methods are mapped as follows:-
@@ -860,12 +861,12 @@ public class Dvd {
 	// Content property 'video' storing the DVD video content
 	private @ContentId UUID videoId;
 	private @ContentLength Long videoLen;
-	private @MimeType videoType;
+	private @MimeType String videoType;
 
 	// Content property 'image' storing the Dvd's image
 	private @ContentId UUID imageId;
 	private @ContentLength Long imageLen;
-	private @MimeType imageType;
+	private @MimeType String imageType;
 
 	...
 }</code></pre>
@@ -876,9 +877,30 @@ public class Dvd {
 <div class="paragraph">
 <p>Spring Content REST will export these two associated Spring Resources to the URI <code>/dvds/{id}/video</code> and <code>/dvds/{id}/image</code>.</p>
 </div>
+<div class="paragraph">
+<p>These endpoints can be found in the similarly named link relations in the Entity&#8217;s
+<code>application/hal+json</code> response:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    ...
+    "image" : {
+      "href" : "http://localhost:8080/dvds/1/image"
+    },
+    "video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_nested_properties">3.1.4. Nested Properties</h4>
+<h4 id="_nested_content_properties">3.1.4. Nested Content Properties</h4>
 <div class="paragraph">
 <p>With its <code>@Embeddable</code>/<code>@Embedded</code> annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-</p>
 </div>
@@ -894,10 +916,10 @@ public class Book {
 
 	private @ContentId UUID coverId;
 	private @ContentLength Long coverLen;
-	private @MimeType coverType;
+	private @MimeType String coverType;
 
-	private Chapter chapterOne = new Chapter();
-	private Chapter chapterTwo = new Chapter();
+	private @Embedded Chapter chapterOne = new Chapter();
+	private @Embedded Chapter chapterTwo = new Chapter();
 	...
 }
 
@@ -908,18 +930,117 @@ public class Chapter {
 	// Content property 'video' storing the DVD video content
 	private @ContentId UUID contentId;
 	private @ContentLength Long contentLen;
-	private @MimeType contentType;
+	private @MimeType String contentType;
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>Spring Content REST will export these associated Spring Resources under the URIs; <code>/books/{id}/cover</code>, <code>/books/{id}/chapterOne/content</code> and <code>/books/{id}/chapterTwo/content</code> and so on.</p>
+<p>Spring Content REST will export these associated Spring Resources under the URIs; <code>/books/{id}/cover</code>, <code>/books/{id}/chapterOne</code> and <code>/books/{id}/chapterTwo</code> and so on.</p>
+</div>
+<div class="paragraph">
+<p>These endpoints can be found in the similarly named link relations in the Entity&#8217;s
+<code>application/hal+json</code> response:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    ...
+    "cover" : {
+      "href" : "http://localhost:8080/dvds/1/cover"
+    },
+    "chapterTwo" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo"
+    },
+    "chapterOne" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne"
+    }</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_search">3.1.5. Search</h4>
+<h4 id="_nested_multiple_content_properties">3.1.5. Nested Multiple Content Properties</h4>
+<div class="paragraph">
+<p>With its <code>@Embeddable</code>/<code>@Embedded</code> annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Data
+public class Book {
+    private @Id @GeneratedValue Long id;
+    private String title;
+
+    private @ContentId UUID coverId;
+    private @ContentLength Long coverLen;
+    private @MimeType String coverType;
+
+    private @Embedded Chapter chapterOne = new Chapter();
+    private @Embedded Chapter chapterTwo = new Chapter();
+    ...
+}
+
+@Embeddable
+@Data
+public class Chapter {
+
+    // Content property 'video' storing the DVD video content
+    private @ContentId UUID contentId;
+    private @ContentLength Long contentLen;
+    private @MimeType String contentType;
+
+    private @ContentId UUID epigraphId;
+    private @ContentLength Long epigraphLen;
+    private @MimeType String epigraphType;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>With nested multiple content properties Spring Content REST will export
+ these associated Spring Resources under the URIs; <code>/books/{id}/cover</code>,
+ <code>/books/{id}/chapterOne/content</code>, <code>/books/{id}/chapterOne/epigraph</code>,
+ <code>/books/{id}/chapterTwo/content</code> and <code>/books/{id}/chapterTwo/epigraph</code>.</p>
+</div>
+<div class="paragraph">
+<p>These endpoints can be found in the following link relations:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  "_links" : {
+    ...
+    "cover" : {
+      "href" : "http://localhost:8080/dvds/1/cover"
+    },
+    "chapterOne/content" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne/content"
+    }
+    "chapterOne/epigraph" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne/epigraph"
+    },
+    "chapterTwo/content" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo/content"
+    },
+    "chapterTwo/epigraph" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo/epigraph"
+    },</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_search">3.1.6. Search</h4>
 <div class="paragraph">
 <p>Exported content stores may be marked as <code>Searchable</code>.  Assuming the following content store interface:</p>
 </div>
@@ -947,7 +1068,7 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 </div>
 </div>
 <div class="sect3">
-<h4 id="_default_status_codes">3.1.6. Default status codes</h4>
+<h4 id="_default_status_codes">3.1.7. Default status codes</h4>
 <div class="paragraph">
 <p>For the content resources exposed, we use a set of default status codes:</p>
 </div>
@@ -969,7 +1090,7 @@ These resources are exported to the URI <code>/dvds/searchContent</code>.  Metho
 </div>
 </div>
 <div class="sect3">
-<h4 id="_resource_discoverability">3.1.7. Resource Discoverability</h4>
+<h4 id="_resource_discoverability">3.1.8. Resource Discoverability</h4>
 <div class="paragraph">
 <p>A core principle of HATEOAS is that Resources should be discoverable through the publication of links that point to the
 available resources.  There are a few competing de-facto standards specifying how to represent links in JSON.  By default,
@@ -1108,10 +1229,11 @@ class CustomContentRestMvcConfiguration {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_property_resource">3.4. The Property Resource</h3>
+<h3 id="_the_content_property_resource">3.4. The Content Property Resource</h3>
 <div class="paragraph">
-<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{property}</code> and <code>/{store}/{id}/{property}/{contentId}</code>.
-The resource path can be customized using the <code>@StoreRestResource</code> annotation on the Store interface.</p>
+<p>Spring Content REST exports Property Resources to <code>/{store}/{id}/{contentPropertyPath}</code>.
+The resource path and link relation prefix can be customized using the <code>@StoreRestResource</code>
+annotation on the Store interface.</p>
 </div>
 <div class="sect3">
 <h4 id="_supported_http_methods_2">3.4.1. Supported HTTP Methods</h4>
@@ -1567,13 +1689,13 @@ Spring Data REST HAL response.</p>
     private Long id;
 
     @ContentId
-    private UUID contentId;
+    private UUID videoId;
 
     @ContentLength
-    private Long contentLength;
+    private Long videoLength;
 
     @MimeType
-    private String mimeType;
+    private String videoMimeType;
 
     // getters and setters
   }
@@ -1599,8 +1721,8 @@ Spring Data REST HAL response.</p>
     "dvd" : {
       ...
     },
-    "content" : {
-      "href" : "http://localhost:8080/dvds/1/content"
+    "video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
     }
   }</code></pre>
 </div>
@@ -1608,7 +1730,7 @@ Spring Data REST HAL response.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Where the linkrel is named after the <code>@ContentId</code> property and the link URI is the fully-qualified URI of that content property.</p>
+<p>Where the linkrel is named after the content property and the link URI is the fully-qualified URI of that content property.</p>
 </div>
 <div class="sect3">
 <h4 id="_customizing_the_link_relation">5.4.1. Customizing the link relation</h4>
@@ -1620,7 +1742,7 @@ the StoreRestResource, as follows:</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">  @StoreRestResource(linkRel="custom-content")
+<pre class="highlight"><code class="language-java" data-lang="java">  @StoreRestResource(linkRel="custom-linkrel")
   public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
 </div>
 </div>
@@ -1640,8 +1762,8 @@ the StoreRestResource, as follows:</p>
     "dvd" : {
       ...
     },
-    "custom-content" : {
-      "href" : "http://localhost:8080/dvds/1/content"
+    "custom-linkrel/video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
     }
   }</code></pre>
 </div>
@@ -1802,7 +1924,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 2.5.0-SNAPSHOT<br>
-Last updated 2022-09-07 04:31:04 UTC
+Last updated 2022-09-07 04:44:19 UTC
 </div>
 </div>
 </body>
