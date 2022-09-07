@@ -1,7 +1,28 @@
 package internal.org.springframework.content.mongo.store;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.mongodb.client.gridfs.model.GridFSFile;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,17 +38,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.mongodb.client.gridfs.model.GridFSFile;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(Ginkgo4jRunner.class)
@@ -55,11 +67,11 @@ public class DefaultMongoStoreImplTest {
                     gridFsTemplate = mock(GridFsTemplate.class);
                     resource = mock(GridFsResource.class);
                     mongoContentRepoImpl = new DefaultMongoStoreImpl<Object, String>(
-                            gridFsTemplate, placer);
+                            gridFsTemplate, null, placer);
                 });
                 Context("when the entity has a String-arg constructor - Issue #57", () ->{
                     BeforeEach(() -> {
-                        mongoContentRepoImpl = new DefaultMongoStoreImpl<>(gridFsTemplate, placer);
+                        mongoContentRepoImpl = new DefaultMongoStoreImpl<>(gridFsTemplate, null, placer);
 
                         property = new TestEntity();
                     });
@@ -94,7 +106,7 @@ public class DefaultMongoStoreImplTest {
                     gridFsTemplate = mock(GridFsTemplate.class);
                     gridFSFile = mock(GridFSFile.class);
                     resource = mock(GridFsResource.class);
-                    mongoContentRepoImpl = spy(new DefaultMongoStoreImpl<Object, String>(gridFsTemplate, placer));
+                    mongoContentRepoImpl = spy(new DefaultMongoStoreImpl<Object, String>(gridFsTemplate, null, placer));
                 });
 
                 Context("#setContent", () -> {
@@ -268,18 +280,22 @@ public class DefaultMongoStoreImplTest {
             this.contentId = new String(contentId);
         }
 
+        @Override
         public String getContentId() {
             return this.contentId;
         }
 
+        @Override
         public void setContentId(String contentId) {
             this.contentId = contentId;
         }
 
+        @Override
         public long getContentLen() {
             return contentLen;
         }
 
+        @Override
         public void setContentLen(long contentLen) {
             this.contentLen = contentLen;
         }
@@ -298,18 +314,22 @@ public class DefaultMongoStoreImplTest {
             this.contentId = null;
         }
 
+        @Override
         public String getContentId() {
             return this.contentId;
         }
 
+        @Override
         public void setContentId(String contentId) {
             this.contentId = contentId;
         }
 
+        @Override
         public long getContentLen() {
             return contentLen;
         }
 
+        @Override
         public void setContentLen(long contentLen) {
             this.contentLen = contentLen;
         }
@@ -328,18 +348,22 @@ public class DefaultMongoStoreImplTest {
             this.contentId = null;
         }
 
+        @Override
         public String getContentId() {
             return this.contentId;
         }
 
+        @Override
         public void setContentId(String contentId) {
             this.contentId = contentId;
         }
 
+        @Override
         public long getContentLen() {
             return contentLen;
         }
 
+        @Override
         public void setContentLen(long contentLen) {
             this.contentLen = contentLen;
         }

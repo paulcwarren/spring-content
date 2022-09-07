@@ -60,7 +60,7 @@ import internal.org.springframework.content.rest.support.TestEntity8Store;
       RestConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
-public class ContentPropertyRestEndpointsIT {
+public class NestedContentPropertyRestEndpointsIT {
 
    @Autowired private TestEntity8Repository repository2;
    @Autowired private TestEntity8Store store;
@@ -76,7 +76,7 @@ public class ContentPropertyRestEndpointsIT {
    private MockMvc mvc;
 
    {
-      Describe("Content/Content Collection REST Endpoints", () -> {
+      Describe("Nested Content Property REST Endpoints", () -> {
 		BeforeEach(() -> {
 		  mvc = MockMvcBuilders.webAppContextSetup(context).build();
 		});

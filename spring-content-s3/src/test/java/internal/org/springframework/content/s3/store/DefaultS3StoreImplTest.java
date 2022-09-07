@@ -3,7 +3,6 @@ package internal.org.springframework.content.s3.store;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 import static java.lang.String.format;
@@ -129,7 +128,7 @@ public class DefaultS3StoreImplTest {
 							loader = new DefaultResourceLoader();
 							((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
 
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, null, placementService, client, null);
 						});
 						JustBeforeEach(() -> {
 							try {
@@ -147,7 +146,7 @@ public class DefaultS3StoreImplTest {
 					});
 					Context("given the store's ID is a custom ID type", () -> {
 						JustBeforeEach(() -> {
-							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, null);
+							customS3ContentIdBasedStore = new DefaultS3StoreImpl<>(context, loader, null, placementService, client, null);
 
 							try {
 								r = customS3ContentIdBasedStore.getResource(customId);
@@ -216,7 +215,7 @@ public class DefaultS3StoreImplTest {
 						JustBeforeEach(() -> {
 							placementService = new PlacementServiceImpl();
 							S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, placementService, client, clientProvider);
+							s3ObjectIdBasedStore = new DefaultS3StoreImpl<>(context, loader, null, placementService, client, clientProvider);
 
 							try {
 								r = s3ObjectIdBasedStore.getResource(new S3ObjectId("some-bucket", "some-object-id"));
@@ -248,7 +247,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("AssociativeStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null);
+					s3StoreImpl = new DefaultS3StoreImpl<ContentProperty, String>(context,loader,null,placementService,client,null);
 				});
 				Context("#getResource", () -> {
 					JustBeforeEach(() -> {
@@ -555,7 +554,7 @@ public class DefaultS3StoreImplTest {
 
 			Describe("ContentStore", () -> {
 				JustBeforeEach(() -> {
-					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(context,loader,placementService,client,null));
+					s3StoreImpl = spy(new DefaultS3StoreImpl<ContentProperty, String>(context,loader,null,placementService,client,null));
 				});
 				Context("#setContent", () -> {
 					BeforeEach(() -> {

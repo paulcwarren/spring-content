@@ -3,6 +3,7 @@ package internal.org.springframework.content.mongo.config;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
@@ -17,6 +18,9 @@ public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired
 	private PlacementService mongoStorePlacementService;
+
+    @Autowired(required=false)
+    private MappingContext mappingContext;
 
 	@Autowired(required=false)
     private LockingAndVersioningProxyFactory versioning;
@@ -35,6 +39,6 @@ public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Override
 	protected Object getContentStoreImpl() {
-		return new DefaultMongoStoreImpl(gridFs, mongoStorePlacementService);
+		return new DefaultMongoStoreImpl(gridFs, mappingContext, mongoStorePlacementService);
 	}
 }

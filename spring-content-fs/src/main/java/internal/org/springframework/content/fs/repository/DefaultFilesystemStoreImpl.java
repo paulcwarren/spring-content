@@ -46,13 +46,16 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	private FileSystemResourceLoader loader;
 	private PlacementService placer;
 	private FileService fileService;
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
-
-	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, PlacementService conversion, FileService fileService) {
+	public DefaultFilesystemStoreImpl(FileSystemResourceLoader loader, MappingContext mappingContext, PlacementService conversion, FileService fileService) {
 		this.loader = loader;
 		this.placer = conversion;
 		this.fileService = fileService;
+		this.mappingContext = mappingContext;
+		if (this.mappingContext == null) {
+		    this.mappingContext = new MappingContext("/", ".");
+		}
 	}
 
 	@Override

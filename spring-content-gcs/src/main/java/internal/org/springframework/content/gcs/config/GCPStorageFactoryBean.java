@@ -4,6 +4,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.context.ApplicationContext;
@@ -31,6 +32,9 @@ public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 
 //	@Autowired(required=false)
 //	private MultiTenantS3ClientProvider s3Provider = null;
+
+    @Autowired(required=false)
+    private MappingContext mappingContext;
 
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
@@ -69,6 +73,6 @@ public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 		DefaultResourceLoader loader = new DefaultResourceLoader();
 		loader.addProtocolResolver(resolver);
 
-		return new DefaultGCPStorageImpl(context, loader, s3StorePlacementService, client/*, s3Provider*/);
+		return new DefaultGCPStorageImpl(context, loader, mappingContext, s3StorePlacementService, client/*, s3Provider*/);
 	}
 }

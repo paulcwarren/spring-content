@@ -44,14 +44,18 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
     private MappingContext mappingContext;
 
-	public DefaultMongoStoreImpl(GridFsTemplate gridFs, PlacementService placer) {
+	public DefaultMongoStoreImpl(GridFsTemplate gridFs, MappingContext mappingContext, PlacementService placer) {
 		Assert.notNull(gridFs, "gridFs cannot be null");
 		Assert.notNull(placer, "placer cannot be null");
 
 		this.gridFs = gridFs;
 		this.placer = placer;
 
-		this.mappingContext = new MappingContext(".", ".");
+		this.mappingContext = mappingContext;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

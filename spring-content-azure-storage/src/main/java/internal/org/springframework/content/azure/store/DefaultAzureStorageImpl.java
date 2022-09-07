@@ -10,7 +10,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +39,7 @@ import org.springframework.util.Assert;
 import com.azure.storage.blob.BlobServiceClient;
 
 import internal.org.springframework.content.azure.io.AzureBlobResource;
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 
 @Transactional
 public class DefaultAzureStorageImpl<S, SID extends Serializable>
@@ -53,9 +53,9 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 	private BlobServiceClient client;
 //	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, BlobServiceClient client) {
+	public DefaultAzureStorageImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, BlobServiceClient client) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -65,6 +65,10 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client;
 //		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

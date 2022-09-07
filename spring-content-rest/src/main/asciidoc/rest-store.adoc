@@ -162,7 +162,7 @@ fields on the Entity using the `@ContentId`, `@ContentLength` and `@MimeType` an
 
 In this example Spring Data REST exports a collection  resource to `/dvds`.  The path is derived from the uncapitalized, pluralized, simple class name of the domain class.  Item resources are also exported to the URI `/dvds {id}`.  The HTTP methods used to request this endpoint map onto the methods of `CrudRepository`.
 
-Similarly, Spring Content REST also exports any associated Spring Resources to the URI `/dvds/{id}/[contentProperty}`.  In this case `/dvds/{id}/content` because the Spring Content metadata is correlated using the prefix `content`. 
+Similarly, Spring Content REST also exports any associated Spring Resources to the URI `/dvds/{id}/{contentPropertyPath}`.  In this case `/dvds/{id}/content` because the Spring Content metadata is correlated using the prefix `content`. 
 
 For an `AssociativeStore` the HTTP methods are mapped as follows:-
 - GET -> getResource -> getInputStream
@@ -204,21 +204,39 @@ public class Dvd {
 	// Content property 'video' storing the DVD video content
 	private @ContentId UUID videoId;  	
 	private @ContentLength Long videoLen;	
-	private @MimeType videoType;
+	private @MimeType String videoType;
 
 	// Content property 'image' storing the Dvd's image
 	private @ContentId UUID imageId;  	
 	private @ContentLength Long imageLen;	
-	private @MimeType imageType;
+	private @MimeType String imageType;
 	
 	...
 }
 ----
 ====  
 
-Spring Content REST will export these two associated Spring Resources to the URI `/dvds/{id}/video` and `/dvds/{id}/image`. 
+Spring Content REST will export these two associated Spring Resources to the URI `/dvds/{id}/video` and `/dvds/{id}/image`.
 
-=== Nested Properties
+These endpoints can be found in the similarly named link relations in the Entity's
+`application/hal+json` response:
+
+====
+[source, java]
+----
+ "_links" : {
+    ...
+    "image" : {
+      "href" : "http://localhost:8080/dvds/1/image"
+    },
+    "video" : {
+      "href" : "http://localhost:8080/dvds/1/video"
+    }
+}
+----
+====  
+
+=== Nested Content Properties
 
 With its `@Embeddable`/`@Embedded` annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-
 
@@ -233,10 +251,10 @@ public class Book {
 
 	private @ContentId UUID coverId;  	
 	private @ContentLength Long coverLen;	
-	private @MimeType coverType;
+	private @MimeType String coverType;
 
-	private Chapter chapterOne = new Chapter();
-	private Chapter chapterTwo = new Chapter();
+	private @Embedded Chapter chapterOne = new Chapter();
+	private @Embedded Chapter chapterTwo = new Chapter();
 	...
 }
 
@@ -247,12 +265,101 @@ public class Chapter {
 	// Content property 'video' storing the DVD video content
 	private @ContentId UUID contentId;  	
 	private @ContentLength Long contentLen;	
-	private @MimeType contentType;
+	private @MimeType String contentType;
 }
 ----
 ====
 
-Spring Content REST will export these associated Spring Resources under the URIs; `/books/{id}/cover`, `/books/{id}/chapterOne/content` and `/books/{id}/chapterTwo/content` and so on.
+Spring Content REST will export these associated Spring Resources under the URIs; `/books/{id}/cover`, `/books/{id}/chapterOne` and `/books/{id}/chapterTwo` and so on.
+
+These endpoints can be found in the similarly named link relations in the Entity's
+`application/hal+json` response:
+
+====
+[source, java]
+----
+  "_links" : {
+    ...
+    "cover" : {
+      "href" : "http://localhost:8080/dvds/1/cover"
+    },
+    "chapterTwo" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo"
+    },
+    "chapterOne" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne"
+    }
+----
+====  
+
+=== Nested Multiple Content Properties
+
+With its `@Embeddable`/`@Embedded` annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-
+
+====
+[source, java]
+----
+@Entity
+@Data
+public class Book {
+    private @Id @GeneratedValue Long id;
+    private String title;
+
+    private @ContentId UUID coverId;    
+    private @ContentLength Long coverLen;   
+    private @MimeType String coverType;
+
+    private @Embedded Chapter chapterOne = new Chapter();
+    private @Embedded Chapter chapterTwo = new Chapter();
+    ...
+}
+
+@Embeddable
+@Data
+public class Chapter {
+
+    // Content property 'video' storing the DVD video content
+    private @ContentId UUID contentId;      
+    private @ContentLength Long contentLen; 
+    private @MimeType String contentType;
+
+    private @ContentId UUID epigraphId;      
+    private @ContentLength Long epigraphLen; 
+    private @MimeType String epigraphType;
+}
+----
+====
+
+With nested multiple content properties Spring Content REST will export
+ these associated Spring Resources under the URIs; `/books/{id}/cover`, 
+ `/books/{id}/chapterOne/content`, `/books/{id}/chapterOne/epigraph`, 
+ `/books/{id}/chapterTwo/content` and `/books/{id}/chapterTwo/epigraph`.
+
+These endpoints can be found in the following link relations:
+
+====
+[source, java]
+----
+  "_links" : {
+    ...
+    "cover" : {
+      "href" : "http://localhost:8080/dvds/1/cover"
+    },
+    "chapterOne/content" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne/content"
+    }
+    "chapterOne/epigraph" : {
+      "href" : "http://localhost:8080/dvds/1/chapterOne/epigraph"
+    },
+    "chapterTwo/content" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo/content"
+    },
+    "chapterTwo/epigraph" : {
+      "href" : "http://localhost:8080/dvds/1/chapterTwo/epigraph"
+    },
+----
+====  
+
 
 === Search
 
@@ -384,10 +491,11 @@ class CustomContentRestMvcConfiguration {
 ----
 ====
 
-== The Property Resource
+== The Content Property Resource
 
-Spring Content REST exports Property Resources to `/{store}/{id}/{property}` and `/{store}/{id}/{property}/{contentId}`.
-The resource path can be customized using the `@StoreRestResource` annotation on the Store interface.
+Spring Content REST exports Property Resources to `/{store}/{id}/{contentPropertyPath}`.
+The resource path and link relation prefix can be customized using the `@StoreRestResource` 
+annotation on the Store interface.
 
 === Supported HTTP Methods
 

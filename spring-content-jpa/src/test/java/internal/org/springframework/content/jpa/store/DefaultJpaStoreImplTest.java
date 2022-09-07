@@ -64,7 +64,7 @@ public class DefaultJpaStoreImplTest {
 	{
 		Describe("DefaultJpaStoreImpl", () -> {
 			JustBeforeEach(() -> {
-				store = spy(new DefaultJpaStoreImpl(blobResourceLoader));
+				store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null));
 			});
 
 			Describe("Store", () -> {

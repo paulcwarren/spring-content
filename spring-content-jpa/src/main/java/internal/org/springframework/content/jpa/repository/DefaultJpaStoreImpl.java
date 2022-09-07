@@ -44,10 +44,14 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 	private ResourceLoader loader;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader) {
+	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader, MappingContext mappingContext) {
 		this.loader = blobResourceLoader;
+		this.mappingContext = mappingContext;
+		if (this.mappingContext == null) {
+		    this.mappingContext = new MappingContext("/", ".");
+		}
 	}
 
 	@Override

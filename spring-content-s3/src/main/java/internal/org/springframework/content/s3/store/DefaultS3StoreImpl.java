@@ -10,13 +10,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
@@ -29,7 +29,6 @@ import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
-import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
@@ -40,6 +39,7 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageProtocolResolver;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -56,9 +56,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	private S3Client client;
 	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
+	public DefaultS3StoreImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, S3Client client, MultiTenantS3ClientProvider provider) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -68,6 +68,10 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client;
 		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

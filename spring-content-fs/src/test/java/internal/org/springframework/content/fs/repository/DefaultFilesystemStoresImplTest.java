@@ -81,7 +81,7 @@ public class DefaultFilesystemStoresImplTest {
 				fileService = mock(FileService.class);
 
 				filesystemContentRepoImpl = spy(new DefaultFilesystemStoreImpl<ContentProperty, String>(
-						loader, placer, fileService));
+						loader, null, placer, fileService));
 			});
 
 			Describe("Store", () -> {

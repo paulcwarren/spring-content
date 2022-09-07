@@ -10,7 +10,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +38,7 @@ import org.springframework.util.Assert;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 
+import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
 import internal.org.springframework.content.gcs.io.GCSResource;
 
 @Transactional
@@ -53,9 +53,9 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 	private Storage client;
 //	private MultiTenantS3ClientProvider clientProvider;
 
-    private MappingContext mappingContext = new MappingContext(".", ".");
+    private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultGCPStorageImpl(ApplicationContext context, ResourceLoader loader, PlacementService placementService, Storage client2) {
+	public DefaultGCPStorageImpl(ApplicationContext context, ResourceLoader loader, MappingContext mappingContext, PlacementService placementService, Storage client2) {
         Assert.notNull(context, "context must be specified");
 		Assert.notNull(loader, "loader must be specified");
 		Assert.notNull(placementService, "placementService must be specified");
@@ -65,6 +65,10 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		this.placementService = placementService;
 		this.client = client2;
 //		this.clientProvider = provider;
+        this.mappingContext = mappingContext;
+        if (this.mappingContext == null) {
+            this.mappingContext = new MappingContext("/", ".");
+        }
 	}
 
 	@Override

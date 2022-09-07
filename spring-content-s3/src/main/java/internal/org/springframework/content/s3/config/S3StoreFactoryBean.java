@@ -6,6 +6,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
@@ -43,6 +44,9 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
 
+    @Autowired(required=false)
+    private MappingContext mappingContext;
+
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 
@@ -78,12 +82,12 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 		    if (client == null) {
 		        throw new NoSuchBeanDefinitionException(S3Client.class.getCanonicalName());
 		    }
-		    return new DefaultS3StoreImpl(context, loader, s3StorePlacementService, client, s3Provider);
+		    return new DefaultS3StoreImpl(context, loader, mappingContext, s3StorePlacementService, client, s3Provider);
 		} else {
             if (asyncClient == null) {
                 throw new NoSuchBeanDefinitionException(S3AsyncClient.class.getCanonicalName());
             }
-            return new DefaultReactiveS3StoreImpl(context, loader, s3StorePlacementService, asyncClient, s3Provider);
+            return new DefaultReactiveS3StoreImpl(context, loader, mappingContext, s3StorePlacementService, asyncClient, s3Provider);
 		}
 	}
 }

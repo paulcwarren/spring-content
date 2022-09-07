@@ -4,9 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.content.commons.storeservice.StoreInfo;
-import org.springframework.content.commons.storeservice.Stores;
-
 public class MappingContext {
 
     private Map<Class<?>, Map<String, ContentProperty>> context = new HashMap<>();
@@ -19,13 +16,13 @@ public class MappingContext {
         this.contentPropertySeparator = contentPropertySeparator;
     }
 
-    public MappingContext(Stores stores) {
-        for (StoreInfo info : stores.getStores(Stores.MATCH_ALL)) {
-            if (info.getDomainObjectClass() != null) {
-                context.put(info.getDomainObjectClass(), resolveProperties(info.getDomainObjectClass()));
-            }
-        }
-    }
+//    public MappingContext(Stores stores) {
+//        for (StoreInfo info : stores.getStores(Stores.MATCH_ALL)) {
+//            if (info.getDomainObjectClass() != null) {
+//                context.put(info.getDomainObjectClass(), resolveProperties(info.getDomainObjectClass()));
+//            }
+//        }
+//    }
 
     public boolean hasMapping(Class<?> domainClass, String path) {
         Map<String, ContentProperty> properties = context.get(domainClass);

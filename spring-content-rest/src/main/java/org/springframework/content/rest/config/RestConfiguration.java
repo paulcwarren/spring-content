@@ -12,6 +12,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.StoreCacheControlInterceptor.StoreCacheControlConfigurer;
@@ -152,7 +153,14 @@ public class RestConfiguration implements InitializingBean {
 
     @Bean
     MappingContext mappingContext() {
-        MappingContext context = new MappingContext(stores());
+        MappingContext context = new MappingContext("/", ".");
+
+        for (StoreInfo info : stores.getStores(Stores.MATCH_ALL)) {
+            if (info.getDomainObjectClass() != null) {
+                context.getContentProperties(info.getDomainObjectClass());
+            }
+        }
+
         return context;
     }
 
