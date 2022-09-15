@@ -3,9 +3,9 @@ package org.springframework.content.commons.mappingcontext;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
-import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
@@ -42,9 +42,9 @@ public class ClassWalkerTest {
     {
         Describe("ClassWalker", () -> {
             It("should visit all fields", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("content");
@@ -74,9 +74,9 @@ public class ClassWalkerTest {
 
         Context("given a class with uncorrelated attributes", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(UncorrelatedAttrClass.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(UncorrelatedAttrClass.class);
 
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
@@ -90,9 +90,9 @@ public class ClassWalkerTest {
 
         Context("given a class with correlated attributes", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(CorrelatedAttrClass.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(CorrelatedAttrClass.class);
 
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
@@ -106,9 +106,9 @@ public class ClassWalkerTest {
 
         Context("given a class with a child with uncorrelated attributes", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass2.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass2.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.content");
@@ -122,19 +122,19 @@ public class ClassWalkerTest {
 
         Context("given a class with relation attributes", () -> {
             It("should not traverse them", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass3.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass3.class);
 
-                assertThat(visitor.getProperties(), aMapWithSize(0));
+                assertThat(visitor.getProperties().size(), is(0));
             });
         });
 
         Context("given a class with content properties in its super class", () -> {
             It("should visit them", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass4.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass4.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("content");
@@ -148,9 +148,9 @@ public class ClassWalkerTest {
 
         Context("given a class with multple child content property objects", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass5.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass5.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child1.content");
@@ -172,9 +172,9 @@ public class ClassWalkerTest {
 
         Context("given a class with a child with multiple content property objects", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass6.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass6.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.content");
@@ -196,9 +196,9 @@ public class ClassWalkerTest {
 
         Context("given a class with a child with a child with multiple content property objects", () -> {
             It("should return two content properties", () -> {
-                ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor("/", ".", new ContentPropertyBuilderVisitor.CanonicalName());
-                ClassWalker walker = new ClassWalker(TestClass7.class);
-                walker.accept(visitor);
+                ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
+                ClassWalker walker = new ClassWalker(visitor);
+                walker.accept(TestClass7.class);
 
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.child.content");

@@ -57,9 +57,9 @@ public class MappingContext {
     }
 
     private Map<String, ContentProperty> resolveProperties(Class<?> domainClass) {
-        ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor(this.keySeparator, this.contentPropertySeparator, new ContentPropertyBuilderVisitor.CanonicalName());
-        ClassWalker walker = new ClassWalker(domainClass);
-        walker.accept(visitor);
+        ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor(this.keySeparator, this.contentPropertySeparator);
+        ClassWalker walker = new ClassWalker(visitor);
+        walker.accept(domainClass);
         context.put(domainClass, visitor.getProperties());
         return visitor.getProperties();
     }
