@@ -4,6 +4,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -15,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +59,7 @@ public class CmisTests {
 	private String mimetype = "text/plain; charset=UTF-8";
 	private String content = "This is some test content.";
 	private String filename = "some-file.txt";
+	private String description = "This is a test description.";
 
 	{
 		Describe("given a repository", () -> {
@@ -100,6 +103,7 @@ public class CmisTests {
 					Map<String, Object> properties = new HashMap<String, Object>();
 					properties.put(PropertyIds.NAME, "folder1");
 					properties.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
+					properties.put(PropertyIds.DESCRIPTION, description);
 
 					folder = root.createFolder(properties);
 				});
@@ -107,6 +111,22 @@ public class CmisTests {
 				It("should be present in the root", () -> {
 					ItemIterable<CmisObject> children = root.getChildren();
 					assertThat(children, hasItem(hasProperty("name", is("folder1"))));
+				});
+
+				It("should contain all properties", () -> {
+					ItemIterable<CmisObject> children = root.getChildren();
+
+					Iterator<CmisObject> i = children.iterator();
+					while (i.hasNext()) {
+						CmisObject object = i.next();
+						assertThat(object.getDescription(), equalTo(description));
+					}
+					//TODO
+					//cmis:secondaryObjectTypeIds
+					//cmis:creationDate
+					//cmis:lastModificationDate
+					//cmis:changeToken
+					//cmis:allowedChildObjectTypeIds
 				});
 
 				It("should be deletable", () -> {
