@@ -953,6 +953,8 @@ public class CmisServiceBridge {
 			objectInfo.setLastModificationDate(conversionService.convert(instant, GregorianCalendar.class));
 		}
 
+		addPropertyString(props, type, filter, PropertyIds.DESCRIPTION, getAsString(object, CmisDescription.class));
+
 		String typeId = null;
 
 		boolean folder = type.getId().equals(BaseTypeId.CMIS_FOLDER.value());
@@ -975,8 +977,6 @@ public class CmisServiceBridge {
 
 			addPropertyId(props, type, filter, PropertyIds.BASE_TYPE_ID, typeId);
 			addPropertyId(props, type, filter, PropertyIds.OBJECT_TYPE_ID, typeId);
-
-			addPropertyString(props, type, filter, PropertyIds.DESCRIPTION, getAsString(object, CmisDescription.class));
 
 			if (((DocumentTypeDefinition)type).isVersionable()) {
 				addPropertyBoolean(props, type, filter, PropertyIds.IS_IMMUTABLE, false);
