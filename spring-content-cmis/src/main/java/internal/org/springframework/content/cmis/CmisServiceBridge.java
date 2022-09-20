@@ -39,6 +39,7 @@ import org.apache.chemistry.opencmis.commons.data.ObjectInFolderData;
 import org.apache.chemistry.opencmis.commons.data.ObjectInFolderList;
 import org.apache.chemistry.opencmis.commons.data.ObjectParentData;
 import org.apache.chemistry.opencmis.commons.data.Properties;
+import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.definitions.DocumentTypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionList;
@@ -66,10 +67,12 @@ import org.apache.chemistry.opencmis.commons.impl.server.ObjectInfoImpl;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.ObjectInfoHandler;
 import org.apache.chemistry.opencmis.commons.spi.Holder;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.cmis.CmisDescription;
 import org.springframework.content.cmis.CmisDocument;
+import org.springframework.content.cmis.CmisFileName;
 import org.springframework.content.cmis.CmisFolder;
 import org.springframework.content.cmis.CmisName;
 import org.springframework.content.cmis.CmisPropertySetter;
@@ -377,7 +380,8 @@ public class CmisServiceBridge {
 
 				@Override
 				public String getFileName() {
-					return null;
+					Object filename = BeanUtils.getFieldWithAnnotation(object, CmisFileName.class);
+					return (filename != null) ? filename.toString() : null;
 				}
 
 				@Override
@@ -661,8 +665,10 @@ public class CmisServiceBridge {
 				e.printStackTrace();
 			}
 
+			PropertyData fileNameProperty = new PropertyStringImpl(PropertyIds.CONTENT_STREAM_FILE_NAME, contentStream.getFileName());
+
 			CmisPropertySetter propSetter = new CmisPropertySetter(properties);
-			propSetter.populate(object);
+			propSetter.populate(object, fileNameProperty);
 
 			if (folderId != null) {
 				// find CmisReference(type==Parent)
@@ -916,6 +922,8 @@ public class CmisServiceBridge {
 
 		Object id = BeanUtils.getFieldWithAnnotation(object, Id.class);
 		Object name = BeanUtils.getFieldWithAnnotation(object, CmisName.class);
+		Object fileName = BeanUtils.getFieldWithAnnotation(object, CmisFileName.class);
+
 		PropertiesImpl props = new PropertiesImpl();
 		addPropertyId(props, type, filter, PropertyIds.OBJECT_ID, id != null ? id.toString() : "");
 		addPropertyString(props, type, filter, PropertyIds.NAME, name != null ? name.toString() : "");
@@ -1014,7 +1022,10 @@ public class CmisServiceBridge {
 					addPropertyInteger(props, type, filter, PropertyIds.CONTENT_STREAM_LENGTH, len);
 					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_MIME_TYPE,
 							MimeTypes.getMIMEType(toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));
-					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, toString(name));
+
+					String contentStreamFilename = toString(fileName);
+					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_FILE_NAME,
+						StringUtils.isEmpty(contentStreamFilename) ? toString(name) : contentStreamFilename);
 
 					objectInfo.setHasContent(true);
 					objectInfo.setContentType(MimeTypes.getMIMEType(toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));

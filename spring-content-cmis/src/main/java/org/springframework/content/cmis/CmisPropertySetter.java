@@ -21,8 +21,7 @@ public class CmisPropertySetter {
 		this.properties = properties;
 	}
 
-	public void populate(Object bean) {
-
+	public void populate(Object bean, PropertyData... additionalProperties) {
 		if (properties == null) {
 			return;
 		}
@@ -43,6 +42,14 @@ public class CmisPropertySetter {
 					break;
 				case "cmis:description":
 					setCmisProperty(CmisDescription.class, wrapper, props.get(name).getValues());
+					break;
+			}
+		}
+
+		for (PropertyData property : additionalProperties) {
+			switch(property.getId()) {
+				case "cmis:contentStreamFileName":
+					setCmisProperty(CmisFileName.class, wrapper, property.getValues());
 					break;
 			}
 		}

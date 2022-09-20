@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.springframework.content.cmis.CmisDocument;
+import org.springframework.content.cmis.CmisFileName;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -31,6 +32,9 @@ public class Document extends BaseObject {
 
 	@ContentLength
 	private Long contentLen;
+
+	@CmisFileName
+	private String filename;
 
 	@MimeType
 	private String mimeType;
