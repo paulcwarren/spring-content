@@ -542,13 +542,71 @@ the StoreRestResource, as follows:</p>
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>The linkrel can be further customized by specifying the <code>linkRel</code> attribute on
+the <code>@RestResource</code> placed on any field contributing to the path up-to and including the
+@ContentId field, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @RestResource(linkRel="movie")
+    @ContentId
+    private UUID videoId;
+
+    @ContentLength
+    private Long videoLength;
+
+    @MimeType
+    private String videoMimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  @StoreRestResource(linkRel="custom-linkrel")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Resulting in the following lnkrel:-</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "custom-linkrel/movie" : {
+      "href" : "http://localhost:8080/dvds/1/video"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-09-21 04:21:16 UTC
+Last updated 2022-09-21 05:22:38 UTC
 </div>
 </div>
 </body>

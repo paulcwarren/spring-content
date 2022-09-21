@@ -637,7 +637,7 @@ the Resource <code>/comedy/monty_pythons_flying_circus.mp4</code>.</p>
 <div class="sect2">
 <h3 id="_associativestorecontentstore_resources">AssociativeStore/ContentStore Resources</h3>
 <div class="paragraph">
-<p><code>AssociativeStore</code> and <code>ContentStore</code> both manage and associate Spring Resources with JPA Entities.  When exported using Spring Content REST these can also be accessed via REST endpoints.</p>
+<p><code>AssociativeStore</code> and <code>ContentStore</code> both manage and associate Spring Resources with Spring Data Entities.  When exported using Spring Content REST these can also be accessed via REST endpoints.</p>
 </div>
 <div class="paragraph">
 <p>Assume the following <code>Entity</code> class, <code>Repository</code> and <code>Store</code> interfaces:</p>
@@ -840,7 +840,7 @@ public class Chapter {
 <div class="sect2">
 <h3 id="_nested_multiple_content_properties">Nested Multiple Content Properties</h3>
 <div class="paragraph">
-<p>With its <code>@Embeddable</code>/<code>@Embedded</code> annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-</p>
+<p>Of course it is also possible to have multiple content properties on nested objects too, as in this example:-</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -1157,7 +1157,7 @@ Allowed</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-09-21 04:21:16 UTC
+Last updated 2022-09-21 05:22:38 UTC
 </div>
 </div>
 </body>
