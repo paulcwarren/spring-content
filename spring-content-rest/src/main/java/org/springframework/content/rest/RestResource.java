@@ -24,4 +24,6 @@ public @interface RestResource {
      * @return  an array of paths
      */
     String[] paths() default {"*"};
+
+    String linkRel() default "";
 }

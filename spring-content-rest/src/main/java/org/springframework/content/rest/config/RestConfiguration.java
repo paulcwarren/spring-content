@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,6 +164,11 @@ public class RestConfiguration implements InitializingBean {
 
         return context;
     }
+
+	@Bean
+	RequestMappingToLinkrelMappingContext linkrelMappingContext() {
+		return new RequestMappingToLinkrelMappingContext();
+	}
 
 	@Bean
 	RequestMappingHandlerMapping contentHandlerMapping(Stores stores, EntityResolvers entityResolvers) {

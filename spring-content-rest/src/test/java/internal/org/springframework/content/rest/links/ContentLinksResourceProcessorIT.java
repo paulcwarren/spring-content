@@ -1,11 +1,6 @@
 package internal.org.springframework.content.rest.links;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -15,9 +10,17 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 
 import java.util.UUID;
 
+import internal.org.springframework.content.rest.support.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.mapping.PersistentEntity;
@@ -40,11 +43,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-import internal.org.springframework.content.rest.support.BaseUriConfig;
-import internal.org.springframework.content.rest.support.TestEntity2;
-import internal.org.springframework.content.rest.support.TestEntity4;
-import internal.org.springframework.content.rest.support.TestEntity5;
-import internal.org.springframework.content.rest.support.TestEntityChild;
+import javax.persistence.*;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -105,7 +104,7 @@ public class ContentLinksResourceProcessorIT {
 					assertThat(resource.getLinks("content"), hasItem(hasProperty("href", is("http://localhost/contentApi/testEntity4s/999/content"))));
 				});
 
-				Context("when fully qualified links are disabed and shortcut links are enabled", () -> {
+				Context("when fully qualified links are disabled and shortcut links are enabled", () -> {
 					BeforeEach(() -> {
 						processor.getRestConfiguration().setFullyQualifiedLinks(false);
                         processor.getRestConfiguration().setShortcutLinks(true);
@@ -121,7 +120,7 @@ public class ContentLinksResourceProcessorIT {
 					});
 				});
 
-                Context("when fully qualified links are disabed and shortcut links are disabled", () -> {
+                Context("when fully qualified links are disabled and shortcut links are disabled", () -> {
                     BeforeEach(() -> {
                         processor.getRestConfiguration().setFullyQualifiedLinks(false);
                         processor.getRestConfiguration().setShortcutLinks(false);
@@ -178,7 +177,23 @@ public class ContentLinksResourceProcessorIT {
 				It("should add content property links", () -> {
 					assertThat(resource.getLinks("child"), hasItems(hasProperty("href", is("http://localhost/contentApi/files/999/child"))));
 				});
+			});
 
+			Context("given an entity with embedded object with @RestResource customizations [Issue #1049]", () -> {
+				BeforeEach(() -> {
+					PersistentEntity<?, ?> persistentEntity = persistentEntities.getRequiredPersistentEntity(TestEntity11.class);
+
+					TestEntity11 testEntity11 = new TestEntity11();
+					testEntity11.setId(999L);
+
+					PersistentEntityResource.Builder build = PersistentEntityResource.build(testEntity11, persistentEntity);
+					resource = build.buildNested();
+				});
+
+				It("should add content property links", () -> {
+					assertThat(resource.getLinks("package/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/_package/content"))));
+					assertThat(resource.getLinks("package/preview"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/_package/preview"))));
+				});
 			});
 
 			Context("given the embedded object in an entity containing @ContentId properties", () -> {

@@ -39,15 +39,8 @@ public class ClassWalker {
         fields = getAllFields(fields, klazz);
 
         for (Field field : fields) {
-            if (!isObject(field)) {
-                fContinue &= visitor.visitField("", klazz, field);
-            }
-        }
-        if (!fContinue) {
-            return;
-        }
-
-        for (Field field : fields) {
+            fContinue &= visitor.visitFieldBefore("", klazz, field);
+            fContinue &= visitor.visitField("", klazz, field);
             if (isObject(field)) {
                 if (!contains(classStack, field.getType())) {
                     classStack.push(new WalkContext(field.getName(), field.getType()));
@@ -55,7 +48,12 @@ public class ClassWalker {
                     classStack.pop();
                 }
             }
+            fContinue &= visitor.visitFieldAfter("", klazz, field);
         }
+        if (!fContinue) {
+            return;
+        }
+
         if (!fContinue) {
             return;
         }
@@ -78,15 +76,8 @@ public class ClassWalker {
         fields = getAllFields(fields, context.getClazz());
 
         for (Field field : fields) {
-            if (!isObject(field)) {
-                fContinue &= visitor.visitField(context.getPath(), klazz, field);
-            }
-        }
-        if (!fContinue) {
-            return;
-        }
-
-        for (Field field : fields) {
+            fContinue &= visitor.visitFieldBefore("", klazz, field);
+            fContinue &= visitor.visitField(context.getPath(), klazz, field);
             if (isObject(field)) {
                 if (!contains(classStack, field.getType())) {
                     String path = field.getName();
@@ -98,7 +89,12 @@ public class ClassWalker {
                     classStack.pop();
                 }
             }
+            fContinue &= visitor.visitFieldAfter("", klazz, field);
         }
+        if (!fContinue) {
+            return;
+        }
+
         if (!fContinue) {
             return;
         }
