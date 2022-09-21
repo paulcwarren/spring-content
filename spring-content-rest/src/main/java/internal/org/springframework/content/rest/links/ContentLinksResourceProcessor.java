@@ -4,16 +4,18 @@ import static java.lang.String.format;
 
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -55,14 +57,17 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");
 	}
 
+	private final RequestMappingToLinkrelMappingContext linkrelMappingContext;
+
 	private Stores stores;
 	private RestConfiguration config;
 	private MappingContext mappingContext;
 
-	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext) {
+	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
 		this.stores = stores;
 		this.config = config;
 		this.mappingContext = mappingContext;
+		this.linkrelMappingContext = linkrelMappingContext;
 	}
 
 	RestConfiguration getRestConfiguration() {
@@ -92,20 +97,19 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 			// If there is no store, this PersistentEntityResource can't have content links
 			return resource;
 		}
-		Collection<String> contentPropertyPaths = mappingContext.getContentPaths(persistentEntityType);
 
-		if(contentPropertyPaths.size() == 1 && config.shortcutLinks() && !config.fullyQualifiedLinks()) {
+        Map<String, ContentProperty> contentProperties = mappingContext.getContentPropertyMap(persistentEntityType);
+
+		if(contentProperties.size() == 1 && config.shortcutLinks() && !config.fullyQualifiedLinks()) {
 			// for compatibility with v0.x.0 versions
 			originalLink(config.getBaseUri(), store, entityId).ifPresent((l) -> addLink(resource, l));
 
 			addLink(resource, shortcutLink(config.getBaseUri(), store, entityId, StringUtils
 					.uncapitalize(StoreUtils.getSimpleName(store))));
 		} else {
-			for (String contentPropertyPath: contentPropertyPaths) {
-				if(!contentPropertyPath.isEmpty()) {
-					resource.add(fullyQualifiedLink(config.getBaseUri(), store, entityId, contentPropertyPath));
-				}
-			}
+            for (Map.Entry<String, ContentProperty> contentProperty : contentProperties.entrySet()) {
+                resource.add(fullyQualifiedLink(config.getBaseUri(), store, entityId, contentProperty));
+            }
 		}
 
 		return resource;
@@ -124,14 +128,21 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		resource.add(l);
 	}
 
-	private String propertyLinkRel(StoreInfo storeInfo, String name) {
-		String contentRel = StringUtils.uncapitalize(name);
+	private String propertyLinkRel(StoreInfo storeInfo, Map.Entry<String, ContentProperty> contentProperty) {
+        String uriPath = StringUtils.uncapitalize(contentProperty.getKey());
+		Map<String,String> linkrelMappings = this.linkrelMappingContext.getMappings(storeInfo.getDomainObjectClass());
+		String linkrel = linkrelMappings.get(uriPath);
+		if (linkrel == null || !StringUtils.hasLength(linkrel)) {
+			linkrel = uriPath;
+		}
+
 		Class<?> storeIface = storeInfo.getInterface();
 		StoreRestResource exportSpec = storeIface.getAnnotation(StoreRestResource.class);
 		if (exportSpec != null && !StringUtils.isEmpty(exportSpec.linkRel())) {
-			contentRel = exportSpec.linkRel() + "/" + name;
+			linkrel = exportSpec.linkRel() + "/" + linkrel;
 		}
-		return contentRel;
+
+		return linkrel;
 	}
 
 	private String entityRel(StoreInfo storeInfo, String defaultLinkRel) {
@@ -163,18 +174,18 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		return builder.withRel(entityRel(store, defaultLinkRel));
 	}
 
-	private Link fullyQualifiedLink(URI baseUri, StoreInfo store, Object id, String contentPropertyPath) {
+	private Link fullyQualifiedLink(URI baseUri, StoreInfo store, Object id, Map.Entry<String, ContentProperty> contentPropertyEntry) {
 
-	    Assert.notNull(id);
+        Assert.notNull(id);
 
-		LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
+        LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
-		builder = builder.slash(id);
+        builder = builder.slash(id);
 
-		builder = builder.slash(contentPropertyPath);
+        builder = builder.slash(contentPropertyEntry.getKey());
 
-		return builder.withRel(propertyLinkRel(store, contentPropertyPath));
-	}
+        return builder.withRel(propertyLinkRel(store, contentPropertyEntry));
+    }
 
     private Object getProjectionTarget(Object object) {
         return ((TargetAware)object).getTarget();

@@ -48,6 +48,14 @@ public class MappingContext {
         return properties.values();
     }
 
+    public Map<String,ContentProperty> getContentPropertyMap(Class<?> domainClass) {
+        Map<String, ContentProperty> properties = context.get(domainClass);
+        if (properties == null) {
+            properties = resolveProperties(domainClass);
+        }
+        return properties;
+    }
+
     public Collection<String> getContentPaths(Class<?> domainClass) {
         Map<String, ContentProperty> properties = context.get(domainClass);
         if (properties == null) {
@@ -57,9 +65,9 @@ public class MappingContext {
     }
 
     private Map<String, ContentProperty> resolveProperties(Class<?> domainClass) {
-        ContentPropertyBuilderVisitor visitor = new ContentPropertyBuilderVisitor(this.keySeparator, this.contentPropertySeparator, new ContentPropertyBuilderVisitor.CanonicalName());
-        ClassWalker walker = new ClassWalker(domainClass);
-        walker.accept(visitor);
+        ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor(this.keySeparator, this.contentPropertySeparator);
+        ClassWalker walker = new ClassWalker(visitor);
+        walker.accept(domainClass);
         context.put(domainClass, visitor.getProperties());
         return visitor.getProperties();
     }

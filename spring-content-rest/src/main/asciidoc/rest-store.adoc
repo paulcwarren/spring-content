@@ -125,7 +125,7 @@ the Resource `/comedy/monty_pythons_flying_circus.mp4`.
 
 === AssociativeStore/ContentStore Resources
 
-`AssociativeStore` and `ContentStore` both manage and associate Spring Resources with JPA Entities.  When exported using Spring Content REST these can also be accessed via REST endpoints.
+`AssociativeStore` and `ContentStore` both manage and associate Spring Resources with Spring Data Entities.  When exported using Spring Content REST these can also be accessed via REST endpoints.
 
 Assume the following `Entity` class, `Repository` and `Store` interfaces:
   
@@ -294,7 +294,7 @@ These endpoints can be found in the similarly named link relations in the Entity
 
 === Nested Multiple Content Properties
 
-With its `@Embeddable`/`@Embedded` annotations JPA along with some of the newer database technologies like Mongo it is possible to model Entities as complex objects.  It may be appropriate to associate Spring Resources as nested properties on these complex objects, as in the following example:-
+Of course it is also possible to have multiple content properties on nested objects too, as in this example:-
 
 ====
 [source, java]
