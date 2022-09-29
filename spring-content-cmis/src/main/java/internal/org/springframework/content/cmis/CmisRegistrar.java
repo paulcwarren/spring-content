@@ -5,6 +5,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.UUID;
 
 import internal.org.springframework.content.commons.utils.StoreUtils;
+import org.apache.chemistry.opencmis.commons.data.RepositoryCapabilities;
+import org.apache.chemistry.opencmis.commons.enums.*;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.RepositoryCapabilitiesImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.RepositoryInfoImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.TypeDefinitionListImpl;
 
@@ -210,8 +213,28 @@ public class CmisRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoa
 		repoInfoBuilder.addPropertyValue("productName", attributes.getString("productName"));
 		repoInfoBuilder.addPropertyValue("productVersion", attributes.getString("productVersion"));
 		repoInfoBuilder.addPropertyValue("rootFolder", "@root@");
+		repoInfoBuilder.addPropertyValue("capabilities", buildCaps());
 
 		return repoInfoBuilder.getBeanDefinition();
+	}
+
+	private RepositoryCapabilities buildCaps() {
+		RepositoryCapabilitiesImpl capabilities = new RepositoryCapabilitiesImpl();
+		capabilities.setCapabilityAcl(CapabilityAcl.DISCOVER);
+		capabilities.setAllVersionsSearchable(false);
+		capabilities.setCapabilityJoin(CapabilityJoin.NONE);
+		capabilities.setSupportsMultifiling(false);
+		capabilities.setSupportsUnfiling(false);
+		capabilities.setSupportsVersionSpecificFiling(false);
+		capabilities.setIsPwcSearchable(false);
+		capabilities.setIsPwcUpdatable(false);
+		capabilities.setCapabilityQuery(CapabilityQuery.NONE);
+		capabilities.setCapabilityChanges(CapabilityChanges.NONE);
+		capabilities.setCapabilityContentStreamUpdates(CapabilityContentStreamUpdates.ANYTIME);
+		capabilities.setSupportsGetDescendants(true);
+		capabilities.setSupportsGetFolderTree(true);
+		capabilities.setCapabilityRendition(CapabilityRenditions.NONE);
+		return capabilities;
 	}
 
 	BeanDefinition createCmisRepositoryConfigurationDefinition(

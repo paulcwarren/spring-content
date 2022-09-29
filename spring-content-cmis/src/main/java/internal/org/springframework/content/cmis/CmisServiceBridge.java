@@ -9,59 +9,26 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 import javax.persistence.Id;
 import javax.transaction.Transactional;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
-import org.apache.chemistry.opencmis.commons.data.Acl;
-import org.apache.chemistry.opencmis.commons.data.AllowableActions;
-import org.apache.chemistry.opencmis.commons.data.CmisExtensionElement;
-import org.apache.chemistry.opencmis.commons.data.ContentStream;
-import org.apache.chemistry.opencmis.commons.data.ExtensionsData;
-import org.apache.chemistry.opencmis.commons.data.ObjectData;
-import org.apache.chemistry.opencmis.commons.data.ObjectInFolderData;
-import org.apache.chemistry.opencmis.commons.data.ObjectInFolderList;
-import org.apache.chemistry.opencmis.commons.data.ObjectParentData;
+import org.apache.chemistry.opencmis.commons.data.*;
 import org.apache.chemistry.opencmis.commons.data.Properties;
 import org.apache.chemistry.opencmis.commons.definitions.DocumentTypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionList;
-import org.apache.chemistry.opencmis.commons.enums.Action;
-import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
-import org.apache.chemistry.opencmis.commons.enums.ContentStreamAllowed;
-import org.apache.chemistry.opencmis.commons.enums.IncludeRelationships;
-import org.apache.chemistry.opencmis.commons.enums.VersioningState;
+import org.apache.chemistry.opencmis.commons.enums.*;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.MimeTypes;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.AllowableActionsImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.ObjectDataImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.ObjectInFolderDataImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.ObjectInFolderListImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.ObjectParentDataImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertiesImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyBooleanImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDateTimeImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIdImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIntegerImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyStringImpl;
-import org.apache.chemistry.opencmis.commons.impl.dataobjects.TypeDefinitionListImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.*;
 import org.apache.chemistry.opencmis.commons.impl.server.ObjectInfoImpl;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.ObjectInfoHandler;
@@ -1325,6 +1292,15 @@ public class CmisServiceBridge {
 		private String id = CmisServiceBridge.this.cmisRepositoryConfiguration.getCmisRepositoryInfo().getRootFolderId();
 
 		@CmisName
-		private String name = "";
+		private String name = CmisServiceBridge.this.cmisRepositoryConfiguration.getCmisRepositoryInfo().getName();
+
+		@CmisDescription
+		private String description = CmisServiceBridge.this.cmisRepositoryConfiguration.getCmisRepositoryInfo().getDescription();
+
+		@CreatedDate
+		private Instant createdDate = Instant.now();
+
+		@LastModifiedDate
+		private Instant lastModfiedDate = Instant.now();
 	}
 }
