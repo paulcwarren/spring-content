@@ -221,6 +221,12 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+        return this.setContent(entity, propertyPath, content, -1L);
+    }
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         // TODO: property == null?
@@ -241,11 +247,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         }
 
         OutputStream os = null;
-        long contentLen = -1L;
+        long readLen = -1L;
         try {
             if (resource instanceof WritableResource) {
                 os = ((WritableResource) resource).getOutputStream();
-                contentLen = IOUtils.copyLarge(content, os);
+                readLen = IOUtils.copyLarge(content, os);
             }
         }
         catch (IOException e) {
@@ -259,12 +265,16 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         property.setContentId(entity, ((BlobResource) resource).getId(), null);
 
-        property.setContentLength(entity, contentLen);
+        long len = contentLen;
+        if (len == -1L) {
+            len = readLen;
+        }
+        property.setContentLength(entity, len);
 
         return entity;
     }
 
-	@Transactional
+    @Transactional
 	@Override
 	public S setContent(S entity, Resource resourceContent) {
 		try {

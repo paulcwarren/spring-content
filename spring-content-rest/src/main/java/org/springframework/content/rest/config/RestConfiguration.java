@@ -180,7 +180,12 @@ public class RestConfiguration implements InitializingBean {
 
 	@Bean
 	StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler() {
-		return new StoreByteRangeHttpRequestHandler();
+	    StoreByteRangeHttpRequestHandler handler = new StoreByteRangeHttpRequestHandler();
+
+	    // implemented by StoreRestController
+	    handler.setUseLastModified(false);
+
+	    return handler;
 	}
 
 	@Bean

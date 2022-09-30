@@ -188,7 +188,7 @@ public class StoreMethodInterceptorTest {
 
 					inOrder.verify(publisher).publishEvent(beforeArgCaptor.capture());
 					assertThat(beforeArgCaptor.getValue().getResource(), is(nullValue()));
-					assertThat(beforeArgCaptor.getValue().getIs(), is(not(nullValue())));
+					assertThat(beforeArgCaptor.getValue().getInputStream(), is(not(nullValue())));
 
 					inOrder.verify(store).setContent(anyObject(), setContentArgCaptor.capture());
 					try (InputStream setContentInputStream = setContentArgCaptor.getValue()) {
@@ -203,7 +203,7 @@ public class StoreMethodInterceptorTest {
 
 					BeforeEach(() -> {
 						onBeforeSetContentPublishEvent((invocationOnMock) -> {
-							try (InputStream is = ((BeforeSetContentEvent)invocationOnMock.getArgument(0)).getIs()) {
+							try (InputStream is = ((BeforeSetContentEvent)invocationOnMock.getArgument(0)).getInputStream()) {
 								assertThat(IOUtils.toString(is), is("test"));
 							}
 							return null;
@@ -234,7 +234,7 @@ public class StoreMethodInterceptorTest {
 
 					BeforeEach(() -> {
 						onBeforeSetContentPublishEvent((invocationOnMock) -> {
-							InputStream is = ((BeforeSetContentEvent)invocationOnMock.getArgument(0)).getIs();
+							InputStream is = ((BeforeSetContentEvent)invocationOnMock.getArgument(0)).getInputStream();
 							assertThat((char)is.read(), is('t'));
 							assertThat((char)is.read(), is('e'));
 							return null;
@@ -291,6 +291,38 @@ public class StoreMethodInterceptorTest {
 					});
 				});
 
+				Context("when the BeforeSetContentEvent replaces the inputstream", () -> {
+
+					BeforeEach(() -> {
+						onBeforeSetContentPublishEvent((invocationOnMock) -> {
+							((BeforeSetContentEvent)invocationOnMock.getArgument(0)).setInputStream(new ByteArrayInputStream("encrypted".getBytes()));
+							return null;
+						});
+					});
+
+					It("should still receive the replaced inputstream in the setContent invocation", () -> {
+						assertThat(e, is(nullValue()));
+
+						InOrder inOrder = Mockito.inOrder(publisher, store);
+
+						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
+						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+
+						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
+
+						inOrder.verify(store).setContent(anyObject(), setContentArgCaptor.capture());
+
+						try (InputStream setContentInputStream = setContentArgCaptor.getValue()) {
+							String contents = IOUtils.toString(setContentInputStream);
+							assertThat(contents, is(not("test")));
+							assertThat(contents, is("encrypted"));
+						}
+
+						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						assertThat(afterArgCaptor.getValue().getResult(), is(result));
+					});
+				});
+
 				Context("when setContent is invoked with illegal arguments", () -> {
 
 					BeforeEach(() -> {
@@ -325,7 +357,7 @@ public class StoreMethodInterceptorTest {
 
 					inOrder.verify(publisher).publishEvent(beforeArgCaptor.capture());
 					assertThat(beforeArgCaptor.getValue().getResource(), is(not(nullValue())));
-					assertThat(beforeArgCaptor.getValue().getIs(), is(nullValue()));
+					assertThat(beforeArgCaptor.getValue().getInputStream(), is(nullValue()));
 
 					inOrder.verify(store).setContent(anyObject(), setContentArgCaptor.capture());
 					try (InputStream setContentInputStream = setContentArgCaptor.getValue().getInputStream()) {

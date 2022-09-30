@@ -156,6 +156,10 @@ public class MethodNotAllowedExceptionIT {
 
         @RestResource(exported=false)
         @Override
+        public TEntity setContent(TEntity property, PropertyPath path, InputStream content, long contentLen);
+
+        @RestResource(exported=false)
+        @Override
         public TEntity setContent(TEntity property, PropertyPath path, Resource resourceContent);
 
         @RestResource(exported=false)

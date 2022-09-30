@@ -121,12 +121,17 @@ public class AbstractStoreFactoryBeanTest {
         }
 
         @Override
-        public Object setContent(Object property, PropertyPath propertyPath, InputStream contentm) {
+        public Object setContent(Object property, PropertyPath propertyPath, InputStream content) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        @Override
+		public Object setContent(Object property, PropertyPath propertyPath, InputStream content, long contentLen) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
         public Object setContent(Object property, PropertyPath propertyPath, Resource resourceContent) {
             // TODO Auto-generated method stub
             return null;

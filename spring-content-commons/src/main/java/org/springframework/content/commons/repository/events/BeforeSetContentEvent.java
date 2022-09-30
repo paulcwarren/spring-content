@@ -15,12 +15,12 @@ public class BeforeSetContentEvent extends StoreEvent {
 
 	private static final long serialVersionUID = -7299354365313770L;
 
-	private InputStream is;
+	private InputStream inputStream;
 	private Resource resource;
 
 	public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, InputStream is) {
 		super(source, store);
-		this.is = is;
+		this.inputStream = is;
 	}
 
 	public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, Resource resource) {
@@ -30,11 +30,25 @@ public class BeforeSetContentEvent extends StoreEvent {
 
     public BeforeSetContentEvent(Object source, PropertyPath propertyPath, ContentStore<Object, Serializable> store, InputStream is) {
         super(source, propertyPath, store);
-        this.is = is;
+        this.inputStream = is;
     }
 
     public BeforeSetContentEvent(Object source, PropertyPath propertyPath, ContentStore<Object, Serializable> store, Resource resource) {
         super(source, propertyPath, store);
         this.resource = resource;
+    }
+
+    /**
+     * Deprecated.
+     *
+     * Use {@link #getInputStream() getInputStream}
+     */
+    @Deprecated()
+    public InputStream getIs() {
+        return this.inputStream;
+    }
+
+    public void setInputStream(InputStream is) {
+        this.inputStream = is;
     }
 }

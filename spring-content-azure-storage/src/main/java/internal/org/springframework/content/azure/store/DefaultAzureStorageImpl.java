@@ -273,6 +273,12 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
     @Transactional
 	@Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+        return this.setContent(entity, propertyPath, content, -1L);
+    }
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
@@ -285,9 +291,9 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             Serializable newId = UUID.randomUUID().toString();
 
             Object convertedId = placementService.convert(
-                        newId,
-                        TypeDescriptor.forObject(newId),
-                        property.getContentIdType(entity));
+                    newId,
+                    TypeDescriptor.forObject(newId),
+                    property.getContentIdType(entity));
 
             property.setContentId(entity, convertedId, null);
         }
@@ -306,7 +312,11 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         }
 
         try {
-            property.setContentLength(entity, resource.contentLength());
+            long lenToSet = contentLen;
+            if (lenToSet == -1L) {
+                lenToSet = resource.contentLength();
+            }
+            property.setContentLength(entity, lenToSet);
         }
         catch (IOException e) {
             logger.error(format("Unexpected error setting content length for entity %s", entity), e);
@@ -315,7 +325,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         return entity;
     }
 
-	@Override
+    @Override
 	public S setContent(S property, Resource resourceContent) {
 		try {
 			return setContent(property, resourceContent.getInputStream());

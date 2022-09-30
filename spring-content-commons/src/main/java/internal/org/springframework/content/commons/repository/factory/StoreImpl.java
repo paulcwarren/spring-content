@@ -61,7 +61,12 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
 
             publisher.publishEvent(before);
 
-            if (contentCopyStream != null && contentCopyStream.isDirty()) {
+            // inputstream was processed and replaced
+            if (before.getInputStream() != null && before.getInputStream().equals(contentCopyStream) == false) {
+                content = before.getInputStream();
+            }
+            // content was processed but not replaced
+            else if (contentCopyStream != null && contentCopyStream.isDirty()) {
                 while (contentCopyStream.read(new byte[4096]) != -1) {
                 }
                 content = new FileInputStream(contentCopy);
@@ -99,6 +104,11 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
 
     @Override
     public Object setContent(Object property, PropertyPath propertyPath, InputStream content) {
+        return this.setContent(property, propertyPath, content, -1);
+    }
+
+    @Override
+    public Object setContent(Object property, PropertyPath propertyPath, InputStream content, long contentLen) {
         Object result = null;
 
         File contentCopy = null;
@@ -110,14 +120,19 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
 
             publisher.publishEvent(before);
 
-            if (contentCopyStream != null && contentCopyStream.isDirty()) {
+            // inputstream was processed and replaced
+            if (before.getInputStream() != null && before.getInputStream().equals(contentCopyStream) == false) {
+                content = before.getInputStream();
+            }
+            // content was processed but not replaced
+            else if (contentCopyStream != null && contentCopyStream.isDirty()) {
                 while (contentCopyStream.read(new byte[4096]) != -1) {
                 }
                 content = new FileInputStream(contentCopy);
             }
 
             try {
-                result = delegate.setContent(property, propertyPath, content);
+                result = delegate.setContent(property, propertyPath, content, contentLen);
             }
             catch (Exception e) {
                 throw e;
@@ -272,7 +287,7 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         after.setResult(result);
         publisher.publishEvent(after);
 
-        return result;
+        return (InputStream) after.getResult();
     }
 
     @Override
@@ -316,7 +331,7 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         after.setResult(result);
         publisher.publishEvent(after);
 
-        return result;
+        return (Resource) after.getResult();
     }
 
     @Override
