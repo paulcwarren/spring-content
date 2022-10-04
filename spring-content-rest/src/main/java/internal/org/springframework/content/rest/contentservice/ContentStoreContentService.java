@@ -172,12 +172,24 @@ public class ContentStoreContentService implements ContentService {
         }
 
         Method methodToUse = methodsToUse[0];
+        List<Object> argsList = new ArrayList<>();
+        argsList.add(domainObject);
+        argsList.add(storeResource.getPropertyPath());
         Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[indexOfContentArg(methodToUse.getParameterTypes())]);
+        argsList.add(contentArg);
+        if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(long.class)) {
+            long len = -1L;
+            // if available use the original content length
+            if (headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {
+                len = headers.getContentLength();
+            }
+            argsList.add(len);
+        }
 
         try {
             Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
             ReflectionUtils.makeAccessible(methodToUse);
-            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, domainObject, storeResource.getPropertyPath(), contentArg);
+            Object updatedDomainObj = ReflectionUtils.invokeMethod(methodToUse, targetObj, argsList.toArray());
 
             repoInvoker.invokeSave(updatedDomainObj);
         } finally {
@@ -330,7 +342,7 @@ public class ContentStoreContentService implements ContentService {
 
         static {
             SETCONTENT_METHODS = new Method[] {
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, long.class),
                 ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
             };
 

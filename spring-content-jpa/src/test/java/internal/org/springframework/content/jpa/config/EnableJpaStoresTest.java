@@ -262,7 +262,12 @@ public class EnableJpaStoresTest {
             return null;
         }
 
-        @Override
+		@Override
+		public TestEntity setContent(TestEntity entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+			return null;
+		}
+
+		@Override
         public TestEntity setContent(TestEntity property, PropertyPath propertyPath, Resource resourceContent) {
             // TODO Auto-generated method stub
             return null;

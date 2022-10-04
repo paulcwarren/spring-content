@@ -208,63 +208,73 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S property, PropertyPath propertyPath, InputStream content) {
-
-        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-        if (contentProperty == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-
-        Object contentId = contentProperty.getContentId(property);
-        if (contentId == null) {
-
-            Serializable newId = UUID.randomUUID().toString();
-
-            Object convertedId = placer.convert(
-                    newId,
-                    TypeDescriptor.forObject(newId),
-                    contentProperty.getContentIdType(property));
-
-            contentProperty.setContentId(property, convertedId, null);
-        }
-
-        Resource resource = this.getResource(property, propertyPath);
-        if (resource == null) {
-            return property;
-        }
-
-        OutputStream os = null;
-        try {
-            if (resource.exists() == false) {
-                File resourceFile = resource.getFile();
-                File parent = resourceFile.getParentFile();
-                this.fileService.mkdirs(parent);
-            }
-            if (resource instanceof WritableResource) {
-                os = ((WritableResource) resource).getOutputStream();
-                IOUtils.copy(content, os);
-            }
-        } catch (IOException e) {
-            logger.error(format("Unexpected io error setting content for entity %s", property), e);
-            throw new StoreAccessException(format("Setting content for entity %s", property), e);
-        } catch (Exception e) {
-            logger.error(format("Unexpected error setting content for entity %s", property), e);
-            throw new StoreAccessException(format("Setting content for entity %s", property), e);
-        }
-        finally {
-            IOUtils.closeQuietly(os);
-        }
-
-        try {
-            contentProperty.setContentLength(property, resource.contentLength());
-        }
-        catch (IOException e) {
-            logger.error(format(
-                    "Unexpected error setting content length for content for resource %s",
-                    resource.toString()), e);
-        }
-
-        return property;
+		return this.setContent(property, propertyPath, content, -1L);
     }
+
+	@Transactional
+	@Override
+	public S setContent(S property, PropertyPath propertyPath, InputStream content, long contentLen) {
+
+		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
+		if (contentProperty == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		Object contentId = contentProperty.getContentId(property);
+		if (contentId == null) {
+
+			Serializable newId = UUID.randomUUID().toString();
+
+			Object convertedId = placer.convert(
+					newId,
+					TypeDescriptor.forObject(newId),
+					contentProperty.getContentIdType(property));
+
+			contentProperty.setContentId(property, convertedId, null);
+		}
+
+		Resource resource = this.getResource(property, propertyPath);
+		if (resource == null) {
+			return property;
+		}
+
+		OutputStream os = null;
+		try {
+			if (resource.exists() == false) {
+				File resourceFile = resource.getFile();
+				File parent = resourceFile.getParentFile();
+				this.fileService.mkdirs(parent);
+			}
+			if (resource instanceof WritableResource) {
+				os = ((WritableResource) resource).getOutputStream();
+				IOUtils.copy(content, os);
+			}
+		} catch (IOException e) {
+			logger.error(format("Unexpected io error setting content for entity %s", property), e);
+			throw new StoreAccessException(format("Setting content for entity %s", property), e);
+		} catch (Exception e) {
+			logger.error(format("Unexpected error setting content for entity %s", property), e);
+			throw new StoreAccessException(format("Setting content for entity %s", property), e);
+		}
+		finally {
+			IOUtils.closeQuietly(os);
+		}
+
+		try {
+			long len = contentLen;
+			if (len == -1L) {
+				len = resource.contentLength();
+			}
+			contentProperty.setContentLength(property, len);
+		}
+		catch (IOException e) {
+			logger.error(format(
+					"Unexpected error setting content length for content for resource %s",
+					resource.toString()), e);
+		}
+
+		return property;
+	}
 
 	@Transactional
 	@Override

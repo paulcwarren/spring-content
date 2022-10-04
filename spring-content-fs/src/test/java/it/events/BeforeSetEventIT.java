@@ -87,7 +87,7 @@ public class BeforeSetEventIT {
 
             @HandleBeforeSetContent
             public void handleBeforeSetContentEvent(BeforeSetContentEvent event) throws IOException {
-                InputStream is = event.getIs();
+                InputStream is = event.getInputStream();
                 IOUtils.copy(is, new ByteArrayOutputStream());
             }
         }

@@ -298,50 +298,60 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
-
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-
-        Object contentId = property.getContentId(entity);
-        if (contentId == null) {
-
-            Serializable newId = UUID.randomUUID().toString();
-
-            Object convertedId = placementService.convert(
-                        newId,
-                        TypeDescriptor.forObject(newId),
-                        property.getContentIdType(entity));
-
-            property.setContentId(entity, convertedId, null);
-        }
-
-        Resource resource = this.getResource(entity, propertyPath);
-        if (resource == null) {
-            return entity;
-        }
-
-        setResourceContentTypeFromMimeType(entity, property, resource);
-
-        if (resource instanceof WritableResource) {
-            try (OutputStream os = ((WritableResource) resource).getOutputStream()) {
-                    IOUtils.copy(content, os);
-            }
-            catch (IOException e) {
-                logger.error(format("Unexpected error setting content for entity %s", entity), e);
-                throw new StoreAccessException(format("Setting content for entity %s", entity), e);
-            }
-        }
-
-        try {
-            property.setContentLength(entity, resource.contentLength());
-        }
-        catch (IOException e) {
-            logger.error(format("Unexpected error setting content length for entity %s", entity), e);
-        }
-        return entity;
+		return this.setContent(entity, propertyPath, content, -1L);
     }
+
+	@Transactional
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		Object contentId = property.getContentId(entity);
+		if (contentId == null) {
+
+			Serializable newId = UUID.randomUUID().toString();
+
+			Object convertedId = placementService.convert(
+					newId,
+					TypeDescriptor.forObject(newId),
+					property.getContentIdType(entity));
+
+			property.setContentId(entity, convertedId, null);
+		}
+
+		Resource resource = this.getResource(entity, propertyPath);
+		if (resource == null) {
+			return entity;
+		}
+
+		setResourceContentTypeFromMimeType(entity, property, resource);
+
+		if (resource instanceof WritableResource) {
+			try (OutputStream os = ((WritableResource) resource).getOutputStream()) {
+				IOUtils.copy(content, os);
+			}
+			catch (IOException e) {
+				logger.error(format("Unexpected error setting content for entity %s", entity), e);
+				throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+			}
+		}
+
+		try {
+			long len = contentLen;
+			if (len == -1L) {
+				len = resource.contentLength();
+			}
+			property.setContentLength(entity, len);
+		}
+		catch (IOException e) {
+			logger.error(format("Unexpected error setting content length for entity %s", entity), e);
+		}
+		return entity;
+	}
 
 	@Override
 	public S setContent(S property, Resource resourceContent) {

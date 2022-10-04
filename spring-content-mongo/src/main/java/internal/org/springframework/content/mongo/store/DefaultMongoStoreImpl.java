@@ -225,6 +225,12 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 	@Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+        return this.setContent(entity, propertyPath, content, -1L);
+    }
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
 
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
@@ -258,19 +264,21 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
             throw new StoreAccessException(format("Setting content for entity %s", entity), e);
         }
 
-        long contentLen = 0L;
         try {
-            contentLen = resource.contentLength();
+            long len = contentLen;
+            if (len == -1L) {
+                len = resource.contentLength();
+            }
+            property.setContentLength(entity, len);
         }
         catch (IOException ioe) {
             logger.debug(format("Unable to retrieve content length for %s", contentId));
         }
-        property.setContentLength(entity, contentLen);
 
         return entity;
     }
 
-	@Override
+    @Override
     @Transactional
 	public S setContent(S property, Resource resourceContent) {
 		try {

@@ -88,6 +88,7 @@ public class StoreRestController implements InitializingBean  {
         try {
             lastModified = storeResource.lastModified();
         } catch (IOException e) {}
+
         if(new ServletWebRequest(request, response).checkNotModified(storeResource.getETag() != null ? storeResource.getETag().toString() : null, lastModified)) {
             return;
         }
