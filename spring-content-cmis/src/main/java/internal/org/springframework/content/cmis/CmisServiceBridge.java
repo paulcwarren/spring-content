@@ -893,15 +893,19 @@ public class CmisServiceBridge {
 
 		Object createdDate = BeanUtils.getFieldWithAnnotation(object, CreatedDate.class);
 		if (createdDate != null) {
-			if (conversionService.canConvert(createdDate.getClass(), Instant.class) == false) {
+			GregorianCalendar createdDateVal = null;
+
+			if (createdDate.getClass().isAssignableFrom(Long.class)) {
+				createdDateVal = millisToCalendar((Long)createdDate);
+			} else if (conversionService.canConvert(createdDate.getClass(), GregorianCalendar.class)) {
+				createdDateVal = conversionService.convert(createdDate, GregorianCalendar.class);
+			} else {
 				throw new IllegalArgumentException(format("Unable to convert created date %s to java.time.Instant", createdDate));
 			}
 
-			Instant instant = conversionService.convert(createdDate, Instant.class);
+			addPropertyDateTime(props, type, filter, PropertyIds.CREATION_DATE, createdDateVal);
 
-			addPropertyString(props, type, filter, PropertyIds.CREATION_DATE, conversionService.convert(instant, String.class));
-
-			objectInfo.setCreationDate(conversionService.convert(instant, GregorianCalendar.class));
+			objectInfo.setCreationDate(createdDateVal /*conversionService.convert(instant, GregorianCalendar.class)*/);
 		}
 
 		Object modifiedBy = BeanUtils.getFieldWithAnnotation(object, LastModifiedBy.class);
@@ -909,21 +913,28 @@ public class CmisServiceBridge {
 
 		Object modifiedDate = BeanUtils.getFieldWithAnnotation(object, LastModifiedDate.class);
 		if (modifiedDate != null) {
-			if (conversionService.canConvert(modifiedDate.getClass(), Instant.class) == false) {
+			GregorianCalendar modifiedDateVal = null;
+
+			if (modifiedDate.getClass().isAssignableFrom(Long.class)) {
+				modifiedDateVal = millisToCalendar((Long)createdDate);
+			} else if (conversionService.canConvert(modifiedDate.getClass(), GregorianCalendar.class) == false) {
+				modifiedDateVal = conversionService.convert(modifiedDate, GregorianCalendar.class);
+			} else {
 				throw new IllegalArgumentException(format("Unable to convert last modified date %s to java.time.Instant", modifiedDate));
 			}
 
-			Instant instant = conversionService.convert(modifiedDate, Instant.class);
+			addPropertyDateTime(props, type, filter, PropertyIds.LAST_MODIFICATION_DATE, modifiedDateVal /*conversionService.convert(instant, String.class)*/);
 
-			addPropertyString(props, type, filter, PropertyIds.LAST_MODIFICATION_DATE, conversionService.convert(instant, String.class));
-
-			objectInfo.setLastModificationDate(conversionService.convert(instant, GregorianCalendar.class));
+			objectInfo.setLastModificationDate(modifiedDateVal /*conversionService.convert(instant, GregorianCalendar.class)*/);
 		}
 
 		addPropertyString(props, type, filter, PropertyIds.DESCRIPTION, getAsString(object, CmisDescription.class));
 
-		String typeId = null;
+//		addPropertyId(props, type, filter, PropertyIds.SECONDARY_OBJECT_TYPE_IDS, Collections.singletonList(""));
+		props.addProperty(new PropertyStringImpl(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, new ArrayList<String>()));
+		addPropertyString(props, type, filter, PropertyIds.CHANGE_TOKEN, "");
 
+		String typeId = null;
 		boolean folder = type.getId().equals(BaseTypeId.CMIS_FOLDER.value());
 		if (folder) {
 			typeId = BaseTypeId.CMIS_FOLDER.value();
@@ -939,6 +950,7 @@ public class CmisServiceBridge {
 				addPropertyId(props, type, filter, PropertyIds.PARENT_ID, (getParentId(object) != null ? getParentId(object) : config.getCmisRepositoryInfo().getRootFolderId()));
 				objectInfo.setHasParent(true);
 			}
+			props.addProperty(new PropertyStringImpl(PropertyIds.ALLOWED_CHILD_OBJECT_TYPE_IDS, new ArrayList<String>()));
 		} else {
 			typeId = BaseTypeId.CMIS_DOCUMENT.value();
 
@@ -1282,6 +1294,14 @@ public class CmisServiceBridge {
 		return value;
 	}
 
+	static GregorianCalendar millisToCalendar(long millis) {
+		GregorianCalendar result = new GregorianCalendar();
+		result.setTimeZone(TimeZone.getTimeZone("GMT"));
+		result.setTimeInMillis((long) (Math.ceil((double) millis / 1000) * 1000));
+
+		return result;
+	}
+
 	@Getter
 	@Setter
 	@NoArgsConstructor
@@ -1298,9 +1318,9 @@ public class CmisServiceBridge {
 		private String description = CmisServiceBridge.this.cmisRepositoryConfiguration.getCmisRepositoryInfo().getDescription();
 
 		@CreatedDate
-		private Instant createdDate = Instant.now();
+		private Long createdDate = Instant.now().toEpochMilli();
 
 		@LastModifiedDate
-		private Instant lastModfiedDate = Instant.now();
+		private Long lastModfiedDate = Instant.now().toEpochMilli();
 	}
 }

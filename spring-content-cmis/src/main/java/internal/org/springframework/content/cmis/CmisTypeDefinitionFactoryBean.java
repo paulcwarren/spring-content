@@ -180,19 +180,19 @@ public class CmisTypeDefinitionFactoryBean implements BeanFactoryAware, FactoryB
 
 		Field field = BeanUtils.findFieldWithAnnotation(entityClazz, CreatedBy.class);
 		if (field != null) {
-			type.addPropertyDefinition(this.createPropertyDefinition("cmis:createdBy", "Created By", "Created By", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, false, false));
+			type.addPropertyDefinition(this.createPropertyDefinition("cmis:createdBy", "Created By", "Created By", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, true, true));
 		}
 		field = BeanUtils.findFieldWithAnnotation(entityClazz, CreatedDate.class);
 		if (field != null) {
-			type.addPropertyDefinition(this.createPropertyDefinition("cmis:creationDate", "Creation Date", "Creation Date", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, false, false));
+			type.addPropertyDefinition(this.createPropertyDefinition("cmis:creationDate", "Creation Date", "Creation Date", PropertyType.DATETIME, cardinality(field), Updatability.READONLY, inherited, false, true, true));
 		}
 		field = BeanUtils.findFieldWithAnnotation(entityClazz, LastModifiedBy.class);
 		if (field != null) {
-			type.addPropertyDefinition(this.createPropertyDefinition("cmis:lastModifiedBy", "Last Modified By", "Last Modified By", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, false, false));
+			type.addPropertyDefinition(this.createPropertyDefinition("cmis:lastModifiedBy", "Last Modified By", "Last Modified By", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, true, true));
 		}
 		field = BeanUtils.findFieldWithAnnotation(entityClazz, LastModifiedDate.class);
 		if (field != null) {
-			type.addPropertyDefinition(this.createPropertyDefinition("cmis:lastModificationDate", "Last Modification Date", "Last Modification Date", propertyType(field), cardinality(field), Updatability.READONLY, inherited, false, false, false));
+			type.addPropertyDefinition(this.createPropertyDefinition("cmis:lastModificationDate", "Last Modification Date", "Last Modification Date", PropertyType.DATETIME, cardinality(field), Updatability.READONLY, inherited, false, true, true));
 		}
 		field = BeanUtils.findFieldWithAnnotation(entityClazz, Version.class);
 		if (field != null) {
@@ -353,7 +353,7 @@ public class CmisTypeDefinitionFactoryBean implements BeanFactoryAware, FactoryB
 			return PropertyType.DECIMAL;
 		} else if (field.getType().equals(URI.class)) {
 			return PropertyType.URI;
-		} else if ((field.getType().getAnnotation(Id.class) == null) || (field.getType().getAnnotation(org.springframework.data.annotation.Id.class) == null)) {
+		} else if ((field.getType().getAnnotation(Id.class) != null) || (field.getType().getAnnotation(org.springframework.data.annotation.Id.class) != null)) {
 			return PropertyType.ID;
 		}
 
