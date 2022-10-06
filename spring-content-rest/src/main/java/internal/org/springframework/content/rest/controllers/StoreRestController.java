@@ -1,6 +1,8 @@
 package internal.org.springframework.content.rest.controllers;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileSystemNotFoundException;
 import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
@@ -84,12 +86,7 @@ public class StoreRestController implements InitializingBean  {
 
         StoreResource storeResource = (StoreResource)resource;
 
-        long lastModified = -1;
-        try {
-            lastModified = storeResource.lastModified();
-        } catch (IOException e) {}
-
-        if(new ServletWebRequest(request, response).checkNotModified(storeResource.getETag() != null ? storeResource.getETag().toString() : null, lastModified)) {
+        if(new ServletWebRequest(request, response).checkNotModified(storeResource.getETag() != null ? storeResource.getETag().toString() : null, resolveLastModified(storeResource))) {
             return;
         }
 
@@ -184,7 +181,7 @@ public class StoreRestController implements InitializingBean  {
         if (!resource.exists()) {
             throw new ResourceNotFoundException();
         } else {
-            HeaderUtils.evaluateHeaderConditions(headers, storeResource.getETag() != null ? storeResource.getETag().toString() : null, new Date(storeResource.lastModified()));
+            HeaderUtils.evaluateHeaderConditions(headers, storeResource.getETag() != null ? storeResource.getETag().toString() : null, new Date(resolveLastModified(storeResource)));
         }
 
         ContentService contentService = contentServiceFactory.getContentService(storeResource);
@@ -205,7 +202,7 @@ public class StoreRestController implements InitializingBean  {
         boolean isNew = false;
 
         if (target.exists()) {
-            HeaderUtils.evaluateHeaderConditions(headers, targetETag != null ? targetETag.toString() : null, new Date(target.lastModified()));
+            HeaderUtils.evaluateHeaderConditions(headers, targetETag != null ? targetETag.toString() : null, new Date(resolveLastModified(target)));
         } else {
             isNew = true;
         }
@@ -218,6 +215,15 @@ public class StoreRestController implements InitializingBean  {
         else {
             response.setStatus(HttpStatus.OK.value());
         }
+    }
+
+    protected static long resolveLastModified(StoreResource storeResource) {
+        long lastModified = -1L;
+        try {
+            lastModified = storeResource.lastModified();
+        } catch (FileSystemNotFoundException fnfe) {
+        } catch (IOException e) {}
+        return lastModified;
     }
 
     @Override
@@ -236,4 +242,4 @@ public class StoreRestController implements InitializingBean  {
 
         contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, mappingContext, byteRangeRestRequestHandler);
     }
-    }
+}
