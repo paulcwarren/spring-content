@@ -19,6 +19,8 @@ public interface StoreInfo {
     /**
      * Returns the Store's implementation
      *
+     * @param <T>
+     *          the type of the implementation class
      * @param clazz
      *          the type of the implementation
      * @return T

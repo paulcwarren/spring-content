@@ -41,7 +41,9 @@ public class BeforeSetContentEvent extends StoreEvent {
     /**
      * Deprecated.
      *
-     * Use {@link #getInputStream() getInputStream}
+     * Use getInputStream instead
+     *
+     * @return the event's input stream
      */
     @Deprecated()
     public InputStream getIs() {
