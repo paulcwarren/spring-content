@@ -368,14 +368,14 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 	protected abstract Class<? extends Annotation> getAnnotation();
 
 	/**
-	 * Return the the storage module's signature types
-	 * @return
+	 * Return the storage module's signature types
+	 * @return array of classes that represent signature types
 	 */
 	protected abstract Class<?>[] getSignatureTypes();
 
     /**
      * Return the storage module's override property value
-     * @return
+     * @return the storage modules' override property value
      */
     protected String getOverridePropertyValue() {
         return "";
