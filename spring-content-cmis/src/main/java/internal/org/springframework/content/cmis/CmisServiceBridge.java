@@ -2,6 +2,7 @@ package internal.org.springframework.content.cmis;
 
 import static java.lang.String.format;
 
+import java.io.File;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -79,6 +80,8 @@ public class CmisServiceBridge {
 
 	private Map<String, TypeDefinition> typeMap = new HashMap<>();
 
+	private Root root = null;
+
 	public CmisServiceBridge(CmisRepositoryConfiguration cmisRepositoryConfiguration) {
 		this.cmisRepositoryConfiguration = cmisRepositoryConfiguration;
 
@@ -154,6 +157,142 @@ public class CmisServiceBridge {
 		children = config.getCmisNavigationService().getChildren(parent);
 
 		return toObjectInFolderList(config, context, children, filterCol,true, handler);
+	}
+
+	public List<ObjectInFolderContainer> getDescendants(CmisRepositoryConfiguration config,
+			String folderId,
+			BigInteger depth,
+			String filter,
+			Boolean includeAllowableActions,
+			IncludeRelationships includeRelationships,
+			String renditionFilter,
+			Boolean includePathSegment,
+			Boolean foldersOnly,
+			ExtensionsData extension,
+			CallContext context,
+			ObjectInfoHandler handler) {
+
+//		boolean userReadOnly = checkUser(context, false);
+
+		// check depth
+		int d = depth == null ? 2 : depth.intValue();
+		if (d == 0) {
+			throw new CmisInvalidArgumentException("Depth must not be 0!");
+		}
+		if (d < -1) {
+			d = -1;
+		}
+
+		// split filter
+		Set<String> filterCollection = splitFilter(filter);
+
+		// set defaults if values not set
+		boolean iaa = getBooleanParameter(includeAllowableActions, false);
+		boolean ips = getBooleanParameter(includePathSegment, false);
+
+		// get the folder
+		Optional<Object> folder = Optional.empty();
+		if (folderId.equals(this.getRootId())) {
+			folder = Optional.of(getRoot());
+		} else {
+			folder = config.cmisFolderRepository().findById(folderId);
+		}
+		if (!folder.isPresent()) {
+			throw new CmisObjectNotFoundException("not found: " + folderId);
+		}
+
+		Object fldr = folder.get();
+
+		if (!isFolder(fldr)) {
+			throw new CmisObjectNotFoundException("Not a folder: " + folderId);
+		}
+
+		// set object info of the the folder
+		if (context.isObjectInfoRequired()) {
+			toObjectData(config, context, getType(fldr), fldr, isRoot(fldr), null, handler);
+		}
+
+		// get the tree
+		List<ObjectInFolderContainer> result = new ArrayList<ObjectInFolderContainer>();
+		gatherDescendants(config, fldr, result, foldersOnly, d, filterCollection, iaa, ips, context, handler);
+
+		return result;
+	}
+
+	private void gatherDescendants(CmisRepositoryConfiguration config, Object folder, List<ObjectInFolderContainer> list,
+								   boolean foldersOnly, int depth, Set<String> filter, boolean includeAllowableActions,
+								   boolean includePathSegments, CallContext context, ObjectInfoHandler objectInfos) {
+		assert folder != null;
+		assert list != null;
+
+		// iterate through children
+		for (Object child : config.getCmisNavigationService().getChildren(!isRoot(folder) ? folder : null)) {
+
+			// folders only?
+			if (foldersOnly && !isFolder(child)) {
+				continue;
+			}
+
+			// add to list
+			ObjectInFolderDataImpl objectInFolder = new ObjectInFolderDataImpl();
+			objectInFolder.setObject(toObjectData(config, context, getType(child), child, false, filter, objectInfos));
+			if (includePathSegments) {
+				objectInFolder.setPathSegment(getName(child));
+			}
+
+			ObjectInFolderContainerImpl container = new ObjectInFolderContainerImpl();
+			container.setObject(objectInFolder);
+
+			list.add(container);
+
+			// move to next level
+			if (depth != 1 && isFolder(child)) {
+				container.setChildren(new ArrayList<ObjectInFolderContainer>());
+				gatherDescendants(config, child, container.getChildren(), foldersOnly, depth - 1, filter,
+						includeAllowableActions, includePathSegments, context, objectInfos);
+			}
+		}
+	}
+
+	public List<ObjectInFolderContainer> getFolderTree(CmisRepositoryConfiguration config,
+														String folderId,
+														BigInteger depth,
+														String filter,
+														Boolean includeAllowableActions,
+														IncludeRelationships includeRelationships,
+														String renditionFilter,
+														Boolean includePathSegment,
+														ExtensionsData extension,
+														CallContext context,
+														ObjectInfoHandler handler) {
+		return this.getDescendants(config,
+				folderId,
+				depth,
+				filter,
+				includeAllowableActions,
+				includeRelationships,
+				renditionFilter,
+				includePathSegment,
+				true,
+				extension,
+				context,
+				handler);
+	}
+
+	private boolean isFolder(Object object) {
+		return object.getClass().isAnnotationPresent(CmisFolder.class);
+	}
+
+	private boolean isDocument(Object object) {
+		return object.getClass().isAnnotationPresent(CmisDocument.class);
+	}
+
+	public static boolean getBooleanParameter(Boolean value, boolean def) {
+		if (value == null) {
+			return def;
+		}
+
+		return value.booleanValue();
 	}
 
 	@Transactional
@@ -235,7 +374,7 @@ public class CmisServiceBridge {
 			return parentData.get(0).getObject();
 		}
 
-		return toObjectData(config, context, typeMap.get("cmis:folder"), new Root(), true, null, handler);
+		return toObjectData(config, context, typeMap.get("cmis:folder"), getRoot(), true, null, handler);
 	}
 
 	@Transactional
@@ -252,7 +391,7 @@ public class CmisServiceBridge {
 			ObjectInfoHandler handler) {
 
 		if (path.equals("/")) {
-			return toObjectData(config, context, typeMap.get("cmis:folder"), new Root(), true, null, handler);
+			return toObjectData(config, context, typeMap.get("cmis:folder"), getRoot(), true, null, handler);
 		}
 
 		if (path.startsWith("/")) {
@@ -301,8 +440,7 @@ public class CmisServiceBridge {
 		ObjectInfoImpl objectInfo = new ObjectInfoImpl();
 
 		if (objectId.equals(getRootId())) {
-			object = new Root();
-			result = toObjectData(config, context, getType(object), object, true, filterCol, handler);
+			result = toObjectData(config, context, getType(getRoot()), getRoot(), true, filterCol, handler);
 		} else {
 			object = this.getObjectInternal(config, objectId, filterCol, includeAllowableActions, includeRelationships,
 					renditionFilter, includePolicyIds, includeAcl, extension);
@@ -861,7 +999,7 @@ public class CmisServiceBridge {
 
 		result.setProperties(compileProperties(config, type, object, root, filter, objectInfo));
 
-		result.setAllowableActions(compileAllowableActions(type, object, false, false));
+		result.setAllowableActions(compileAllowableActions(type, object, root, false));
 
 		if (context.isObjectInfoRequired()) {
 			objectInfo.setObject(result);
@@ -1300,6 +1438,17 @@ public class CmisServiceBridge {
 		result.setTimeInMillis((long) (Math.ceil((double) millis / 1000) * 1000));
 
 		return result;
+	}
+
+	private Root getRoot() {
+		if (root == null) {
+			root = new Root();
+		}
+		return root;
+	}
+
+	private boolean isRoot(Object folder) {
+		return getRoot().equals(folder);
 	}
 
 	@Getter
