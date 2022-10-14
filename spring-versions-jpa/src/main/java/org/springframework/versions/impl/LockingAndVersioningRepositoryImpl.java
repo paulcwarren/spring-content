@@ -129,6 +129,41 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     }
 
     @Override
+    public <S extends T> boolean isLocked(S entity) {
+        Authentication authentication = auth.getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+        Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
+        if (id == null) {
+            id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
+        }
+        if (id == null) {
+            throw new IllegalStateException("@Id missing");
+        }
+        return (lockingService.lockOwner(id) != null);
+    }
+
+    @Override
+    public <S extends T> boolean isLockedByPrincipal(S entity) {
+        Authentication authentication = auth.getAuthentication();
+        if (!authentication.isAuthenticated()) {
+            throw new SecurityException("no principal");
+        }
+        Object id = BeanUtils.getFieldWithAnnotation(entity, Id.class);
+        if (id == null) {
+            id = BeanUtils.getFieldWithAnnotation(entity, org.springframework.data.annotation.Id.class);
+        }
+        if (id == null) {
+            throw new IllegalStateException("@Id missing");
+        }
+
+        String principal = authentication.getName();
+        Principal lockOwner = lockingService.lockOwner(id);
+        return lockOwner.getName() != null && lockOwner.getName().equals(principal);
+    }
+
+    @Override
     @Transactional
     public <S extends T> S save(S entity) {
         if (entityInformation == null) {

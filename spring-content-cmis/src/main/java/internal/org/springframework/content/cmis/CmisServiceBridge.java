@@ -26,6 +26,7 @@ import org.apache.chemistry.opencmis.commons.definitions.DocumentTypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionList;
 import org.apache.chemistry.opencmis.commons.enums.*;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisConstraintException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.MimeTypes;
@@ -279,6 +280,66 @@ public class CmisServiceBridge {
 				handler);
 	}
 
+	public FailedToDeleteData deleteTree(CmisRepositoryConfiguration config,
+										 String folderId, Boolean allVersions,
+										 UnfileObject unfileObjects, Boolean continueOnFailure, ExtensionsData extension,
+										 CallContext context, ObjectInfoHandler handler) {
+		boolean cof = getBooleanParameter(continueOnFailure, false);
+
+		// get the file or folder
+		Optional<Object> folder = Optional.empty();
+		if (folderId.equals(this.getRootId())) {
+			folder = Optional.of(getRoot());
+		} else {
+			Long convertedId = conversionService.convert(folderId, Long.class);
+			folder = config.cmisFolderRepository().findById(convertedId);
+		}
+		if (!folder.isPresent()) {
+			throw new CmisObjectNotFoundException("not found: " + folderId);
+		}
+
+		FailedToDeleteDataImpl result = new FailedToDeleteDataImpl();
+		result.setIds(new ArrayList<String>());
+
+		deleteFolder(config, folder.get(), cof, result);
+
+		return result;
+	}
+
+	private boolean deleteFolder(CmisRepositoryConfiguration config, Object folder, boolean continueOnFailure, FailedToDeleteDataImpl ftd) {
+		boolean success = true;
+
+		for (Object child : config.getCmisNavigationService().getChildren(folder)) {
+			if (isFolder(child)) {
+				if (!deleteFolder(config, child, continueOnFailure, ftd)) {
+					if (!continueOnFailure) {
+						return false;
+					}
+					success = false;
+				}
+			} else {
+				try {
+					config.cmisDocumentRepository().delete(child);
+				} catch (Exception e) {
+					ftd.getIds().add(toString(getId(child)));
+					if (!continueOnFailure) {
+						return false;
+					}
+					success = false;
+				}
+			}
+		}
+
+		try {
+			config.getCmisFolderRepository().delete(folder);
+		} catch (Exception e) {
+			ftd.getIds().add(toString(getId(folder)));
+			success = false;
+		}
+
+		return success;
+	}
+
 	private boolean isFolder(Object object) {
 		return object.getClass().isAnnotationPresent(CmisFolder.class);
 	}
@@ -476,13 +537,12 @@ public class CmisServiceBridge {
 
 				@Override
 				public String getMimeType() {
-					Object mimeType = BeanUtils.getFieldWithAnnotation(object, MimeType.class);
-					return (mimeType != null) ? mimeType.toString() : null;
+					return MimeTypes.getMIMEType(CmisServiceBridge.toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class)));
 				}
 
 				@Override
 				public String getFileName() {
-					return null;
+					return getName(object);
 				}
 
 				@Override
@@ -999,7 +1059,7 @@ public class CmisServiceBridge {
 
 		result.setProperties(compileProperties(config, type, object, root, filter, objectInfo));
 
-		result.setAllowableActions(compileAllowableActions(type, object, root, false));
+		result.setAllowableActions(compileAllowableActions(config, type, object, root, false));
 
 		if (context.isObjectInfoRequired()) {
 			objectInfo.setObject(result);
@@ -1134,7 +1194,7 @@ public class CmisServiceBridge {
 					addPropertyString(props, type, filter, PropertyIds.CONTENT_STREAM_FILE_NAME, toString(name));
 
 					objectInfo.setHasContent(true);
-					objectInfo.setContentType(MimeTypes.getMIMEType(toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));
+					objectInfo.setContentType(MimeTypes.getMIMEType(CmisServiceBridge.toString(BeanUtils.getFieldWithAnnotation(object, MimeType.class))));
 					objectInfo.setFileName(toString(name));
 				}
 
@@ -1188,7 +1248,7 @@ public class CmisServiceBridge {
 		}
 	}
 
-	static AllowableActions compileAllowableActions(TypeDefinition type, Object object, boolean isRoot, boolean isPrincipalReadOnly) {
+	static AllowableActions compileAllowableActions(CmisRepositoryConfiguration config, TypeDefinition type, Object object, boolean isRoot, boolean isPrincipalReadOnly) {
 		AllowableActionsImpl result = new AllowableActionsImpl();
 
 		Set<Action> aas = EnumSet.noneOf(Action.class);
@@ -1219,9 +1279,11 @@ public class CmisServiceBridge {
 			}
 
 			if (((DocumentTypeDefinition)type).isVersionable()) {
-				addAction(aas, Action.CAN_CHECK_IN, true);
-				addAction(aas, Action.CAN_CHECK_OUT, true);
-				addAction(aas, Action.CAN_CANCEL_CHECK_OUT, true);
+				addAction(aas, Action.CAN_CHECK_IN,
+						((LockingAndVersioningRepository)config.getCmisDocumentRepository()).isLocked(object) && ((LockingAndVersioningRepository)config.getCmisDocumentRepository()).isLockedByPrincipal(object));
+				addAction(aas, Action.CAN_CHECK_OUT, !((LockingAndVersioningRepository)config.getCmisDocumentRepository()).isLocked(object));
+				addAction(aas, Action.CAN_CANCEL_CHECK_OUT,
+						((LockingAndVersioningRepository)config.getCmisDocumentRepository()).isLocked(object) && ((LockingAndVersioningRepository)config.getCmisDocumentRepository()).isLockedByPrincipal(object));
 			}
 		}
 

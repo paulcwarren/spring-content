@@ -120,7 +120,8 @@ public class CmisRepositoryConfigurationImpl implements CmisRepositoryConfigurat
 						PropertyDescriptor descriptor = wrapper.getPropertyDescriptor(parentProp);
 						if (descriptor != null && descriptor.getReadMethod() != null) {
 							Object actualParent = ReflectionUtils.invokeMethod(descriptor.getReadMethod(), candidate);
-							if (Objects.equals(parent, actualParent)) {
+							if (actualParent == parent && actualParent == null ||
+								actualParent != null && parent != null && CmisServiceBridge.getId(actualParent).equals(CmisServiceBridge.getId(parent))) {
 								children.add(candidate);
 							}
 						}

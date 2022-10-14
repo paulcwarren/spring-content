@@ -1,9 +1,6 @@
 package org.springframework.content.cmis.integration;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -178,6 +175,21 @@ public class CmisTests {
 
 							ItemIterable<CmisObject> children = subfolder.getChildren();
 							assertThat(children, not(hasItem(hasProperty("name", is("doc1")))));
+						});
+
+						It("should delete by the parent folder", () -> {
+							String folderId = folder.getId();
+							assertThat(folderRepository.existsById(Long.parseLong(folderId)), is(true));
+							String subFolderId = subfolder.getId();
+							assertThat(folderRepository.existsById(Long.parseLong(subFolderId)), is(true));
+							String docId = doc.getId();
+							assertThat(documentRepository.existsById(Long.parseLong(docId)), is(true));
+
+							folder.delete();
+
+							assertThat(documentRepository.existsById(Long.parseLong(docId)), is(false));
+							assertThat(folderRepository.existsById(Long.parseLong(subFolderId)), is(false));
+							assertThat(folderRepository.existsById(Long.parseLong(folderId)), is(false));
 						});
 
 						Context("given the document's properties are updated", () -> {

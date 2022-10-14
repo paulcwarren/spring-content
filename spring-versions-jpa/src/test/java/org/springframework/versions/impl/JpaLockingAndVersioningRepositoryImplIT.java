@@ -164,6 +164,11 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                                 assertThat(e, is(instanceOf(LockOwnerException.class)));
                                 assertThat(result, is(nullValue()));
                             });
+
+                            It("should report its locked", () -> {
+                                assertThat(repo.isLocked(e1), is(true));
+                                assertThat(repo.isLockedByPrincipal(e1), is(false));
+                            });
                         });
 
                         Context("when the lock is already held", () -> {
@@ -177,6 +182,11 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                             It("should succeed", () -> {
                                 assertThat(e, is(nullValue()));
                                 assertThat(result, is(not(nullValue())));
+                            });
+
+                            It("should report its locked", () -> {
+                                assertThat(repo.isLocked(e1), is(true));
+                                assertThat(repo.isLockedByPrincipal(e1), is(true));
                             });
                         });
 

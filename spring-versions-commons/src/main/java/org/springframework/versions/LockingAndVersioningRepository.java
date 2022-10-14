@@ -32,6 +32,26 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
     <S extends T> S unlock(S entity);
 
     /**
+     * Returns whether the entity is locked by any Principal
+     *
+     * @param <S> the type of entity
+     * @param entity the entity
+     * @return whether the entity is locked by any Principal
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> boolean isLocked(S entity);
+
+    /**
+     * Returns whether the entity is locked by the current Principal
+     *
+     * @param <S> the type of entity
+     * @param entity the entity
+     * @return whether the entity is locked by the current Principal
+     * @throws SecurityException if no authentication exists
+     */
+    <S extends T> boolean isLockedByPrincipal(S entity);
+
+    /**
      * Overridden implementation of save that enforces locking semantics
      *
      * @param <S> the type of entity

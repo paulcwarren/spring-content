@@ -9,6 +9,7 @@ import org.apache.chemistry.opencmis.commons.data.*;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionList;
 import org.apache.chemistry.opencmis.commons.enums.IncludeRelationships;
+import org.apache.chemistry.opencmis.commons.enums.UnfileObject;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisNotSupportedException;
@@ -112,6 +113,11 @@ public class ContentCmisService extends AbstractCmisService implements CallConte
 				extension,
 				this.getCallContext(),
 				this);
+	}
+
+	public FailedToDeleteData deleteTree(String repositoryId, String folderId, Boolean allVersions,
+										 UnfileObject unfileObjects, Boolean continueOnFailure, ExtensionsData extension) {
+		return bridge.deleteTree(config, folderId, allVersions, unfileObjects, continueOnFailure, extension, this.getCallContext(), this);
 	}
 
 	@Override
