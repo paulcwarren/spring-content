@@ -7,7 +7,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.content.commons.config.AbstractStoreBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
@@ -19,6 +22,8 @@ import org.springframework.util.ClassUtils;
 import static java.lang.String.format;
 
 public class StoreFragmentDetector {
+
+	private static final Log LOGGER = LogFactory.getLog(StoreFragmentDetector.class);
 
 	private static final String CUSTOM_IMPLEMENTATION_RESOURCE_PATTERN = "**/*%s.class";
 
@@ -71,7 +76,7 @@ public class StoreFragmentDetector {
 		}
 
 		if (definitions.size() > 1) {
-			throw new IllegalStateException(format("Multiple implementations (%s) found for store interface %s", concat(definitions), iface));
+			LOGGER.info(String.format("Found implementations found for %s.  Using %s", iface, definitions.get(0).getBeanClassName()));
 		}
 
 		StoreFragmentDefinition defn = new StoreFragmentDefinition(iface, definitions.get(0));
