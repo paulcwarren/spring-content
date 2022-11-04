@@ -9,6 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -181,9 +182,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 			try {
 				final Class<? extends Store> storeClass = loadStoreClass((ConfigurableListableBeanFactory)registry, definition);
 
-				Pair<Class<?>, Class<? extends Serializable>> types = StoreInterfaceUtils.getStoreTypes(storeClass);
+				Pair<Optional<Class<?>>, Class<? extends Serializable>> types = StoreInterfaceUtils.getStoreTypes(storeClass);
 
-				final Class<?> domainClass = types.getFirst();
+				final Class<?> domainClass = types.getFirst().isPresent() ? types.getFirst().get() : null;
 				final Class<?> idClass = types.getSecond();
 
 				Predicate isCandidate = new IsCandidatePredicate(this.getSignatureTypes());
@@ -229,7 +230,9 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	protected Class<? extends Store> loadStoreClass(ConfigurableListableBeanFactory registry, BeanDefinition definition) throws ClassNotFoundException {
 		Class<?> candidateStoreClass = ClassUtils.forName(definition.getBeanClassName(), registry.getBeanClassLoader());
-		Assert.isAssignable(Store.class, candidateStoreClass);
+		if (!Store.class.isAssignableFrom(candidateStoreClass) && !ReactiveContentStore.class.isAssignableFrom(candidateStoreClass)) {
+			throw new IllegalStateException(String.format("Store class %s is not assignable from Store or ReactiveContentStore", definition.getBeanClassName()));
+		}
 		return (Class<? extends Store>) candidateStoreClass;
 	}
 
