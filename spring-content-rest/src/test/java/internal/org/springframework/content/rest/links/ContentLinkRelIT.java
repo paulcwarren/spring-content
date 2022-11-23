@@ -1,8 +1,6 @@
 package internal.org.springframework.content.rest.links;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
@@ -165,9 +163,6 @@ public class ContentLinkRelIT {
 	            Context("given a store specifying a linkRel and an entity with top-level correlated content properties", () -> {
 	                BeforeEach(() -> {
 
-//	                    StoreRestResource srr = new DynamicStoreRestResource("foo");
-//	                    alterAnnotationValueJDK8(TestEntity5Store.class, StoreRestResource.class, srr);
-
 	                    testEntity5 = repository5.save(new TestEntity5());
 
 	                    contentLinkTests.setMvc(mvc);
@@ -175,8 +170,8 @@ public class ContentLinkRelIT {
 	                    contentLinkTests.setStore(store5);
 	                    contentLinkTests.setTestEntity(testEntity5);
 	                    contentLinkTests.setUrl("/api/testEntity5s/" + testEntity5.getId());
-	                    contentLinkTests.setLinkRel("foo/content");
-	                    contentLinkTests.setExpectedLinkRegex(format("http://localhost/contentApi/testEntity5s/%s/content", testEntity5.getId()));
+	                    contentLinkTests.setLinkRel("foo/contentProperty");
+	                    contentLinkTests.setExpectedLinkRegex(format("http://localhost/contentApi/testEntity5s/%s/contentProperty", testEntity5.getId()));
 	                });
 	                contentLinkTests = new ContentLinkTests();
 	            });
@@ -292,13 +287,13 @@ public class ContentLinkRelIT {
 
         public String name;
 
-        private @ContentId UUID contentId;
-        private @ContentLength Long contentLen;
-        private @MimeType String contentMimeType;
+        private @ContentId UUID contentPropertyId;
+        private @ContentLength Long contentPropertyLen;
+        private @MimeType String contentPropertyMimeType;
 
-        private @ContentId UUID renditionId;
-        private @ContentLength Long renditionLen;
-        private @MimeType String renditionMimeType;
+        private @ContentId UUID renditionPropertyId;
+        private @ContentLength Long renditionPropertyLen;
+        private @MimeType String renditionPropertyMimeType;
 
         private @Version Long version;
         private @CreatedDate Date createdDate;

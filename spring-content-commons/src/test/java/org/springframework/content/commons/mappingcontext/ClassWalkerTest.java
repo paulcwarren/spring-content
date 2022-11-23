@@ -1,8 +1,6 @@
 package org.springframework.content.commons.mappingcontext;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
@@ -69,6 +67,22 @@ public class ClassWalkerTest {
                 expectedSubSubClassProperty.setMimeTypePropertyPath("child.subChild.contentMimeType");
                 expectedSubSubClassProperty.setOriginalFileNamePropertyPath("child.subChild.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/subChild", expectedSubSubClassProperty));
+
+                ContentProperty expectedCamelCaseProperty = new ContentProperty();
+                expectedCamelCaseProperty.setContentPropertyPath("camelCaseProperty.camelCaseProperty");
+                expectedCamelCaseProperty.setContentIdPropertyPath("camelCaseProperty.camelCasePropertyId");
+                expectedCamelCaseProperty.setContentLengthPropertyPath("camelCaseProperty.camelCasePropertyLen");
+                expectedCamelCaseProperty.setMimeTypePropertyPath("camelCaseProperty.camelCasePropertyMimeType");
+                expectedCamelCaseProperty.setOriginalFileNamePropertyPath("camelCaseProperty.camelCasePropertyOriginalFileName");
+                assertThat(visitor.getProperties(), hasEntry("camelCaseProperty", expectedCamelCaseProperty));
+
+                ContentProperty expectedOtherCamelCaseProperty = new ContentProperty();
+                expectedOtherCamelCaseProperty.setContentPropertyPath("otherCamelCaseProperty.camelCaseProperty");
+                expectedOtherCamelCaseProperty.setContentIdPropertyPath("otherCamelCaseProperty.camelCasePropertyIds");
+                expectedOtherCamelCaseProperty.setContentLengthPropertyPath("otherCamelCaseProperty.camelCasePropertyLens");
+                expectedOtherCamelCaseProperty.setMimeTypePropertyPath("otherCamelCaseProperty.camelCasePropertyMimetypes");
+                expectedOtherCamelCaseProperty.setOriginalFileNamePropertyPath("otherCamelCaseProperty.camelCasePropertyFilenames");
+                assertThat(visitor.getProperties(), hasEntry("otherCamelCaseProperty", expectedOtherCamelCaseProperty));
             });
         });
 
@@ -236,6 +250,9 @@ public class ClassWalkerTest {
         @OriginalFileName
         private Long contentOriginalFileName;
         private TestSubClass child;
+
+        private TestCamelCasedProperty camelCaseProperty;
+        private OtherTestCamelCasedProperty otherCamelCaseProperty;
     }
 
     public static class TestSubClass {
@@ -329,5 +346,19 @@ public class ClassWalkerTest {
 
     public static enum TestEnum {
         A, B, C, D
+    }
+
+    private static class TestCamelCasedProperty {
+        private @ContentId UUID camelCasePropertyId;
+        private @ContentLength Long camelCasePropertyLen;
+        private @MimeType String camelCasePropertyMimeType;
+        private @OriginalFileName String camelCasePropertyOriginalFileName;
+    }
+
+    private static class OtherTestCamelCasedProperty {
+        private @ContentId UUID camelCasePropertyIds;
+        private @ContentLength Long camelCasePropertyLens;
+        private @MimeType String camelCasePropertyMimetypes;
+        private @OriginalFileName String camelCasePropertyFilenames;
     }
 }
