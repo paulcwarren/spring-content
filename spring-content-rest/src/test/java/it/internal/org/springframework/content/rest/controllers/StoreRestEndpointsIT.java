@@ -33,6 +33,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.FIt;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -94,6 +95,7 @@ public class StoreRestEndpointsIT {
 						assertThat(IOUtils.contentEquals(
 								new ByteArrayInputStream("New multi-part content".getBytes()),
 								r.getInputStream()), is(true));
+						assertThat(r.contentLength(), equalTo(Long.valueOf(content.length())));
 					});
 				});
 				Context("given a DELETE request to that path", () -> {
@@ -159,6 +161,7 @@ public class StoreRestEndpointsIT {
 								new ByteArrayInputStream(
 										"New multi-part content".getBytes()),
 								r.getInputStream()), is(true));
+						assertThat(r.contentLength(), equalTo(Long.valueOf(content.length())));
 					});
 				});
 				It("should delete the resource", () -> {
@@ -234,6 +237,7 @@ public class StoreRestEndpointsIT {
 								new ByteArrayInputStream(
 										"New multi-part content".getBytes()),
 								r.getInputStream()), is(true));
+						assertThat(r.contentLength(), equalTo(Long.valueOf(content.length())));
 					});
 				});
 				It("should delete the resource", () -> {
