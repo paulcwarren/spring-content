@@ -125,6 +125,8 @@ public class StoreRestController implements InitializingBean  {
 
         ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
+        headers.setContentLength(multiPart.getSize());
+
         handleMultipart(request, response, headers,
                 contentService,
                 multiPart.getResource(),
@@ -144,6 +146,8 @@ public class StoreRestController implements InitializingBean  {
 
         ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
+        headers.setContentLength(multiPart.getSize());
+        
         handleMultipart(request, response, headers,
                 contentService,
                 new InputStreamResource(multiPart.getInputStream(), multiPart.getOriginalFilename()),
