@@ -178,10 +178,9 @@ public class ContentStoreContentService implements ContentService {
         Object contentArg = convertContentArg(source, methodToUse.getParameterTypes()[indexOfContentArg(methodToUse.getParameterTypes())]);
         argsList.add(contentArg);
         if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(long.class)) {
-            long len = source.contentLength();
-            
+            long len = -1L;
             // if available use the original content length
-            if (len <= 0L && headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {
+            if (headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {
                 len = headers.getContentLength();
             }
             argsList.add(len);
