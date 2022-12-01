@@ -23,9 +23,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
-import org.springframework.content.fs.store.FilesystemContentStore;
-import org.springframework.content.jpa.config.EnableJpaStores;
-import org.springframework.content.jpa.store.JpaContentStore;
+import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.content.s3.store.S3ContentStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -35,13 +34,16 @@ import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
 import org.springframework.vault.core.VaultOperations;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,8 +55,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EncryptionIT {
+@SpringBootTest(classes = EncryptionS3IT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class EncryptionS3IT {
+
+    private static Object mutex = new Object();
 
     @Autowired
     private FileRepository repo;
@@ -72,7 +76,10 @@ public class EncryptionIT {
     private java.io.File filesystemRoot;
 
     @Autowired
-    private EnvelopeEncryptionService encrypter;
+    private S3Client client;
+
+    @Autowired
+    private EnvelopeEncryptionServiceCTR encrypter;
 
     @Autowired
     private VaultOperations vaultOperations;
@@ -82,10 +89,31 @@ public class EncryptionIT {
 
     private File f;
 
+
+    static {
+        System.setProperty("spring.content.s3.bucket", "test-bucket");
+    }
+
     {
         Describe("Client-side encryption", () -> {
             BeforeEach(() -> {
                 RestAssured.port = port;
+
+                synchronized(mutex) {
+                    HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
+                            .bucket("test-bucket")
+                            .build();
+
+                    try {
+                        client.headBucket(headBucketRequest);
+                    } catch (NoSuchBucketException e) {
+
+                        CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
+                                .bucket("test-bucket")
+                                .build();
+                        client.createBucket(bucketRequest);
+                    }
+                }
 
                 f = repo.save(new File());
             });
@@ -112,7 +140,16 @@ public class EncryptionIT {
                     assertThat(fetched.isPresent(), is(true));
                     f = fetched.get();
 
-                    String contents = IOUtils.toString(new FileInputStream(new java.io.File(filesystemRoot, f.getContentId().toString())));
+//                    String contents = IOUtils.toString(new FileInputStream(new java.io.File(filesystemRoot, f.getContentId().toString())));
+//                    assertThat(contents, is(not("Hello Client-side encryption World!")));
+//
+                    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                            .bucket("test-bucket")
+                            .key(f.getContentId().toString())
+                            .build();
+
+                    ResponseInputStream<GetObjectResponse> resp = client.getObject(getObjectRequest);
+                    String contents = IOUtils.toString(resp);
                     assertThat(contents, is(not("Hello Client-side encryption World!")));
                 });
                 It("should be retrieved decrypted", () -> {
@@ -129,7 +166,7 @@ public class EncryptionIT {
                     Response r =
                             given()
                                     .header("accept", "text/plain")
-                                    .header("range", "bytes=18-27")
+                                    .header("range", "bytes=16-27")
                                     .get("/files/" + f.getId() + "/content")
                                     .then()
                                     .statusCode(HttpStatus.SC_PARTIAL_CONTENT)
@@ -137,11 +174,11 @@ public class EncryptionIT {
                                     .contentType(Matchers.startsWith("text/plain"))
                                     .and().extract().response();
 
-                    assertThat(r.asString(), is("encryption"));
+                    assertThat(r.asString(), is("e encryption"));
                 });
                 Context("when the keyring is rotated", () -> {
                     BeforeEach(() -> {
-                        encrypter.rotate("filecontentstore");
+                        encrypter.rotate("fsfile");
                     });
                     It("should not change the stored content key", () -> {
                         f = repo.findById(f.getId()).get();
@@ -196,7 +233,7 @@ public class EncryptionIT {
 
     @SpringBootApplication
     @EnableJpaRepositories(considerNestedRepositories = true)
-    @EnableJpaStores
+    @EnableS3Stores
     static class Application {
         public static void main(String[] args) {
             SpringApplication.run(Application.class, args);
@@ -222,8 +259,8 @@ public class EncryptionIT {
             }
 
             @Bean
-            public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
-                return new EnvelopeEncryptionService(vaultOperations);
+            public EnvelopeEncryptionServiceCTR encrypter(VaultOperations vaultOperations) {
+                return new EnvelopeEncryptionServiceCTR(vaultOperations);
             }
             @Bean
             public java.io.File filesystemRoot() {
@@ -239,11 +276,23 @@ public class EncryptionIT {
             }
 
             @Bean
+            public S3Client client() throws URISyntaxException {
+//                AwsCredentials creds = AwsBasicCredentials.create(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_KEY"));
+//                AwsCredentialsProvider credsProvider = StaticCredentialsProvider.create(creds);
+//                Region region = Region.US_WEST_1;
+//                return S3Client.builder()
+//                        .credentialsProvider(credsProvider)
+//                        .region(region)
+//                        .build();
+                return LocalStack.getAmazonS3Client();
+            }
+
+            @Bean
             public EncryptingContentStoreConfigurer config() {
                 return new EncryptingContentStoreConfigurer<FileContentStore>() {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration config) {
-                        config.encryptionKeyContentProperty("key").keyring("filecontentstore");
+                        config.encryptionKeyContentProperty("key").keyring("fsfile");
                     }
                 };
             }
@@ -262,11 +311,11 @@ public class EncryptionIT {
 
     public interface FileRepository extends CrudRepository<File, Long> {}
 
-    public interface FileContentStore extends FilesystemContentStore<File, UUID>, EncryptingContentStore<File, UUID> {}
+    public interface FileContentStore extends S3ContentStore<File, UUID>, EncryptingContentStore<File, UUID> {}
 
     public interface FileRepository2 extends CrudRepository<TEntity, Long> {}
 
-    public interface FileContentStore2 extends JpaContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
+    public interface FileContentStore2 extends S3ContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
 
     @Entity
     @Getter

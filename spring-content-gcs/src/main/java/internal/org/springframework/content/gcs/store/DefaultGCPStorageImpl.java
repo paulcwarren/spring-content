@@ -20,10 +20,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -109,14 +106,18 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
+		return this.getResource(entity, propertyPath, GetResourceParams.builder().build());
+    }
 
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
+	@Override
+	public Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params) {
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
 
-        if (entity == null)
-            return null;
+		if (entity == null)
+			return null;
 
 		BlobId blobId = null;
 		TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
@@ -130,9 +131,9 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 			}
 		}
 
-        SID contentId = (SID) property.getContentId(entity);
-        return this.getResource(contentId);
-    }
+		SID contentId = (SID) property.getContentId(entity);
+		return this.getResource(contentId);
+	}
 
 	protected Resource getResourceInternal(BlobId id) {
 		String bucket = id.getBucket();

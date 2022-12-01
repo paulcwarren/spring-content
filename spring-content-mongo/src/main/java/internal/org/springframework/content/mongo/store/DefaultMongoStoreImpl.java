@@ -19,10 +19,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -89,6 +86,11 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
+        return this.getResource(entity, propertyPath, GetResourceParams.builder().build());
+    }
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params) {
         if (entity == null)
             return null;
 
@@ -112,7 +114,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         return this.getResource(contentId);
     }
 
-	@Override
+    @Override
 	public void associate(S entity, SID id) {
 		Resource resource = this.getResource(id);
 		Object convertedId = convertToExternalContentIdType(entity, id);

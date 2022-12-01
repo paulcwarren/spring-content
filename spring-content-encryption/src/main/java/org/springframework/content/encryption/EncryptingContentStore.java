@@ -2,6 +2,7 @@ package org.springframework.content.encryption;
 
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
@@ -15,5 +16,6 @@ public interface EncryptingContentStore<S, SID extends Serializable> extends Con
     S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen);
     S setContent(S o, PropertyPath propertyPath, Resource resource);
     Resource getResource(S entity, PropertyPath propertyPath);
+    Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params);
     S unsetContent(S entity, PropertyPath propertyPath);
 }

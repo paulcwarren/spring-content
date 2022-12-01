@@ -25,6 +25,7 @@ import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.content.jpa.io.BlobResourceLoader;
@@ -244,7 +245,13 @@ public class EnableJpaStoresTest {
             return null;
         }
 
-        @Override
+		@Override
+		public Resource getResource(TestEntity entity, PropertyPath propertyPath, GetResourceParams params) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
         public void associate(TestEntity entity, PropertyPath propertyPath, String id) {
             // TODO Auto-generated method stub
 

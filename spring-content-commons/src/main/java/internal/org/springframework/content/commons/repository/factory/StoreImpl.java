@@ -16,6 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
@@ -322,6 +323,27 @@ public class StoreImpl implements ContentStore<Object, Serializable> {
         Resource result;
         try {
             result = delegate.getResource(entity, propertyPath);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+
+        AfterGetResourceEvent after = new AfterGetResourceEvent(entity, propertyPath, delegate);
+        after.setResult(result);
+        publisher.publishEvent(after);
+
+        return (Resource) after.getResult();
+    }
+
+    @Override
+    public Resource getResource(Object entity, PropertyPath propertyPath, GetResourceParams params) {
+        BeforeGetResourceEvent before = new BeforeGetResourceEvent(entity, propertyPath, delegate);
+
+        publisher.publishEvent(before);
+
+        Resource result;
+        try {
+            result = delegate.getResource(entity, propertyPath, params);
         }
         catch (Exception e) {
             throw e;

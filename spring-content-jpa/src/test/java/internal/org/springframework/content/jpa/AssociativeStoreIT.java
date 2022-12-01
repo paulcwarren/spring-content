@@ -1,19 +1,20 @@
 package internal.org.springframework.content.jpa;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static internal.org.springframework.content.jpa.StoreIT.getContextName;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.io.Resource;
@@ -29,6 +30,10 @@ import internal.org.springframework.content.jpa.StoreIT.SqlServerConfig;
 import internal.org.springframework.content.jpa.testsupport.models.Document;
 import internal.org.springframework.content.jpa.testsupport.repositories.DocumentRepository;
 import internal.org.springframework.content.jpa.testsupport.stores.DocumentAssociativeStore;
+import org.springframework.core.io.WritableResource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -48,7 +53,9 @@ public class AssociativeStoreIT {
     private DocumentRepository repo;
     private DocumentAssociativeStore store;
 
-    private Document document;
+	private PlatformTransactionManager txn;
+
+	private Document document;
     private Resource resource;
     private String resourceId;
 
@@ -69,6 +76,7 @@ public class AssociativeStoreIT {
 
 	        			repo = context.getBean(DocumentRepository.class);
 	        			store = context.getBean(DocumentAssociativeStore.class);
+						txn = context.getBean(PlatformTransactionManager.class);
 	        		});
 
 		            Context("given a new entity", () -> {
@@ -95,6 +103,25 @@ public class AssociativeStoreIT {
 		                            assertThat(document.getContentId(), is(resourceId));
                                     assertThat(document.getRenditionId(), is(resourceId));
 		                        });
+								Context("when the resource has content", () -> {
+									BeforeEach(() -> {
+										TransactionStatus status = txn.getTransaction(new DefaultTransactionDefinition());
+
+										Resource r = store.getResource(document, PropertyPath.from("content"), GetResourceParams.builder().build());
+										try (OutputStream os = ((WritableResource)resource).getOutputStream()) {
+											os.write("Hello Client-side World!".getBytes());
+										}
+
+										txn.commit(status);
+									});
+									It("should not honor byte ranges", () -> {
+										// relies on REST-layer to serve byte range
+										Resource r = store.getResource(document, PropertyPath.from("content"), GetResourceParams.builder().range("5-10").build());
+										try (InputStream is = r.getInputStream()) {
+											assertThat(IOUtils.toString(is), is("Hello Client-side World!"));
+										}
+									});
+								});
 		                        Context("when the resource is unassociated", () -> {
 		                            BeforeEach(() -> {
 		                                store.unassociate(document);

@@ -18,13 +18,11 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.io.DeletableResource;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -83,12 +81,12 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			S3ObjectId s3ObjectId = null;
 			if (placementService.canConvert(id.getClass(), S3ObjectId.class)) {
 				s3ObjectId = placementService.convert(id, S3ObjectId.class);
-				return this.getResourceInternal(s3ObjectId);
+				return this.getResourceInternal(s3ObjectId, GetResourceParams.builder().build());
 			}
 
 			throw new StoreAccessException(format("Unable to convert from %s to S3ObjectId", id));
 		} else {
-			return this.getResourceInternal((S3ObjectId) id);
+			return this.getResourceInternal((S3ObjectId) id, GetResourceParams.builder().build());
 		}
 	}
 
@@ -106,7 +104,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			s3ObjectId = placementService.convert(entity, S3ObjectId.class);
 
 			if (s3ObjectId != null) {
-				return this.getResourceInternal(s3ObjectId);
+				return this.getResourceInternal(s3ObjectId, GetResourceParams.builder().build());
 			}
 		}
 
@@ -115,32 +113,37 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
-
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-
-        if (entity == null)
-            return null;
-
-        if (property.getContentId(entity) == null)
-            return null;
-
-        S3ObjectId s3ObjectId = null;
-		TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
-        if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
-			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
-					(SID) property.getContentId(entity), propertyPath, property);
-            s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
-            return this.getResourceInternal(s3ObjectId);
-        }
-
-        SID contentId = (SID) property.getContentId(entity);
-        return this.getResource(contentId);
+		return this.getResource(entity, propertyPath, GetResourceParams.builder().build());
     }
 
-	protected Resource getResourceInternal(S3ObjectId id) {
+	@Override
+	public Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params) {
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		if (entity == null)
+			return null;
+
+		if (property.getContentId(entity) == null)
+			return null;
+
+		S3ObjectId s3ObjectId = null;
+		TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
+		if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
+			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
+					(SID) property.getContentId(entity), propertyPath, property);
+			s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
+			Resource r = this.getResourceInternal(s3ObjectId, params);
+			return r;
+		}
+
+		SID contentId = (SID) property.getContentId(entity);
+		return this.getResource(contentId);
+	}
+
+	protected Resource getResourceInternal(S3ObjectId id, GetResourceParams params) {
 		String bucket = id.getBucket();
 
         String location = null;
@@ -170,7 +173,9 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 
 		Resource resource = loaderToUse.getResource(location);
-		return new S3StoreResource(clientToUse, bucket, resource);
+		S3StoreResource s3Resource = new S3StoreResource(clientToUse, bucket, resource);
+		((RangeableResource)s3Resource).setRange(params.getRange());
+		return s3Resource;
 	}
 
 	@Override

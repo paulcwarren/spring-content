@@ -1,18 +1,23 @@
 package internal.org.springframework.content.fragments;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ContentStoreAware;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.encryption.EnvelopeEncryptionService;
+import org.springframework.content.encryption.EnvelopeEncryptionServiceCTR;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
+import org.w3c.dom.ranges.Range;
 
 import javax.crypto.CipherInputStream;
 import java.io.*;
@@ -24,7 +29,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
     private MappingContext mappingContext = null;
     @Autowired
-    private EnvelopeEncryptionService encrypter;
+    private EnvelopeEncryptionServiceCTR encrypter;
 
     @Autowired(required = false)
     private List<EncryptingContentStoreConfigurer> configurers;
@@ -141,7 +146,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
         InputStream encryptedContentStream = delegate.getContent(o, propertyPath);
 
-        CipherInputStream unencryptedStream = null;
+        InputStream unencryptedStream = null;
         if (encryptedContentStream != null) {
 
             ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
@@ -150,7 +155,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
             }
 
             // remove cast and use conversion service
-            unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), encryptedContentStream, this.keyRing);
+            unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), encryptedContentStream, 0, this.keyRing);
         }
 
         return unencryptedStream;
@@ -169,7 +174,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Resource r = delegate.getResource(o, propertyPath);
 
         if (r != null) {
-            CipherInputStream unencryptedStream = null;
+            InputStream unencryptedStream = null;
             try {
                 ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
                 if (contentProperty == null) {
@@ -177,7 +182,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
                 }
 
                 // remove cast and use conversion service
-                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), r.getInputStream(), this.keyRing);
+                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), r.getInputStream(), 0, this.keyRing);
                 r = new InputStreamResource(new SkipInputStream(unencryptedStream));
             } catch (IOException e) {
                 throw new StoreAccessException("error encrypting resource", e);
@@ -185,6 +190,53 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         }
 
         return r;
+    }
+
+    @Override
+    public Resource getResource(S o, PropertyPath propertyPath, GetResourceParams params) {
+        Assert.notNull(o);
+        Assert.notNull(propertyPath);
+
+        GetResourceParams ctrParams = rewriteParamsForCTR(params);
+        Resource r = delegate.getResource(o, propertyPath, ctrParams);
+
+        if (r != null) {
+            InputStream unencryptedStream = null;
+            try {
+                ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+                if (contentProperty == null) {
+                    throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+                }
+
+                // remove cast and use conversion service
+                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), r.getInputStream(), getOffset(r, params), this.keyRing);
+                r = new InputStreamResource(unencryptedStream);
+            } catch (IOException e) {
+                throw new StoreAccessException("error encrypting resource", e);
+            }
+        }
+
+        return r;
+    }
+
+    private GetResourceParams rewriteParamsForCTR(GetResourceParams params) {
+        if (params.getRange() == null) {
+            return params;
+        }
+        int begin = Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
+        int blockBegin = begin - (begin % 16);
+        return GetResourceParams.builder().range("bytes=" + blockBegin + "-" + StringUtils.substringAfter(params.getRange(), "-")).build();
+    }
+
+    private int getOffset(Resource r, GetResourceParams params) {
+        int offset = 0;
+
+        if (r instanceof RangeableResource == false)
+            return offset;
+        if (params.getRange() == null)
+            return offset;
+
+        return Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
     }
 
     @Override
