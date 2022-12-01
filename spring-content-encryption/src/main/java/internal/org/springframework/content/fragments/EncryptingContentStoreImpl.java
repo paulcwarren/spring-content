@@ -12,12 +12,10 @@ import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.encryption.EnvelopeEncryptionService;
-import org.springframework.content.encryption.EnvelopeEncryptionServiceCTR;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
-import org.w3c.dom.ranges.Range;
 
 import javax.crypto.CipherInputStream;
 import java.io.*;
@@ -29,7 +27,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
     private MappingContext mappingContext = null;
     @Autowired
-    private EnvelopeEncryptionServiceCTR encrypter;
+    private EnvelopeEncryptionService encrypter;
 
     @Autowired(required = false)
     private List<EncryptingContentStoreConfigurer> configurers;

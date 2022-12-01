@@ -73,7 +73,7 @@ public class EncryptionFsIT {
     private java.io.File filesystemRoot;
 
     @Autowired
-    private EnvelopeEncryptionServiceCTR encrypter;
+    private EnvelopeEncryptionService encrypter;
 
     @Autowired
     private VaultOperations vaultOperations;
@@ -229,8 +229,8 @@ public class EncryptionFsIT {
             }
 
             @Bean
-            public EnvelopeEncryptionServiceCTR encrypter(VaultOperations vaultOperations) {
-                return new EnvelopeEncryptionServiceCTR(vaultOperations);
+            public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
+                return new EnvelopeEncryptionService(vaultOperations);
             }
             @Bean
             public java.io.File filesystemRoot() {

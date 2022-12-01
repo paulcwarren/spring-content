@@ -45,6 +45,7 @@ import javax.persistence.Id;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.rmi.NoSuchObjectException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,6 +53,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -66,20 +68,20 @@ public class EncryptionS3IT {
     @Autowired
     private FileContentStore store;
 
-    @Autowired
-    private FileRepository repo2;
+//    @Autowired
+//    private FileRepository repo2;
+//
+//    @Autowired
+//    private FileContentStore2 store2;
 
-    @Autowired
-    private FileContentStore2 store2;
-
-    @Autowired
-    private java.io.File filesystemRoot;
+//    @Autowired
+//    private java.io.File filesystemRoot;
 
     @Autowired
     private S3Client client;
 
     @Autowired
-    private EnvelopeEncryptionServiceCTR encrypter;
+    private EnvelopeEncryptionService encrypter;
 
     @Autowired
     private VaultOperations vaultOperations;
@@ -119,14 +121,6 @@ public class EncryptionS3IT {
             });
             Context("given content", () -> {
                 BeforeEach(() -> {
-//                    TEntity t = new TEntity();
-////                    t = store2.setContent(t, PropertyPath.from("content"), new ByteArrayInputStream("foo".getBytes()), 3L);
-//                    t = store2.setContent(t, PropertyPath.from("content"), new ByteArrayInputStream("foo".getBytes()));
-////                    Resource r = store2.getResource(t, PropertyPath.from("content"));
-////                    assertThat(IOUtils.toString(r.getInputStream()), is("foo"));
-//                    InputStream contentStream = store2.getContent(t, PropertyPath.from("content"));
-//                    assertThat(IOUtils.toString(contentStream), is("foo"));
-
                     given()
                             .contentType("text/plain")
                             .content("Hello Client-side encryption World!")
@@ -140,9 +134,6 @@ public class EncryptionS3IT {
                     assertThat(fetched.isPresent(), is(true));
                     f = fetched.get();
 
-//                    String contents = IOUtils.toString(new FileInputStream(new java.io.File(filesystemRoot, f.getContentId().toString())));
-//                    assertThat(contents, is(not("Hello Client-side encryption World!")));
-//
                     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                             .bucket("test-bucket")
                             .key(f.getContentId().toString())
@@ -221,7 +212,18 @@ public class EncryptionS3IT {
 
                         f = repo.findById(f.getId()).get();
                         assertThat(f.getContentKey(), is(nullValue()));
-                        assertThat(new java.io.File(filesystemRoot, contentId).exists(), is(false));
+
+                        //todo: refactor to check s3 bucket
+//                        assertThat(new java.io.File(filesystemRoot, contentId).exists(), is(false));
+                        HeadObjectRequest getObjectRequest = HeadObjectRequest.builder()
+                                .bucket("test-bucket")
+                                .key(contentId)
+                                .build();
+
+                        try {
+                            client.headObject(getObjectRequest);
+                            fail("expected object not to exist");
+                        } catch (NoSuchKeyException nske) {}
                     });
                 });
             });
@@ -259,21 +261,21 @@ public class EncryptionS3IT {
             }
 
             @Bean
-            public EnvelopeEncryptionServiceCTR encrypter(VaultOperations vaultOperations) {
-                return new EnvelopeEncryptionServiceCTR(vaultOperations);
+            public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
+                return new EnvelopeEncryptionService(vaultOperations);
             }
-            @Bean
-            public java.io.File filesystemRoot() {
-                try {
-                    return Files.createTempDirectory("").toFile();
-                } catch (IOException ioe) {}
-                return null;
-            }
+//            @Bean
+//            public java.io.File filesystemRoot() {
+//                try {
+//                    return Files.createTempDirectory("").toFile();
+//                } catch (IOException ioe) {}
+//                return null;
+//            }
 
-            @Bean
-            public FileSystemResourceLoader fileSystemResourceLoader() {
-                return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
-            }
+//            @Bean
+//            public FileSystemResourceLoader fileSystemResourceLoader() {
+//                return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
+//            }
 
             @Bean
             public S3Client client() throws URISyntaxException {
@@ -297,15 +299,15 @@ public class EncryptionS3IT {
                 };
             }
 
-            @Bean
-            public EncryptingContentStoreConfigurer config2() {
-                return new EncryptingContentStoreConfigurer<FileContentStore2>() {
-                    @Override
-                    public void configure(EncryptingContentStoreConfiguration config) {
-                        config.encryptionKeyContentProperty("key2").keyring("filecontentstore2");
-                    }
-                };
-            }
+//            @Bean
+//            public EncryptingContentStoreConfigurer config2() {
+//                return new EncryptingContentStoreConfigurer<FileContentStore2>() {
+//                    @Override
+//                    public void configure(EncryptingContentStoreConfiguration config) {
+//                        config.encryptionKeyContentProperty("key2").keyring("filecontentstore2");
+//                    }
+//                };
+//            }
         }
     }
 
@@ -313,9 +315,9 @@ public class EncryptionS3IT {
 
     public interface FileContentStore extends S3ContentStore<File, UUID>, EncryptingContentStore<File, UUID> {}
 
-    public interface FileRepository2 extends CrudRepository<TEntity, Long> {}
-
-    public interface FileContentStore2 extends S3ContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
+//    public interface FileRepository2 extends CrudRepository<TEntity, Long> {}
+//
+//    public interface FileContentStore2 extends S3ContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
 
     @Entity
     @Getter
@@ -336,22 +338,22 @@ public class EncryptionS3IT {
         @MimeType private String contentMimeType;
     }
 
-    @Entity
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public static class TEntity {
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
-
-        private String name;
-
-        @JsonIgnore
-        private byte[] contentKey2;
-
-        @ContentId private UUID contentId;
-        @ContentLength private long contentLength;
-        @MimeType private String contentMimeType;
-    }
+//    @Entity
+//    @Getter
+//    @Setter
+//    @NoArgsConstructor
+//    public static class TEntity {
+//        @Id
+//        @GeneratedValue(strategy = GenerationType.AUTO)
+//        private Long id;
+//
+//        private String name;
+//
+//        @JsonIgnore
+//        private byte[] contentKey2;
+//
+//        @ContentId private UUID contentId;
+//        @ContentLength private long contentLength;
+//        @MimeType private String contentMimeType;
+//    }
 }
