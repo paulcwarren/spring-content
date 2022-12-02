@@ -6,6 +6,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -32,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
@@ -205,6 +209,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
+    @EnableAutoConfiguration(exclude= S3ContentAutoConfiguration.class)
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableFilesystemStores
     static class Application {
