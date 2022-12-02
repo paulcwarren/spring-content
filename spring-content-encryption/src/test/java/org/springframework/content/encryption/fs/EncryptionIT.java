@@ -6,6 +6,7 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -71,12 +72,6 @@ public class EncryptionIT {
     private FileContentStore3 store;
 
     @Autowired
-    private FileRepository repo2;
-
-    @Autowired
-    private FileContentStore4 store2;
-
-    @Autowired
     private java.io.File filesystemRoot;
 
     @Autowired
@@ -119,15 +114,6 @@ public class EncryptionIT {
 
                     String contents = IOUtils.toString(new FileInputStream(new java.io.File(filesystemRoot, f.getContentId().toString())));
                     assertThat(contents, is(not("Hello Client-side encryption World!")));
-
-//                    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-//                            .bucket("test-bucket")
-//                            .key(f.getContentId().toString())
-//                            .build();
-//
-//                    ResponseInputStream<GetObjectResponse> resp = client.getObject(getObjectRequest);
-//                    String contents = IOUtils.toString(resp);
-//                    assertThat(contents, is(not("Hello Client-side encryption World!")));
                 });
                 It("should be retrieved decrypted", () -> {
                     given()
@@ -209,7 +195,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
-    @EnableAutoConfiguration(exclude= S3ContentAutoConfiguration.class)
+    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class, FilesystemContentAutoConfiguration.class})
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableFilesystemStores
     static class Application {
@@ -253,18 +239,6 @@ public class EncryptionIT {
                 return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
             }
 
-//            @Bean
-//            public S3Client client() throws URISyntaxException {
-////                AwsCredentials creds = AwsBasicCredentials.create(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_KEY"));
-////                AwsCredentialsProvider credsProvider = StaticCredentialsProvider.create(creds);
-////                Region region = Region.US_WEST_1;
-////                return S3Client.builder()
-////                        .credentialsProvider(credsProvider)
-////                        .region(region)
-////                        .build();
-//                return LocalStack.getAmazonS3Client();
-//            }
-
             @Bean
             public EncryptingContentStoreConfigurer config() {
                 return new EncryptingContentStoreConfigurer<FileContentStore3>() {
@@ -274,26 +248,12 @@ public class EncryptionIT {
                     }
                 };
             }
-
-            @Bean
-            public EncryptingContentStoreConfigurer config2() {
-                return new EncryptingContentStoreConfigurer<FileContentStore4>() {
-                    @Override
-                    public void configure(EncryptingContentStoreConfiguration config) {
-                        config.encryptionKeyContentProperty("key2").keyring("filecontentstore2");
-                    }
-                };
-            }
         }
     }
 
     public interface FileRepository extends CrudRepository<FsFile, Long> {}
 
     public interface FileContentStore3 extends FilesystemContentStore<FsFile, UUID>, EncryptingContentStore<FsFile, UUID> {}
-
-    public interface FileRepository2 extends CrudRepository<TEntity, Long> {}
-
-    public interface FileContentStore4 extends FilesystemContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
 
     @Entity
     @Getter
@@ -308,25 +268,6 @@ public class EncryptionIT {
 
         @JsonIgnore
         private byte[] contentKey;
-
-        @ContentId private UUID contentId;
-        @ContentLength private long contentLength;
-        @MimeType private String contentMimeType;
-    }
-
-    @Entity
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public static class TEntity {
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
-
-        private String name;
-
-        @JsonIgnore
-        private byte[] contentKey2;
 
         @ContentId private UUID contentId;
         @ContentLength private long contentLength;

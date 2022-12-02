@@ -6,6 +6,8 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -65,28 +68,11 @@ public class EncryptionIT {
 
     private static Object mutex = new Object();
 
-    static {
-        try {
-            setEnv(Collections.singletonMap("AWS_REGION", "us-west-1"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Autowired
     private FileRepository repo;
 
     @Autowired
     private FileContentStore store;
-
-//    @Autowired
-//    private FileRepository repo2;
-//
-//    @Autowired
-//    private FileContentStore2 store2;
-
-//    @Autowired
-//    private java.io.File filesystemRoot;
 
     @Autowired
     private S3Client client;
@@ -245,6 +231,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
+    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class, FilesystemContentAutoConfiguration.class})
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableS3Stores
     static class Application {
@@ -275,28 +262,9 @@ public class EncryptionIT {
             public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
                 return new EnvelopeEncryptionService(vaultOperations);
             }
-//            @Bean
-//            public java.io.File filesystemRoot() {
-//                try {
-//                    return Files.createTempDirectory("").toFile();
-//                } catch (IOException ioe) {}
-//                return null;
-//            }
-
-//            @Bean
-//            public FileSystemResourceLoader fileSystemResourceLoader() {
-//                return new FileSystemResourceLoader(filesystemRoot().getAbsolutePath());
-//            }
 
             @Bean
             public S3Client amazonS3() throws URISyntaxException {
-//                AwsCredentials creds = AwsBasicCredentials.create(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_KEY"));
-//                AwsCredentialsProvider credsProvider = StaticCredentialsProvider.create(creds);
-//                Region region = Region.US_WEST_1;
-//                return S3Client.builder()
-//                        .credentialsProvider(credsProvider)
-//                        .region(region)
-//                        .build();
                 return LocalStack.getAmazonS3Client();
             }
 
@@ -309,26 +277,12 @@ public class EncryptionIT {
                     }
                 };
             }
-
-//            @Bean
-//            public EncryptingContentStoreConfigurer config2() {
-//                return new EncryptingContentStoreConfigurer<FileContentStore2>() {
-//                    @Override
-//                    public void configure(EncryptingContentStoreConfiguration config) {
-//                        config.encryptionKeyContentProperty("key2").keyring("filecontentstore2");
-//                    }
-//                };
-//            }
         }
     }
 
     public interface FileRepository extends CrudRepository<File, Long> {}
 
     public interface FileContentStore extends S3ContentStore<File, UUID>, EncryptingContentStore<File, UUID> {}
-
-//    public interface FileRepository2 extends CrudRepository<TEntity, Long> {}
-//
-//    public interface FileContentStore2 extends S3ContentStore<TEntity, UUID>, EncryptingContentStore<TEntity, UUID> {}
 
     @Entity
     @Getter
@@ -347,52 +301,5 @@ public class EncryptionIT {
         @ContentId private UUID contentId;
         @ContentLength private long contentLength;
         @MimeType private String contentMimeType;
-    }
-
-//    @Entity
-//    @Getter
-//    @Setter
-//    @NoArgsConstructor
-//    public static class TEntity {
-//        @Id
-//        @GeneratedValue(strategy = GenerationType.AUTO)
-//        private Long id;
-//
-//        private String name;
-//
-//        @JsonIgnore
-//        private byte[] contentKey2;
-//
-//        @ContentId private UUID contentId;
-//        @ContentLength private long contentLength;
-//        @MimeType private String contentMimeType;
-//    }
-
-    @SuppressWarnings("unchecked")
-    public static void setEnv(Map<String, String> newenv) throws Exception {
-        try {
-            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-            theEnvironmentField.setAccessible(true);
-            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-            env.putAll(newenv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
-            theCaseInsensitiveEnvironmentField.setAccessible(true);
-            Map<String, String> cienv = (Map<String, String>)theCaseInsensitiveEnvironmentField.get(null);
-            cienv.putAll(newenv);
-        } catch (NoSuchFieldException e) {
-            Class[] classes = Collections.class.getDeclaredClasses();
-            Map<String, String> env = System.getenv();
-            for(Class cl : classes) {
-                if("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
-                    Field field = cl.getDeclaredField("m");
-                    field.setAccessible(true);
-                    Object obj = field.get(env);
-                    Map<String, String> map = (Map<String, String>) obj;
-                    map.clear();
-                    map.putAll(newenv);
-                }
-            }
-        }
     }
 }
