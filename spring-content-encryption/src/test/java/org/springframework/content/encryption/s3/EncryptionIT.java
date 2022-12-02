@@ -1,4 +1,4 @@
-package org.springframework.content.encryption;
+package org.springframework.content.encryption.s3;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
@@ -22,7 +22,10 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.fs.io.FileSystemResourceLoader;
+import org.springframework.content.encryption.EncryptingContentStore;
+import org.springframework.content.encryption.EnvelopeEncryptionService;
+import org.springframework.content.encryption.LocalStack;
+import org.springframework.content.encryption.VaultContainerSupport;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.store.S3ContentStore;
 import org.springframework.context.annotation.Bean;
@@ -42,11 +45,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.rmi.NoSuchObjectException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -60,8 +60,8 @@ import static org.junit.Assert.fail;
 
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@SpringBootTest(classes = EncryptionS3IT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EncryptionS3IT {
+@SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class EncryptionIT {
 
     private static Object mutex = new Object();
 
@@ -108,7 +108,7 @@ public class EncryptionS3IT {
     }
 
     {
-        Describe("Client-side encryption", () -> {
+        Describe("Client-side encryption with s3 storage", () -> {
             BeforeEach(() -> {
                 RestAssured.port = port;
 

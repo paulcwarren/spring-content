@@ -1,4 +1,4 @@
-package org.springframework.content.encryption;
+package org.springframework.content.encryption.fs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
@@ -22,6 +22,9 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.encryption.EncryptingContentStore;
+import org.springframework.content.encryption.EnvelopeEncryptionService;
+import org.springframework.content.encryption.VaultContainerSupport;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
@@ -52,8 +55,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@SpringBootTest(classes = EncryptionFsIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EncryptionFsIT {
+@SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class EncryptionIT {
 
     private static Object mutex = new Object();
 
@@ -89,7 +92,7 @@ public class EncryptionFsIT {
     }
 
     {
-        Describe("Client-side encryption", () -> {
+        Describe("Client-side encryption with fs storage", () -> {
             BeforeEach(() -> {
                 RestAssured.port = port;
 
