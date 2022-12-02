@@ -289,7 +289,7 @@ public class EncryptionS3IT {
 //            }
 
             @Bean
-            public S3Client client() throws URISyntaxException {
+            public S3Client amazonS3() throws URISyntaxException {
 //                AwsCredentials creds = AwsBasicCredentials.create(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_KEY"));
 //                AwsCredentialsProvider credsProvider = StaticCredentialsProvider.create(creds);
 //                Region region = Region.US_WEST_1;

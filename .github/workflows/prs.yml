@@ -27,9 +27,6 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-
     - name: Build and Test
       run: |
         pushd spring-content
