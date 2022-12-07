@@ -195,7 +195,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
-    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class, FilesystemContentAutoConfiguration.class})
+    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class})
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableFilesystemStores
     static class Application {
