@@ -1,10 +1,6 @@
 package internal.org.springframework.content.s3.store;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -16,13 +12,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,6 +28,7 @@ import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.config.ContentPropertyInfo;
+import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
@@ -95,7 +86,7 @@ public class DefaultS3StoreImplTest {
 	{
 		Describe("DefaultS3StoreImpl", () -> {
 			BeforeEach(() -> {
-				resource = mock(WritableResource.class);
+				resource = mock(WritableResource.class, withSettings().extraInterfaces(RangeableResource.class));
 				loader = mock(ResourceLoader.class);
 				placementService = mock(PlacementService.class);
 				client = mock(S3Client.class);
@@ -784,7 +775,7 @@ public class DefaultS3StoreImplTest {
 									entity = new TestEntity();
 									entity.setContentId("abcd-efgh");
 									entity.setContentLen(100L);
-									resource = mock(WritableResource.class);
+									resource = mock(WritableResource.class, withSettings().extraInterfaces(RangeableResource.class));
 								});
 								Context("and the content exists", () -> {
 									BeforeEach(() -> {
@@ -830,7 +821,7 @@ public class DefaultS3StoreImplTest {
 										placementService = new PlacementServiceImpl();
 										S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-										nonExistentResource = mock(WritableResource.class);
+										nonExistentResource = mock(WritableResource.class, withSettings().extraInterfaces(RangeableResource.class));
 										when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(nonExistentResource);
 										when(nonExistentResource.exists()).thenReturn(false);
 									});

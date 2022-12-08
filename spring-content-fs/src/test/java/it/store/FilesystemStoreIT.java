@@ -35,6 +35,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -211,6 +212,22 @@ public class FilesystemStoreIT {
 							It("should be recorded as such on the entity's @ContentId", () -> {
 								assertThat(entity.getContentId(), is(resourceLocation));
                                 assertThat(entity.getRenditionId(), is(resourceLocation));
+							});
+
+							Context("when the resource has content", () -> {
+								BeforeEach(() -> {
+									try (OutputStream os = ((WritableResource)genericResource).getOutputStream()) {
+										os.write("Hello Client-side World!".getBytes());
+									}
+								});
+
+								It("should not honor byte ranges", () -> {
+									// relies on REST-layer to serve byte range
+									Resource r = store.getResource(entity, PropertyPath.from("content"), GetResourceParams.builder().range("5-10").build());
+									try (InputStream is = r.getInputStream()) {
+										assertThat(IOUtils.toString(is), is("Hello Client-side World!"));
+									}
+								});
 							});
 
 							Context("when the resource is unassociated", () -> {

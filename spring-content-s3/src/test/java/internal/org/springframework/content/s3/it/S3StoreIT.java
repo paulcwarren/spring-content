@@ -1,10 +1,6 @@
 package internal.org.springframework.content.s3.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -207,7 +203,7 @@ public class S3StoreIT {
                             });
                         });
 
-                        Context("given a byte range is requsted", () -> {
+                        Context("given a byte range is requested", () -> {
 
                             It("should return a partial content input stream and the partial content", () -> {
 

@@ -1,5 +1,6 @@
 package org.springframework.content.commons.mappingcontext;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.core.convert.TypeDescriptor;
@@ -18,6 +19,20 @@ public class ContentProperty {
     private String contentLengthPropertyPath;
     private String mimeTypePropertyPath;
     private String originalFileNamePropertyPath;
+
+    public Object getCustomProperty(Object entity, String propertyName) {
+        String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
+
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        return wrapper.getPropertyValue(customContentPropertyPath);
+    }
+
+    public void setCustomProperty(Object entity, String propertyName, Object value) {
+        String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
+
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        wrapper.setPropertyValue(customContentPropertyPath, value);
+    }
 
     public Object getContentId(Object entity) {
         if (contentLengthPropertyPath == null) {

@@ -28,6 +28,17 @@ public interface AssociativeStore<S, SID extends Serializable> extends Store<SID
     Resource getResource(S entity, PropertyPath propertyPath);
 
 	/**
+	 * Returns the resource associated with the given property for entity, or null if no association exists
+	 *
+	 * @param entity
+	 *          the entity associated with resource
+	 * @param propertyPath
+	 *          the property path of the associated resource
+	 * @return  resource
+	 */
+	Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params);
+
+	/**
 	 * Associates the resource (identified by id) with entity.
 	 *
 	 * @param entity

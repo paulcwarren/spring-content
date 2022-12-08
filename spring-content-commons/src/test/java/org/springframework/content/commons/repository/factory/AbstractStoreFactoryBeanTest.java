@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -108,7 +109,13 @@ public class AbstractStoreFactoryBeanTest {
             return null;
         }
 
-        @Override
+		@Override
+		public Resource getResource(Object entity, PropertyPath propertyPath, GetResourceParams params) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
         public void associate(Object entity, PropertyPath propertyPath, Serializable id) {
             // TODO Auto-generated method stub
 

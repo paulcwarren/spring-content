@@ -83,10 +83,10 @@ public class StoresImpl implements Stores, InitializingBean {
 		return null;
 	}
 
-	@Override
-	public void addStoreResolver(String name, StoreResolver resolver) {
-		resolvers.put(name, resolver);
-	}
+		@Override
+		public void addStoreResolver(String name, StoreResolver resolver) {
+			resolvers.put(name, resolver);
+		}
 
 	@Override
 	public StoreInfo getStore(Class<?> storeType, StoreFilter filter) {

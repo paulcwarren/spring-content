@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.core.io.Resource;
 
@@ -61,6 +62,12 @@ public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
             // TODO Auto-generated method stub
             return null;
         }
+
+		@Override
+		public Resource getResource(Object entity, PropertyPath propertyPath, GetResourceParams params) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
         @Override
         public void associate(Object entity, PropertyPath propertyPath, Serializable id) {
