@@ -63,8 +63,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EncryptionIT {
 
-    private static Object mutex = new Object();
-
     @Autowired
     private FileRepository repo;
 
@@ -77,18 +75,10 @@ public class EncryptionIT {
     @Autowired
     private EnvelopeEncryptionService encrypter;
 
-    @Autowired
-    private VaultOperations vaultOperations;
-
     @LocalServerPort
     int port;
 
     private FsFile f;
-
-
-    static {
-        System.setProperty("spring.content.s3.bucket", "test-bucket");
-    }
 
     {
         Describe("Client-side encryption with fs storage", () -> {

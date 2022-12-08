@@ -88,9 +88,6 @@ public class EncryptionIT {
     @Autowired
     private EnvelopeEncryptionService encrypter;
 
-    @Autowired
-    private VaultOperations vaultOperations;
-
     @LocalServerPort
     int port;
 
