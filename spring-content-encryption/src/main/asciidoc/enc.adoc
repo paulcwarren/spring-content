@@ -1,0 +1,96 @@
+= Content Encryption
+
+Spring Content Encryption adds the interface `EncryptingContentStore` that can be used to decorate a `Store`
+to provide at-rest encryption of the content in that Store.
+
+This module uses an envelope encryption strategy.  Envelope encryption is the practice of encrypting content
+with a content-encryption key, and then encrypting the content-encryption key under another key.
+
+Every time
+content is stored it is first encrypted using the AES-CTR cipher and a randomly generated key.  That
+content-encryption key is then encrypted using Hashicorp's vault and that key is then storied on the domain
+object.  Any user with authorization to decrypt the encryption key can retrieve the content.
+
+Spring Content Encryption can be added to your application by updating your application's configuration, as follows:
+
+.Spring Content Encryption using Java Config
+====
+[source, java]
+----
+@Configuration
+@EnableFilesystemStores
+public static class Config {
+
+    @Bean
+    public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {   (1)
+        return new EnvelopeEncryptionService(vaultOperations);
+    }
+
+    @Bean
+    public EncryptingContentStoreConfigurer config() {                              (2)
+        return new EncryptingContentStoreConfigurer<FileContentStore>() {
+            @Override
+            public void configure(EncryptingContentStoreConfiguration config) {
+                config.keyring("my-app-keyring").encryptionKeyContentProperty("key");
+            }
+        };
+    }
+}
+----
+1. encrypter contributes the Envelope Encryption Service
+2. The `config` configures the `FileContentStore` with the Hashicorp Vault keyring to use (for encrypting the
+content encryption key) and the property to use to store the encryption key
+====
+
+Next, domain objects content properties are updated with a custom attribute to store the encrypted content-encryption key.
+
+The above example assumes you have defined a "key" attribute on the content property, as the following example shows:
+
+.Domain Object Content Property
+====
+[source, java]
+----
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public static class File {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    ...other properties...
+
+    @ContentId private UUID contentId;
+    @ContentLength private long contentLength;
+    @MimeType private String contentMimeType;
+    @JsonIgnore private byte[] contentKey;                          (1)
+}
+----
+1. The additional "custom" attribute `key` that will be used to store the encrypted content encryption key
+====
+
+Lastly, the Store is decorated with the interface `EncryptingContentStore`.
+
+.Decorated Store Interface
+====
+[source, java]
+----
+public interface FileContentStore extends ContentStore<File, UUID>, EncryptingContentStore<File, UUID> {}
+----
+====
+
+== Byte-Range Support
+Because the default implementation uses AES-CTR cipher even though a Store is encrypted it is still capable of
+serving byte-ranges.  However, type of storage depends on how exactly that happens.
+
+With S3 storage byte-ranges will be forwarded onto S3 for fetching and therefore only the
+byte range need be decrypted before serving.  This is very efficient.
+
+With storage that does not yet support byte ranges.  Filesystem for example.  The
+byte range cannot be forwarded and the entire content is fetched and decrypted before
+serving just the byte range.  This is less efficient but works and can be useful when, for
+example, S3 storage is used in production, but filesystem is used in test.
+
+== Getting Started
+For a working example please refer to the getting started guide link:http://https://paulcwarren.github.io/spring-content/spring-content-with-encryption-docs/[here].
