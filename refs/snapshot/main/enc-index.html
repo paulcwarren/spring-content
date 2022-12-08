@@ -5,8 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<meta name="author" content="Paul Warren">
-<title>Spring Content Elasticsearch - Reference Documentation</title>
+<meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
+<title>Spring Content Filesystem - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -439,9 +439,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Spring Content Elasticsearch - Reference Documentation</h1>
+<h1>Spring Content Filesystem - Reference Documentation</h1>
 <div class="details">
-<span id="author" class="author">Paul Warren</span><br>
+<span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 2.7.0-SNAPSHOT,</span>
 <span id="revdate">2022-12-08</span>
 </div>
@@ -450,7 +450,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2019-present The original authors.</p>
+<p>&#169; 2008-present The original authors.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -479,16 +479,10 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_patterns_of_content_association">1.5. Patterns of Content Association</a></li>
 </ul>
 </li>
-<li><a href="#fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</a>
+<li><a href="#_content_encryption">2. Content Encryption</a>
 <ul class="sectlevel2">
-<li><a href="#_overview">2.1. Overview</a></li>
-<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
-<li><a href="#_spring_boot_configuration">2.3. Spring Boot Configuration</a></li>
-<li><a href="#_making_stores_searchable">2.4. Making Stores Searchable</a></li>
-<li><a href="#_custom_indexing">2.5. Custom Indexing</a></li>
-<li><a href="#_text_extraction">2.6. Text Extraction</a></li>
-<li><a href="#_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</a></li>
-<li><a href="#_search_return_types">2.8. Search Return Types</a></li>
+<li><a href="#_byte_range_support">2.1. Byte-Range Support</a></li>
+<li><a href="#_getting_started">2.2. Getting Started</a></li>
 </ul>
 </li>
 </ul>
@@ -1575,278 +1569,137 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect1">
-<h2 id="fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</h2>
+<h2 id="_content_encryption">2. Content Encryption</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_overview">2.1. Overview</h3>
 <div class="paragraph">
-<p>When enabled, the Elasticsearch integration will, by default, forward all content to an Elasticsearch cluster for fulltext indexing.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
-<div class="paragraph">
-<p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to your Elasticsearch
-cluster.</p>
+<p>Spring Content Encryption adds the interface <code>EncryptingContentStore</code> that can be used to decorate a <code>Store</code>
+to provide at-rest encryption of the content in that Store.</p>
 </div>
 <div class="paragraph">
-<p>Elasticsearch can be enabled with the following Java Config.</p>
+<p>This module uses an envelope encryption strategy.  Envelope encryption is the practice of encrypting content
+with a content-encryption key, and then encrypting the content-encryption key under another key.</p>
+</div>
+<div class="paragraph">
+<p>Every time
+content is stored it is first encrypted using the AES-CTR cipher and a randomly generated key.  That
+content-encryption key is then encrypted using Hashicorp&#8217;s vault and that key is then storied on the domain
+object.  Any user with authorization to decrypt the encryption key can retrieve the content.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content Encryption can be added to your application by updating your application&#8217;s configuration, as follows:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 16. Enabling Spring Content Elasticsearch with Java Config</div>
+<div class="title">Example 16. Spring Content Encryption using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableElasticsearchFulltextIndexing        <b class="conum">(1)</b>
-@EnableFilesystemStores                     <b class="conum">(2)</b>
-public static class ApplicationConfig {
-
-                                            <b class="conum">(3)</b>
-    public RestHighLevelClient client() {
-        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
-    }
-
-}</code></pre>
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Specify the <code>@EnableElasticsearchFulltextIndexing</code> annotation in an <code>@Configuration</code> class</p>
-</li>
-<li>
-<p>Spring Content Elasticsearch works with any Spring Content Store module</p>
-</li>
-<li>
-<p>Ensure a <code>RestHighLevelClient</code> bean is instantiated somewhere within your <code>@Configuration</code></p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_spring_boot_configuration">2.3. Spring Boot Configuration</h3>
-<div class="paragraph">
-<p>Alternatively, you can use the Spring Boot Starter <code>spring-content-elasticsearch-boot-starter</code>.</p>
-</div>
-<div class="paragraph">
-<p>When using this method of configuration the <code>@EnableElasticsearchFulltextIndexing</code> annotation can be omitted as it will
-be added for you.  As will a RestHighLevelClient client bean configured to connect to localhost.</p>
-</div>
-<div class="paragraph">
-<p>The following configuration properties (prefix spring.content.elasticsearch) are supported.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">autoindex</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Whether, or not, to enable autoindexing to index content as it is added</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="_making_stores_searchable">2.4. Making Stores Searchable</h3>
-<div class="paragraph">
-<p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
-<a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_custom_indexing">2.5. Custom Indexing</h3>
-<div class="paragraph">
-<p>By default when you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content
-being added to a Store and sends that content to your Elasticsearch cluster for full-text indexing.  This is usually
-all you need.  However, sometimes you may need more control over when documents are indexed.  For these cases you can
-use the <code>IndexService</code> bean directly in your code to index (or unindex) content as required.</p>
-</div>
-<div class="paragraph">
-<p>When performing custom indexing it is usual to turn of the auto-indexing feature but specifying
-<code>spring.content.elasticsearch.autoindex=false</code> in your application properties.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_text_extraction">2.6. Text Extraction</h3>
-<div class="paragraph">
-<p>For images and other media, it also possible to configure the elasticsearch integration to perform text extraction and
-send that instead of the image content to Elasticsearch.</p>
-</div>
-<div class="paragraph">
-<p>This requires two stages of configuration:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Add one or more renderers to the application context.  These renderers are used to perform the text extraction.  To be
-used for text extraction a renderer <strong>must</strong> produce <code>text/plain</code> content but can consume any suitable mime type.   When
-content matching its <code>consume</code> mime type is added to a Store the renderer will be invoked to extract text and this extracted text
-will then be sent to the Elasticsearch for fulltext indexing in place of the original content.</p>
-</li>
-</ol>
-</div>
-<div class="exampleblock">
-<div class="title">Example 17. Adding a renderer to perform text extraction</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableElasticsearchFulltextIndexing
 @EnableFilesystemStores
-public static class ApplicationConfig {
+public static class Config {
 
-    public RestHighLevelClient client() {
-        return new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200, "http")));
+    @Bean
+    public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {   (1)
+        return new EnvelopeEncryptionService(vaultOperations);
     }
 
     @Bean
-    public RenditionProvider jpgTextExtractor() {
-        return new RenditionProvider() {
-
+    public EncryptingContentStoreConfigurer config() {                              (2)
+        return new EncryptingContentStoreConfigurer&lt;FileContentStore&gt;() {
             @Override
-            public String consumes() {
-                return "image/jpg";                     // can be any mime-type
+            public void configure(EncryptingContentStoreConfiguration config) {
+                config.keyring("my-app-keyring").encryptionKeyContentProperty("key");
             }
-
-            @Override
-            public String[] produces() {
-                return new String[] {"text/plain"};     // must be 'text/plain'
-            }
-
-            @Override
-            public InputStream convert(InputStream fromInputSource, String toMimeType) {
-                ...implementation...
-            }
-        }
+        };
     }
 }</code></pre>
-</div>
-</div>
 </div>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Make the Store Renderable as this will be used internally to extract the text</p>
+<p>encrypter contributes the Envelope Encryption Service</p>
+</li>
+<li>
+<p>The <code>config</code> configures the <code>FileContentStore</code> with the Hashicorp Vault keyring to use (for encrypting the
+content encryption key) and the property to use to store the encryption key</p>
 </li>
 </ol>
 </div>
+</div>
+</div>
+<div class="paragraph">
+<p>Next, domain objects content properties are updated with a custom attribute to store the encrypted content-encryption key.</p>
+</div>
+<div class="paragraph">
+<p>The above example assumes you have defined a "key" attribute on the content property, as the following example shows:</p>
+</div>
 <div class="exampleblock">
-<div class="title">Example 18. Making the Store interface Renderable</div>
+<div class="title">Example 17. Domain Object Content Property</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public interface DocumentStore extends ContentStore&lt;Document, UUID&gt; implements Searchable&lt;Document&gt;, Renderable&lt;Document&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public static class File {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    ...other properties...
+
+    @ContentId private UUID contentId;
+    @ContentLength private long contentLength;
+    @MimeType private String contentMimeType;
+    @JsonIgnore private byte[] contentKey;                          (1)
 }</code></pre>
 </div>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The additional "custom" attribute <code>key</code> that will be used to store the encrypted content encryption key</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</h3>
 <div class="paragraph">
-<p>By default Spring Content Elasticsearch indexes content only.  However, it is common to synchronize additional
-attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
-search results (removing the need to perform subsequent queries against the primary domain model).</p>
-</div>
-<div class="paragraph">
-<p>To synchronize additional attributes when content is indexed add a bean that implements <code>AttributeProvider</code> to your
-application&#8217;s configuration:</p>
+<p>Lastly, the Store is decorated with the interface <code>EncryptingContentStore</code>.</p>
 </div>
 <div class="exampleblock">
+<div class="title">Example 18. Decorated Store Interface</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
-    public AttributeProvider&lt;Document&gt; attributeProvider() {
-        return new AttributeProvider&lt;Document&gt;() {
-
-            @Override
-            public Map&lt;String, String&gt; synchronize(Document entity) {
-
-                Map&lt;String, String&gt; attrs = new HashMap&lt;&gt;();
-                attrs.put("title", entity.getTitle());
-                attrs.put("author", entity.getAuthor());
-                return attrs;
-            }
-        };
-    }</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>To customize the query that gets executed when a Store&#8217;s Searchable method is invoked add a <code>FilterQueryProvider</code> bean to your
-application&#8217;s configuration:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">    @Bean
-    public FilterQueryProvider fqProvider() {
-        return new FilterQueryProvider() {
-
-            @Override
-            public String[] filterQueries(Class&lt;?&gt; entity) {
-
-                return new String[] {"author:foo@bar.com"};
-            }
-        };
-    }</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-this bean is often a request scoped bean or has an implementation based on a thread local variable in order to build and return
-filter queries based on the current execution context.
-</td>
-</tr>
-</table>
+<pre class="highlight"><code class="language-java" data-lang="java">public interface FileContentStore extends ContentStore&lt;File, UUID&gt;, EncryptingContentStore&lt;File, UUID&gt; {}</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_search_return_types">2.8. Search Return Types</h3>
+<h3 id="_byte_range_support">2.1. Byte-Range Support</h3>
 <div class="paragraph">
-<p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
-type this interface to String in which case result sets will be collections of content IDs.</p>
+<p>Because the default implementation uses AES-CTR cipher even though a Store is encrypted it is still capable of
+serving byte-ranges.  However, type of storage depends on how exactly that happens.</p>
 </div>
 <div class="paragraph">
-<p>You can also type the interface to your own custom class.  Several annotations are available allowing you to tailor full-text search
-results to your specific needs:</p>
+<p>With S3 storage byte-ranges will be forwarded onto S3 for fetching and therefore only the
+byte range need be decrypted before serving.  This is very efficient.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>@ContentId; extracts the content ID of the content from your search results</p>
-</li>
-<li>
-<p>@Highlight; extracts highlighted snippets from your search results so you can show users where the query matches are</p>
-</li>
-<li>
-<p>Attribute; extracts the specified attribute from your search results (must be synchronized using an <code>AttributeProvider</code>)
+<div class="paragraph">
+<p>With storage that does not yet support byte ranges.  Filesystem for example.  The
+byte range cannot be forwarded and the entire content is fetched and decrypted before
+serving just the byte range.  This is less efficient but works and can be useful when, for
+example, S3 storage is used in production, but filesystem is used in test.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_getting_started">2.2. Getting Started</h3>
+<div class="paragraph">
+<p>For a working example please refer to the getting started guide <a href="http://https://paulcwarren.github.io/spring-content/spring-content-with-encryption-docs/">here</a>.
 :leveloffset: -1</p>
-</li>
-</ul>
 </div>
 </div>
 </div>

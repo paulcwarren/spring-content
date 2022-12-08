@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<title>Search</title>
+<title>Content Encryption</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -436,46 +436,146 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body id="search" class="book">
+<body class="book">
 <div id="header">
-<h1>Search</h1>
+<h1>Content Encryption</h1>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_the_searchcontent_resource">The SearchContent Resource</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a Store extending <code>Searchable</code> is exported a <code>searchContent</code> endpoint will be
-available at the <code>/{store}/searchContent</code> URI.</p>
+<p>Spring Content Encryption adds the interface <code>EncryptingContentStore</code> that can be used to decorate a <code>Store</code>
+to provide at-rest encryption of the content in that Store.</p>
+</div>
+<div class="paragraph">
+<p>This module uses an envelope encryption strategy.  Envelope encryption is the practice of encrypting content
+with a content-encryption key, and then encrypting the content-encryption key under another key.</p>
+</div>
+<div class="paragraph">
+<p>Every time
+content is stored it is first encrypted using the AES-CTR cipher and a randomly generated key.  That
+content-encryption key is then encrypted using Hashicorp&#8217;s vault and that key is then storied on the domain
+object.  Any user with authorization to decrypt the encryption key can retrieve the content.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content Encryption can be added to your application by updating your application&#8217;s configuration, as follows:</p>
 </div>
 <div class="exampleblock">
+<div class="title">Example 1. Spring Content Encryption using Java Config</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">  curl http://localhost:8080/searchContent?keyword=foo</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableFilesystemStores
+public static class Config {
+
+    @Bean
+    public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {   (1)
+        return new EnvelopeEncryptionService(vaultOperations);
+    }
+
+    @Bean
+    public EncryptingContentStoreConfigurer config() {                              (2)
+        return new EncryptingContentStoreConfigurer&lt;FileContentStore&gt;() {
+            @Override
+            public void configure(EncryptingContentStoreConfiguration config) {
+                config.keyring("my-app-keyring").encryptionKeyContentProperty("key");
+            }
+        };
+    }
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>encrypter contributes the Envelope Encryption Service</p>
+</li>
+<li>
+<p>The <code>config</code> configures the <code>FileContentStore</code> with the Hashicorp Vault keyring to use (for encrypting the
+content encryption key) and the property to use to store the encryption key</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_supported_http_methods">Supported HTTP Methods</h3>
 <div class="paragraph">
-<p>As the SearchContent resource is read-only it supports <code>GET</code> only.  All other HTTP methods will
-cause a <code>405 Method Not Allowed</code>.</p>
+<p>Next, domain objects content properties are updated with a custom attribute to store the encrypted content-encryption key.</p>
 </div>
-<div class="sect3">
-<h4 id="_supported_media_types">Supported media types</h4>
-<div class="ulist">
-<ul>
+<div class="paragraph">
+<p>The above example assumes you have defined a "key" attribute on the content property, as the following example shows:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Domain Object Content Property</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public static class File {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    ...other properties...
+
+    @ContentId private UUID contentId;
+    @ContentLength private long contentLength;
+    @MimeType private String contentMimeType;
+    @JsonIgnore private byte[] contentKey;                          (1)
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p><code>application/hal+json</code></p>
+<p>The additional "custom" attribute <code>key</code> that will be used to store the encrypted content encryption key</p>
 </li>
-<li>
-<p><code>application/json</code>.</p>
-</li>
-</ul>
+</ol>
 </div>
 </div>
+</div>
+<div class="paragraph">
+<p>Lastly, the Store is decorated with the interface <code>EncryptingContentStore</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Decorated Store Interface</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface FileContentStore extends ContentStore&lt;File, UUID&gt;, EncryptingContentStore&lt;File, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_byte_range_support">Byte-Range Support</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Because the default implementation uses AES-CTR cipher even though a Store is encrypted it is still capable of
+serving byte-ranges.  However, type of storage depends on how exactly that happens.</p>
+</div>
+<div class="paragraph">
+<p>With S3 storage byte-ranges will be forwarded onto S3 for fetching and therefore only the
+byte range need be decrypted before serving.  This is very efficient.</p>
+</div>
+<div class="paragraph">
+<p>With storage that does not yet support byte ranges.  Filesystem for example.  The
+byte range cannot be forwarded and the entire content is fetched and decrypted before
+serving just the byte range.  This is less efficient but works and can be useful when, for
+example, S3 storage is used in production, but filesystem is used in test.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started">Getting Started</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For a working example please refer to the getting started guide <a href="http://https://paulcwarren.github.io/spring-content/spring-content-with-encryption-docs/">here</a>.</p>
 </div>
 </div>
 </div>
