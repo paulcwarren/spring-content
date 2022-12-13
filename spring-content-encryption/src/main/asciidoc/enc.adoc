@@ -11,7 +11,20 @@ content is stored it is first encrypted using the AES-CTR cipher and a randomly 
 content-encryption key is then encrypted using Hashicorp's vault and that key is then storied on the domain
 object.  Any user with authorization to decrypt the encryption key can retrieve the content.
 
-Spring Content Encryption can be added to your application by updating your application's configuration, as follows:
+Spring Content Encryption can be added to your application by adding the dependency:
+
+====
+[source, xml]
+----
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-encryption</artifactId>
+    <version>${spring-content-version}</version>
+</dependency>
+----
+====
+
+and then updating your application's configuration, as follows:
 
 .Spring Content Encryption using Java Config
 ====
@@ -42,7 +55,7 @@ public static class Config {
 content encryption key) and the property to use to store the encryption key
 ====
 
-Next, domain objects content properties are updated with a custom attribute to store the encrypted content-encryption key.
+Domain objects content properties are then updated with a custom attribute to store the encrypted content-encryption key.
 
 The above example assumes you have defined a "key" attribute on the content property, as the following example shows:
 
