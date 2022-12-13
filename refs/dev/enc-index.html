@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
 <meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
-<title>Spring Content Filesystem - Reference Documentation</title>
+<title>Spring Content Encryption (beta) - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>Spring Content Filesystem - Reference Documentation</h1>
+<h1>Spring Content Encryption (beta) - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 2.7.0-SNAPSHOT,</span>
@@ -1586,7 +1586,23 @@ content-encryption key is then encrypted using Hashicorp&#8217;s vault and that 
 object.  Any user with authorization to decrypt the encryption key can retrieve the content.</p>
 </div>
 <div class="paragraph">
-<p>Spring Content Encryption can be added to your application by updating your application&#8217;s configuration, as follows:</p>
+<p>Spring Content Encryption can be added to your application by adding the dependency:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-encryption&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>and then updating your application&#8217;s configuration, as follows:</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 16. Spring Content Encryption using Java Config</div>
@@ -1628,7 +1644,7 @@ content encryption key) and the property to use to store the encryption key</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Next, domain objects content properties are updated with a custom attribute to store the encrypted content-encryption key.</p>
+<p>Domain objects content properties are then updated with a custom attribute to store the encrypted content-encryption key.</p>
 </div>
 <div class="paragraph">
 <p>The above example assumes you have defined a "key" attribute on the content property, as the following example shows:</p>
@@ -1708,7 +1724,7 @@ example, S3 storage is used in production, but filesystem is used in test.</p>
 <div id="footer">
 <div id="footer-text">
 Version 2.7.0-SNAPSHOT<br>
-Last updated 2022-12-13 04:30:07 UTC
+Last updated 2022-12-13 07:15:33 UTC
 </div>
 </div>
 </body>
