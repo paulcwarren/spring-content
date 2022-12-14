@@ -134,7 +134,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
  <code>cd</code> into <code>spring-content-gettingstarted/spring-content-rest/complete</code></p>
 </li>
 </ul>
-<p>When you’re finished, you can check your results against the code in
+<p>When you're finished, you can check your results against the code in
 <code>spring-content-gettingstarted/spring-content-with-encryption/complete</code>.</p>
 <h2 id="update-dependencies">Update dependencies</h2>
 <p>Add the <code>com.github.paulcwarren:spring-content-encryption</code> dependency.  This provides us the implementation of a EncryptingContentStore.</p>
@@ -205,12 +205,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 
 <h2 id="vault-testcontainer">Vault TestContainer</h2>
 <p>First we add a simple class that creates and starts a vault test container upon demand.  The vault is configured with a vault token <code>root-token</code> (referenced later) and enables the transit module that provides cryptographic functions to the encrypting content store. </p>
-<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code></p>
-<p>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}</p>
+<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code>
+{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}</p>
 <h2 id="configuration">Configuration</h2>
 <p>Next we need to introduce a small <code>Configuration</code> class to provide a vault endpoint to our application as well as configuring our encrypting content store.  We add the following <code>@Configuration</code> to our <code>SpringContentApplication</code>.</p>
-<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
-<p>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code>
+{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}</p>
 <p>Points to note:
 - the <code>clientAuthentication</code> references the <code>root-token</code>
 - the <code>encrypter</code> bean creates an instance an <code>EnvelopeEncryptionService</code>.  This is used by the <code>EncyptingContentStore</code> to provide <a href="https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/use-envelope-encryption-with-customer-master-keys.html">envelope encryption</a> on the content.
@@ -252,6 +252,10 @@ public class File {
 
 	@ContentId private String contentId;
 	@ContentLength private long contentLength;
+	@MimeType private String contentMimeType = "text/plain";
+	@JsonIgnore
+	private byte[] contentKey;
+}
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
