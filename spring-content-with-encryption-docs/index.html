@@ -205,12 +205,95 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 
 <h2 id="vault-testcontainer">Vault TestContainer</h2>
 <p>First we add a simple class that creates and starts a vault test container upon demand.  The vault is configured with a vault token <code>root-token</code> (referenced later) and enables the transit module that provides cryptographic functions to the encrypting content store. </p>
-<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code>
-{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}</p>
+<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code></p>
+<pre><code>
+package gettingstarted;
+
+import org.testcontainers.vault.VaultContainer;
+
+public class VaultContainerSupport {
+
+    private static VaultContainer vaultContainer = null;
+
+    public static VaultContainer getVaultContainer() {
+
+        if (vaultContainer == null) {
+            vaultContainer = new VaultContainer&lt;&gt;()
+                    .withVaultToken("root-token")
+                    .withVaultPort(8200)
+                    .withInitCommand("secrets enable transit");
+
+            vaultContainer.start();
+        }
+
+        return vaultContainer;
+    }
+}
+</code></pre>
+
 <h2 id="configuration">Configuration</h2>
 <p>Next we need to introduce a small <code>Configuration</code> class to provide a vault endpoint to our application as well as configuring our encrypting content store.  We add the following <code>@Configuration</code> to our <code>SpringContentApplication</code>.</p>
-<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code>
-{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<pre><code>
+package gettingstarted;
+
+import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
+import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.content.encryption.EnvelopeEncryptionService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.vault.authentication.ClientAuthentication;
+import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.client.VaultEndpoint;
+import org.springframework.vault.config.AbstractVaultConfiguration;
+import org.springframework.vault.core.VaultOperations;
+
+@SpringBootApplication
+public class SpringContentApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringContentApplication.class, args);
+	}
+
+	@Configuration
+	public static class Config extends AbstractVaultConfiguration {
+
+		@Override
+		public VaultEndpoint vaultEndpoint() {
+
+			String host = VaultContainerSupport.getVaultContainer().getHost();
+			int port = VaultContainerSupport.getVaultContainer().getMappedPort(8200);
+
+			VaultEndpoint vault = VaultEndpoint.create(host, port);
+			vault.setScheme("http");
+			return vault;
+		}
+
+		@Override
+		public ClientAuthentication clientAuthentication() {
+			return new TokenAuthentication("root-token");
+		}
+
+		@Bean
+		public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
+			return new EnvelopeEncryptionService(vaultOperations);
+		}
+
+		@Bean
+		public EncryptingContentStoreConfigurer config() {
+			return new EncryptingContentStoreConfigurer&lt;FileContentStore&gt;() {
+				@Override
+				public void configure(EncryptingContentStoreConfiguration config) {
+					config.keyring("fsfile").encryptionKeyContentProperty("key");
+				}
+			};
+		}
+	}
+}
+</code></pre>
+
 <p>Points to note:
 - the <code>clientAuthentication</code> references the <code>root-token</code>
 - the <code>encrypter</code> bean creates an instance an <code>EnvelopeEncryptionService</code>.  This is used by the <code>EncyptingContentStore</code> to provide <a href="https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/use-envelope-encryption-with-customer-master-keys.html">envelope encryption</a> on the content.

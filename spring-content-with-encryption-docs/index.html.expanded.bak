@@ -145,12 +145,16 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 
 <h2 id="vault-testcontainer">Vault TestContainer</h2>
 <p>First we add a simple class that creates and starts a vault test container upon demand.  The vault is configured with a vault token <code>root-token</code> (referenced later) and enables the transit module that provides cryptographic functions to the encrypting content store. </p>
-<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code>
-{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}</p>
+<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}
+</code></pre>
+
 <h2 id="configuration">Configuration</h2>
 <p>Next we need to introduce a small <code>Configuration</code> class to provide a vault endpoint to our application as well as configuring our encrypting content store.  We add the following <code>@Configuration</code> to our <code>SpringContentApplication</code>.</p>
-<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code>
-{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
+</code></pre>
+
 <p>Points to note:
 - the <code>clientAuthentication</code> references the <code>root-token</code>
 - the <code>encrypter</code> bean creates an instance an <code>EnvelopeEncryptionService</code>.  This is used by the <code>EncyptingContentStore</code> to provide <a href="https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/use-envelope-encryption-with-customer-master-keys.html">envelope encryption</a> on the content.
