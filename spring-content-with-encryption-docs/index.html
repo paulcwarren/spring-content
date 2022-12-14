@@ -14,7 +14,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Renditions - Content Services for Spring</title>
+        <title>Encryption - Content Services for Spring</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link href="../css/font-awesome.min.css" rel="stylesheet">
     <link href="../css/base.css" rel="stylesheet">
@@ -58,7 +58,7 @@
                   
 <a href="../spring-content-rest-docs/" class="dropdown-item">REST API</a>
                   
-<a href="./" class="dropdown-item active">Renditions</a>
+<a href="../spring-content-with-renditions-docs/" class="dropdown-item">Renditions</a>
                   
 <a href="../spring-content-with-fulltext-docs/" class="dropdown-item">Fulltext</a>
                   
@@ -68,7 +68,7 @@
                   
 <a href="../spring-content-with-cmis-docs/" class="dropdown-item">CMIS</a>
                   
-<a href="../spring-content-with-encryption-docs/" class="dropdown-item">Encryption</a>
+<a href="./" class="dropdown-item active">Encryption</a>
                 </div>
               </li>
             </ul>
@@ -96,12 +96,12 @@
     <li class="breadcrumb-item">Guides</li>
     
     
-    <li class="breadcrumb-item active" aria-current="page">Renditions</li>
+    <li class="breadcrumb-item active" aria-current="page">Encryption</li>
   </ol>
 </nav>
 
 
-<h1 id="getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</h1>
+<h1 id="getting-started-spring-content-with-encryption">Getting Started Spring Content with Encryption</h1>
 <h2 id="what-youll-build">What you'll build</h2>
 <p>We'll build on the previous guide <a href="../spring-content-rest-docs/">Getting Started with Spring Content REST API</a>.</p>
 <h2 id="what-youll-need">What you'll need</h2>
@@ -118,6 +118,9 @@
 <li>
 <p>Maven 3.0+</p>
 </li>
+<li>
+<p>Docker Desktop (for the vault test container)</p>
+</li>
 </ul>
 <h2 id="how-to-complete-this-guide">How to complete this guide</h2>
 <p>Before we begin let's set up our development environment:</p>
@@ -132,84 +135,195 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 </li>
 </ul>
 <p>When you’re finished, you can check your results against the code in
-<code>spring-content-gettingstarted/spring-content-with-fulltext/complete</code>.</p>
+<code>spring-content-gettingstarted/spring-content-with-encryption/complete</code>.</p>
 <h2 id="update-dependencies">Update dependencies</h2>
-<p>Add the <code>com.github.paulcwarren:spring-content-renditions-boot-starter</code> dependency.</p>
+<p>Add the <code>com.github.paulcwarren:spring-content-encryption</code> dependency.  This provides us the implementation of a EncryptingContentStore.</p>
+<p>Also add <code>org.testcontainers:vault:1.17.6</code>.  We are going to use vault to provide a keyring for encrypting the content encryption key which in turn is used to encrypt the content. </p>
 <p><code>pom.xml</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/pom.xml 1-}
+<pre><code class="java">
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  
+  &lt;artifactId&gt;spring-content-with-encryption&lt;/artifactId&gt;
+  
+ 	&lt;parent&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+		&lt;version&gt;2.7.4&lt;/version&gt;
+	&lt;/parent&gt;
+ 
+	&lt;properties&gt;
+		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+		&lt;java.version&gt;1.8&lt;/java.version&gt;
+		&lt;ginkgo-version&gt;1.0.14&lt;/ginkgo-version&gt;
+	&lt;/properties&gt;
+
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.h2database&lt;/groupId&gt;
+			&lt;artifactId&gt;h2&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-data-rest&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;2.7.0&lt;/version&gt;
+		&lt;/dependency&gt;
+ 		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
+			&lt;version&gt;2.7.0&lt;/version&gt;
+		&lt;/dependency&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+          &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-content-encryption&lt;/artifactId&gt;
+			&lt;version&gt;2.7.0-SNAPSHOT&lt;/version&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
+			&lt;artifactId&gt;vault&lt;/artifactId&gt;
+			&lt;version&gt;1.17.6&lt;/version&gt;
+		&lt;/dependency&gt;
+		
+		&lt;!-- Test dependencies --&gt;
 </code></pre>
 
+<h2 id="vault-testcontainer">Vault TestContainer</h2>
+<p>First we add a simple class that creates and starts a vault test container upon demand.  The vault is configured with a vault token <code>root-token</code> (referenced later) and enables the transit module that provides cryptographic functions to the encrypting content store. </p>
+<p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code></p>
+<p>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/VaultContainerSupport.java 1-}</p>
+<h2 id="configuration">Configuration</h2>
+<p>Next we need to introduce a small <code>Configuration</code> class to provide a vault endpoint to our application as well as configuring our encrypting content store.  We add the following <code>@Configuration</code> to our <code>SpringContentApplication</code>.</p>
+<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
+<p>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-encryption/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}</p>
+<p>Points to note:
+- the <code>clientAuthentication</code> references the <code>root-token</code>
+- the <code>encrypter</code> bean creates an instance an <code>EnvelopeEncryptionService</code>.  This is used by the <code>EncyptingContentStore</code> to provide <a href="https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/use-envelope-encryption-with-customer-master-keys.html">envelope encryption</a> on the content.
+- the <code>config</code> bean configures the <code>EnryptingContentStore</code> specifying the vault keyring to use to encrypt the content encryption key and the content property attribute to use to store that encrypted key for later use when decrypting content.</p>
 <h2 id="update-file">Update File</h2>
-<p>To be able to return renditions we need to know the mime-type of the existing
-content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
-will be by Spring Content REST.</p>
+<p>Update File to add the new content property attribute called <code>key</code> that will store the encrypted content encryption key.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-33}
+<pre><code>
+package gettingstarted;
+
+import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class File {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private String name;
+	private Date created = new Date();
+	private String summary;
+
+	@ContentId private String contentId;
+	@ContentLength private long contentLength;
 </code></pre>
 
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
-<p>So that we can fetch renditions make your FileContentStore extend <code>Renderable</code>.  </p>
+<p>Decorate the <code>FileContentStore</code> as an <code>EncryptingContentStore</code> to enable encryption/decryption on the content.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
+<pre><code>
+package gettingstarted;
+
+import org.springframework.content.commons.repository.ContentStore;
+
+import org.springframework.content.encryption.EncryptingContentStore;
+import org.springframework.content.rest.StoreRestResource;
+
+@StoreRestResource
+public interface FileContentStore extends ContentStore&lt;File, String&gt;, EncryptingContentStore&lt;File, String&gt; {
+}
 </code></pre>
 
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
 by typing:</p>
-<p><code>java -jar target/gettingstarted-spring-content-with-renditions-0.0.1.jar</code></p>
-<h2 id="test-renditions">Test renditions</h2>
+<p><code>java -jar target/gettingstarted-spring-content-with-encryption-0.0.1.jar</code></p>
+<p>As the application starts up look for the root of the filesystem storage.  We'll look in here shortly to check content is encrypted.  Look for the 
+log entry that starts <code>Default filesystem storage to ...</code> and copy the file path. e.g. </p>
+<pre><code>2022-12-06 21:45:14.180  INFO 89223 --- [           main] o.s.c.fs.io.FileSystemResourceLoader     : Defaulting filesystem root to /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966
+</code></pre>
+
+<h2 id="test-encryption">Test Encryption</h2>
 <p>Create an entity:</p>
-<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
+<p><code>$ curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
 <p>Associate content with that entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code></p>
+<p><code>$ curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code></p>
+<p>Get the content id:</p>
+<pre><code>$ curl -X GET -H 'Accept:application/hal+json' http://localhost:8080/files/1
+{
+  &quot;name&quot; : null,
+  &quot;created&quot; : &quot;2022-12-07T05:47:42.356+00:00&quot;,
+  &quot;summary&quot; : null,
+  &quot;contentId&quot; : &quot;2d654dfc-57dc-44b7-aad9-f9ad0701c5d1&quot;,
+  &quot;contentLength&quot; : 27,
+  &quot;contentMimeType&quot; : &quot;text/plain&quot;,
+  &quot;_links&quot; : {
+    &quot;self&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+    },
+    &quot;file&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1&quot;
+    },
+    &quot;content&quot; : {
+      &quot;href&quot; : &quot;http://localhost:8080/files/1/content&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>Copy the <code>contentId</code></p>
+<p>Check the content is encrypted:</p>
+<p><code>$ cat /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966/&lt;contnetId&gt;</code></p>
+<p>i.e.</p>
+<pre><code>$ cat /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966/2d654dfc-57dc-44b7-aad9-f9ad0701c5d1
+��H�}��l������إ�.��^
+</code></pre>
+
 <p>Fetch the content:</p>
-<p><code>curl -H 'Accept:text/plain' http://localhost:8080/files/1/content</code>   </p>
-<p>And you should see a response like this:</p>
-<pre><code>Hello Spring Content World!
+<pre><code>$ curl -H 'Accept:text/plain' http://localhost:8080/files/1/content
+Hello Spring Content World!
 </code></pre>
 
-<p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
-the mime-type <code>image/jpeg</code> as the accept header.  Let's time the operation too.  We'll use this later.  As 
-it is an image let's save it to a file:</p>
-<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
-<p>Note the time the operation tookk and inspect the image <code>open /tmp/file-1.jpg</code> and you should see an image like this:</p>
-<p><center><img alt="Spring Content Rendition" src="../spring-content-with-renditions.png" /></center></p>
-<h2 id="stored-renditions">Stored Renditions</h2>
-<p>This is useful but rendering content on-demand everytime is unnecessary.  Let's store the rendition instead.</p>
-<h3 id="update-file_1">Update File</h3>
-<p>Add a second content property to store the rendition.</p>
-<p><code>src/main/java/gettingstarted/File.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
-</code></pre>
-
-<h3 id="add-event-handler">Add Event Handler</h3>
-<p>Next let's add an event handler that uses the rendition service to convert the <code>text/plain</code> content to <code>image/jpeg</code> and store
-it in the second content property we just created.  Then remove it again when the content is also removed.</p>
-<p><code>src/main/java/gettingstarted/StoredRenditionsEventHandler.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/StoredRenditionsEventHandler.java 1-}
-</code></pre>
-
-<p>and register it.</p>
-<p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
-<pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
-</code></pre>
-
-<h2 id="test-store-renditions">Test Store Renditions</h2>
-<p>Rebuild and restart your application and let's replay the operations we performed earlier.</p>
-<p>Create an entity:</p>
-<p><code>curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
-<p>Associate content with that entity:</p>
-<p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Stored Renditions World!' http://localhost:8080/files/1/content</code></p>
-<p>Fetch the content again specifying that we want a jpeg rendition of the content by specifying
-the mime-type <code>image/jpeg</code> as the accept header.  Note, we are still addressing the 'content' property.  Let's time the operation again.  We can compare this to our previous timing.  And for ease save it to a file:</p>
-<p><code>time curl -H 'Accept:image/jpeg' http://localhost:8080/files/1/content --output /tmp/file-1.jpg</code>   </p>
-<p>Note the time completed quicker (roughly twice as fast) as it was returning the previous stored rendition rather than converting it on the fly.  Inspect the image by opening <code>/tmp/file-2.jpg</code> and you should see an image like this:</p>
-<p><center><img alt="Spring Content Rendition" src="../spring-content-with-stored-renditions.png" /></center></p>
 <h2 id="summary">Summary</h2>
-<p>Congratulations!  You've just written a simple application that uses Spring Content and Spring Content Renditions to be able to transform content from one format to another and to store that rendered content for quicker access later on.</p>
-<p>This guide demonstrates the Spring Content Renditions Module.  This module supports several renderers out-of-the-box satisfying most use cases.  However, you may also add your own renderers using the RenditionProvider extension point.  For more details
-see the Spring Content Renditions reference guide.  </p>
+<p>Congratulations!  You've just written a simple application that uses Spring Content and Spring Content Encryption to be store content encrypted.</p>
+<p>Spring Content Encryption is also capable of serving bytes ranges.  The default implementation uses AES CTR encryption and when used with Spring Content S3 will decrypt and serve just the byte ranges.  With any other storage the content will be fully decrypted before serving the byte range.</p>
 
 <ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
   <li class="last-updated-holder displayDate loading">
@@ -236,7 +350,7 @@ see the Spring Content Renditions reference guide.  </p>
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-fulltext">Getting Started Spring Content with Fulltext</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-spring-content-with-encryption">Getting Started Spring Content with Encryption</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>
@@ -250,6 +364,12 @@ see the Spring Content Renditions reference guide.  </p>
                     <a href="#update-dependencies" class="nav-link">Update dependencies</a>
                 </li>
                 <li class="nav-item">
+                    <a href="#vault-testcontainer" class="nav-link">Vault TestContainer</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#configuration" class="nav-link">Configuration</a>
+                </li>
+                <li class="nav-item">
                     <a href="#update-file" class="nav-link">Update File</a>
                 </li>
                 <li class="nav-item">
@@ -259,13 +379,7 @@ see the Spring Content Renditions reference guide.  </p>
                     <a href="#build-an-executable-jar" class="nav-link">Build an executable JAR</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#test-renditions" class="nav-link">Test renditions</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#stored-renditions" class="nav-link">Stored Renditions</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#test-store-renditions" class="nav-link">Test Store Renditions</a>
+                    <a href="#test-encryption" class="nav-link">Test Encryption</a>
                 </li>
                 <li class="nav-item">
                     <a href="#summary" class="nav-link">Summary</a>
