@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 2.8.0-SNAPSHOT,</span>
-<span id="revdate">2022-12-20</span>
+<span id="revdate">2023-01-24</span>
 </div>
 </div>
 <div id="content">
@@ -537,6 +537,7 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#_store_links">5.4. Store Links</a>
 <ul class="sectlevel3">
 <li><a href="#_customizing_the_link_relation">5.4.1. Customizing the link relation</a></li>
+<li><a href="#_customizing_the_link">5.4.2. Customizing the link</a></li>
 </ul>
 </li>
 <li><a href="#_store_resolver">5.5. Store Resolver</a></li>
@@ -1829,6 +1830,67 @@ the <code>@RestResource</code> placed on any field contributing to the path up-t
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_customizing_the_link">5.4.2. Customizing the link</h4>
+<div class="paragraph">
+<p>In addition, the link itself can also be customized by specifying the <code>path</code> attribute on
+the <code>@RestResource</code> placed on any field contributing to the path up-to and including the
+@ContentId field, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @RestResource(linkRel="movie", path="movie")
+    @ContentId
+    private UUID videoId;
+
+    @ContentLength
+    private Long videoLength;
+
+    @MimeType
+    private String videoMimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  @StoreRestResource(linkRel="custom-linkrel")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Resulting in the following lnk:-</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "custom-linkrel/movie" : {
+      "href" : "http://localhost:8080/dvds/1/movie"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_store_resolver">5.5. Store Resolver</h3>
@@ -1982,7 +2044,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2022-12-20 06:53:22 UTC
+Last updated 2023-01-24 06:21:02 UTC
 </div>
 </div>
 </body>

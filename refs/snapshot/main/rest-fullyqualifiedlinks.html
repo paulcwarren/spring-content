@@ -601,12 +601,73 @@ the <code>@RestResource</code> placed on any field contributing to the path up-t
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_customizing_the_link">Customizing the link</h3>
+<div class="paragraph">
+<p>In addition, the link itself can also be customized by specifying the <code>path</code> attribute on
+the <code>@RestResource</code> placed on any field contributing to the path up-to and including the
+@ContentId field, as follows:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @RestResource(linkRel="movie", path="movie")
+    @ContentId
+    private UUID videoId;
+
+    @ContentLength
+    private Long videoLength;
+
+    @MimeType
+    private String videoMimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository&lt;Dvd, Long&gt; {}
+
+  @StoreRestResource(linkRel="custom-linkrel")
+  public interface DvdStore extends ContentStore&lt;Dvd, UUID&gt; {}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Resulting in the following lnk:-</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java"> "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "custom-linkrel/movie" : {
+      "href" : "http://localhost:8080/dvds/1/movie"
+    }
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-12-20 06:53:22 UTC
+Last updated 2023-01-24 06:21:02 UTC
 </div>
 </div>
 </body>
