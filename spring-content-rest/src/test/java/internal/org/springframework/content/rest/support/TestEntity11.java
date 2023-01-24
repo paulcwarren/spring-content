@@ -26,6 +26,6 @@ public class TestEntity11 {
     private @CreatedDate Date createdDate;
     private @LastModifiedDate Date modifiedDate;
 
-    @RestResource(linkRel="package")
+    @RestResource(linkRel="package", path="package")
     private @Embedded TestEntity10Child _package = new TestEntity10Child();
 }

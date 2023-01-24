@@ -66,14 +66,14 @@ public final class StoreUtils {
 		return iface.getSimpleName().replaceAll("Store", "");
 	}
 
-	public static String storeLookupPath(String lookupPath, URI baseUri) {
-
-		Assert.notNull(lookupPath, "Lookup path must not be null!");
+	public static String storeLookupPath(String requestPath, URI baseUri) {
+		Assert.notNull(requestPath, "requestPath must not be null");
+		Assert.notNull(baseUri, "baseUri must not be null");
 
 		// Temporary fix for SPR-13455
-		lookupPath = lookupPath.replaceAll("//", "/");
+		requestPath = requestPath.replaceAll("//", "/");
 
-		lookupPath = trimTrailingCharacter(lookupPath, '/');
+		requestPath = trimTrailingCharacter(requestPath, '/');
 
 		if (baseUri.isAbsolute()) {
 			throw new UnsupportedOperationException("Absolute BaseUri is not supported");
@@ -82,11 +82,11 @@ public final class StoreUtils {
 		String uri = baseUri.toString();
 
 		if (!StringUtils.hasText(uri)) {
-			return lookupPath;
+			return requestPath;
 		}
 
 		uri = uri.startsWith("/") ? uri : "/".concat(uri);
-		return lookupPath.startsWith(uri) ? lookupPath.substring(uri.length(), lookupPath.length()) : null;
+		return requestPath.startsWith(uri) ? requestPath.substring(uri.length(), requestPath.length()) : null;
 	}
 
 	public static class ResourcePlan {

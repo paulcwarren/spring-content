@@ -8,26 +8,26 @@ import org.springframework.content.commons.storeservice.StoreInfo;
 
 public class StoreInfoImpl implements StoreInfo {
 
-	private Class<?> storeInterface;
+	private Class<? extends Store> storeInterface;
 	private Class<?> storeDomainClass;
 	private Object storeImpl;
     private Supplier<Store<Serializable>> storeSupplier;
 
-	public StoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass,
+	public StoreInfoImpl(Class<? extends Store> interfaceClass, Class<?> storeDomainClass,
 						 Store<Serializable> storeImpl) {
 		this.storeInterface = interfaceClass;
 		this.storeDomainClass = storeDomainClass;
 		this.storeImpl = storeImpl;
 	}
 
-    public StoreInfoImpl(Class<?> interfaceClass, Class<?> storeDomainClass, Supplier<Store<Serializable>> storeSupplier) {
+    public StoreInfoImpl(Class<? extends Store> interfaceClass, Class<?> storeDomainClass, Supplier<Store<Serializable>> storeSupplier) {
         this.storeInterface = interfaceClass;
         this.storeDomainClass = storeDomainClass;
         this.storeSupplier = storeSupplier;
     }
 
 	@Override
-	public Class<?> getInterface() {
+	public Class<? extends Store> getInterface() {
 		return this.storeInterface;
 	}
 

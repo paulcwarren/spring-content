@@ -19,11 +19,24 @@ public @interface RestResource {
     boolean exported() default true;
 
     /**
-     * The set of paths that are governed by this export
+     * The set of paths that are governed by this export when exported=false
      *
      * @return  an array of paths
+     * @deprecated
      */
     String[] paths() default {"*"};
 
+    /**
+     * The name of the path element to be exported
+     *
+     * @return  the path element
+     */
+    String path() default "";
+
+    /**
+     * The name of the linkrel element to be exported
+     *
+     * @return  the linkrel element
+     */
     String linkRel() default "";
 }

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -166,13 +168,23 @@ public class RestConfiguration implements InitializingBean {
     }
 
 	@Bean
+	ContentPropertyToRequestMappingContext exportedRequestMappingContext() {
+		return new ContentPropertyToRequestMappingContext();
+	}
+
+	@Bean
+	ContentPropertyToExportedContext exportedContentPropertyContext() {
+		return new ContentPropertyToExportedContext();
+	}
+
+	@Bean
 	RequestMappingToLinkrelMappingContext linkrelMappingContext() {
 		return new RequestMappingToLinkrelMappingContext();
 	}
 
 	@Bean
-	RequestMappingHandlerMapping contentHandlerMapping(Stores stores, EntityResolvers entityResolvers) {
-		ContentHandlerMapping mapping = new ContentHandlerMapping(stores, entityResolvers, this);
+	RequestMappingHandlerMapping contentHandlerMapping(Stores stores, EntityResolvers entityResolvers, ContentPropertyToRequestMappingContext exportedRequestMappingContext) {
+		ContentHandlerMapping mapping = new ContentHandlerMapping(stores, entityResolvers, exportedRequestMappingContext, this);
 		mapping.setCorsConfigurations(this.getCorsRegistry().getCorsConfigurations());
         mapping.setInterceptors(this.getStoreHandlerInterceptor());
 		return mapping;
@@ -243,12 +255,15 @@ public class RestConfiguration implements InitializingBean {
 		private EntityResolvers entityResolvers;
 
 		@Autowired
+		private ContentPropertyToRequestMappingContext requestMappingContext;
+
+		@Autowired
 		private MappingContext mappingContext;
 
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, mappingContext, entityResolvers));
+			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, requestMappingContext, mappingContext, entityResolvers));
 		}
 
 		@Override

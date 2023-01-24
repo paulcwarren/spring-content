@@ -1,5 +1,7 @@
 package internal.org.springframework.content.rest.contentservice;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -19,14 +21,16 @@ public class ContentServiceFactory {
     private final RepositoryInvokerFactory repoInvokerFactory;
     private final Stores stores;
     private MappingContext mappingContext;
+    private final ContentPropertyToExportedContext exportContext;
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-    public ContentServiceFactory(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, MappingContext mappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public ContentServiceFactory(RestConfiguration config, Repositories repositories, RepositoryInvokerFactory repoInvokerFactory, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
         this.config = config;
         this.repositories = repositories;
         this.repoInvokerFactory = repoInvokerFactory;
         this.stores = stores;
         this.mappingContext = mappingContext;
+        this.exportContext = exportContext;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
     }
 
@@ -36,7 +40,7 @@ public class ContentServiceFactory {
 
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
 
-            return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), mappingContext, byteRangeRestRequestHandler);
+            return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), mappingContext, exportContext, byteRangeRestRequestHandler);
 
         } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 

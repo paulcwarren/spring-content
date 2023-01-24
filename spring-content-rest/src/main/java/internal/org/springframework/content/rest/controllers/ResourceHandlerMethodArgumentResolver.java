@@ -1,11 +1,14 @@
 package internal.org.springframework.content.rest.controllers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyRequest;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.Store;
@@ -17,6 +20,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -31,6 +35,8 @@ import internal.org.springframework.content.rest.controllers.resolvers.ResourceR
 import internal.org.springframework.content.rest.controllers.resolvers.StoreResourceResolver;
 import internal.org.springframework.content.rest.io.StoreResourceImpl;
 import internal.org.springframework.content.rest.utils.StoreUtils;
+
+import static org.apache.commons.lang.StringUtils.join;
 
 public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -47,13 +53,15 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
     private final RestConfiguration config;
     private final Repositories repositories;
     private final Stores stores;
+    private final ContentPropertyToRequestMappingContext requestMappingContext;
     private final MappingContext mappingContext;
 
-    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores, MappingContext mappingContext, EntityResolvers entityResolvers) {
+    public ResourceHandlerMethodArgumentResolver(ApplicationContext context, RestConfiguration config, Repositories repositories, Stores stores, ContentPropertyToRequestMappingContext requestMappingContext, MappingContext mappingContext, EntityResolvers entityResolvers) {
         this.context = context;
         this.config = config;
         this.repositories = repositories;
         this.stores = stores;
+        this.requestMappingContext = requestMappingContext;
         this.mappingContext = mappingContext;
 
         this.entityResolvers = entityResolvers;
@@ -100,14 +108,17 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
 
         if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
-            EntityResolution result = this.entityResolvers.resolve(pathInfo);
+            String resolvedContentPropertyPath = requestMappingContext.resolveContentPropertyPath(info.getDomainObjectClass(), ContentPropertyRequest.from(pathInfo).getContentPropertyPath());
+            String resolvedStoreLookupPath = ContentPropertyRequest.from(pathSegments[1], pathSegments[2], resolvedContentPropertyPath).getRequestURI();
+
+            EntityResolution result = this.entityResolvers.resolve(resolvedStoreLookupPath);
 
             AntPathMatcher matcher = new AntPathMatcher();
-            Comparator<String> patternComparator = matcher.getPatternComparator(pathInfo);
+            Comparator<String> patternComparator = matcher.getPatternComparator(resolvedStoreLookupPath);
 
             List<String> uriTemplates = new ArrayList<>();
             for (ResourceResolver resolver : resolvers) {
-                if (matcher.match(resolver.getMapping(), pathInfo)) {
+                if (matcher.match(resolver.getMapping(), resolvedStoreLookupPath)) {
                     uriTemplates.add(resolver.getMapping());
                 }
             }

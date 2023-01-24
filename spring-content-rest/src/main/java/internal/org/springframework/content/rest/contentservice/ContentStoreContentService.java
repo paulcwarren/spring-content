@@ -5,17 +5,16 @@ import static java.lang.String.format;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +23,16 @@ import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.content.commons.utils.StoreInterfaceUtils;
 import org.springframework.content.rest.RestResource;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.content.rest.config.RestConfiguration.Resolver;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvoker;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.InvalidMediaTypeException;
@@ -54,13 +56,14 @@ public class ContentStoreContentService implements ContentService {
     private final RestConfiguration config;
     private final RepositoryInvoker repoInvoker;
     private final MappingContext mappingContext;
+    private final ContentPropertyToExportedContext exportContext;
     private final StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
 
-
-    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, MappingContext mappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
+    public ContentStoreContentService(RestConfiguration config, StoreInfo store, RepositoryInvoker repoInvoker, MappingContext mappingContext, ContentPropertyToExportedContext exportContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler) {
         this.config = config;
         this.repoInvoker = repoInvoker;
         this.mappingContext = mappingContext;
+        this.exportContext = exportContext;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
     }
 
@@ -71,7 +74,7 @@ public class ContentStoreContentService implements ContentService {
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
         ContentProperty property = storeResource.getContentProperty();
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).getContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath(), exportContext).getContentMethods();
 
         if (methodsToUse.length > 1) {
             throw new IllegalStateException("Too many getContent methods");
@@ -156,7 +159,7 @@ public class ContentStoreContentService implements ContentService {
             property.setOriginalFileName(domainObject, source.getFilename());
         }
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).setContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath(), exportContext).setContentMethods();
 
         if (methodsToUse.length > 1) {
             RestConfiguration.DomainTypeConfig dtConfig = config.forDomainType(storeResource.getStoreInfo().getDomainObjectClass());
@@ -203,7 +206,7 @@ public class ContentStoreContentService implements ContentService {
         AssociatedStoreResource storeResource = (AssociatedStoreResource)resource;
         ContentProperty property = storeResource.getContentProperty();
 
-        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath()).unsetContentMethods();
+        Method[] methodsToUse = getExportedMethodsFor(storeResource.getStoreInfo().getInterface(), storeResource.getPropertyPath(), exportContext).unsetContentMethods();
 
         if (methodsToUse.length == 0) {
             throw new MethodNotAllowedException();
@@ -323,11 +326,11 @@ public class ContentStoreContentService implements ContentService {
         return storedRenditionResource;
     }
 
-    public static StoreExportedMethodsMap getExportedMethodsFor(Class<?> storeInterfaceClass, PropertyPath path) {
+    public static StoreExportedMethodsMap getExportedMethodsFor(Class<? extends Store> storeInterfaceClass, PropertyPath path, ContentPropertyToExportedContext exportContext) {
 
         StoreExportedMethodsMap exportMap = storeExportedMethods.get(storeInterfaceClass.getCanonicalName()+"#"+path.toString());
         if (exportMap == null) {
-            storeExportedMethods.put(storeInterfaceClass.getCanonicalName()+"#"+path.toString(), new StoreExportedMethodsMap(storeInterfaceClass, path));
+            storeExportedMethods.put(storeInterfaceClass.getCanonicalName()+"#"+path.toString(), new StoreExportedMethodsMap(storeInterfaceClass, path, exportContext));
             exportMap = storeExportedMethods.get(storeInterfaceClass.getCanonicalName()+"#"+path.toString());
         }
 
@@ -355,17 +358,19 @@ public class ContentStoreContentService implements ContentService {
             };
         }
 
-        private Class<?> storeInterface;
+
+        private Class<? extends Store> storeInterface;
         private PropertyPath path;
         private Method[] getContentMethods;
         private Method[] setContentMethods;
         private Method[] unsetContentMethods;
 
-        public StoreExportedMethodsMap(Class<?> storeInterface, PropertyPath path) {
+        public StoreExportedMethodsMap(Class<? extends Store> storeInterface, PropertyPath path, ContentPropertyToExportedContext exportContext) {
             this.storeInterface = storeInterface;
-            this.getContentMethods = calculateExports(GETCONTENT_METHODS, path);
-            this.setContentMethods = calculateExports(SETCONTENT_METHODS, path);
-            this.unsetContentMethods = calculateExports(UNSETCONTENT_METHODS, path);
+            this.path = path;
+            this.getContentMethods = calculateExports(GETCONTENT_METHODS, path, exportContext);
+            this.setContentMethods = calculateExports(SETCONTENT_METHODS, path, exportContext);
+            this.unsetContentMethods = calculateExports(UNSETCONTENT_METHODS, path, exportContext);
         }
 
         public Method[] getContentMethods() {
@@ -380,19 +385,19 @@ public class ContentStoreContentService implements ContentService {
             return this.unsetContentMethods;
         }
 
-        private Method[] calculateExports(Method[] storeMethods, PropertyPath path) {
+        private Method[] calculateExports(Method[] storeMethods, PropertyPath path, ContentPropertyToExportedContext exportContext) {
 
             List<Method> exportedMethods = new ArrayList<>();
             exportedMethods.addAll(Arrays.asList(storeMethods));
 
             List<Method> unexportedMethods = new ArrayList<>();
 
+            // if developer chooses to decorate store and annotate with @RestResource(exported=false)
             for (Method m : exportedMethods) {
                 for (Method dm : storeInterface.getDeclaredMethods()) {
                     if (!dm.isBridge()) {
                         if (dm.getName().equals(m.getName())) {
                             if (argsMatch(dm, m)) {
-
                                 RestResource r = dm.getAnnotation(RestResource.class);
                                 if (r != null && r.exported() == false) {
                                     List<String> paths = Arrays.asList(r.paths());
@@ -406,8 +411,15 @@ public class ContentStoreContentService implements ContentService {
                 }
             }
 
-            for (Method unexportedMethod : unexportedMethods) {
+            // if developer chooses to decorate content property and annotate with @RestResource(exported=false)
+            Pair<Optional<Class<?>>, Class<? extends Serializable>> types = StoreInterfaceUtils.getStoreTypes(storeInterface);
+            types.getFirst().ifPresent((clazz) -> {
+                if (exportContext.getMappings(types.getFirst().get()).get(path.getName()) == false) {
+                    unexportedMethods.addAll(Arrays.asList(storeMethods));
+                }
+            });
 
+            for (Method unexportedMethod : unexportedMethods) {
                 exportedMethods.remove(unexportedMethod);
             }
 

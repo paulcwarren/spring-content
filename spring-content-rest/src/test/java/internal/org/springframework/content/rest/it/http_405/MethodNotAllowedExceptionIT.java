@@ -1,8 +1,6 @@
 package internal.org.springframework.content.rest.it.http_405;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static com.jayway.restassured.RestAssured.given;
 
 import java.io.ByteArrayInputStream;
@@ -73,6 +71,12 @@ public class MethodNotAllowedExceptionIT {
     @Autowired
     private UnexportedContentStore store;
 
+    @Autowired
+    private TestEntity2Repo repo2;
+
+    @Autowired
+    private TestEntity2Store store2;
+
     @LocalServerPort
     int port;
 
@@ -98,7 +102,7 @@ public class MethodNotAllowedExceptionIT {
             });
         });
 
-        Describe("when no setContent methods are exported", () -> {
+        Describe("when no setContent methods are not exported", () -> {
 
             BeforeEach(() -> {
                 RestAssured.port = port;
@@ -119,7 +123,7 @@ public class MethodNotAllowedExceptionIT {
             });
         });
 
-        Describe("when unsetContent method are exported", () -> {
+        Describe("when unsetContent method are not exported", () -> {
 
             BeforeEach(() -> {
                 RestAssured.port = port;
@@ -135,6 +139,39 @@ public class MethodNotAllowedExceptionIT {
                     .accept("text/plain")
                 .when()
                     .delete("/tEntities/" + tentity.getId())
+                .then()
+                    .statusCode(405);
+            });
+        });
+
+        Describe("when a content property is not exported", () -> {
+            BeforeEach(() -> {
+                RestAssured.port = port;
+            });
+            It("should throw a 405 Not Allowed for all requests", () -> {
+                TEntity2 tentity = new TEntity2();
+                tentity = store2.setContent(tentity, new ByteArrayInputStream("some content".getBytes()));
+                tentity = repo2.save(tentity);
+
+                given()
+                    .accept("text/plain")
+                .when()
+                    .get("/tEntity2s/" + tentity.getId() + "/content")
+                .then()
+                    .statusCode(405);
+
+                given()
+                    .contentType("text/plain")
+                    .content("some content".getBytes())
+                .when()
+                    .post("/tEntity2s/" + tentity.getId() + "/content")
+                .then()
+                    .statusCode(405);
+
+                given()
+                    .accept("text/plain")
+                .when()
+                    .delete("/tEntity2s/" + tentity.getId() + "/content")
                 .then()
                     .statusCode(405);
             });
@@ -178,6 +215,19 @@ public class MethodNotAllowedExceptionIT {
         private @MimeType String mimeType;
     }
 
+    @Entity
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class TEntity2 {
+        private @Id @GeneratedValue Long id;
+        private @ContentId @RestResource(exported=false) UUID contentId;
+        private @ContentLength Long len;
+        private @MimeType String mimeType;
+    }
+
+    public interface TestEntity2Repo extends CrudRepository<TEntity2, Long> {}
+    public interface TestEntity2Store extends FilesystemContentStore<TEntity2, UUID> {}
 
     @SpringBootApplication(exclude = {
             MongoAutoConfiguration.class,

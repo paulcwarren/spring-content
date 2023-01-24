@@ -11,7 +11,7 @@ import org.springframework.content.rest.StoreRestResource;
 @StoreRestResource
 public interface TestEntity5Store extends FilesystemContentStore<TestEntity5, UUID> {
 
-    @RestResource(paths={"rendition"}, exported=false)
+    @RestResource(exported=false, paths={"rendition"})
     @Override
     InputStream getContent(TestEntity5 entity, PropertyPath propertyPath);
 }

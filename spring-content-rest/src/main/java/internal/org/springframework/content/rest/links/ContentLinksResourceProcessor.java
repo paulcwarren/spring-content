@@ -11,6 +11,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,16 +58,18 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");
 	}
 
+	private final ContentPropertyToRequestMappingContext requestMappingContext;
 	private final RequestMappingToLinkrelMappingContext linkrelMappingContext;
 
 	private Stores stores;
 	private RestConfiguration config;
 	private MappingContext mappingContext;
 
-	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
+	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, ContentPropertyToRequestMappingContext requestMappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
 		this.stores = stores;
 		this.config = config;
 		this.mappingContext = mappingContext;
+		this.requestMappingContext = requestMappingContext;
 		this.linkrelMappingContext = linkrelMappingContext;
 	}
 
@@ -129,7 +132,8 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	}
 
 	private String propertyLinkRel(StoreInfo storeInfo, Map.Entry<String, ContentProperty> contentProperty) {
-        String uriPath = StringUtils.uncapitalize(contentProperty.getKey());
+//        String uriPath = StringUtils.uncapitalize(contentProperty.getKey());
+		String uriPath = contentProperty.getKey();
 		Map<String,String> linkrelMappings = this.linkrelMappingContext.getMappings(storeInfo.getDomainObjectClass());
 		String linkrel = linkrelMappings.get(uriPath);
 		if (linkrel == null || !StringUtils.hasLength(linkrel)) {
@@ -182,7 +186,12 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
         builder = builder.slash(id);
 
-        builder = builder.slash(contentPropertyEntry.getKey());
+		String requestMapping = requestMappingContext.getMappings(store.getDomainObjectClass()).get(contentPropertyEntry.getKey());
+		if (StringUtils.hasText(requestMapping)) {
+			builder = builder.slash(requestMapping);
+		} else {
+			builder = builder.slash(contentPropertyEntry.getKey());
+		}
 
         return builder.withRel(propertyLinkRel(store, contentPropertyEntry));
     }
