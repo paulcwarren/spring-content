@@ -136,3 +136,57 @@ Resulting in the following lnkrel:-
   }
 ----
 ====
+
+=== Customizing the link
+
+In addition, the link itself can also be customized by specifying the `path` attribute on
+the `@RestResource` placed on any field contributing to the path up-to and including the
+@ContentId field, as follows:
+
+====
+[source, java]
+----
+  @Entity
+  public class Dvd {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @RestResource(linkRel="movie", path="movie")
+    @ContentId
+    private UUID videoId;
+
+    @ContentLength
+    private Long videoLength;
+
+    @MimeType
+    private String videoMimeType;
+
+    // getters and setters
+  }
+
+  public interface DvdRepository extends CrudRepository<Dvd, Long> {}
+
+  @StoreRestResource(linkRel="custom-linkrel")
+  public interface DvdStore extends ContentStore<Dvd, UUID> {}
+----
+====
+
+Resulting in the following lnk:-
+
+====
+[source, java]
+----
+ "_links" : {
+    "self" : {
+      ...
+    },
+    "dvd" : {
+      ...
+    },
+    "custom-linkrel/movie" : {
+      "href" : "http://localhost:8080/dvds/1/movie"
+    }
+  }
+----
+====
