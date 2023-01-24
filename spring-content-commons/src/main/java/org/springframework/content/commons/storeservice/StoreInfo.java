@@ -1,12 +1,14 @@
 package org.springframework.content.commons.storeservice;
 
+import org.springframework.content.commons.repository.Store;
+
 public interface StoreInfo {
     /**
      * Returns the Store's interface class
      *
      * @return interface class
      */
-    public Class<?> getInterface();
+    public Class<? extends Store> getInterface();
 
     /**
      * Returns the Store's domain object class if applicable. In cases where the Store

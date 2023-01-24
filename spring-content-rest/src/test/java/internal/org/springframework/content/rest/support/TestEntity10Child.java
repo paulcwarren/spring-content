@@ -13,6 +13,7 @@ import org.springframework.content.commons.annotations.OriginalFileName;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.content.rest.RestResource;
 
 @Embeddable
 @Getter

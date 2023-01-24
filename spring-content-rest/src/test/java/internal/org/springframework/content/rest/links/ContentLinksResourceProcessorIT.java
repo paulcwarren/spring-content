@@ -191,8 +191,8 @@ public class ContentLinksResourceProcessorIT {
 				});
 
 				It("should add content property links", () -> {
-					assertThat(resource.getLinks("package/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/_package/content"))));
-					assertThat(resource.getLinks("package/preview"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/_package/preview"))));
+					assertThat(resource.getLinks("package/content"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/package/content"))));
+					assertThat(resource.getLinks("package/preview"), hasItems(hasProperty("href", is("http://localhost/contentApi/testEntity11s/999/package/preview"))));
 				});
 			});
 

@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyRequest;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -31,20 +33,24 @@ import internal.org.springframework.content.rest.annotations.ContentRestControll
 import internal.org.springframework.content.rest.controllers.resolvers.EntityResolvers;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
+import static org.apache.commons.lang.StringUtils.join;
+
 public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 
 	private static MediaType hal = MediaType.parseMediaType("application/hal+json");
 	private static MediaType json = MediaType.parseMediaType("application/json");
 
-    private Exclusions exclusions = null;
+	private Exclusions exclusions = null;
 	private Stores contentStores;
 	private EntityResolvers entityResolvers = null;
+	private final ContentPropertyToRequestMappingContext requestMappingContext;
 
-	public ContentHandlerMapping(Stores contentStores, EntityResolvers entityResolvers, RestConfiguration config) {
+	public ContentHandlerMapping(Stores contentStores, EntityResolvers entityResolvers, ContentPropertyToRequestMappingContext requestMappingContext, RestConfiguration config) {
 		super(config);
 		initExclusions(exclusions, config);
 		this.contentStores = contentStores;
 		this.entityResolvers = entityResolvers;
+		this.requestMappingContext = requestMappingContext;
 		setOrder(Ordered.LOWEST_PRECEDENCE - 200);
 	}
 
@@ -99,10 +105,13 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 			if (info2 != null) {
 
 			    if (isFullyQualifiedContentPropertyRequest(path, info2)) {
-			        if (entityResolvers.hasPropertyFor(storeLookupPath)) {
+
+					String resolvedContentPropertyPath = requestMappingContext.resolveContentPropertyPath(info2.getDomainObjectClass(), ContentPropertyRequest.from(storeLookupPath).getContentPropertyPath());
+					String resolvedStoreLookupPath = ContentPropertyRequest.from(path[1], path[2], resolvedContentPropertyPath).getRequestURI();
+
+					if (entityResolvers.hasPropertyFor(resolvedStoreLookupPath)) {
     			        return super.lookupHandlerMethod(lookupPath, request);
     			    }
-
 			    } else if (this.getConfiguration().shortcutLinks()) {
     			    // for backward compatibility
     			    if (info2 != null && isExcludedShortcutContentPropertyRequest(request) == false) {
@@ -114,7 +123,7 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 		return null;
 	}
 
-    @Override
+	@Override
 	protected boolean hasCorsConfigurationSource(Object handler) {
 		return true;
 	}

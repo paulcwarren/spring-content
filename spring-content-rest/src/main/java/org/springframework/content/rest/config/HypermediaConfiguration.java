@@ -1,6 +1,7 @@
 package org.springframework.content.rest.config;
 
 import internal.org.springframework.content.rest.links.ContentLinksResourceProcessor;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.storeservice.Stores;
@@ -15,7 +16,7 @@ import org.springframework.hateoas.server.RepresentationModelProcessor;
 public class HypermediaConfiguration {
 
 	@Bean
-	public RepresentationModelProcessor<PersistentEntityResource> contentLinksProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
-		return new ContentLinksResourceProcessor(stores, config, mappingContext, linkrelMappingContext);
+	public RepresentationModelProcessor<PersistentEntityResource> contentLinksProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, ContentPropertyToRequestMappingContext requestMappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
+		return new ContentLinksResourceProcessor(stores, config, mappingContext, requestMappingContext, linkrelMappingContext);
 	}
 }

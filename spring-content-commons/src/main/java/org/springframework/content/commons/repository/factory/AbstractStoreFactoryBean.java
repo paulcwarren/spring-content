@@ -81,7 +81,7 @@ public abstract class AbstractStoreFactoryBean
 	 * getContentStoreInterface()
 	 */
 	@Override
-    public Class<?> getStoreInterface() {
+    public Class<? extends Store> getStoreInterface() {
 		return this.storeInterface;
 	}
 

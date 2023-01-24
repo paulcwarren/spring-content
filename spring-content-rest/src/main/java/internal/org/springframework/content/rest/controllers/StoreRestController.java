@@ -1,6 +1,5 @@
 package internal.org.springframework.content.rest.controllers;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.util.Date;
@@ -8,6 +7,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -67,6 +67,9 @@ public class StoreRestController implements InitializingBean  {
 
     @Autowired
     private MappingContext mappingContext;
+
+    @Autowired
+    private ContentPropertyToExportedContext exportedMappingContext;
 
     private ContentServiceFactory contentServiceFactory;
 
@@ -244,6 +247,6 @@ public class StoreRestController implements InitializingBean  {
             this.repoInvokerFactory = new DefaultRepositoryInvokerFactory(this.repositories);
         }
 
-        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, mappingContext, byteRangeRestRequestHandler);
+        contentServiceFactory = new ContentServiceFactory(config, repositories, repoInvokerFactory, stores, mappingContext, exportedMappingContext, byteRangeRestRequestHandler);
     }
 }
