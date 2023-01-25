@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
-import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToLinkrelMappingContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
@@ -59,13 +59,13 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 	}
 
 	private final ContentPropertyToRequestMappingContext requestMappingContext;
-	private final RequestMappingToLinkrelMappingContext linkrelMappingContext;
+	private final ContentPropertyToLinkrelMappingContext linkrelMappingContext;
 
 	private Stores stores;
 	private RestConfiguration config;
 	private MappingContext mappingContext;
 
-	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, ContentPropertyToRequestMappingContext requestMappingContext, RequestMappingToLinkrelMappingContext linkrelMappingContext) {
+	public ContentLinksResourceProcessor(Stores stores, RestConfiguration config, MappingContext mappingContext, ContentPropertyToRequestMappingContext requestMappingContext, ContentPropertyToLinkrelMappingContext linkrelMappingContext) {
 		this.stores = stores;
 		this.config = config;
 		this.mappingContext = mappingContext;

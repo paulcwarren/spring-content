@@ -10,12 +10,11 @@ import java.util.Map;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
-import internal.org.springframework.content.rest.mappingcontext.RequestMappingToLinkrelMappingContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToLinkrelMappingContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
-import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.StoreCacheControlInterceptor.StoreCacheControlConfigurer;
@@ -170,8 +169,8 @@ public class RestConfiguration implements InitializingBean {
 	}
 
 	@Bean
-	RequestMappingToLinkrelMappingContext linkrelMappingContext() {
-		return new RequestMappingToLinkrelMappingContext();
+	ContentPropertyToLinkrelMappingContext linkrelMappingContext() {
+		return new ContentPropertyToLinkrelMappingContext();
 	}
 
 	@Bean

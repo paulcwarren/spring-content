@@ -5,11 +5,11 @@ import org.springframework.content.commons.mappingcontext.ClassWalker;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RequestMappingToLinkrelMappingContext {
+public class ContentPropertyToLinkrelMappingContext {
 
     private Map<Class<?>, Map<String, String>> mappings = new HashMap<Class<?>, Map<String,String>>();
 
-    public RequestMappingToLinkrelMappingContext() {}
+    public ContentPropertyToLinkrelMappingContext() {}
 
     public Map<String, String> getMappings(Class<?> domainClass) {
 
@@ -21,10 +21,10 @@ public class RequestMappingToLinkrelMappingContext {
     }
 
     private Map<String,String> resolveMappings(Class<?> domainClass) {
-        RequestMappingToLinkrelMappingBuilder visitor = new RequestMappingToLinkrelMappingBuilder();
+        RestResourceMappingBuilder visitor = new RestResourceMappingBuilder((rr)->rr.linkRel());
         ClassWalker walker = new ClassWalker(visitor);
         walker.accept(domainClass);
-        Map<String,String> mappings = visitor.getRequestMappings();
+        Map<String,String> mappings = visitor.getMappings();
         this.mappings.put(domainClass, mappings);
         return mappings;
     }
