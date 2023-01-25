@@ -156,15 +156,7 @@ public class RestConfiguration implements InitializingBean {
 
     @Bean
     MappingContext mappingContext() {
-        MappingContext context = new MappingContext("/", ".");
-
-        for (StoreInfo info : stores.getStores(Stores.MATCH_ALL)) {
-            if (info.getDomainObjectClass() != null) {
-                context.getContentProperties(info.getDomainObjectClass());
-            }
-        }
-
-        return context;
+        return new MappingContext("/", ".");
     }
 
 	@Bean
