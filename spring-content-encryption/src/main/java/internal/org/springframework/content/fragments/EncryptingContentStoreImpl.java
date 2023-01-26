@@ -1,6 +1,7 @@
 package internal.org.springframework.content.fragments;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.io.RangeableResource;
@@ -16,6 +17,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
+import org.springframework.vault.core.VaultOperations;
 
 import javax.crypto.CipherInputStream;
 import java.io.*;

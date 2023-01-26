@@ -18,14 +18,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-public class EnvelopeEncryptionService implements InitializingBean {
+public class EnvelopeEncryptionService {
 
     private static KeyGenerator KEY_GENERATOR;
 
     private static String transformation = "AES/CTR/NoPadding";
     private static final String AES = "AES";
-
-    private static final String KEYRING_NAME = "shared-key";
 
     static {
         // Create an encryption key.
@@ -147,15 +145,6 @@ public class EnvelopeEncryptionService implements InitializingBean {
     public void rotate(String keyName) {
         VaultTransitOperations transit = vaultOperations.opsForTransit();
         transit.rotate(keyName);
-    }
-
-    public void rotate() {
-        this.rotate(KEYRING_NAME);
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        vaultOperations.opsForTransit().createKey(KEYRING_NAME);
     }
 
     // CipherInputStream skip does not work.  This wraps a cipherinputstream purely to override the skip with a
