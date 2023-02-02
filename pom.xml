@@ -47,7 +47,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        
+
+        <spring-content.version>${project.version}</spring-content.version>
         <ginkgo4j-version>1.0.15</ginkgo4j-version>
         <springboot-version>2.7.8</springboot-version>
         <spring-cloud.version>2022.0.1</spring-cloud.version>
@@ -115,6 +116,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <module>./spring-versions-jpa</module>
         <module>./spring-versions-jpa-boot-starter</module>
         <module>./spring-content-cmis</module>
+        <module>./spring-content-bom</module>
     </modules>
 
     <build>
