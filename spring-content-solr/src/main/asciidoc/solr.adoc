@@ -6,7 +6,7 @@ The maven coordinates for this Spring Content library are as follows:
 ```xml
 <dependency>
     <groupId>com.github.paulcwarren</groupId>
-    <artifactId>spring-content-solr</artifactId>
+    <artifactId>spring-content-solra</artifactId>
 </dependency>
 ```
 
