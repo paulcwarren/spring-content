@@ -442,6 +442,36 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="content">
 <div class="sect1">
+<h2 id="_maven_central_coordinates">Maven Central Coordinates</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-azure-storage&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -648,7 +678,7 @@ public class AzureStoreConfiguration  {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>

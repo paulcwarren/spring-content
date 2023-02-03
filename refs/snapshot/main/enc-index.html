@@ -481,8 +481,10 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_content_encryption">2. Content Encryption</a>
 <ul class="sectlevel2">
-<li><a href="#_byte_range_support">2.1. Byte-Range Support</a></li>
-<li><a href="#_getting_started">2.2. Getting Started</a></li>
+<li><a href="#_maven_central_coordinates">2.1. Maven Central Coordinates</a></li>
+<li><a href="#_adding_encryption_to_your_contentstores">2.2. Adding Encryption to your ContentStores</a></li>
+<li><a href="#_byte_range_support">2.3. Byte-Range Support</a></li>
+<li><a href="#_getting_started">2.4. Getting Started</a></li>
 </ul>
 </li>
 </ul>
@@ -1571,6 +1573,36 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="sect1">
 <h2 id="_content_encryption">2. Content Encryption</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_maven_central_coordinates">2.1. Maven Central Coordinates</h3>
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-encryption&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_encryption_to_your_contentstores">2.2. Adding Encryption to your ContentStores</h3>
 <div class="paragraph">
 <p>Spring Content Encryption adds the interface <code>EncryptingContentStore</code> that can be used to decorate a <code>Store</code>
 to provide at-rest encryption of the content in that Store.</p>
@@ -1694,8 +1726,9 @@ public static class File {
 </div>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_byte_range_support">2.1. Byte-Range Support</h3>
+<h3 id="_byte_range_support">2.3. Byte-Range Support</h3>
 <div class="paragraph">
 <p>Because the default implementation uses AES-CTR cipher even though a Store is encrypted it is still capable of
 serving byte-ranges.  However, type of storage depends on how exactly that happens.</p>
@@ -1712,7 +1745,7 @@ example, S3 storage is used in production, but filesystem is used in test.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_getting_started">2.2. Getting Started</h3>
+<h3 id="_getting_started">2.4. Getting Started</h3>
 <div class="paragraph">
 <p>For a working example please refer to the getting started guide <a href="http://https://paulcwarren.github.io/spring-content/spring-content-with-encryption-docs/">here</a>.
 :leveloffset: -1</p>
@@ -1724,7 +1757,7 @@ example, S3 storage is used in production, but filesystem is used in test.</p>
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>

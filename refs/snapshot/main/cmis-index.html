@@ -481,9 +481,10 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_cmis_integration">2. CMIS Integration</a>
 <ul class="sectlevel2">
-<li><a href="#_cmis_domain_model_mapping">2.1. CMIS Domain Model Mapping</a></li>
-<li><a href="#_cmis_workbench">2.2. CMIS Workbench</a></li>
-<li><a href="#_using_spring_content_cmis">2.3. Using Spring Content CMIS</a></li>
+<li><a href="#_maven_central_coordinates">2.1. Maven Central Coordinates</a></li>
+<li><a href="#_cmis_domain_model_mapping">2.2. CMIS Domain Model Mapping</a></li>
+<li><a href="#_cmis_workbench">2.3. CMIS Workbench</a></li>
+<li><a href="#_using_spring_content_cmis">2.4. Using Spring Content CMIS</a></li>
 </ul>
 </li>
 </ul>
@@ -1572,6 +1573,33 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <div class="sect1">
 <h2 id="_cmis_integration">2. CMIS Integration</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_maven_central_coordinates">2.1. Maven Central Coordinates</h3>
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-cmis&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
 <div class="paragraph">
 <p>Spring Content CMIS supports the CMIS browser (JSON) bindings.</p>
 </div>
@@ -1583,10 +1611,11 @@ for document management use cases or for migration away from traditional documen
 <p>Spring Content CMIS provides a set of annotations that can be placed on an existing Spring Content domain model to map
 its classes onto the CMIS domain model in order to export its entities via the CMIS browser bindings.</p>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_cmis_domain_model_mapping">2.1. CMIS Domain Model Mapping</h3>
+<h3 id="_cmis_domain_model_mapping">2.2. CMIS Domain Model Mapping</h3>
 <div class="sect3">
-<h4 id="_cmisrepository">2.1.1. CmisRepository</h4>
+<h4 id="_cmisrepository">2.2.1. CmisRepository</h4>
 <div class="paragraph">
 <p>At the root of the CMIS model and services is a repository, which is an instance of the content management system
 and its store of metadata, content, and indexes.</p>
@@ -1598,7 +1627,7 @@ Content CMIS application therefore exports, at most, one CMIS Repository.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cmisobject">2.1.2. CmisObject</h4>
+<h4 id="_cmisobject">2.2.2. CmisObject</h4>
 <div class="paragraph">
 <p>The Spring Data/Content domain model can be mapped to the CMIS domain model using two annotations; <code>@CmisDocument</code> and
 <code>@CmisFolder</code>.  These annotations should be placed on Spring Data entity types with each being placed on a single entity
@@ -1648,7 +1677,7 @@ annotation may be present to identify a <code>cmis:description</code> field.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cmisdocument">2.1.3. CmisDocument</h4>
+<h4 id="_cmisdocument">2.2.3. CmisDocument</h4>
 <div class="paragraph">
 <p>Entity types mapped to <code>@CmisDocument</code> that also have a <code>ContentStore</code> will also have additional content stream
 properties and service for accessing the binary information that is the document.</p>
@@ -1722,7 +1751,7 @@ copies (CMIS 1.1) are supported by default.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cmisfolder">2.1.4. CmisFolder</h4>
+<h4 id="_cmisfolder">2.2.4. CmisFolder</h4>
 <div class="paragraph">
 <p>With a CMIS repository, Document objects can live in one, or more, folders.  A folder can also exist in other folders
 creating a hierarchy.</p>
@@ -1735,7 +1764,7 @@ entity.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cmisnavigationservice">2.1.5. CmisNavigationService</h4>
+<h4 id="_cmisnavigationservice">2.2.5. CmisNavigationService</h4>
 <div class="paragraph">
 <p>These two annotations are sufficient to achieve a working folder hierarchy.  However, it is also possible to provide a
 <code>CmisNavigationService</code> bean through configuration in order to provide a more efficient implementation for
@@ -1744,7 +1773,7 @@ navigation.  This is recommended.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cmis_workbench">2.2. CMIS Workbench</h3>
+<h3 id="_cmis_workbench">2.3. CMIS Workbench</h3>
 <div class="paragraph">
 <p>A good option for testing is to use the <a href="https://chemistry.apache.org/java/developing/tools/dev-tools-workbench.html">CMIS Workbench</a>.
 If you wish to use this client application in your Spring application ensure you disable Spring&#8217;s hidden method filter
@@ -1760,9 +1789,9 @@ otherwise it attempts to parse POSTed requests from the CMIS Workbench client ca
 </div>
 </div>
 <div class="sect2">
-<h3 id="_using_spring_content_cmis">2.3. Using Spring Content CMIS</h3>
+<h3 id="_using_spring_content_cmis">2.4. Using Spring Content CMIS</h3>
 <div class="sect3">
-<h4 id="_enabling_the_cmis_integration">2.3.1. Enabling the CMIS Integration</h4>
+<h4 id="_enabling_the_cmis_integration">2.4.1. Enabling the CMIS Integration</h4>
 <div class="paragraph">
 <p>To enable CMIS, place a <code>@EnableCmis</code> annotation on a suitable <code>@Configuration</code> class.</p>
 </div>
@@ -1801,7 +1830,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_domain_model_mapping">2.3.2. Domain Model Mapping</h4>
+<h4 id="_domain_model_mapping">2.4.2. Domain Model Mapping</h4>
 <div class="sect4">
 <h5 id="_cmisobject_2">CmisObject</h5>
 <div class="paragraph">
@@ -2057,7 +2086,7 @@ for navigation.</p>
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>

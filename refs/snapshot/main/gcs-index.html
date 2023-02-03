@@ -481,9 +481,10 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_gcs_content_stores">2. GCS Content Stores</a>
 <ul class="sectlevel2">
-<li><a href="#_annotation_based_configuration">2.1. Annotation-based Configuration</a></li>
-<li><a href="#_configuration_properties">2.2. Configuration Properties</a></li>
-<li><a href="#_accessing_content">2.3. Accessing Content</a></li>
+<li><a href="#_maven_central_coordinates">2.1. Maven Central Coordinates</a></li>
+<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
+<li><a href="#_configuration_properties">2.3. Configuration Properties</a></li>
+<li><a href="#_accessing_content">2.4. Accessing Content</a></li>
 </ul>
 </li>
 <li><a href="#solr-search">3. Indexing &amp; Searching with Solr</a>
@@ -1581,7 +1582,35 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 <h2 id="_gcs_content_stores">2. GCS Content Stores</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_annotation_based_configuration">2.1. Annotation-based Configuration</h3>
+<h3 id="_maven_central_coordinates">2.1. Maven Central Coordinates</h3>
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-gcs&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
 <div class="paragraph">
 <p>Spring Content GCS is enabled with the following Java Config.</p>
 </div>
@@ -1616,7 +1645,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuration_properties">2.2. Configuration Properties</h3>
+<h3 id="_configuration_properties">2.3. Configuration Properties</h3>
 <div class="paragraph">
 <p>The following configuration properties (prefix <code>spring.content.gcs</code>) are supported.</p>
 </div>
@@ -1643,9 +1672,9 @@ public static class ApplicationConfig {
 </table>
 </div>
 <div class="sect2">
-<h3 id="_accessing_content">2.3. Accessing Content</h3>
+<h3 id="_accessing_content">2.4. Accessing Content</h3>
 <div class="sect3">
-<h4 id="_signature_types">2.3.1. Signature Types</h4>
+<h4 id="_signature_types">2.4.1. Signature Types</h4>
 <div id="signature_types" class="paragraph">
 <p>Google Cloud Storage supports the following signature types:</p>
 </div>
@@ -1661,7 +1690,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_storage_model">2.3.2. Storage Model</h4>
+<h4 id="_storage_model">2.4.2. Storage Model</h4>
 <div class="paragraph">
 <p>With GCP Storage (GCS), buckets and objects are the two main primitives, where objects are stored in buckets.  GCS has a
 flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
@@ -1669,7 +1698,7 @@ of buckets or objects in buckets.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_loading_spring_resources_from_a_store_or_associativestore">2.3.3. Loading Spring Resources from a Store or AssociativeStore</h4>
+<h4 id="_loading_spring_resources_from_a_store_or_associativestore">2.4.3. Loading Spring Resources from a Store or AssociativeStore</h4>
 <div class="paragraph">
 <p>Resources returned by Google Cloud Storage are standard Spring Resources implementing the following interfaces:
 - <code>org.springframework.core.io.Resource</code>
@@ -1724,7 +1753,7 @@ instance of <code>BlobId</code></p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content_using_a_contentstore">2.3.4. Setting Content using a ContentStore</h4>
+<h4 id="_setting_content_using_a_contentstore">2.4.4. Setting Content using a ContentStore</h4>
 <div class="paragraph">
 <p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
 </div>
@@ -1740,19 +1769,19 @@ based in <code>java.util.UUID</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content_from_a_contentstore">2.3.5. Getting Content from a ContentStore</h4>
+<h4 id="_getting_content_from_a_contentstore">2.4.5. Getting Content from a ContentStore</h4>
 <div class="paragraph">
 <p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content_from_a_contentstore">2.3.6. Unsetting Content from a ContentStore</h4>
+<h4 id="_unsetting_content_from_a_contentstore">2.4.6. Unsetting Content from a ContentStore</h4>
 <div class="paragraph">
 <p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_configuring_a_spring_converter">2.3.7. Configuring a Spring Converter</h4>
+<h4 id="_configuring_a_spring_converter">2.4.7. Configuring a Spring Converter</h4>
 <div id="configuring_converters" class="paragraph">
 <p>To configure Spring Content GCS with one or more Spring Converters that convert your Entities, or IDs, to an
 instance of BlobId the following approach can be used:</p>
@@ -1888,7 +1917,7 @@ public class GCSStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>

@@ -482,10 +482,11 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#renditions">2. Renditions</a>
 <ul class="sectlevel2">
 <li><a href="#_overview">2.1. Overview</a></li>
-<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
-<li><a href="#_making_stores_renderable">2.3. Making Stores Renderable</a></li>
-<li><a href="#_renderers">2.4. Renderers</a></li>
-<li><a href="#_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</a></li>
+<li><a href="#_maven_central_coordinates">2.2. Maven Central Coordinates</a></li>
+<li><a href="#_annotation_based_configuration">2.3. Annotation-based Configuration</a></li>
+<li><a href="#_making_stores_renderable">2.4. Making Stores Renderable</a></li>
+<li><a href="#_renderers">2.5. Renderers</a></li>
+<li><a href="#_renditionprovider_extension_point">2.6. RenditionProvider Extension Point</a></li>
 </ul>
 </li>
 </ul>
@@ -1594,7 +1595,35 @@ can convert documents between Microsoft Word, Adobe PDF and HTML based on the do
 </div>
 </div>
 <div class="sect2">
-<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
+<h3 id="_maven_central_coordinates">2.2. Maven Central Coordinates</h3>
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-renditions&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.3. Annotation-based Configuration</h3>
 <div class="exampleblock">
 <div class="title">Example 16. Enabling Spring Content Renditions with Java Config</div>
 <div class="content">
@@ -1621,14 +1650,14 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_making_stores_renderable">2.3. Making Stores Renderable</h3>
+<h3 id="_making_stores_renderable">2.4. Making Stores Renderable</h3>
 <div class="paragraph">
 <p>With renditions enabled, Store interfaces can be made <code>Renderable</code>.  See
 <a href="#content-repositories.renditions">Renderable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_renderers">2.4. Renderers</h3>
+<h3 id="_renderers">2.5. Renderers</h3>
 <div class="paragraph">
 <p>The <code>spring-content-rendition</code> dependency contributes the following renderer:</p>
 </div>
@@ -1666,7 +1695,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_renditionprovider_extension_point">2.5. RenditionProvider Extension Point</h3>
+<h3 id="_renditionprovider_extension_point">2.6. RenditionProvider Extension Point</h3>
 <div class="paragraph">
 <p>Spring Content Renditions offers some common renderers out-of-the-box.  However, if you need to provide additional
 renderers to satisfy your use cases then you can implement the RenditionProvider extension point.  This requires you
@@ -1727,7 +1756,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>

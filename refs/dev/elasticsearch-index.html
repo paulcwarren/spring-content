@@ -482,13 +482,14 @@ Copies of this document may be made for your own use and for distribution to oth
 <li><a href="#fulltext-search">2. Fulltext Indexing and Searching with Elasticsearch</a>
 <ul class="sectlevel2">
 <li><a href="#_overview">2.1. Overview</a></li>
-<li><a href="#_annotation_based_configuration">2.2. Annotation-based Configuration</a></li>
-<li><a href="#_spring_boot_configuration">2.3. Spring Boot Configuration</a></li>
-<li><a href="#_making_stores_searchable">2.4. Making Stores Searchable</a></li>
-<li><a href="#_custom_indexing">2.5. Custom Indexing</a></li>
-<li><a href="#_text_extraction">2.6. Text Extraction</a></li>
-<li><a href="#_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</a></li>
-<li><a href="#_search_return_types">2.8. Search Return Types</a></li>
+<li><a href="#_maven_central_coordinates">2.2. Maven Central Coordinates</a></li>
+<li><a href="#_annotation_based_configuration">2.3. Annotation-based Configuration</a></li>
+<li><a href="#_spring_boot_configuration">2.4. Spring Boot Configuration</a></li>
+<li><a href="#_making_stores_searchable">2.5. Making Stores Searchable</a></li>
+<li><a href="#_custom_indexing">2.6. Custom Indexing</a></li>
+<li><a href="#_text_extraction">2.7. Text Extraction</a></li>
+<li><a href="#_custom_attributes_and_filtering_queries">2.8. Custom Attributes and Filtering Queries</a></li>
+<li><a href="#_search_return_types">2.9. Search Return Types</a></li>
 </ul>
 </li>
 </ul>
@@ -1584,7 +1585,35 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_annotation_based_configuration">2.2. Annotation-based Configuration</h3>
+<h3 id="_maven_central_coordinates">2.2. Maven Central Coordinates</h3>
+<div class="paragraph">
+<p>The maven coordinates for this Spring Content library are as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-elasticsearch&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
+    &lt;version&gt;${spring-content-version}&lt;/version&gt;
+    &lt;type&gt;pom&lt;/type&gt;
+    &lt;scope&gt;import&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_annotation_based_configuration">2.3. Annotation-based Configuration</h3>
 <div class="paragraph">
 <p>Spring Content Elasticsearch requires a <code>RestHighLevelClient</code> bean that is used as the connection to your Elasticsearch
 cluster.</p>
@@ -1627,7 +1656,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_spring_boot_configuration">2.3. Spring Boot Configuration</h3>
+<h3 id="_spring_boot_configuration">2.4. Spring Boot Configuration</h3>
 <div class="paragraph">
 <p>Alternatively, you can use the Spring Boot Starter <code>spring-content-elasticsearch-boot-starter</code>.</p>
 </div>
@@ -1658,14 +1687,14 @@ be added for you.  As will a RestHighLevelClient client bean configured to conne
 </table>
 </div>
 <div class="sect2">
-<h3 id="_making_stores_searchable">2.4. Making Stores Searchable</h3>
+<h3 id="_making_stores_searchable">2.5. Making Stores Searchable</h3>
 <div class="paragraph">
 <p>With fulltext-indexing enabled, Store interfaces can be made <code>Searchable</code>.  See
 <a href="#content-repositories.search">Searchable Stores</a> for more information on how to do this.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_custom_indexing">2.5. Custom Indexing</h3>
+<h3 id="_custom_indexing">2.6. Custom Indexing</h3>
 <div class="paragraph">
 <p>By default when you <code>@EnableElasticsearchFulltextIndexing</code> a store event handler is registered that intercepts content
 being added to a Store and sends that content to your Elasticsearch cluster for full-text indexing.  This is usually
@@ -1678,7 +1707,7 @@ use the <code>IndexService</code> bean directly in your code to index (or uninde
 </div>
 </div>
 <div class="sect2">
-<h3 id="_text_extraction">2.6. Text Extraction</h3>
+<h3 id="_text_extraction">2.7. Text Extraction</h3>
 <div class="paragraph">
 <p>For images and other media, it also possible to configure the elasticsearch integration to perform text extraction and
 send that instead of the image content to Elasticsearch.</p>
@@ -1755,7 +1784,7 @@ public static class ApplicationConfig {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_custom_attributes_and_filtering_queries">2.7. Custom Attributes and Filtering Queries</h3>
+<h3 id="_custom_attributes_and_filtering_queries">2.8. Custom Attributes and Filtering Queries</h3>
 <div class="paragraph">
 <p>By default Spring Content Elasticsearch indexes content only.  However, it is common to synchronize additional
 attributes from the primary domain model that can then be used for filtering full-text queries or for efficiently populating
@@ -1825,7 +1854,7 @@ filter queries based on the current execution context.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_search_return_types">2.8. Search Return Types</h3>
+<h3 id="_search_return_types">2.9. Search Return Types</h3>
 <div class="paragraph">
 <p><code>Searchable</code> is a generic type allowing you to specify the return type of the result set.  The simplest option is to
 type this interface to String in which case result sets will be collections of content IDs.</p>
@@ -1855,7 +1884,7 @@ results to your specific needs:</p>
 <div id="footer">
 <div id="footer-text">
 Version 2.8.0-SNAPSHOT<br>
-Last updated 2023-02-03 04:29:45 UTC
+Last updated 2023-02-03 04:48:17 UTC
 </div>
 </div>
 </body>
