@@ -1,5 +1,25 @@
 = Azure Storage
 
+== Maven Central Coordinates
+The maven coordinates for this Spring Content library are as follows:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-azure-storage</artifactId>
+</dependency>
+```
+
+As it is usual to use several Spring Content libraries together importing the bom is recommended:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-bom</artifactId>
+    <version>${spring-content-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+```
+
 == Annotation-based Configuration
 
 Spring Content Azure Storage is enabled with the following Java Config.
