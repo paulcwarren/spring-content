@@ -17,7 +17,27 @@ Spring Content REST officially supports:
 
 == Introduction
 
-Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort. 
+Spring Content REST is itself a Spring MVC application and is designed in such a way that it should integrate with your existing Spring MVC applications with very little effort.
+
+== Maven Central Coordinates
+The maven coordinates for this Spring Content library are as follows:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-rest</artifactId>
+</dependency>
+```
+
+As it is usual to use several Spring Content libraries together importing the bom is recommended:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-bom</artifactId>
+    <version>${spring-content-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+```
 
 == Adding Spring Content REST to a Spring Boot project
 
