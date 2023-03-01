@@ -1,34 +1,13 @@
 package internal.org.springframework.content.rest.links;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static java.lang.String.format;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Version;
-import javax.sql.DataSource;
-import javax.transaction.Transactional;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.rest.support.TestEntityChild;
+import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.annotations.Formula;
 import org.junit.Test;
@@ -79,13 +58,17 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Date;
+import java.util.UUID;
 
-import internal.org.springframework.content.rest.support.TestEntityChild;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static java.lang.String.format;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -178,10 +161,6 @@ public class ContentLinkRelIT {
 
 	            Context("given a store specifying a linkrel and an entity a nested content property", () -> {
 	              BeforeEach(() -> {
-
-	                  StoreRestResource srr = new DynamicStoreRestResource("foo");
-	                  alterAnnotationValueJDK8(TestEntity2Store.class, StoreRestResource.class, srr);
-
 	                  testEntity2 = new TestEntity2();
 	                  testEntity2.getChild().setContentId(UUID.randomUUID());
 	                  testEntity2.getChild().setContentLen(1L);
@@ -201,10 +180,6 @@ public class ContentLinkRelIT {
 
 	            Context("given a store specifying a linkrel and an entity with nested content properties", () -> {
 	              BeforeEach(() -> {
-
-	                  StoreRestResource srr = new DynamicStoreRestResource("foo");
-	                  alterAnnotationValueJDK8(TestEntity10Store.class, StoreRestResource.class, srr);
-
 	                  testEntity10 = new TestEntity10();
 	                  testEntity10.getChild().setContentId(UUID.randomUUID());
 	                  testEntity10.getChild().setContentLen(1L);
@@ -232,51 +207,6 @@ public class ContentLinkRelIT {
 	@Test
 	public void noop() {
 	}
-
-    private static final String ANNOTATION_METHOD = "annotationData";
-    private static final String ANNOTATION_FIELDS = "declaredAnnotations";
-    private static final String ANNOTATIONS = "annotations";
-
-    public static void alterAnnotationValueJDK8(Class<?> targetClass, Class<? extends Annotation> targetAnnotation, Annotation targetValue) {
-      try {
-          Method method = Class.class.getDeclaredMethod(ANNOTATION_METHOD, null);
-          method.setAccessible(true);
-
-          Object annotationData = method.invoke(targetClass);
-
-          Field annotations = annotationData.getClass().getDeclaredField(ANNOTATIONS);
-          annotations.setAccessible(true);
-
-          Map<Class<? extends Annotation>, Annotation> map = (Map<Class<? extends Annotation>, Annotation>) annotations.get(annotationData);
-          map.put(targetAnnotation, targetValue);
-      } catch (Exception e) {
-          e.printStackTrace();
-      }
-    }
-
-    public static class DynamicStoreRestResource implements StoreRestResource {
-
-        private String linkRel;
-
-        public DynamicStoreRestResource(String linkRel) {
-            this.linkRel = linkRel;
-        }
-
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return DynamicStoreRestResource.class;
-        }
-
-        @Override
-        public String path() {
-            return "";
-        }
-
-        @Override
-        public String linkRel() {
-            return linkRel;
-        }
-    }
 
     @Entity
     @EntityListeners(AuditingEntityListener.class)
@@ -345,10 +275,9 @@ public class ContentLinkRelIT {
         private @LastModifiedDate Date modifiedDate;
 
         private @Embedded TestEntityChild child = new TestEntityChild();
-        private @RestResource @ElementCollection(fetch = FetchType.EAGER) List<TestEntityChild> children = new ArrayList<>();
     }
 
-    @StoreRestResource(path = "files")
+    @StoreRestResource(path = "files", linkRel = "foo")
     public interface TestEntity2Store extends FilesystemContentStore<TestEntity2, UUID> {
     }
 
@@ -398,7 +327,7 @@ public class ContentLinkRelIT {
     public interface TestEntity10Repository extends CrudRepository<TestEntity10, Long> {
     }
 
-    @StoreRestResource(/*linkRel = "foo"*/)
+    @StoreRestResource(linkRel = "foo")
     public interface TestEntity10Store extends FilesystemContentStore<TestEntity10, UUID>, Renderable<TestEntity10> {
     }
 
@@ -428,9 +357,7 @@ public class ContentLinkRelIT {
     @Configuration
     @EnableJpaRepositories(considerNestedRepositories=true)
     @EnableTransactionManagement
-    // @Import(RepositoryRestMvcConfiguration.class)
     @EnableFilesystemStores()
-//    @Profile("store")
     public static class BaseUriConfig extends JpaInfrastructureConfig {
 
         @Bean
@@ -522,12 +449,6 @@ public class ContentLinkRelIT {
 
             return factory;
         }
-//
-//        protected String[] packagesToScan() {
-//            return new String[] {
-//                "internal.org.springframework.content.rest.support"
-//            };
-//        }
 
         @Bean
         public PlatformTransactionManager transactionManager() {

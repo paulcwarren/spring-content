@@ -14,10 +14,10 @@ import org.springframework.versions.LockOwnerException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PessimisticLockException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @ControllerAdvice(basePackageClasses = StoreRestExceptionHandler.class)
 public class StoreRestExceptionHandler {

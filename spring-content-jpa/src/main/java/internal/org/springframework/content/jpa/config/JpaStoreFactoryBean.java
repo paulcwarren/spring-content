@@ -5,6 +5,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
@@ -25,6 +26,10 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 
 	@Autowired(required=false)
 	private PlatformTransactionManager ptm;
+
+	protected JpaStoreFactoryBean(Class<? extends Store> storeInterface) {
+		super(storeInterface);
+	}
 
 	@Override
 	protected Object getContentStoreImpl() {

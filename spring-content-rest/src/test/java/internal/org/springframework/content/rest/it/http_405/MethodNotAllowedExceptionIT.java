@@ -1,19 +1,15 @@
 package internal.org.springframework.content.rest.it.http_405;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.jayway.restassured.RestAssured.given;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.UUID;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.sql.DataSource;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.rest.it.SecurityConfiguration;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +21,6 @@ import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoCo
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -50,15 +45,17 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
+import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.UUID;
 
-import internal.org.springframework.content.rest.it.SecurityConfiguration;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -77,14 +74,14 @@ public class MethodNotAllowedExceptionIT {
     @Autowired
     private TestEntity2Store store2;
 
-    @LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     {
         Describe("when getContent method is not exported", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             It("should throw a 405 Not Allowed", () -> {
@@ -105,7 +102,7 @@ public class MethodNotAllowedExceptionIT {
         Describe("when no setContent methods are not exported", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             It("should throw a 405 Not Allowed", () -> {
@@ -115,7 +112,7 @@ public class MethodNotAllowedExceptionIT {
 
                 given()
                     .contentType("text/plain")
-                    .content("some content".getBytes())
+                    .body("some content".getBytes())
                 .when()
                     .post("/tEntities/" + tentity.getId())
                 .then()
@@ -126,7 +123,7 @@ public class MethodNotAllowedExceptionIT {
         Describe("when unsetContent method are not exported", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             It("should throw a 405 Not Allowed", () -> {
@@ -146,7 +143,7 @@ public class MethodNotAllowedExceptionIT {
 
         Describe("when a content property is not exported", () -> {
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
             It("should throw a 405 Not Allowed for all requests", () -> {
                 TEntity2 tentity = new TEntity2();
@@ -162,7 +159,7 @@ public class MethodNotAllowedExceptionIT {
 
                 given()
                     .contentType("text/plain")
-                    .content("some content".getBytes())
+                    .body("some content".getBytes())
                 .when()
                     .post("/tEntity2s/" + tentity.getId() + "/content")
                 .then()

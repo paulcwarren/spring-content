@@ -31,9 +31,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

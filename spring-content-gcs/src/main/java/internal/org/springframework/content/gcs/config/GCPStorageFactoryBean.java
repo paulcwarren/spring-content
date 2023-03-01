@@ -5,6 +5,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.context.ApplicationContext;
@@ -45,12 +46,9 @@ public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Value("${spring.content.gcp.storage.bucket:#{environment.GCP_STORAGE_BUCKET}}")
 	private String bucket;
 
-	public GCPStorageFactoryBean() {
-		// required for bean instantiation
-	}
-
 	@Autowired
-	public GCPStorageFactoryBean(ApplicationContext context, Storage client, PlacementService s3StorePlacementService) {
+	public GCPStorageFactoryBean(Class<? extends Store> storeInterface, ApplicationContext context, Storage client, PlacementService s3StorePlacementService) {
+		super(storeInterface);
 	    this.context = context;
 		this.client = client;
 		this.s3StorePlacementService = s3StorePlacementService;

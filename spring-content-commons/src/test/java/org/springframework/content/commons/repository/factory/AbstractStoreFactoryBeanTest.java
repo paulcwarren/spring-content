@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.GetResourceParams;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -29,13 +30,13 @@ public class AbstractStoreFactoryBeanTest {
 
 			Context("#getDomainClass", () -> {
 				It("gets the domain class", () -> {
-					TestContentStoreFactory factory = new TestContentStoreFactory();
+					TestContentStoreFactory factory = new TestContentStoreFactory(TestStore.class);
 					Class<?> domainClass = factory.getDomainClass(TestStore.class);
 					assertThat(domainClass, is(equalTo(String.class)));
 				});
 				It("when ContentStore isn't the first extended interface it still get the domain type",
 						() -> {
-							TestContentStoreFactory factory = new TestContentStoreFactory();
+							TestContentStoreFactory factory = new TestContentStoreFactory(TestStore.class);
 							Class<?> domainClass = factory.getDomainClass(
 									ContentStoreNotFirstIntefaceStore.class);
 							assertThat(domainClass, is(equalTo(String.class)));
@@ -44,7 +45,7 @@ public class AbstractStoreFactoryBeanTest {
 
 			Context("#getContentIdClass", () -> {
 				It("gets the domain id", () -> {
-					TestContentStoreFactory factory = new TestContentStoreFactory();
+					TestContentStoreFactory factory = new TestContentStoreFactory(TestStore.class);
 					Class<? extends Serializable> domainId = factory
 							.getContentIdClass(TestStore.class);
 					assertThat(domainId, is(equalTo(UUID.class)));
@@ -54,6 +55,10 @@ public class AbstractStoreFactoryBeanTest {
 	}
 
 	public static class TestContentStoreFactory extends AbstractStoreFactoryBean {
+		protected TestContentStoreFactory(Class<? extends Store> storeInterface) {
+			super(storeInterface);
+		}
+
 		@Override
 		protected Object getContentStoreImpl() {
 			return new TestConfigStoreImpl();
@@ -157,7 +162,7 @@ public class AbstractStoreFactoryBeanTest {
         }
 	}
 
-	public interface TestStore extends ContentStore<String, UUID> {
+	public interface TestStore extends Serializable, ContentStore<String, UUID> {
 	}
 
 	public interface ContentStoreNotFirstIntefaceStore

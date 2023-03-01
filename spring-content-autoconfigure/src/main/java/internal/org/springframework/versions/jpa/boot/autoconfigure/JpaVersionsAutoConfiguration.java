@@ -11,7 +11,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.versions.jpa.config.JpaLockingAndVersioningConfig;
 
 @Configuration
@@ -30,11 +29,10 @@ public class JpaVersionsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(DataSource.class)
-    public JpaVersionsDatabaseInitializer jpaVersionsDatabaseInitializer(DataSource dataSource,
-                                                             ResourceLoader resourceLoader) {
-        return new JpaVersionsDatabaseInitializer(dataSource, resourceLoader, this.properties);
+    public JpaVersionsDatabaseInitializer jpaVersionsDatabaseInitializer(DataSource dataSource) {
+        return new JpaVersionsDatabaseInitializer(dataSource, properties);
     }
-    
+
     @Configuration
     @Import(JpaVersionsAutoConfigureRegistrar.class)
     public static class JpaVersionAutoConfig {}

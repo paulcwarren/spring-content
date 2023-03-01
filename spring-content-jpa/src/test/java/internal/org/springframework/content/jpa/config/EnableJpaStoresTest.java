@@ -14,8 +14,8 @@ import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import javax.sql.DataSource;
 
 import org.junit.Test;

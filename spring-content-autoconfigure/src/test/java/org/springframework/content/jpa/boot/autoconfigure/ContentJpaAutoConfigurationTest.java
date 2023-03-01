@@ -12,9 +12,11 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
+import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.content.jpa.store.JpaContentStore;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -29,7 +31,6 @@ import org.springframework.support.TestEntity;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 
@@ -57,20 +58,17 @@ public class ContentJpaAutoConfigurationTest {
 				context.close();
 			});
 			It("should have a content repository", () -> {
-				assertThat(context.getBean(TestEntityContentRepository.class),
-						is(not(nullValue())));
+				assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
 			});
 			It("should have a database initializer", () -> {
-				assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
-						is(not(nullValue())));
+				assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(not(nullValue())));
 			});
 			Context("when a custom bean configuration is used", () -> {
 				BeforeEach(() -> {
 					context.register(CustomBeanConfig.class);
 				});
 				It("should use the supplied custom bean", () -> {
-					assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
-							is(initializer));
+					assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(initializer));
 				});
 			});
 			Context("when an explicit @EnableFilesystemStores is used", () -> {

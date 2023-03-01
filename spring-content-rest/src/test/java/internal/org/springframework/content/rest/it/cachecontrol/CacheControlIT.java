@@ -2,9 +2,9 @@ package internal.org.springframework.content.rest.it.cachecontrol;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
 import internal.org.springframework.content.rest.it.SecurityConfiguration;
 import internal.org.springframework.content.rest.support.TestEntity;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoCo
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
@@ -39,6 +39,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
@@ -47,8 +48,9 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.UUID;
 
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.*;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.jayway.restassured.RestAssured.given;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -67,11 +69,14 @@ public class CacheControlIT {
     @LocalServerPort
     int port;
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
     {
         Describe("CacheControl", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             It("given the pattern matches it should apply the configured cache settings", () -> {

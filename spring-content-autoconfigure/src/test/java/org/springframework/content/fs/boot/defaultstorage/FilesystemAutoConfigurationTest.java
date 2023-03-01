@@ -30,7 +30,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
 import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
-import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
+//import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 
@@ -97,7 +97,7 @@ public class FilesystemAutoConfigurationTest {
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
-            RenditionsContentAutoConfiguration.class,
+//            RenditionsContentAutoConfiguration.class,
             S3ContentAutoConfiguration.class})
 	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {

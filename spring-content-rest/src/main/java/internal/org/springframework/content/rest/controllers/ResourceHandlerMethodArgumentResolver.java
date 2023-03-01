@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyRequest;
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
@@ -20,7 +20,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -35,8 +34,6 @@ import internal.org.springframework.content.rest.controllers.resolvers.ResourceR
 import internal.org.springframework.content.rest.controllers.resolvers.StoreResourceResolver;
 import internal.org.springframework.content.rest.io.StoreResourceImpl;
 import internal.org.springframework.content.rest.utils.StoreUtils;
-
-import static org.apache.commons.lang.StringUtils.join;
 
 public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 

@@ -41,16 +41,6 @@ public class ContentS3AutoConfigurationTest {
 
 	static {
 		client = mock(S3Client.class);
-
-		try {
-		    Map<String,String> props = new HashMap<>();
-		    props.put("AWS_REGION", "us-west-1");
-		    props.put("AWS_ACCESS_KEY_ID", "user");
-		    props.put("AWS_SECRET_KEY", "password");
-		    TestUtils.setEnv(props);
-		} catch (Exception e) {
-		    e.printStackTrace();
-		}
 	}
 
 	{
@@ -190,11 +180,4 @@ public class ContentS3AutoConfigurationTest {
 
 	public interface TestEntityContentRepository extends S3ContentStore<TestEntity, String> {
 	}
-
-    private static Field getField(Class<?> clazz, String field) {
-
-        Field f = ReflectionUtils.findField(clazz, field);
-        ReflectionUtils.makeAccessible(f);
-        return f;
-    }
 }

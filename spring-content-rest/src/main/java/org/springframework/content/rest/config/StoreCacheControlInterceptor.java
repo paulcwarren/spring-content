@@ -6,25 +6,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.CacheControl;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.context.request.WebRequestInterceptor;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.UrlPathHelper;
 
 import internal.org.springframework.content.rest.utils.StoreUtils;
 import lombok.Getter;
 
-public class StoreCacheControlInterceptor extends HandlerInterceptorAdapter {
+public class StoreCacheControlInterceptor implements HandlerInterceptor {
 
     private Map<String, CacheControl> cacheControlMap = new HashMap<>();
     private List<CacheControlRule> cacheControlRules = new ArrayList<>();
     private URI baseUri;
 
     public StoreCacheControlInterceptor() {
-
     }
 
     public StoreCacheControlConfigurer configurer() {

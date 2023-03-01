@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.google.cloud.storage.BlobId;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.config.ContentPropertyInfo;
@@ -23,7 +24,7 @@ import com.google.cloud.spring.storage.GoogleStorageProtocolResolver;
 
 @Configuration
 @Import(GoogleStorageProtocolResolver.class)
-public class GCPStorageConfiguration {
+public class GCPStorageConfiguration implements InitializingBean {
 
 	@Autowired(required = false)
 	private List<GCPStorageConfigurer> configurers;
@@ -34,10 +35,6 @@ public class GCPStorageConfiguration {
 	@Bean
 	public PlacementService gcpStoragePlacementService() {
 		PlacementService conversion = new PlacementServiceImpl();
-
-		addDefaultConverters(conversion, bucket);
-		addConverters(conversion);
-
 		return conversion;
 	}
 
@@ -81,5 +78,11 @@ public class GCPStorageConfiguration {
 		for (GCPStorageConfigurer configurer : configurers) {
 			configurer.configureGCPStorageConverters(registry);
 		}
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		addDefaultConverters(gcpStoragePlacementService(), bucket);
+		addConverters(gcpStoragePlacementService());
 	}
 }

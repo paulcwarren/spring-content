@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import javax.persistence.Version;
+import jakarta.persistence.Version;
 
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.io.RangeableResource;

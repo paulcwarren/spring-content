@@ -2,14 +2,18 @@ package internal.org.springframework.content.rest.mappings;
 
 import internal.org.springframework.content.rest.annotations.StoreAwareController;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
+import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -38,11 +42,21 @@ public class StoreAwareHandlerMapping extends RequestMappingHandlerMapping {
 			return null;
 		}
 
-		PatternsRequestCondition patternsCondition = customize(info.getPatternsCondition(), prefix);
-//		ProducesRequestCondition producesCondition = customize(info.getProducesCondition());
+		RequestMappingInfo.Builder builder = info.mutate();
 
-		return new RequestMappingInfo(patternsCondition, info.getMethodsCondition(), info.getParamsCondition(),
-				info.getHeadersCondition(), info.getConsumesCondition(), info.getProducesCondition(), info.getCustomCondition());
+		Set<String> patterns = info.getPatternsCondition() != null ? info.getPatternsCondition().getPatterns() : Collections.emptySet();
+		String[] augmentedPatterns = new String[patterns.size()];
+		int count = 0;
+
+		for (String pattern : patterns) {
+			augmentedPatterns[count++] = prefix.concat(pattern);
+		}
+
+		builder.paths(augmentedPatterns);
+
+		return builder //
+				.build() //
+				.combine(info);
 	}
 
 	@Override
@@ -59,8 +73,6 @@ public class StoreAwareHandlerMapping extends RequestMappingHandlerMapping {
 		URI baseUri = configuration.getBaseUri();
 
 		if (baseUri.isAbsolute()) {
-//			HttpServletRequest request = new BasePathAwareHandlerMapping.UriAwareHttpServletRequest(getServletContext(), baseUri);
-//			this.prefix = URL_PATH_HELPER.getPathWithinApplication(request);
 			throw new UnsupportedOperationException(format("absolute base URIs not supported %s", baseUri));
 		} else {
 			this.prefix = baseUri.toString();
@@ -77,6 +89,9 @@ public class StoreAwareHandlerMapping extends RequestMappingHandlerMapping {
 	 * @return
 	 */
 	protected PatternsRequestCondition customize(PatternsRequestCondition condition, String prefix) {
+		if (!condition.isEmpty()) {
+			return condition;
+		}
 
 		Set<String> patterns = condition.getPatterns();
 		String[] augmentedPatterns = new String[patterns.size()];
@@ -86,7 +101,6 @@ public class StoreAwareHandlerMapping extends RequestMappingHandlerMapping {
 			augmentedPatterns[count++] = prefix.concat(pattern);
 		}
 
-		return new PatternsRequestCondition(augmentedPatterns, getUrlPathHelper(), getPathMatcher(),
-				useSuffixPatternMatch(), useTrailingSlashMatch(), getFileExtensions());
+		return new PatternsRequestCondition(augmentedPatterns, false, getPathMatcher());
 	}
 }

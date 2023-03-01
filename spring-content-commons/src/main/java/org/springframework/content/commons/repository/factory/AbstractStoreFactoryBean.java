@@ -51,7 +51,7 @@ public abstract class AbstractStoreFactoryBean
         }
     }
 
-	private Class<? extends Store<Serializable>> storeInterface;
+	private Class<? extends Store> storeInterface;
 	private ClassLoader classLoader;
 	private ApplicationEventPublisher publisher;
 
@@ -63,9 +63,8 @@ public abstract class AbstractStoreFactoryBean
 
 	private BeanFactory beanFactory;
 
-	@Autowired
-	public void setStoreInterface(Class<? extends Store<Serializable>> storeInterface) {
-		Assert.notNull(storeInterface);
+	protected AbstractStoreFactoryBean(Class<? extends Store> storeInterface) {
+		Assert.notNull(storeInterface, "storeInterface must not be null");
 		this.storeInterface = storeInterface;
 	}
 
@@ -139,8 +138,7 @@ public abstract class AbstractStoreFactoryBean
 	@Override
     @SuppressWarnings("unchecked")
 	public Class<? extends Store<? extends Serializable>> getObjectType() {
-		return (Class<? extends Store<? extends Serializable>>) (null == storeInterface
-				? Store.class : storeInterface);
+		return (Class<? extends Store<? extends Serializable>>) this.storeInterface;
 	}
 
 	/*

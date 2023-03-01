@@ -6,10 +6,15 @@ import java.io.Serializable;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.GetResourceParams;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.core.io.Resource;
 
 public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
+
+	public TestStoreFactoryBean(Class<? extends Store<Serializable>> storeInterface) {
+		super(storeInterface);
+	}
 
 	@Override
 	protected Object getContentStoreImpl() {

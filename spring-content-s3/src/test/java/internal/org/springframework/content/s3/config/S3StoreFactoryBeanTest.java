@@ -44,7 +44,7 @@ public class S3StoreFactoryBeanTest {
 				context.registerBean("amazonS3", S3Client.class, () -> client);
 				context.refresh();
 
-				factory = new S3StoreFactoryBean(context, client, placer);
+				factory = new S3StoreFactoryBean(S3StoreFactoryBeanTest.TestStore.class, context, client, placer);
 			});
 			Context("#getStore", () -> {
 				BeforeEach(() -> {
@@ -54,17 +54,11 @@ public class S3StoreFactoryBeanTest {
 					store = factory.getStore();
 				});
 				Context("given a Store", () -> {
-					BeforeEach(() -> {
-						factory.setStoreInterface(S3StoreFactoryBeanTest.TestStore.class);
-					});
 					It("should return a store implementation", () -> {
 						assertThat(store, is(not(nullValue())));
 					});
 				});
 				Context("given an AssociativeStore", () -> {
-					BeforeEach(() -> {
-						factory.setStoreInterface(S3StoreFactoryBeanTest.TestAssociativeStore.class);
-					});
 					It("should return a store implementation", () -> {
 						assertThat(store, is(not(nullValue())));
 					});

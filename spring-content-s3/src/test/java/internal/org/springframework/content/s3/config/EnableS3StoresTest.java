@@ -47,23 +47,17 @@ import software.amazon.awssdk.services.s3.S3Client;
 @RunWith(Ginkgo4jRunner.class)
 public class EnableS3StoresTest {
 
+	private static final String BUCKET = "test-bucket";
+
+	static {
+		System.setProperty("spring.content.s3.bucket", BUCKET);
+	}
+
 	private AnnotationConfigApplicationContext context;
 
 	// mocks
 	static S3StoreConfigurer configurer;
 	static S3Client client;
-
-    static {
-        try {
-            Map<String,String> props = new HashMap<>();
-            props.put("AWS_REGION", "us-west-1");
-            props.put("AWS_ACCESS_KEY_ID", "user");
-            props.put("AWS_SECRET_KEY", "password");
-            S3StoreIT.setEnv(props);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
 	{
 		Describe("EnableS3Stores", () -> {

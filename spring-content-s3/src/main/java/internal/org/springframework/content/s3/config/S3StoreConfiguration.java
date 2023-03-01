@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.annotations.ContentId;
@@ -21,7 +22,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
 @Configuration
-public class S3StoreConfiguration {
+public class S3StoreConfiguration implements InitializingBean {
 
 	@Autowired(required = false)
 	private List<S3StoreConfigurer> configurers;
@@ -29,13 +30,10 @@ public class S3StoreConfiguration {
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 
-	@Bean
+    private PlacementService conversion =  new PlacementServiceImpl();
+
+    @Bean
 	public PlacementService s3StorePlacementService() {
-		PlacementService conversion = new PlacementServiceImpl();
-
-		addDefaultS3ObjectIdConverters(conversion, bucket);
-		addConverters(conversion);
-
 		return conversion;
 	}
 
@@ -123,4 +121,10 @@ public class S3StoreConfiguration {
 			configurer.configureS3StoreConverters(registry);
 		}
 	}
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        addDefaultS3ObjectIdConverters(conversion, bucket);
+        addConverters(conversion);
+    }
 }

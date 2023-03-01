@@ -4,6 +4,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.FileServiceImpl;
 import org.springframework.content.commons.utils.PlacementService;
@@ -12,6 +13,8 @@ import org.springframework.util.Assert;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
 
 import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
+
+import java.io.Serializable;
 
 @SuppressWarnings("rawtypes")
 public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
@@ -27,6 +30,10 @@ public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {
 
     @Autowired(required=false)
     private MappingContext mappingContext;
+
+	public FilesystemStoreFactoryBean(Class<? extends Store> storeInterface) {
+		super(storeInterface);
+	}
 
 	@Override
 	protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {

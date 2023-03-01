@@ -43,7 +43,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads = 1)

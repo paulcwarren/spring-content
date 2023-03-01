@@ -1,28 +1,24 @@
 package internal.org.springframework.content.rest.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
-
-import java.io.ByteArrayInputStream;
-
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.content.commons.property.PropertyPath;
-
-import com.jayway.restassured.RestAssured;
-
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity2JpaStore;
 import internal.org.springframework.content.rest.support.TestEntity2Repository;
 import internal.org.springframework.content.rest.support.TestEntityChild;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import net.bytebuddy.utility.RandomString;
+import org.apache.http.HttpStatus;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.io.ByteArrayInputStream;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.when;
 
 public abstract class AbstractRestIT {
 
@@ -35,6 +31,9 @@ public abstract class AbstractRestIT {
     @LocalServerPort
     int port;
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
     private TestEntity2 existingClaim;
 
     {
@@ -42,7 +41,7 @@ public abstract class AbstractRestIT {
 
             Context("Spring Content REST", () -> {
                 BeforeEach(() -> {
-                    RestAssured.port = port;
+                    RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
 
                     // delete any existing claim forms
                     Iterable<TestEntity2> existingClaims = claimRepo.findAll();
@@ -75,7 +74,7 @@ public abstract class AbstractRestIT {
                         // POST the new content
                         given()
                         .contentType("text/plain")
-                        .content(newContent.getBytes())
+                        .body(newContent.getBytes())
                         .when()
                         .post("/files/" + existingClaim.getId() + "/child")
                         .then()
@@ -113,7 +112,7 @@ public abstract class AbstractRestIT {
 
                             given()
                             .contentType("text/plain")
-                            .content(newContent.getBytes())
+                            .body(newContent.getBytes())
                             .when()
                             .post("/files/" + existingClaim.getId() + "/child")
                             .then()

@@ -32,6 +32,7 @@ import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.web.context.request.WebRequestInterceptor;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -112,7 +113,7 @@ public class RestConfiguration implements InitializingBean {
 
     public Stores getStores() {
         if (this.stores == null) {
-            Assert.notNull(context);
+            Assert.notNull(context, "context should not be null");
             this.stores = new StoresImpl(this.context);
         }
         return this.stores;

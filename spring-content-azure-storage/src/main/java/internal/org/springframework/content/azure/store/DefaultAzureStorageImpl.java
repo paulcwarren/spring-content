@@ -193,7 +193,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 					@Override
 					public boolean matches(Field field) {
 						for (Annotation annotation : field.getAnnotations()) {
-							if ("javax.persistence.Id".equals(
+							if ("jakarta.persistence.Id".equals(
 									annotation.annotationType().getCanonicalName())
 									|| "org.springframework.data.annotation.Id"
 											.equals(annotation.annotationType()
@@ -218,7 +218,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             @Override
             public boolean matches(TypeDescriptor descriptor) {
                 for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
+                    if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
                                     .equals(annotation.annotationType()
@@ -417,7 +417,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 					@Override
 					public boolean matches(Field field) {
 						for (Annotation annotation : field.getAnnotations()) {
-							if ("javax.persistence.Id".equals(
+							if ("jakarta.persistence.Id".equals(
 									annotation.annotationType().getCanonicalName())
 									|| "org.springframework.data.annotation.Id"
 											.equals(annotation.annotationType()
@@ -461,7 +461,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             @Override
             public boolean matches(TypeDescriptor descriptor) {
                 for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
+                    if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
                                     .equals(annotation.annotationType()

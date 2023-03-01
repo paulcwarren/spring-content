@@ -18,10 +18,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
@@ -556,7 +556,7 @@ public class GCPStorageIT {
     @NoArgsConstructor
     public static class SharedIdContentIdEntity {
 
-        @javax.persistence.Id
+        @jakarta.persistence.Id
         @ContentId
         private String contentId = UUID.randomUUID().toString();
 

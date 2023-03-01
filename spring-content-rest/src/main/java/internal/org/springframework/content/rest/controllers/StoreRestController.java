@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.util.Date;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
 import org.slf4j.Logger;

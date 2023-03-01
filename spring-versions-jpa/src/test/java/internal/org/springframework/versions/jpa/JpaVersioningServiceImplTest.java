@@ -10,9 +10,9 @@ import org.springframework.versions.SuccessorId;
 import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;

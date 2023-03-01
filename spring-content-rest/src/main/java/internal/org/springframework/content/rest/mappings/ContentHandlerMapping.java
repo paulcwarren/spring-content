@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyRequest;
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;

@@ -79,7 +79,7 @@ public class SolrFulltextIndexServiceImplTest {
 
                     It("should throw a StoreAccessException", () -> {
                         assertThat(e, is(instanceOf(StoreAccessException.class)));
-                        assertThat(e.getMessage(), containsString("badness"));
+                        assertThat(e.getCause().getMessage(), containsString("badness"));
                     });
                 });
             }
@@ -114,7 +114,7 @@ public class SolrFulltextIndexServiceImplTest {
 
                     It("should throw a StoreAccessException", () -> {
                         assertThat(e, is(instanceOf(StoreAccessException.class)));
-                        assertThat(e.getMessage(), containsString("badness"));
+                        assertThat(e.getCause().getMessage(), containsString("badness"));
                     });
                 });
             }

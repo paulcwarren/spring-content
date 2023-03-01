@@ -2,8 +2,8 @@ package internal.org.springframework.content.jpa.testsupport.models;
 
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;

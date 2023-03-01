@@ -1,10 +1,6 @@
 package internal.org.springframework.content.fs.repository;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -390,7 +386,7 @@ public class DefaultFilesystemStoresImplTest {
 						});
 						It("should throw a StoreAccessException", () -> {
 							assertThat(e, is(instanceOf(StoreAccessException.class)));
-							assertThat(e.getMessage(), containsString("setContent badness"));
+							assertThat(e.getCause().getMessage(), containsString("setContent badness"));
 						});
 					});
 				});
@@ -702,7 +698,7 @@ public class DefaultFilesystemStoresImplTest {
 
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
-		@javax.persistence.Id
+		@jakarta.persistence.Id
 		@ContentId
 		private String contentId;
 

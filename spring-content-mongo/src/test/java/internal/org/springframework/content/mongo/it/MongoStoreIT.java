@@ -534,7 +534,7 @@ public class MongoStoreIT {
 
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
-		@javax.persistence.Id
+		@jakarta.persistence.Id
 		@ContentId
 		private String contentId;
 

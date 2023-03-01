@@ -20,22 +20,15 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.UUID;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.sql.DataSource;
-
+import jakarta.persistence.*;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -57,6 +50,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -70,6 +64,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
+
+import javax.sql.DataSource;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -383,6 +379,7 @@ public class FilesystemStorePropertyPathAccessorsIT {
 
 	@Configuration
 	@EnableJpaRepositories(considerNestedRepositories = true)
+	@EntityScan(basePackageClasses = TEntity.class)
 	@EnableFilesystemStores
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
@@ -412,25 +409,30 @@ public class FilesystemStorePropertyPathAccessorsIT {
 	    }
 
 	    @Bean
-	    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+	    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
 
 	        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-	        vendorAdapter.setDatabase(Database.HSQL);
+				vendorAdapter.setDatabase(Database.HSQL);
 	        vendorAdapter.setGenerateDdl(true);
 
-	        LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-	        factory.setJpaVendorAdapter(vendorAdapter);
-	        factory.setPackagesToScan("it.store");
-	        factory.setDataSource(dataSource());
+			EntityManagerFactoryBuilder builder = createEntityManagerFactoryBuilder(new JpaProperties());
+			return builder.dataSource(dataSource).packages(TEntity.class).persistenceUnit("firstDs").build();
+		}
 
-	        return factory;
-	    }
+		private EntityManagerFactoryBuilder createEntityManagerFactoryBuilder(JpaProperties jpaProperties) {
+
+			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+			vendorAdapter.setDatabase(Database.HSQL);
+			vendorAdapter.setGenerateDdl(true);
+
+			return new EntityManagerFactoryBuilder(vendorAdapter, jpaProperties.getProperties(), null);
+		}
 
 	    @Bean
-	    public PlatformTransactionManager transactionManager() {
+	    public PlatformTransactionManager transactionManager(DataSource dataSource) {
 
 	        JpaTransactionManager txManager = new JpaTransactionManager();
-	        txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+	        txManager.setEntityManagerFactory(entityManagerFactory(dataSource).getObject());
 	        return txManager;
 	    }
 	}

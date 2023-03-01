@@ -50,10 +50,21 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
         <spring-content.version>${project.version}</spring-content.version>
         <ginkgo4j-version>1.0.15</ginkgo4j-version>
-        <springboot-version>2.7.8</springboot-version>
+        <springboot-version>3.0.2</springboot-version>
         <spring-cloud.version>2022.0.1</spring-cloud.version>
         <commonsio-version>2.11.0</commonsio-version>
+        <commons-lang.version>2.6</commons-lang.version>
+        <common-logging.version>1.2</common-logging.version>
+        <commons-text.version>1.10.0</commons-text.version>
+        <jakarta-persistence-api.version>3.1.0</jakarta-persistence-api.version>
+        <hibernate.version>5.6.15.Final</hibernate.version>
+        <hibernate-orm.version>6.1.6.Final</hibernate-orm.version>
+        <solr-solrj.version>8.11.2</solr-solrj.version>
+        <elasticsearch-rest-high-level-client.version>7.17.9</elasticsearch-rest-high-level-client.version>
+
+        <!-- Test dependencies -->
         <test-containers.version>1.17.6</test-containers.version>
+        <mockito.version>3.12.4</mockito.version>
 
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
     </properties>
@@ -88,7 +99,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <module>./spring-content-azure-storage</module>
         <module>./spring-content-commons</module>
         <module>./spring-content-encryption</module>
-        <module>./spring-content-docx4j</module>
+<!--        <module>./spring-content-docx4j</module>-->
         <module>./spring-content-fs</module>
         <module>./spring-content-fs-boot-starter</module>
         <module>./spring-content-gcs</module>
@@ -115,7 +126,6 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <module>./spring-versions-commons</module>
         <module>./spring-versions-jpa</module>
         <module>./spring-versions-jpa-boot-starter</module>
-        <module>./spring-content-cmis</module>
         <module>./spring-content-bom</module>
     </modules>
 
@@ -126,8 +136,8 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
 <!-- 

@@ -1,6 +1,5 @@
 package internal.org.springframework.content.rest.controllers.resolvers;
 
-import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AssociativeStore;
@@ -10,8 +9,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import internal.org.springframework.content.rest.io.AssociatedStoreResourceImpl;
-
-import javax.servlet.http.HttpServletRequest;
 
 public class AssociativeStoreResourceResolver implements ResourceResolver {
 

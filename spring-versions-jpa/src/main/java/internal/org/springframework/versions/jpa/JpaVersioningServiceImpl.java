@@ -8,8 +8,8 @@ import org.springframework.versions.SuccessorId;
 import org.springframework.versions.VersionLabel;
 import org.springframework.versions.VersionNumber;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
 
 public class JpaVersioningServiceImpl implements VersioningService {
 

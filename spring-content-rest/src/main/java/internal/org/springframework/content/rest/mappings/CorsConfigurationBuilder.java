@@ -1,7 +1,5 @@
 package internal.org.springframework.content.rest.mappings;
 
-import java.util.Arrays;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.CollectionUtils;
@@ -25,15 +23,11 @@ public class CorsConfigurationBuilder {
 		}
 
 		if (CollectionUtils.isEmpty(config.getAllowedOrigins())) {
-			config.setAllowedOrigins(Arrays.asList(CrossOrigin.DEFAULT_ORIGINS));
+			config.applyPermitDefaultValues();
 		}
 
 		for (String header : annotation.allowedHeaders()) {
 			config.addAllowedHeader(header);
-		}
-
-		if (CollectionUtils.isEmpty(config.getAllowedHeaders())) {
-			config.setAllowedHeaders(Arrays.asList(CrossOrigin.DEFAULT_ALLOWED_HEADERS));
 		}
 
 		for (String header : annotation.exposedHeaders()) {
@@ -65,16 +59,8 @@ public class CorsConfigurationBuilder {
 							+ allowCredentials + "]");
 		}
 
-		if (config.getAllowCredentials() == null) {
-			config.setAllowCredentials(CrossOrigin.DEFAULT_ALLOW_CREDENTIALS);
-		}
-
 		if (annotation.maxAge() >= 0) {
 			config.setMaxAge(annotation.maxAge());
-		}
-
-		if (config.getMaxAge() == null) {
-			config.setMaxAge(CrossOrigin.DEFAULT_MAX_AGE);
 		}
 
 		return config;

@@ -11,10 +11,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.springframework.support.TestUtils.setEnv;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -38,17 +34,7 @@ public class S3AutoConfigurationTest {
 
 	static {
 		mock(S3Client.class);
-
-		try {
-		    Map<String,String> props = new HashMap<>();
-		    props.put("AWS_REGION", "us-west-1");
-		    props.put("AWS_ACCESS_KEY_ID", "user");
-		    props.put("AWS_SECRET_KEY", "password");
-		    setEnv(props);
-		} catch (Exception e) {
-		    e.printStackTrace();
-		}
-	}
+    }
 
 	{
 		Describe("S3 auto configuration with default storage", () -> {

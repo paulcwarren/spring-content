@@ -9,7 +9,6 @@ import internal.org.springframework.content.elasticsearch.boot.autoconfigure.Ela
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
 import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
-import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -143,7 +142,7 @@ public class ElasticsearchAutoConfigurationTest {
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
-            RenditionsContentAutoConfiguration.class,
+//            RenditionsContentAutoConfiguration.class,
             S3ContentAutoConfiguration.class})
     @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
     public static class ContextWithoutClientBean {
@@ -156,7 +155,7 @@ public class ElasticsearchAutoConfigurationTest {
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
-            RenditionsContentAutoConfiguration.class,
+//            RenditionsContentAutoConfiguration.class,
             S3ContentAutoConfiguration.class})
     @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
     public static class ContextWithClientBean {
@@ -175,7 +174,7 @@ public class ElasticsearchAutoConfigurationTest {
             JpaContentAutoConfiguration.class,
             JpaVersionsAutoConfiguration.class,
             MongoContentAutoConfiguration.class,
-            RenditionsContentAutoConfiguration.class,
+//            RenditionsContentAutoConfiguration.class,
             S3ContentAutoConfiguration.class})
     @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
     public static class ContextWithEnablement {
