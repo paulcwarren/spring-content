@@ -91,11 +91,13 @@
 			<groupId>jakarta.persistence</groupId>
 			<artifactId>jakarta.persistence-api</artifactId>
 			<version>${jakarta-persistence-api.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core-jakarta</artifactId>
 			<version>${hibernate.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
