@@ -2,57 +2,38 @@ package org.springframework.content.fs.boot.autoconfigure;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
-import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
-import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
-//import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
-import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
-import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
-
+import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
-
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.support.TestEntity;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.endsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class ContentFilesystemAutoConfigurationTest {
 
+	private ApplicationContextRunner contextRunner;
+
 	{
 		Describe("FilesystemContentAutoConfiguration", () -> {
+			BeforeEach(() -> {
+				contextRunner = new ApplicationContextRunner()
+						.withConfiguration(AutoConfigurations.of(FilesystemContentAutoConfiguration.class));
+			});
 			Context("given a default configuration", () -> {
 				It("should load the context", () -> {
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(TestConfig.class);
-					context.refresh();
-
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-
-					context.close();
+					contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+					});
 				});
 			});
 
@@ -66,72 +47,38 @@ public class ContentFilesystemAutoConfigurationTest {
 				});
 				It("should have a filesystem properties bean with the correct root set",
 						() -> {
-							AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-							context.register(TestConfig.class);
-							context.refresh();
-
-							assertThat(context.getBean(
-									FilesystemContentAutoConfiguration.FilesystemProperties.class)
-									.getFilesystemRoot(),
-									endsWith("/UPPERCASE/NOTATION/"));
-
-							context.close();
+							contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
+								Assertions.assertThat(context).hasSingleBean(FilesystemContentAutoConfiguration.FilesystemProperties.class);
+								Assertions.assertThat(context).getBean(FilesystemContentAutoConfiguration.FilesystemProperties.class).extracting("filesystemRoot").matches((val) -> val.toString().endsWith("/UPPERCASE/NOTATION/"));
+							});
 						});
 			});
 
 			Context("given a configuration that contributes a loader bean", () -> {
 				It("should have that loader bean in the context", () -> {
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(ConfigWithLoaderBean.class);
-					context.refresh();
-
-					FileSystemResourceLoader loader = context
-							.getBean(FileSystemResourceLoader.class);
-					assertThat(loader.getFilesystemRoot(), is("/some/random/path/"));
-
-					context.close();
+					contextRunner.withUserConfiguration(ConfigWithLoaderBean.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(FileSystemResourceLoader.class);
+						Assertions.assertThat(context).getBean(FileSystemResourceLoader.class).extracting("filesystemRoot").matches((val) -> val.toString().endsWith("/some/random/path/"));
+					});
 				});
 			});
 
 			Context("given a configuration with explicit @EnableFilesystemStores annotation", () -> {
 				It("should load the context", () -> {
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(ConfigWithExplicitEnableFilesystemStores.class);
-					context.refresh();
-
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(FileSystemResourceLoader.class), is(not(nullValue())));
-
-					context.close();
+					contextRunner.withUserConfiguration(ConfigWithExplicitEnableFilesystemStores.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+						Assertions.assertThat(context).getBean(FileSystemResourceLoader.class);
+					});
 				});
 			});
-
 		});
 	}
 
-	@Configuration
-    @EnableAutoConfiguration(exclude= {
-            ElasticsearchAutoConfiguration.class,
-            MongoAutoConfiguration.class,
-            JpaContentAutoConfiguration.class,
-            JpaVersionsAutoConfiguration.class,
-            MongoContentAutoConfiguration.class,
-//            RenditionsContentAutoConfiguration.class,
-            S3ContentAutoConfiguration.class})
-	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+	@SpringBootApplication
 	public static class TestConfig {
 	}
 
-	@Configuration
-    @EnableAutoConfiguration(exclude= {
-            ElasticsearchAutoConfiguration.class,
-            MongoAutoConfiguration.class,
-            JpaContentAutoConfiguration.class,
-            JpaVersionsAutoConfiguration.class,
-            MongoContentAutoConfiguration.class,
-//            RenditionsContentAutoConfiguration.class,
-            S3ContentAutoConfiguration.class})
-	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+	@SpringBootApplication
 	public static class ConfigWithLoaderBean {
 
 		@Bean
@@ -141,16 +88,7 @@ public class ContentFilesystemAutoConfigurationTest {
 
 	}
 
-	@Configuration
-    @EnableAutoConfiguration(exclude= {
-            ElasticsearchAutoConfiguration.class,
-            MongoAutoConfiguration.class,
-            JpaContentAutoConfiguration.class,
-            JpaVersionsAutoConfiguration.class,
-            MongoContentAutoConfiguration.class,
-//            RenditionsContentAutoConfiguration.class,
-            S3ContentAutoConfiguration.class})
-    @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+	@SpringBootApplication
 	@EnableFilesystemStores
 	public static class ConfigWithExplicitEnableFilesystemStores {
 	}

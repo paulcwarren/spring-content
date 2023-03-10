@@ -1,32 +1,21 @@
 package org.springframework.content.s3.boot.defaultstorage;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.support.TestEntity;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import org.assertj.core.api.Assertions;
+import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.support.TestEntity;
 import software.amazon.awssdk.services.s3.S3Client;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -36,9 +25,14 @@ public class S3AutoConfigurationTest {
 		mock(S3Client.class);
     }
 
-	{
-		Describe("S3 auto configuration with default storage", () -> {
+    private ApplicationContextRunner contextRunner;
 
+    {
+		Describe("S3 auto configuration with default storage", () -> {
+            BeforeEach(() -> {
+                contextRunner = new ApplicationContextRunner()
+                        .withConfiguration(AutoConfigurations.of(S3ContentAutoConfiguration.class));
+            });
             Context("given a default storage type of s3", () -> {
                 BeforeEach(() -> {
                     System.setProperty("spring.content.storage.type.default", "s3");
@@ -47,11 +41,9 @@ public class S3AutoConfigurationTest {
                     System.clearProperty("spring.content.storage.type.default");
                 });
                 It("should create an S3Client bean", () -> {
-                    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-                    context.register(TestConfigWithoutBeans.class);
-                    context.refresh();
-
-                    assertThat(context.getBean(S3Client.class), is(not(nullValue())));
+                    contextRunner.withUserConfiguration(TestConfigWithoutBeans.class).run((context) -> {
+                        Assertions.assertThat(context).hasSingleBean(S3Client.class);
+                    });
                 });
             });
 
@@ -63,34 +55,23 @@ public class S3AutoConfigurationTest {
                     System.clearProperty("spring.content.storage.type.default");
                 });
                 It("should not create an S3Client bean", () -> {
-                    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-                    context.register(TestConfigWithoutBeans.class);
-                    context.refresh();
-
-                    try {
-                        context.getBean(S3Client.class);
-                        fail("expected no S3Client bean but bean found");
-                    } catch (NoSuchBeanDefinitionException nsbe) {
-                    }
+                    contextRunner.withUserConfiguration(TestConfigWithoutBeans.class).run((context) -> {
+                        Assertions.assertThat(context).doesNotHaveBean(S3Client.class);
+                    });
                 });
             });
 
             Context("given no default storage type", () -> {
-
                 It("should create an S3Client bean", () -> {
-                    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-                    context.register(TestConfigWithoutBeans.class);
-                    context.refresh();
-
-                    assertThat(context.getBean(S3Client.class), is(not(nullValue())));
+                    contextRunner.withUserConfiguration(TestConfigWithoutBeans.class).run((context) -> {
+                        Assertions.assertThat(context).hasSingleBean(S3Client.class);
+                    });
                 });
             });
 		});
 	}
 
-	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+    @SpringBootApplication
 	@EnableS3Stores(basePackageClasses=S3AutoConfigurationTest.class)
 	public static class TestConfigWithoutBeans {
 		// will be supplied by auto-configuration

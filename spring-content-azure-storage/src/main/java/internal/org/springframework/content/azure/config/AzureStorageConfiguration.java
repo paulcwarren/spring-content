@@ -29,8 +29,13 @@ public class AzureStorageConfiguration implements InitializingBean {
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
 
-	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
+//	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
 	private String bucket;
+
+	@Autowired
+	public AzureStorageConfiguration(@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}") String bucket) {
+		this.bucket = bucket;
+	}
 
 	@Bean
 	public PlacementService azureStoragePlacementService() {

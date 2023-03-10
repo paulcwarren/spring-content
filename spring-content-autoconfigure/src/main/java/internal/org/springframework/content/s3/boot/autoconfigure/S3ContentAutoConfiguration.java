@@ -2,6 +2,7 @@ package internal.org.springframework.content.s3.boot.autoconfigure;
 
 import java.net.URI;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,7 +24,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
-@Configuration
+
+@AutoConfiguration
+//@Configuration
 @AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
 @ConditionalOnClass(S3Client.class)
 @ConditionalOnProperty(

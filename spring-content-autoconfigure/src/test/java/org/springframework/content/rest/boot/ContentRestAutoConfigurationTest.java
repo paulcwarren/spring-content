@@ -1,20 +1,19 @@
 package org.springframework.content.rest.boot;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.net.URI;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
+import internal.org.springframework.content.rest.boot.autoconfigure.HypermediaAutoConfiguration;
+import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebApplicationContext;
 import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
@@ -25,12 +24,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import java.net.URI;
 
-import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
-import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
-import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -40,9 +38,9 @@ public class ContentRestAutoConfigurationTest {
 		Describe("ContentRestAutoConfiguration", () -> {
 			Context("given a default configuration", () -> {
 				It("should load the context", () -> {
-					AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-					context.register(TestConfig.class);
+					AnnotationConfigServletWebApplicationContext context = new AnnotationConfigServletWebApplicationContext();
 					context.setServletContext(new MockServletContext());
+					context.register(TestConfig.class, HypermediaConfig.class);
 					context.refresh();
 
 					assertThat(context.getBean("contentHandlerMapping"), is(not(nullValue())));
@@ -84,11 +82,16 @@ public class ContentRestAutoConfigurationTest {
 		});
 	}
 
-	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration(exclude = S3ContentAutoConfiguration.class)
+	@SpringBootApplication
+	@ImportAutoConfiguration({ HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class,
+			PropertyPlaceholderAutoConfiguration.class, RepositoryRestMvcAutoConfiguration.class,
+			JacksonAutoConfiguration.class, ContentRestAutoConfiguration.class})
 	public static class TestConfig {
 	}
+
+	@Configuration
+	@ImportAutoConfiguration({HypermediaAutoConfiguration.class})
+	public static class HypermediaConfig {}
 
 	@Document
 	@Content

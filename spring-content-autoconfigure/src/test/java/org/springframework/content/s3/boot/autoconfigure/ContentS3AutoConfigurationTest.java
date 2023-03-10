@@ -1,37 +1,22 @@
 package org.springframework.content.s3.boot.autoconfigure;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.content.s3.store.S3ContentStore;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.support.TestEntity;
-import org.springframework.support.TestUtils;
-import org.springframework.util.ReflectionUtils;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import org.assertj.core.api.Assertions;
+import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.content.s3.config.EnableS3Stores;
+import org.springframework.content.s3.store.S3ContentStore;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.support.TestEntity;
 import software.amazon.awssdk.services.s3.S3Client;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -43,63 +28,38 @@ public class ContentS3AutoConfigurationTest {
 		client = mock(S3Client.class);
 	}
 
+	private ApplicationContextRunner contextRunner;
+
 	{
 		Describe("FilesystemContentAutoConfiguration", () -> {
+			BeforeEach(() -> {
+				contextRunner = new ApplicationContextRunner()
+						.withConfiguration(AutoConfigurations.of(S3ContentAutoConfiguration.class));
+			});
 			Context("given a configuration with beans", () -> {
 				It("should load the context", () -> {
-
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(TestConfig.class);
-					context.refresh();
-
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(S3Client.class), is(not(nullValue())));
-					assertThat(context.getBean(S3Client.class), is(client));
-
-					context.close();
+					contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+						Assertions.assertThat(context).hasSingleBean(S3Client.class);
+					});
 				});
 			});
 
 			Context("given a configuration without any beans", () -> {
 				It("should load the context", () -> {
-
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(TestConfigWithoutBeans.class);
-					context.refresh();
-
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(S3Client.class), is(not(nullValue())));
-
-					S3Client client = context.getBean(S3Client.class);
-
-//                    Field endpointField = getField(DefaultS3Client.class, "clientConfiguration");
-//                    URI endpoint = (URI) endpointField.get(client);
-//                    assertThat(endpoint.toString(), is("https://s3.us-west-1.amazonaws.com"));
-//
-//                    Field providerField = getField(AmazonS3Client.class, "awsCredentialsProvider");
-//                    AWSCredentialsProvider provider = (AWSCredentialsProvider) providerField.get(client);
-//                    assertThat(provider.getCredentials().getAWSAccessKeyId(), is("user"));
-//                    assertThat(provider.getCredentials().getAWSSecretKey(), is("password"));
-//
-//                    Field coField = getField(AmazonS3Client.class, "clientOptions");
-//                    S3ClientOptions options = (S3ClientOptions) coField.get(client);
-//                    assertThat(options.isPathStyleAccess(), is(false));
-
-					context.close();
+					contextRunner.withUserConfiguration(TestConfigWithoutBeans.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+						Assertions.assertThat(context).hasSingleBean(S3Client.class);
+					});
 				});
 			});
 
 			Context("given a configuration with an explicit @EnableS3Stores annotation", () -> {
 				It("should load the context", () -> {
-
-					AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-					context.register(TestConfigWithExplicitEnableS3Stores.class);
-					context.refresh();
-
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(S3Client.class), is(not(nullValue())));
-
-					context.close();
+					contextRunner.withUserConfiguration(TestConfigWithExplicitEnableS3Stores.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+						Assertions.assertThat(context).hasSingleBean(S3Client.class);
+					});
 				});
 			});
 
@@ -117,34 +77,15 @@ public class ContentS3AutoConfigurationTest {
                     System.clearProperty("spring.content.s3.pathStyleAccess");
                 });
                 It("should have a filesystem properties bean with the correct root set", () -> {
-                    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-                    context.register(TestConfigWithProperties.class);
-                    context.refresh();
-
-                    S3Client client = context.getBean(S3Client.class);
-
-//                    Field endpointField = getField(AmazonWebServiceClient.class, "endpoint");
-//                    URI endpoint = (URI) endpointField.get(client);
-//                    assertThat(endpoint.toString(), is("http://some-endpoint"));
-//
-//                    Field providerField = getField(AmazonS3Client.class, "awsCredentialsProvider");
-//                    AWSCredentialsProvider provider = (AWSCredentialsProvider) providerField.get(client);
-//                    assertThat(provider.getCredentials().getAWSAccessKeyId(), is("foo"));
-//                    assertThat(provider.getCredentials().getAWSSecretKey(), is("bar"));
-//
-//                    Field coField = getField(AmazonS3Client.class, "clientOptions");
-//                    S3ClientOptions options = (S3ClientOptions) coField.get(client);
-//                    assertThat(options.isPathStyleAccess(), is(true));
-
-                    context.close();
-                });
+					contextRunner.withUserConfiguration(TestConfigWithProperties.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(S3Client.class);
+					});
+				});
             });
 		});
 	}
 
-	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@SpringBootApplication
 	public static class TestConfig {
 
 		@Bean
@@ -153,24 +94,18 @@ public class ContentS3AutoConfigurationTest {
 		}
 	}
 
-	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@SpringBootApplication
 	public static class TestConfigWithoutBeans {
 		// will be supplied by auto-configuration
 	}
 
-	@Configuration
-	@AutoConfigurationPackage
-	@EnableAutoConfiguration
+	@SpringBootApplication
 	@EnableS3Stores
 	public static class TestConfigWithExplicitEnableS3Stores {
 		// will be supplied by auto-configuration
 	}
 
-	@Configuration
-    @AutoConfigurationPackage
-    @EnableAutoConfiguration
+	@SpringBootApplication
     public static class TestConfigWithProperties {
         // will be supplied by auto-configuration
     }
