@@ -36,6 +36,7 @@ jobs:
 
     - name: Validate Examples
       run: |
+        export AWS_REGION=us-west-1
         pushd spring-content-examples
           git fetch --all
           git checkout main
