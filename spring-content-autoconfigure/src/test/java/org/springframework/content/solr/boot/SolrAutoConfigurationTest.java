@@ -36,7 +36,7 @@ public class SolrAutoConfigurationTest {
                  .withConfiguration(AutoConfigurations.of(SolrAutoConfiguration.class));
             });
             It("should include the autoconfigured annotated event handler bean", () -> {
-               contextRunner.withUserConfiguration(StarterTestConfig.class, TestConfig.class).run((context) -> {
+               contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
                   Assertions.assertThat(context).getBean("solrFulltextEventListener").isNotNull();
                });
             });
@@ -48,20 +48,13 @@ public class SolrAutoConfigurationTest {
    public void test() {
    }
 
-   @Configuration
-   public static class StarterTestConfig extends SolrAutoConfiguration {
-   }
-
    @SpringBootApplication
-   @ComponentScan(basePackageClasses = StarterTestConfig.class)
    public static class TestConfig {
 
       @Autowired
       private SolrProperties props;
       @Autowired
       private SolrClient solrClient;
-      @Autowired
-      private ConversionService contentConversionService;
 
       public TestConfig() {
       }

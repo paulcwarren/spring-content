@@ -5,9 +5,12 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
 import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.content.jpa.config.EnableJpaStores;
@@ -104,13 +107,13 @@ public class ContentJpaAutoConfigurationTest {
 		}
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/default.properties")
 	public static class TestConfig {
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	public static class CustomBeanConfig extends TestConfig {
 		@Bean
@@ -119,12 +122,12 @@ public class ContentJpaAutoConfigurationTest {
 		}
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@EnableJpaStores
 	public static class ConfigWithExplicitEnableJpaStores {}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/custom-jpa.properties")
 	public static class CustomPropertiesConfig extends TestConfig {

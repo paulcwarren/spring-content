@@ -179,15 +179,4 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<resources>
-			<resource>
-				<directory>/Users/warrenpa/workspace/spring-content/spring-content-autoconfigure/src/main/resources</directory>
-				<includes>
-					<include>*.imports</include>
-				</includes>
-			</resource>
-		</resources>
-	</build>
-
 </project>
