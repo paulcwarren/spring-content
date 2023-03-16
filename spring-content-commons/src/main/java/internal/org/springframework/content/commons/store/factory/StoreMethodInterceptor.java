@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.repository.factory;
+package internal.org.springframework.content.commons.store.factory;
 
 import static java.lang.String.format;
 

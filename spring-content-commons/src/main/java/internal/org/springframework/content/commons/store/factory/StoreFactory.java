@@ -1,4 +1,4 @@
-package org.springframework.content.commons.repository.factory;
+package internal.org.springframework.content.commons.store.factory;
 
 import org.springframework.content.commons.repository.Store;
 

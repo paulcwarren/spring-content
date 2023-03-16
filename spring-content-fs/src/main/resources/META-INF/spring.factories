@@ -1,1 +1,1 @@
-org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean=internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean
+org.springframework.content.commons.store.factory.AbstractStoreFactoryBean=internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean

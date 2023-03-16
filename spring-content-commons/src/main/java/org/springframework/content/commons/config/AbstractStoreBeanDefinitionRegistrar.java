@@ -23,7 +23,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.StoreInterfaceUtils;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
@@ -321,14 +321,14 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	protected boolean multipleStoreImplementationsDetected() {
 
-		boolean multipleModulesFound = SpringFactoriesLoader
-				.loadFactoryNames(AbstractStoreFactoryBean.class, resourceLoader.getClassLoader()).size() > 1;
+		boolean multipleOldModulesFound = SpringFactoriesLoader.loadFactoryNames(org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean.class, resourceLoader.getClassLoader()).size() > 1;
+		boolean multipleNewModulesFound = SpringFactoriesLoader.loadFactoryNames(AbstractStoreFactoryBean.class, resourceLoader.getClassLoader()).size() > 1;
 
-		if (multipleModulesFound) {
+		if (multipleOldModulesFound == true || multipleNewModulesFound == true) {
 			LOGGER.info("Multiple store modules detected.  Entering strict resolution mode");
 		}
 
-		return multipleModulesFound;
+		return multipleOldModulesFound == true || multipleNewModulesFound == true;
 	}
 
 	private class IsCandidatePredicate implements Predicate<String> {

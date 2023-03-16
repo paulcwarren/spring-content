@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.repository.factory;
+package internal.org.springframework.content.commons.store.factory;
 
 import java.io.File;
 import java.io.FileInputStream;

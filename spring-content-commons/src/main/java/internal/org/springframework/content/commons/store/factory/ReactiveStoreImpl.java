@@ -1,4 +1,4 @@
-package internal.org.springframework.content.commons.repository.factory;
+package internal.org.springframework.content.commons.store.factory;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;

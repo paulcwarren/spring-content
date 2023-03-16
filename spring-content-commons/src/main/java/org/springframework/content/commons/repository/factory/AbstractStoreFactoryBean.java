@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import internal.org.springframework.content.commons.store.factory.StoreFactory;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,10 +33,14 @@ import org.springframework.util.Assert;
 
 import internal.org.springframework.content.commons.config.StoreFragment;
 import internal.org.springframework.content.commons.config.StoreFragments;
-import internal.org.springframework.content.commons.repository.factory.ReactiveStoreImpl;
-import internal.org.springframework.content.commons.repository.factory.StoreImpl;
-import internal.org.springframework.content.commons.repository.factory.StoreMethodInterceptor;
+import internal.org.springframework.content.commons.store.factory.ReactiveStoreImpl;
+import internal.org.springframework.content.commons.store.factory.StoreImpl;
+import internal.org.springframework.content.commons.store.factory.StoreMethodInterceptor;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.factory.AbstractStoreFactoryBean} instead.
+ */
+@Deprecated
 public abstract class AbstractStoreFactoryBean
 		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
 		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {

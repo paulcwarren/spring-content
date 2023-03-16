@@ -16,7 +16,7 @@ import java.util.List;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.StoreFactory;
+import internal.org.springframework.content.commons.store.factory.StoreFactory;
 import org.springframework.content.commons.repository.factory.testsupport.TestContentStore;
 import org.springframework.content.commons.repository.factory.testsupport.TestStoreFactoryBean;
 import org.springframework.content.commons.storeservice.StoreFilter;

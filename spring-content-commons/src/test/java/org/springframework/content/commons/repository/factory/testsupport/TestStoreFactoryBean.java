@@ -7,7 +7,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.core.io.Resource;
 
 public class TestStoreFactoryBean extends AbstractStoreFactoryBean {

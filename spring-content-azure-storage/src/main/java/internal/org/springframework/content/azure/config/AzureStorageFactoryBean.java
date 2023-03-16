@@ -5,7 +5,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;

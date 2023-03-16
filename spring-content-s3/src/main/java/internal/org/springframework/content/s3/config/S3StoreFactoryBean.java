@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.ReactiveContentStore;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
