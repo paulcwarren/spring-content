@@ -14,7 +14,6 @@ import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoCon
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebApplicationContext;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.context.annotation.Configuration;
@@ -94,7 +93,6 @@ public class ContentRestAutoConfigurationTest {
 	public static class HypermediaConfig {}
 
 	@Document
-	@Content
 	public class TestEntity {
 		@Id
 		private String id;

@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemContentRepositories;
@@ -198,7 +197,6 @@ public class EnableFilesystemStoresTest {
 
 	}
 
-	@Content
 	public class TestEntity {
 		@ContentId
 		private String contentId;
