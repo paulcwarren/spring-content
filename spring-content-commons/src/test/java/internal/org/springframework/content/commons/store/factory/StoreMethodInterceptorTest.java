@@ -1,15 +1,12 @@
 package internal.org.springframework.content.commons.store.factory;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyObject;
@@ -20,6 +17,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -39,10 +37,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreExtension;
+import org.springframework.content.commons.store.events.AfterStoreEvent;
+import org.springframework.content.commons.repository.*;
 import org.springframework.content.commons.repository.events.AfterAssociateEvent;
 import org.springframework.content.commons.repository.events.AfterGetContentEvent;
 import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
@@ -52,7 +48,7 @@ import org.springframework.content.commons.repository.events.AfterUnsetContentEv
 import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
 import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
-import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
+import org.springframework.content.commons.store.events.BeforeSetContentEvent;
 import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
 import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -110,6 +106,8 @@ public class StoreMethodInterceptorTest {
 
 	private Map<Method, StoreExtension> extensions = null;
 
+	private ByteArrayInputStream modifiedStream = null;
+
 	{
 		Describe("#invoke", () -> {
 
@@ -145,12 +143,12 @@ public class StoreMethodInterceptorTest {
 				It("should proceed", () -> {
 					assertThat(e, is(nullValue()));
 
-					ArgumentCaptor<AfterGetContentEvent> captor = ArgumentCaptor.forClass(AfterGetContentEvent.class);
+					ArgumentCaptor<AfterStoreEvent> captor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 					InOrder inOrder = Mockito.inOrder(publisher, store);
 
-					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeGetContentEvent.class)));
+					inOrder.verify(publisher, times(2)).publishEvent(argThat(isA(StoreEvent.class)));
 					inOrder.verify(store).getContent(anyObject());
-					inOrder.verify(publisher).publishEvent(captor.capture());
+					inOrder.verify(publisher, times(2)).publishEvent(captor.capture());
 					assertThat(captor.getValue().getResult(), is(result));
 				});
 
@@ -183,10 +181,10 @@ public class StoreMethodInterceptorTest {
 
 					ArgumentCaptor<BeforeSetContentEvent> beforeArgCaptor = ArgumentCaptor.forClass(BeforeSetContentEvent.class);
 					ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
-					ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+					ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 					InOrder inOrder = Mockito.inOrder(publisher, store);
 
-					inOrder.verify(publisher).publishEvent(beforeArgCaptor.capture());
+					inOrder.verify(publisher, times(2)).publishEvent(beforeArgCaptor.capture());
 					assertThat(beforeArgCaptor.getValue().getResource(), is(nullValue()));
 					assertThat(beforeArgCaptor.getValue().getInputStream(), is(not(nullValue())));
 
@@ -195,7 +193,7 @@ public class StoreMethodInterceptorTest {
 						assertThat(IOUtils.toString(setContentInputStream), is("test"));
 					}
 
-					inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+					inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 					assertThat(afterArgCaptor.getValue().getResult(), is(result));
 				});
 
@@ -213,9 +211,8 @@ public class StoreMethodInterceptorTest {
 					It("should still receive the inputstream in the setContent invocation", () -> {
 						assertThat(e, is(nullValue()));
 
-						ArgumentCaptor<BeforeSetContentEvent> beforeArgCaptor = ArgumentCaptor.forClass(BeforeSetContentEvent.class);
 						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
-						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+						ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
@@ -225,7 +222,7 @@ public class StoreMethodInterceptorTest {
 							assertThat(IOUtils.toString(setContentInputStream), is("test"));
 						}
 
-						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 						assertThat(afterArgCaptor.getValue().getResult(), is(result));
 					});
 				});
@@ -247,7 +244,7 @@ public class StoreMethodInterceptorTest {
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
-						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+						ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 
 						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
 
@@ -257,7 +254,7 @@ public class StoreMethodInterceptorTest {
 							assertThat(IOUtils.toString(setContentInputStream), is("test"));
 						}
 
-						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 						assertThat(afterArgCaptor.getValue().getResult(), is(result));
 					});
 				});
@@ -276,7 +273,7 @@ public class StoreMethodInterceptorTest {
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
-						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+						ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 
 						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
 
@@ -286,7 +283,7 @@ public class StoreMethodInterceptorTest {
 							assertThat(IOUtils.toString(setContentInputStream), is("test"));
 						}
 
-						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 						assertThat(afterArgCaptor.getValue().getResult(), is(result));
 					});
 				});
@@ -295,7 +292,8 @@ public class StoreMethodInterceptorTest {
 
 					BeforeEach(() -> {
 						onBeforeSetContentPublishEvent((invocationOnMock) -> {
-							((BeforeSetContentEvent)invocationOnMock.getArgument(0)).setInputStream(new ByteArrayInputStream("encrypted".getBytes()));
+							modifiedStream = new ByteArrayInputStream("encrypted".getBytes());
+							((BeforeSetContentEvent)invocationOnMock.getArgument(0)).setInputStream(modifiedStream);
 							return null;
 						});
 					});
@@ -306,19 +304,17 @@ public class StoreMethodInterceptorTest {
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						ArgumentCaptor<InputStream> setContentArgCaptor = ArgumentCaptor.forClass(InputStream.class);
-						ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+						ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 
 						inOrder.verify(publisher).publishEvent(argThat(isA(BeforeSetContentEvent.class)));
 
 						inOrder.verify(store).setContent(anyObject(), setContentArgCaptor.capture());
 
 						try (InputStream setContentInputStream = setContentArgCaptor.getValue()) {
-							String contents = IOUtils.toString(setContentInputStream);
-							assertThat(contents, is(not("test")));
-							assertThat(contents, is("encrypted"));
+							assertThat(setContentInputStream, is(modifiedStream));
 						}
 
-						inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+						inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 						assertThat(afterArgCaptor.getValue().getResult(), is(result));
 					});
 				});
@@ -352,10 +348,10 @@ public class StoreMethodInterceptorTest {
 
 					ArgumentCaptor<BeforeSetContentEvent> beforeArgCaptor = ArgumentCaptor.forClass(BeforeSetContentEvent.class);
 					ArgumentCaptor<Resource> setContentArgCaptor = ArgumentCaptor.forClass(Resource.class);
-					ArgumentCaptor<AfterSetContentEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterSetContentEvent.class);
+					ArgumentCaptor<AfterStoreEvent> afterArgCaptor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 					InOrder inOrder = Mockito.inOrder(publisher, store);
 
-					inOrder.verify(publisher).publishEvent(beforeArgCaptor.capture());
+					inOrder.verify(publisher, times(2)).publishEvent(beforeArgCaptor.capture());
 					assertThat(beforeArgCaptor.getValue().getResource(), is(not(nullValue())));
 					assertThat(beforeArgCaptor.getValue().getInputStream(), is(nullValue()));
 
@@ -364,7 +360,7 @@ public class StoreMethodInterceptorTest {
 						assertThat(IOUtils.toString(setContentInputStream), is("test"));
 					}
 
-					inOrder.verify(publisher).publishEvent(afterArgCaptor.capture());
+					inOrder.verify(publisher, times(2)).publishEvent(afterArgCaptor.capture());
 					assertThat(afterArgCaptor.getValue().getResult(), is(result));
 				});
 			});
@@ -385,14 +381,13 @@ public class StoreMethodInterceptorTest {
 				It("should proceed", () -> {
 					assertThat(e, is(nullValue()));
 
-					ArgumentCaptor<AfterUnsetContentEvent> captor = ArgumentCaptor.forClass(AfterUnsetContentEvent.class);
 					InOrder inOrder = Mockito.inOrder(publisher, store);
 
 					inOrder.verify(publisher).publishEvent(argThat(isA(BeforeUnsetContentEvent.class)));
+					inOrder.verify(store).unsetContent(anyObject());
 
-					verify(store).unsetContent(anyObject());
-
-					inOrder.verify(publisher).publishEvent(captor.capture());
+					ArgumentCaptor<AfterStoreEvent> captor = ArgumentCaptor.forClass(AfterStoreEvent.class);
+					inOrder.verify(publisher, times(2)).publishEvent(captor.capture());
 					assertThat(captor.getValue().getResult(), is(result));
 				});
 			});
@@ -425,12 +420,12 @@ public class StoreMethodInterceptorTest {
 					It("should proceed", () -> {
 						assertThat(e, is(nullValue()));
 
-						ArgumentCaptor<AfterGetResourceEvent> captor = ArgumentCaptor.forClass(AfterGetResourceEvent.class);
+						ArgumentCaptor<AfterStoreEvent> captor = ArgumentCaptor.forClass(AfterStoreEvent.class);
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
-						inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeGetResourceEvent.class)));
+						inOrder.verify(publisher, times(2)).publishEvent(argThat(instanceOf(StoreEvent.class)));
 						verify(store).getResource(any(Serializable.class));
-						inOrder.verify(publisher).publishEvent(captor.capture());
+						inOrder.verify(publisher, times(2)).publishEvent(captor.capture());
 						assertThat(captor.getValue().getResult(), is(result));
 					});
 				});
@@ -449,13 +444,14 @@ public class StoreMethodInterceptorTest {
 					It("should proceed", () -> {
 						assertThat(e, is(nullValue()));
 
-						ArgumentCaptor<AfterGetResourceEvent> captor = ArgumentCaptor.forClass(AfterGetResourceEvent.class);
 
 						InOrder inOrder = Mockito.inOrder(publisher, store);
 
 						inOrder.verify(publisher).publishEvent(argThat(instanceOf(BeforeGetResourceEvent.class)));
-						verify(store).getResource(argThat(isA(ContentObject.class)));
-						inOrder.verify(publisher).publishEvent(captor.capture());
+						inOrder.verify(store).getResource(argThat(isA(ContentObject.class)));
+
+						ArgumentCaptor<AfterStoreEvent> captor = ArgumentCaptor.forClass(AfterStoreEvent.class);
+						inOrder.verify(publisher, times(2)).publishEvent(captor.capture());
 						assertThat(captor.getValue().getResult(), is(result));
 					});
 				});

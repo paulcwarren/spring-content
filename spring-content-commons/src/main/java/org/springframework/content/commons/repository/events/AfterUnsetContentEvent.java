@@ -6,6 +6,9 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.AfterStoreEvent;
 import org.springframework.content.commons.repository.ContentStore;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.events.AfterUnsetContentEvent} instead.
+ */
 public class AfterUnsetContentEvent extends AfterStoreEvent {
 
 	private static final long serialVersionUID = 3984922393423249069L;

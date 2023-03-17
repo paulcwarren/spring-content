@@ -1,35 +1,29 @@
-package org.springframework.content.commons.repository.events;
+package org.springframework.content.commons.store.events;
+
+import lombok.Getter;
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.StoreEvent;
-import org.springframework.core.io.Resource;
-
-import lombok.Getter;
-
-/**
- * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.events.BeforeSetContentEvent} instead.
- */
 @Getter
 public class BeforeSetContentEvent extends StoreEvent {
+    private static final long serialVersionUID = -7299354365313770L;
 
-	private static final long serialVersionUID = -7299354365313770L;
+    private InputStream inputStream;
+    private Resource resource;
 
-	private InputStream inputStream;
-	private Resource resource;
+    public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, InputStream is) {
+        super(source, store);
+        this.inputStream = is;
+    }
 
-	public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, InputStream is) {
-		super(source, store);
-		this.inputStream = is;
-	}
-
-	public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, Resource resource) {
-		super(source, store);
-		this.resource = resource;
-	}
+    public BeforeSetContentEvent(Object source, ContentStore<Object, Serializable> store, Resource resource) {
+        super(source, store);
+        this.resource = resource;
+    }
 
     public BeforeSetContentEvent(Object source, PropertyPath propertyPath, ContentStore<Object, Serializable> store, InputStream is) {
         super(source, propertyPath, store);

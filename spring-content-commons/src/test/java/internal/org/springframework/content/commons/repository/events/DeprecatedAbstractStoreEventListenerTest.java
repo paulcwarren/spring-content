@@ -1,5 +1,17 @@
 package internal.org.springframework.content.commons.repository.events;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.StoreEvent;
+import org.springframework.content.commons.repository.events.*;
+
+import java.io.InputStream;
+import java.io.Serializable;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -7,35 +19,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
-import java.io.InputStream;
-import java.io.Serializable;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.store.events.StoreEvent;
-import org.springframework.content.commons.store.events.AbstractStoreEventListener;
-import org.springframework.content.commons.store.events.AfterAssociateEvent;
-import org.springframework.content.commons.store.events.AfterGetContentEvent;
-import org.springframework.content.commons.store.events.AfterGetResourceEvent;
-import org.springframework.content.commons.store.events.AfterSetContentEvent;
-import org.springframework.content.commons.store.events.AfterUnassociateEvent;
-import org.springframework.content.commons.store.events.AfterUnsetContentEvent;
-import org.springframework.content.commons.store.events.BeforeAssociateEvent;
-import org.springframework.content.commons.store.events.BeforeGetContentEvent;
-import org.springframework.content.commons.store.events.BeforeGetResourceEvent;
-import org.springframework.content.commons.store.events.BeforeSetContentEvent;
-import org.springframework.content.commons.store.events.BeforeUnassociateEvent;
-import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
-
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
 @SuppressWarnings("unchecked")
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
-public class AbstractStoreEventListenerTest {
+public class DeprecatedAbstractStoreEventListenerTest {
 
 	private AbstractStoreEventListener<Object> listener;
 	private StoreEvent event;

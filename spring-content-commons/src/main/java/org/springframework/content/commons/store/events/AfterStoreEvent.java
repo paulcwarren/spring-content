@@ -1,12 +1,10 @@
-package org.springframework.content.commons.repository;
+package org.springframework.content.commons.store.events;
+
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.ContentStore;
 
 import java.io.Serializable;
 
-import org.springframework.content.commons.property.PropertyPath;
-
-/**
- * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.events.AfterStoreEvent} instead.
- */
 public class AfterStoreEvent extends StoreEvent {
 
     private Object result;

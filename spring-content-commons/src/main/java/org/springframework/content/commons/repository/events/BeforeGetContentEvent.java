@@ -6,6 +6,9 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.StoreEvent;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.events.BeforeGetContentEvent} instead.
+ */
 public class BeforeGetContentEvent extends StoreEvent {
 
 	private static final long serialVersionUID = -6943798939368100773L;
