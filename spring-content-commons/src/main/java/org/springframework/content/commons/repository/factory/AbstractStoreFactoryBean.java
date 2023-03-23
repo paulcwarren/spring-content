@@ -22,10 +22,10 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ParameterTypeAware;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.ReactiveContentStore;
-import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.ReactiveContentStore;
+import org.springframework.content.commons.store.Store;
 import org.springframework.content.commons.repository.StoreExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -42,7 +42,7 @@ import internal.org.springframework.content.commons.store.factory.StoreMethodInt
  */
 @Deprecated
 public abstract class AbstractStoreFactoryBean
-		implements BeanFactoryAware, InitializingBean, FactoryBean<Store<? extends Serializable>>,
+		implements BeanFactoryAware, InitializingBean, FactoryBean<org.springframework.content.commons.repository.Store<? extends Serializable>>,
 		BeanClassLoaderAware, ApplicationEventPublisherAware, StoreFactory {
 
 	private static Log logger = LogFactory.getLog(AbstractStoreFactoryBean.class);
@@ -56,7 +56,7 @@ public abstract class AbstractStoreFactoryBean
         }
     }
 
-	private Class<? extends Store> storeInterface;
+	private Class<? extends org.springframework.content.commons.repository.Store> storeInterface;
 	private ClassLoader classLoader;
 	private ApplicationEventPublisher publisher;
 
@@ -68,7 +68,7 @@ public abstract class AbstractStoreFactoryBean
 
 	private BeanFactory beanFactory;
 
-	protected AbstractStoreFactoryBean(Class<? extends Store> storeInterface) {
+	protected AbstractStoreFactoryBean(Class<? extends org.springframework.content.commons.repository.Store> storeInterface) {
 		Assert.notNull(storeInterface, "storeInterface must not be null");
 		this.storeInterface = storeInterface;
 	}
@@ -85,7 +85,7 @@ public abstract class AbstractStoreFactoryBean
 	 * getContentStoreInterface()
 	 */
 	@Override
-    public Class<? extends Store> getStoreInterface() {
+    public Class<? extends org.springframework.content.commons.repository.Store> getStoreInterface() {
 		return this.storeInterface;
 	}
 
@@ -180,10 +180,26 @@ public abstract class AbstractStoreFactoryBean
 		// Create proxy
 		ProxyFactory result = new ProxyFactory();
 		result.setTarget(target);
-        if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class)) {
-            result.setInterfaces(new Class[] { storeInterface, Store.class, AssociativeStore.class, ContentStore.class, ParameterTypeAware.class });
+        if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class) && !ClassUtils.getAllInterfaces(storeInterface).contains(org.springframework.content.commons.repository.ReactiveContentStore.class)) {
+            result.setInterfaces(new Class[] {
+					storeInterface,
+					org.springframework.content.commons.repository.Store.class,
+					org.springframework.content.commons.repository.AssociativeStore.class,
+					org.springframework.content.commons.repository.ContentStore.class,
+					Store.class,
+					AssociativeStore.class,
+					ContentStore.class,
+					ParameterTypeAware.class
+			});
         } else {
-            result.setInterfaces(new Class[] { storeInterface, Store.class, ReactiveContentStore.class, ParameterTypeAware.class });
+            result.setInterfaces(new Class[] {
+					storeInterface,
+					org.springframework.content.commons.repository.Store.class,
+					org.springframework.content.commons.repository.ReactiveContentStore.class,
+					Store.class,
+					ReactiveContentStore.class,
+					ParameterTypeAware.class
+			});
         }
 
 		Map<Method, StoreExtension> extensionsMap = new HashMap<>();
@@ -202,8 +218,8 @@ public abstract class AbstractStoreFactoryBean
 
 		StoreMethodInterceptor intercepter = new StoreMethodInterceptor();
 
-		if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class)) {
-		    storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((ContentStore<Object, Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
+		if (!ClassUtils.getAllInterfaces(storeInterface).contains(ReactiveContentStore.class) && !ClassUtils.getAllInterfaces(storeInterface).contains(org.springframework.content.commons.repository.ReactiveContentStore.class)) {
+		    storeFragments.add(new StoreFragment(storeInterface, new StoreImpl((org.springframework.content.commons.repository.Store<Serializable>) target, publisher, Paths.get(System.getProperty("java.io.tmpdir")))));
 		} else {
             storeFragments.add(new StoreFragment(storeInterface, new ReactiveStoreImpl((ReactiveContentStore<Object, Serializable>) target, publisher)));
 		}

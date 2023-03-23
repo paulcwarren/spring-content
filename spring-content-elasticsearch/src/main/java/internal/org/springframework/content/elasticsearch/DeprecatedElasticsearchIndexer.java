@@ -1,29 +1,28 @@
 package internal.org.springframework.content.elasticsearch;
 
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.client.RestHighLevelClient;
-
 import org.springframework.content.commons.annotations.StoreEventHandler;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.events.AbstractStoreEventListener;
-import org.springframework.content.commons.store.events.AfterSetContentEvent;
-import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.search.IndexService;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
+import org.springframework.content.commons.repository.events.AfterSetContentEvent;
+import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+
+import java.io.IOException;
 
 @StoreEventHandler
-public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
+public class DeprecatedElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 
 	public static final String INDEX_NAME = "spring-content-fulltext-index";
 
-	private static final Log LOGGER = LogFactory.getLog(ElasticsearchIndexer.class);
+	private static final Log LOGGER = LogFactory.getLog(DeprecatedElasticsearchIndexer.class);
 
 	private final RestHighLevelClient client;
 	private final IndexService indexService;
 
-	public ElasticsearchIndexer(RestHighLevelClient client, IndexService indexService) throws IOException {
+	public DeprecatedElasticsearchIndexer(RestHighLevelClient client, IndexService indexService) throws IOException {
 		this.client = client;
 		this.indexService = indexService;
 	}

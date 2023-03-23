@@ -1,5 +1,6 @@
 package internal.org.springframework.content.elasticsearch.boot.autoconfigure;
 
+import internal.org.springframework.content.elasticsearch.DeprecatedElasticsearchIndexer;
 import internal.org.springframework.content.elasticsearch.ElasticsearchConfig;
 import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
 import org.apache.http.HttpHost;
@@ -35,6 +36,13 @@ public class ElasticsearchAutoConfiguration {
 	@Bean
 	public ElasticsearchIndexer elasticFulltextIndexerEventListener(RestHighLevelClient client, IndexService elasticFulltextIndexService) throws IOException {
 		return new ElasticsearchIndexer(client, elasticFulltextIndexService);
+	}
+
+	@ConditionalOnProperty(prefix="spring.content.elasticsearch", name="autoindex", havingValue="true", matchIfMissing = true)
+	@ConditionalOnMissingBean(DeprecatedElasticsearchIndexer.class)
+	@Bean
+	public DeprecatedElasticsearchIndexer deprecatedElasticFulltextIndexerEventListener(RestHighLevelClient client, IndexService elasticFulltextIndexService) throws IOException {
+		return new DeprecatedElasticsearchIndexer(client, elasticFulltextIndexService);
 	}
 
 	// user supplied

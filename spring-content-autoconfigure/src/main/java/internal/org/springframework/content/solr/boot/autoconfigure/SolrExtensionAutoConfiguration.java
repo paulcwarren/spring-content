@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.content.commons.search.IndexService;
+import org.springframework.content.solr.DeprecatedSolrIndexerStoreEventHandler;
 import org.springframework.content.solr.SolrIndexerStoreEventHandler;
 import org.springframework.content.solr.SolrProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,5 +45,11 @@ public class SolrExtensionAutoConfiguration {
    @Bean
    public Object solrFulltextEventListener() {
       return new SolrIndexerStoreEventHandler(solrIndexService());
+   }
+
+   @ConditionalOnMissingBean(name = "deprecatedSolrFulltextEventListener")
+   @Bean
+   public Object deprecatedSolrFulltextEventListener() {
+      return new DeprecatedSolrIndexerStoreEventHandler(solrIndexService());
    }
 }

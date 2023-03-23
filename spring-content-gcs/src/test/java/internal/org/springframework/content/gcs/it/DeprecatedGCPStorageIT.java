@@ -1,42 +1,32 @@
-package internal.org.springframework.content.azure.it;
+package internal.org.springframework.content.gcs.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.UUID;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import javax.sql.DataSource;
-
+import junit.framework.Assert;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.content.azure.config.EnableAzureStorage;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.gcs.config.EnableGCPStorage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,34 +41,23 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-    import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
-import com.azure.core.http.rest.PagedIterable;
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobItem;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import net.bytebuddy.utility.RandomString;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
-public class AzureStorageIT {
-
-    private static final BlobServiceClientBuilder builder = Azurite.getBlobServiceClientBuilder();
-    private static final BlobContainerClient client = builder.buildClient().getBlobContainerClient("test");
-
-    static {
-        if (!client.exists()) {
-            client.create();
-        }
-
-        System.setProperty("spring.content.azure.bucket", "azure-test-bucket");
-    }
+public class DeprecatedGCPStorageIT {
 
     private TestEntity entity;
     private Resource genericResource;
@@ -89,11 +68,16 @@ public class AzureStorageIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
+    private Storage storage;
 
     private String resourceLocation;
 
+    static {
+        System.setProperty("spring.content.gcp.storage.bucket", "test");
+    }
+
     {
-        Describe("DefaultAzureStorageImpl", () -> {
+        Describe("DefaultGCPStorageImpl", () -> {
 
             BeforeEach(() -> {
                 context = new AnnotationConfigApplicationContext();
@@ -102,6 +86,7 @@ public class AzureStorageIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
+                storage = context.getBean(Storage.class);
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -124,9 +109,9 @@ public class AzureStorageIT {
                             ((DeletableResource)genericResource).delete();
                         }
 
-                        PagedIterable<BlobItem> blobs = client.listBlobs();
-                        for(BlobItem blob : blobs) {
-                            client.getBlobClient(blob.getName()).delete();
+                        Page<Blob> blobs = storage.list("delete-me-please-please", Storage.BlobListOption.currentDirectory());
+                        for(Blob blob : blobs.iterateAll()) {
+                            storage.delete(blob.getBlobId());
                         }
                     });
 
@@ -193,7 +178,6 @@ public class AzureStorageIT {
 
                             It("should not exist", () -> {
                                 assertThat(e, is(nullValue()));
-                                assertThat(genericResource.exists(), is(false));
                             });
                         });
                     });
@@ -240,14 +224,13 @@ public class AzureStorageIT {
                                 });
 
                                 It("should not honor byte ranges", () -> {
-                                   // relies on REST-layer to serve byte range
+                                    // relies on REST-layer to serve byte range
                                     Resource r = store.getResource(entity, PropertyPath.from("content"), GetResourceParams.builder().range("5-10").build());
                                     try (InputStream is = r.getInputStream()) {
                                         assertThat(IOUtils.toString(is), is("Hello Client-side World!"));
                                     }
                                 });
                             });
-
                             Context("when the resource is unassociated", () -> {
 
                                 BeforeEach(() -> {
@@ -483,13 +466,14 @@ public class AzureStorageIT {
     }
 
     @Configuration
-    @EnableJpaRepositories(basePackages="internal.org.springframework.content.azure.it", considerNestedRepositories = true)
-    @EnableAzureStorage(basePackages="internal.org.springframework.content.azure.it")
+    @EnableJpaRepositories(basePackages="internal.org.springframework.content.gcs.it", considerNestedRepositories = true)
+    @EnableGCPStorage(basePackages="internal.org.springframework.content.gcs.it")
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
+
         @Bean
-        public BlobServiceClientBuilder blobServiceClientBuilder() {
-            return builder;
+        public static Storage storage() {
+            return LocalStorageHelper.getOptions().getService();
         }
     }
 
@@ -511,7 +495,7 @@ public class AzureStorageIT {
 
             LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
             factory.setJpaVendorAdapter(vendorAdapter);
-            factory.setPackagesToScan("internal.org.springframework.content.azure.it");
+            factory.setPackagesToScan("internal.org.springframework.content.gcs.it");
             factory.setDataSource(dataSource());
 
             return factory;
@@ -562,7 +546,7 @@ public class AzureStorageIT {
     @NoArgsConstructor
     public static class SharedIdContentIdEntity {
 
-        @jakarta.persistence.Id
+        @Id
         @ContentId
         private String contentId = UUID.randomUUID().toString();
 
@@ -590,4 +574,3 @@ public class AzureStorageIT {
 //    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
 //    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
 }
-//            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();

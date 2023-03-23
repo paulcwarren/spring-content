@@ -45,7 +45,7 @@ import internal.org.springframework.content.elasticsearch.IndexManager;
 
 public class SearchableImpl implements Searchable<Object> {
 
-    private static final Log LOGGER = LogFactory.getLog(ElasticsearchIndexer.class);
+    private static final Log LOGGER = LogFactory.getLog(SearchableImpl.class);
 
     private final RestHighLevelClient client;
     private final IndexManager manager;

@@ -13,7 +13,7 @@ import java.io.Serializable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.events.StoreEvent;
 import org.springframework.content.commons.store.events.AbstractStoreEventListener;
 import org.springframework.content.commons.store.events.AfterAssociateEvent;

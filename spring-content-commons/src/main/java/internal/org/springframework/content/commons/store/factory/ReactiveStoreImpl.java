@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ReactiveContentStore;
+import org.springframework.content.commons.store.ReactiveContentStore;
 import org.springframework.context.ApplicationEventPublisher;
 
 import reactor.core.publisher.Flux;

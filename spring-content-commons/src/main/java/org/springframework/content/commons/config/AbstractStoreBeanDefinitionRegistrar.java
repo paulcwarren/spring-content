@@ -19,10 +19,10 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.ReactiveContentStore;
-import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.ReactiveContentStore;
+import org.springframework.content.commons.store.Store;
 import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.StoreInterfaceUtils;
 import org.springframework.context.EnvironmentAware;
@@ -226,7 +226,8 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
 	protected Class<? extends Store> loadStoreClass(ConfigurableListableBeanFactory registry, BeanDefinition definition) throws ClassNotFoundException {
 		Class<?> candidateStoreClass = ClassUtils.forName(definition.getBeanClassName(), registry.getBeanClassLoader());
-		if (!Store.class.isAssignableFrom(candidateStoreClass) && !ReactiveContentStore.class.isAssignableFrom(candidateStoreClass)) {
+		if (!Store.class.isAssignableFrom(candidateStoreClass) && !ReactiveContentStore.class.isAssignableFrom(candidateStoreClass) &&
+			!org.springframework.content.commons.repository.Store.class.isAssignableFrom(candidateStoreClass) && !org.springframework.content.commons.repository.ReactiveContentStore.class.isAssignableFrom(candidateStoreClass)) {
 			throw new IllegalStateException(String.format("Store class %s is not assignable from Store or ReactiveContentStore", definition.getBeanClassName()));
 		}
 		return (Class<? extends Store>) candidateStoreClass;
@@ -342,10 +343,14 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 		@Override
 		public boolean test(String s) {
 
-			if (Store.class.getName().equals(s) ||
+			if (org.springframework.content.commons.repository.Store.class.getName().equals(s) ||
+				org.springframework.content.commons.repository.AssociativeStore.class.getName().equals(s) ||
+				org.springframework.content.commons.repository.ContentStore.class.getName().equals(s) ||
+				org.springframework.content.commons.repository.ReactiveContentStore.class.getName().equals(s) ||
+				Store.class.getName().equals(s) ||
 				AssociativeStore.class.getName().equals(s) ||
 				ContentStore.class.getName().equals(s) ||
-                ReactiveContentStore.class.getName().equals(s) ||
+				ReactiveContentStore.class.getName().equals(s) ||
 				s.startsWith("java.")) {
 
 				return false;

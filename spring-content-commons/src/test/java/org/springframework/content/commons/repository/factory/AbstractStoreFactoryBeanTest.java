@@ -13,9 +13,9 @@ import java.util.UUID;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.GetResourceParams;
-import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.Store;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;

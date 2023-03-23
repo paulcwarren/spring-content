@@ -1,16 +1,14 @@
-package org.springframework.content.commons.repository;
+package org.springframework.content.commons.store;
+
+import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.ContentRepository;
+import org.springframework.core.io.Resource;
+import org.springframework.versions.LockParticipant;
 
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.core.io.Resource;
-import org.springframework.versions.LockParticipant;
-
-/**
- * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.ContentStore} instead.
- */
-public interface ContentStore<S, SID extends Serializable> extends AssociativeStore<S, SID>, ContentRepository<S, SID> {
+public interface ContentStore<S, SID extends Serializable> extends AssociativeStore<S, SID> {
 
 	@LockParticipant
 	S setContent(S entity, InputStream content);

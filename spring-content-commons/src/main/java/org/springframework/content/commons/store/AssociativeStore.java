@@ -1,13 +1,10 @@
-package org.springframework.content.commons.repository;
-
-import java.io.Serializable;
+package org.springframework.content.commons.store;
 
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.Resource;
 
-/**
- * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.AssociativeStore} instead.
- */
+import java.io.Serializable;
+
 public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
 
 	/**
@@ -37,6 +34,8 @@ public interface AssociativeStore<S, SID extends Serializable> extends Store<SID
 	 *          the entity associated with resource
 	 * @param propertyPath
 	 *          the property path of the associated resource
+	 * @param params
+	 *          parameters customizing how the resource is fetched and returned
 	 * @return  resource
 	 */
 	Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params);

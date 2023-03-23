@@ -2,6 +2,7 @@ package org.springframework.content.elasticsearch;
 
 import java.io.IOException;
 
+import internal.org.springframework.content.elasticsearch.DeprecatedElasticsearchIndexer;
 import internal.org.springframework.content.elasticsearch.ElasticsearchIndexServiceImpl;
 import internal.org.springframework.content.elasticsearch.ElasticsearchIndexer;
 import internal.org.springframework.content.elasticsearch.IndexManager;
@@ -26,5 +27,10 @@ public class ElasticsearchFulltextIndexingConfig {
 	@Bean
 	public ElasticsearchIndexer elasticFulltextIndexerEventListener() throws IOException {
 		return new ElasticsearchIndexer(client, elasticFulltextIndexService);
+	}
+
+	@Bean
+	public DeprecatedElasticsearchIndexer deprecatedElasticFulltextIndexerEventListener() throws IOException {
+		return new DeprecatedElasticsearchIndexer(client, elasticFulltextIndexService);
 	}
 }

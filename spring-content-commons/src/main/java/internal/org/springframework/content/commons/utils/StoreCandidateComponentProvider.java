@@ -3,8 +3,8 @@ package internal.org.springframework.content.commons.utils;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
-import org.springframework.content.commons.repository.ContentRepository;
-import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.ReactiveContentStore;
+import org.springframework.content.commons.store.Store;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.classreading.MetadataReader;
@@ -16,8 +16,10 @@ public class StoreCandidateComponentProvider
 
 	public StoreCandidateComponentProvider(boolean useDefaultFilters, Environment env) {
 		super(useDefaultFilters, env);
-		this.addIncludeFilter(new InterfaceTypeFilter(ContentRepository.class));
+		this.addIncludeFilter(new InterfaceTypeFilter(org.springframework.content.commons.repository.ContentRepository.class));
+		this.addIncludeFilter(new InterfaceTypeFilter(org.springframework.content.commons.repository.Store.class));
 		this.addIncludeFilter(new InterfaceTypeFilter(Store.class));
+		this.addIncludeFilter(new InterfaceTypeFilter(ReactiveContentStore.class));
 	}
 
 	@Override

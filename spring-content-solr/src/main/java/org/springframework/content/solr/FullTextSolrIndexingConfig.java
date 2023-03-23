@@ -20,6 +20,11 @@ public class FullTextSolrIndexingConfig {
 	private SolrProperties props;
 
 	@Bean
+	public Object deprecatedSolrFulltextEventListener() {
+		return new DeprecatedSolrIndexerStoreEventHandler(solrFulltextIndexService());
+	}
+
+	@Bean
 	public Object solrFulltextEventListener() {
 		return new SolrIndexerStoreEventHandler(solrFulltextIndexService());
 	}

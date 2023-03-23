@@ -22,7 +22,11 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.*;
+import org.springframework.content.commons.repository.AssociativeStore;
+import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
@@ -36,7 +40,8 @@ import org.springframework.util.Assert;
 
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
-		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
+		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID>,
+		org.springframework.content.commons.store.AssociativeStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -89,6 +94,20 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params) {
+		ContentProperty contentProperty = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (contentProperty == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		SID contentId = (SID) contentProperty.getContentId(entity);
+		if (contentId == null) {
+			return null;
+		}
+		return getResource(contentId);
+	}
+
+	@Override
+	public Resource getResource(S entity, PropertyPath propertyPath, org.springframework.content.commons.repository.GetResourceParams params) {
 		ContentProperty contentProperty = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
 		if (contentProperty == null) {
 			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
