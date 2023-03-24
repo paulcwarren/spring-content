@@ -443,11 +443,11 @@ There are two variants of each event handler.  The first takes the entity with w
 source of the event.  The second takes the event object.  The latter can be useful, especially for events related to Store
 methods that return results to the caller.
 
-.Entity-based AbstractContentRepositoryEventListener
+.Entity-based AbstractStoreEventListener
 ====
 [source, java]
 ----
-public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+public class ExampleEventListener extends AbstractStoreEventListener {
 
 	@Override
 	public void onAfterSetContent(Object entity) {
