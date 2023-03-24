@@ -12,9 +12,7 @@ import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
 
-import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
-
-import java.io.Serializable;
+import internal.org.springframework.content.fs.store.DefaultFilesystemStoreImpl;
 
 @SuppressWarnings("rawtypes")
 public class FilesystemStoreFactoryBean extends AbstractStoreFactoryBean {

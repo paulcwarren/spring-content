@@ -1,4 +1,4 @@
-package internal.org.springframework.content.fs.repository;
+package internal.org.springframework.content.fs.store;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;

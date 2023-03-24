@@ -13,7 +13,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.util.Assert;
 
 import internal.org.springframework.content.jpa.io.DelegatingBlobResourceLoader;
-import internal.org.springframework.content.jpa.repository.DefaultJpaStoreImpl;
+import internal.org.springframework.content.jpa.store.DefaultJpaStoreImpl;
 
 @SuppressWarnings("rawtypes")
 public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {

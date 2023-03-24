@@ -1,4 +1,4 @@
-package internal.org.springframework.content.jpa.repository;
+package internal.org.springframework.content.jpa.store;
 
 import static java.lang.String.format;
 

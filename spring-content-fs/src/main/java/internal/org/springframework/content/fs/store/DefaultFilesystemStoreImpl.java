@@ -1,4 +1,4 @@
-package internal.org.springframework.content.fs.repository;
+package internal.org.springframework.content.fs.store;
 
 import static java.lang.String.format;
 
