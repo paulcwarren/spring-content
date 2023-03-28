@@ -1,100 +1,120 @@
 package org.springframework.content.jpa.boot.autoconfigure;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-
-import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.content.jpa.config.EnableJpaStores;
-import org.springframework.content.jpa.store.JpaContentStore;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableMBeanExport;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.jmx.support.RegistrationPolicy;
-import org.springframework.support.TestEntity;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
-import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
+import org.assertj.core.api.Assertions;
+import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.content.jpa.config.EnableJpaStores;
+import org.springframework.content.jpa.store.JpaContentStore;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.support.TestEntity;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import javax.sql.DataSource;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.mockito.Mockito.mock;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class ContentJpaAutoConfigurationTest {
 
-	private AnnotationConfigApplicationContext context;
-
 	// mocks
 	private static ContentJpaDatabaseInitializer initializer;
+
+	private ApplicationContextRunner contextRunner;
 
 	{
 		initializer = mock(ContentJpaDatabaseInitializer.class);
 
 		Describe("ContentJpaAutoConfiguration", () -> {
 			BeforeEach(() -> {
-				context = new AnnotationConfigApplicationContext();
-				context.register(TestConfig.class);
-			});
-			JustBeforeEach(() -> {
-				context.refresh();
-			});
-			AfterEach(() -> {
-				context.close();
+				contextRunner = new ApplicationContextRunner()
+						.withConfiguration(AutoConfigurations.of(JpaContentAutoConfiguration.class));
 			});
 			It("should have a content repository", () -> {
-				assertThat(context.getBean(TestEntityContentRepository.class),
-						is(not(nullValue())));
-			});
-			It("should have a database initializer", () -> {
-				assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
-						is(not(nullValue())));
+				contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
+					Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+					Assertions.assertThat(context).hasSingleBean(ContentJpaDatabaseInitializer.class);
+				});
 			});
 			Context("when a custom bean configuration is used", () -> {
-				BeforeEach(() -> {
-					context.register(CustomBeanConfig.class);
-				});
 				It("should use the supplied custom bean", () -> {
-					assertThat(context.getBean(ContentJpaDatabaseInitializer.class),
-							is(initializer));
+					contextRunner.withUserConfiguration(CustomBeanConfig.class).run((context) -> {
+						Assertions.assertThat(context).getBean(ContentJpaDatabaseInitializer.class).isEqualTo(initializer);
+					});
 				});
 			});
 			Context("when an explicit @EnableFilesystemStores is used", () -> {
-				BeforeEach(() -> {
-					context.register(ConfigWithExplicitEnableJpaStores.class);
-				});
 				It("should load the context", () -> {
-					assertThat(context.getBean(TestEntityContentRepository.class), is(not(nullValue())));
-					assertThat(context.getBean(ContentJpaProperties.class), is(not(nullValue())));
-					assertThat(context.getBean(ContentJpaDatabaseInitializer.class), is(not(nullValue())));
+					contextRunner.withUserConfiguration(ConfigWithExplicitEnableJpaStores.class).run((context) -> {
+						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
+						Assertions.assertThat(context).hasSingleBean(ContentJpaProperties.class);
+						Assertions.assertThat(context).hasSingleBean(ContentJpaDatabaseInitializer.class);
+					});
+
 				});
 			});
 		});
 	}
 
 	@Configuration
+	public static class JpaTestConfig {
+		@Bean
+		public DataSource dataSource() {
+			EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+			return builder.setType(EmbeddedDatabaseType.HSQL).build();
+		}
+
+		@Bean
+		public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+			HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+			vendorAdapter.setDatabase(Database.HSQL);
+			vendorAdapter.setGenerateDdl(true);
+
+			LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+			factory.setJpaVendorAdapter(vendorAdapter);
+			factory.setPackagesToScan(getClass().getPackage().getName());
+			factory.setDataSource(dataSource());
+
+			return factory;
+		}
+
+		@Bean
+		public PlatformTransactionManager transactionManager() {
+			JpaTransactionManager txManager = new JpaTransactionManager();
+			txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+			return txManager;
+		}
+	}
+
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/default.properties")
-	@EnableAutoConfiguration(exclude= {MongoAutoConfiguration.class, S3ContentAutoConfiguration.class})
-	@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 	public static class TestConfig {
 	}
 
-	@Configuration
-    @EnableAutoConfiguration(exclude= {MongoAutoConfiguration.class, S3ContentAutoConfiguration.class})
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@Import(JpaTestConfig.class)
 	public static class CustomBeanConfig extends TestConfig {
 		@Bean
 		public ContentJpaDatabaseInitializer initializer() {
@@ -102,11 +122,13 @@ public class ContentJpaAutoConfigurationTest {
 		}
 	}
 
-	@Configuration
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@Import(JpaTestConfig.class)
 	@EnableJpaStores
 	public static class ConfigWithExplicitEnableJpaStores {}
 
-	@Configuration
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/custom-jpa.properties")
 	public static class CustomPropertiesConfig extends TestConfig {
 	}

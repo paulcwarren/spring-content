@@ -27,7 +27,9 @@ import java.util.*;
 
 public class EncryptingContentStoreImpl<S, SID extends Serializable> implements ContentStore<S, SID>, ContentStoreAware {
 
+    @Autowired(required = false)
     private MappingContext mappingContext = null;
+
     @Autowired
     private EnvelopeEncryptionService encrypter;
 
@@ -42,11 +44,14 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
     private Class<?> domainClass;
 
-    @Autowired
-    public EncryptingContentStoreImpl(MappingContext mappingContext) {
+    public EncryptingContentStoreImpl() {
+    }
+
+    protected MappingContext getMappingContext() {
         if (this.mappingContext == null) {
             this.mappingContext = new MappingContext("/", ".");
         }
+        return mappingContext;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(propertyPath);
         Assert.notNull(inputStream);
 
-        ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
@@ -76,7 +81,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(propertyPath);
         Assert.notNull(inputStream);
 
-        ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
@@ -98,7 +103,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(resource);
 
         try {
-            ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+            ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
             if (contentProperty == null) {
                 throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
             }
@@ -122,7 +127,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(o);
         Assert.notNull(propertyPath);
 
-        ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
@@ -149,7 +154,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         InputStream unencryptedStream = null;
         if (encryptedContentStream != null) {
 
-            ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+            ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
             if (contentProperty == null) {
                 throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
             }
@@ -176,7 +181,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         if (r != null) {
             InputStream unencryptedStream = null;
             try {
-                ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+                ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
                 if (contentProperty == null) {
                     throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
                 }
@@ -203,7 +208,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         if (r != null) {
             InputStream unencryptedStream = null;
             try {
-                ContentProperty contentProperty = mappingContext.getContentProperty(o.getClass(), propertyPath.getName());
+                ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
                 if (contentProperty == null) {
                     throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
                 }

@@ -5,6 +5,9 @@ import java.io.Serializable;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.Resource;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.AssociativeStore} instead.
+ */
 public interface AssociativeStore<S, SID extends Serializable> extends Store<SID> {
 
 	/**

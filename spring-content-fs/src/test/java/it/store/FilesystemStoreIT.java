@@ -1,16 +1,11 @@
 package it.store;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -20,11 +15,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.sql.DataSource;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -34,10 +29,9 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.GetResourceParams;
-import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -59,20 +53,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import internal.org.springframework.content.fs.repository.DefaultFilesystemStoreImpl;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
 public class FilesystemStoreIT {
 
-    private DefaultFilesystemStoreImpl<Object, String> mongoContentRepoImpl;
 	private FilesystemStoreIT.TEntity entity;
 	private Resource genericResource;
-	private PlacementService placer;
-
-	private InputStream content;
-	private InputStream result;
 	private Exception e;
 
 	private AnnotationConfigApplicationContext context;

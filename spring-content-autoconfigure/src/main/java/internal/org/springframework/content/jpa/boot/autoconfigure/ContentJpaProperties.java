@@ -1,12 +1,12 @@
 package internal.org.springframework.content.jpa.boot.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceInitializationMode;
+import org.springframework.boot.sql.init.DatabaseInitializationMode;
 
 @ConfigurationProperties("spring.content.jpa")
 public class ContentJpaProperties {
 
-	private String schema = "classpath:org/springframework/content/jpa/schema-@@platform@@.sql";
+	private String schema = "optional:classpath:org/springframework/content/jpa/schema-@@platform@@.sql";
 
 	private final ContentJpaProperties.Initializer initializer = new ContentJpaProperties.Initializer();
 
@@ -19,13 +19,13 @@ public class ContentJpaProperties {
 	}
 
 	public class Initializer {
-		private DataSourceInitializationMode initializeSchema;
+		private DatabaseInitializationMode initializeSchema;
 
-		public DataSourceInitializationMode getInitializeSchema() {
+		public DatabaseInitializationMode getInitializeSchema() {
 			return this.initializeSchema;
 		}
 
-		public void setInitializeSchema(DataSourceInitializationMode initializeSchema) {
+		public void setInitializeSchema(DatabaseInitializationMode initializeSchema) {
 			this.initializeSchema = initializeSchema;
 		}
 	}

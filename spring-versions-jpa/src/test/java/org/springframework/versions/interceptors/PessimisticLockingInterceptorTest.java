@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 import org.junit.runner.RunWith;
 import org.springframework.aop.ProxyMethodInvocation;

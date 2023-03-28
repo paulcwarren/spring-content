@@ -1,64 +1,59 @@
 package org.springframework.versions.jpa.boot;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-
-import org.hamcrest.MatcherAssert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.versions.LockingAndVersioningRepository;
-
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsDatabaseInitializer;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.versions.LockingAndVersioningRepository;
 
-import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
-import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
-import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
-import internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration;
-import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import javax.sql.DataSource;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
 public class JpaVersionsAutoConfigurationTest {
 
     private AnnotationConfigApplicationContext context;
+    private ApplicationContextRunner contextRunner;
 
     {
         Describe("JpaVersionsAutoConfiguration", () -> {
+            BeforeEach(() -> {
+                contextRunner = new ApplicationContextRunner()
+                        .withConfiguration(AutoConfigurations.of(JpaVersionsAutoConfiguration.class));
+            });
             Context("given an application context that relies on auto configuration", () -> {
-                BeforeEach(() -> {
-                    context = new AnnotationConfigApplicationContext();
-                    context.register(StarterConfig.class);
-                    context.refresh();
-                });
-                
                 It("should include the repository bean", () -> {
-                    MatcherAssert.assertThat(context, is(not(nullValue())));
-                    MatcherAssert.assertThat(context.getBean(TestEntityRepository.class), is(not(nullValue())));
+                    contextRunner.withUserConfiguration(StarterConfig.class).run((context) -> {
+                        Assertions.assertThat(context).hasSingleBean(JpaVersionsDatabaseInitializer.class);
+                    });
                 });
             });
             Context("given an application context with a EnableJpaRepositories annotation", () -> {
-                BeforeEach(() -> {
-                    context = new AnnotationConfigApplicationContext();
-                    context.register(StarterWithAnnotationConfig.class);
-                    context.refresh();
-                });
-
                 It("should include the repository bean", () -> {
-                    MatcherAssert.assertThat(context, is(not(nullValue())));
-                    MatcherAssert.assertThat(context.getBean(NestedTestEntityRepository.class), is(not(nullValue())));
+                    contextRunner.withUserConfiguration(StarterWithAnnotationConfig.class).run((context) -> {
+                        Assertions.assertThat(context).hasSingleBean(NestedTestEntityRepository.class);
+                    });
                 });
             });
         });
@@ -69,24 +64,45 @@ public class JpaVersionsAutoConfigurationTest {
     }
 
     @Configuration
-    @PropertySource("classpath:default.properties")
-    @EnableAutoConfiguration(exclude= {
-            ElasticsearchAutoConfiguration.class,
-            MongoAutoConfiguration.class,
-            FilesystemContentAutoConfiguration.class,
-            MongoContentAutoConfiguration.class,
-            RenditionsContentAutoConfiguration.class,
-            S3ContentAutoConfiguration.class})
-    public static class BaseConfig {}
-    
-    @Configuration
-    public static class StarterConfig extends BaseConfig {
+    public static class JpaTestConfig {
+        @Bean
+        public DataSource dataSource() {
+            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+            return builder.setType(EmbeddedDatabaseType.HSQL).build();
+        }
+
+        @Bean
+        public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+            HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+            vendorAdapter.setDatabase(Database.HSQL);
+            vendorAdapter.setGenerateDdl(true);
+
+            LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+            factory.setJpaVendorAdapter(vendorAdapter);
+            factory.setPackagesToScan(getClass().getPackage().getName());
+            factory.setDataSource(dataSource());
+
+            return factory;
+        }
+
+        @Bean
+        public PlatformTransactionManager transactionManager() {
+            JpaTransactionManager txManager = new JpaTransactionManager();
+            txManager.setEntityManagerFactory(entityManagerFactory().getObject());
+            return txManager;
+        }
     }
 
-    @Configuration
+    @SpringBootApplication
+    @Import(JpaTestConfig.class)
+    public static class StarterConfig /*extends BaseConfig*/ {
+    }
+
+    @SpringBootApplication
     @EnableJpaRepositories(basePackages="org.springframework.versions",
                            considerNestedRepositories=true)
-    public static class StarterWithAnnotationConfig extends BaseConfig {
+    @Import(JpaTestConfig.class)
+    public static class StarterWithAnnotationConfig /*extends BaseConfig*/ {
     }
 
     public interface NestedTestEntityRepository extends CrudRepository<TestEntityVersioned, Long>, LockingAndVersioningRepository<TestEntityVersioned, Long> {}

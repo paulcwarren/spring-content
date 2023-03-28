@@ -13,8 +13,8 @@ import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ReactiveContentStore;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.store.ReactiveContentStore;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
@@ -40,7 +40,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 @Transactional
 public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
-		implements ReactiveContentStore<S, SID> {
+		implements org.springframework.content.commons.repository.ReactiveContentStore<S, SID>,
+        ReactiveContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultReactiveS3StoreImpl.class);
 
@@ -192,7 +193,7 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
                         @Override
                         public boolean matches(TypeDescriptor descriptor) {
                             for (Annotation annotation : descriptor.getAnnotations()) {
-                                if ("javax.persistence.Id".equals(
+                                if ("jakarta.persistence.Id".equals(
                                         annotation.annotationType().getCanonicalName())
                                         || "org.springframework.data.annotation.Id"
                                                 .equals(annotation.annotationType()

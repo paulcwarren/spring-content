@@ -13,21 +13,21 @@ import java.io.Serializable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.content.commons.repository.StoreEvent;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
-import org.springframework.content.commons.repository.events.AfterAssociateEvent;
-import org.springframework.content.commons.repository.events.AfterGetContentEvent;
-import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
-import org.springframework.content.commons.repository.events.AfterSetContentEvent;
-import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
-import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
-import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
-import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
-import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.events.StoreEvent;
+import org.springframework.content.commons.store.events.AbstractStoreEventListener;
+import org.springframework.content.commons.store.events.AfterAssociateEvent;
+import org.springframework.content.commons.store.events.AfterGetContentEvent;
+import org.springframework.content.commons.store.events.AfterGetResourceEvent;
+import org.springframework.content.commons.store.events.AfterSetContentEvent;
+import org.springframework.content.commons.store.events.AfterUnassociateEvent;
+import org.springframework.content.commons.store.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.store.events.BeforeAssociateEvent;
+import org.springframework.content.commons.store.events.BeforeGetContentEvent;
+import org.springframework.content.commons.store.events.BeforeGetResourceEvent;
+import org.springframework.content.commons.store.events.BeforeSetContentEvent;
+import org.springframework.content.commons.store.events.BeforeUnassociateEvent;
+import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -281,7 +281,7 @@ public class AbstractStoreEventListenerTest {
 
 	public static class TestContentEventListener
 			extends AbstractStoreEventListener<Object> {
-		private TestContentEventConsumer consumer;
+		final private TestContentEventConsumer consumer;
 
 		public TestContentEventListener(TestContentEventConsumer consumer) {
 			super();

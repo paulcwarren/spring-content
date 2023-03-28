@@ -9,7 +9,7 @@ import org.springframework.util.Assert;
 import org.springframework.versions.LockOwnerException;
 import org.springframework.versions.LockParticipant;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 import java.lang.reflect.Field;
 
 import static java.lang.String.format;

@@ -1,17 +1,14 @@
 package internal.org.springframework.content.rest.it.config;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.isA;
-import static org.mockito.Mockito.verify;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
-
-import java.util.UUID;
-
-import javax.sql.DataSource;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.rest.it.SecurityConfiguration;
+import internal.org.springframework.content.rest.support.TestEntity;
+import internal.org.springframework.content.rest.support.TestEntity2;
+import internal.org.springframework.content.rest.support.mockstore.EnableMockStores;
+import internal.org.springframework.content.rest.support.mockstore.MockContentStore;
+import internal.org.springframework.content.rest.support.mockstore.MockStoreFactoryBean;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +20,6 @@ import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoCo
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.rest.config.ContentRestConfigurer;
 import org.springframework.content.rest.config.RestConfiguration;
@@ -44,17 +40,16 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
+import javax.sql.DataSource;
+import java.util.UUID;
 
-import internal.org.springframework.content.rest.it.SecurityConfiguration;
-import internal.org.springframework.content.rest.support.TestEntity;
-import internal.org.springframework.content.rest.support.TestEntity2;
-import internal.org.springframework.content.rest.support.mockstore.EnableMockStores;
-import internal.org.springframework.content.rest.support.mockstore.MockContentStore;
-import internal.org.springframework.content.rest.support.mockstore.MockStoreFactoryBean;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
+import static org.hamcrest.Matchers.isA;
+import static org.mockito.Mockito.verify;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -70,8 +65,8 @@ public class PreferResourceForPutsAndPostsIT {
     @Autowired
     private PreferResourceForPutsAndPostsStore store;
 
-    @LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     private TestEntity2 existingClaim;
 
@@ -79,7 +74,7 @@ public class PreferResourceForPutsAndPostsIT {
         Describe("PreferResourceForPutsAndPosts", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             It("should use the setContent(S, Resource) method", () -> {
@@ -89,7 +84,7 @@ public class PreferResourceForPutsAndPostsIT {
 
                 given()
                         .contentType("text/plain")
-                        .content("some content".getBytes())
+                        .body("some content".getBytes())
                         .when()
                         .post("/testEntities/" + tentity.getId());
 

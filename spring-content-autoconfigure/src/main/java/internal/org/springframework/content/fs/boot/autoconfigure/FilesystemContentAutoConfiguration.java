@@ -5,6 +5,7 @@ import java.nio.file.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,8 +22,8 @@ import internal.org.springframework.content.fs.config.FilesystemStoreFactoryBean
 import internal.org.springframework.content.fs.config.FilesystemStoreRegistrar;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 
-@Configuration
-@AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
+@AutoConfiguration
+@AutoConfigureAfter({JpaVersionsAutoConfiguration.class})
 @ConditionalOnClass(FilesystemStoreRegistrar.class)
 
 @ConditionalOnProperty(

@@ -8,8 +8,11 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import javax.activation.MimetypesFileTypeMap;
+import jakarta.activation.MimetypesFileTypeMap;
 
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.storeservice.StoreInfo;
@@ -51,8 +54,12 @@ public class StoreResourceImpl implements Resource, StoreResource {
 
     @Override
     public MediaType getMimeType() {
-
-        String mimeType = new MimetypesFileTypeMap().getContentType(this.getFilename());
+        String mimeType = null;
+        try {
+            mimeType = Files.probeContentType(Paths.get(this.getFilename()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return MediaType.valueOf(mimeType != null ? mimeType : "");
     }
 

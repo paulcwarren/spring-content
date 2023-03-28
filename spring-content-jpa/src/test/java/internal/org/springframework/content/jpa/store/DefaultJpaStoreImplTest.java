@@ -42,7 +42,6 @@ import org.springframework.core.io.Resource;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.jpa.io.GenericBlobResource;
-import internal.org.springframework.content.jpa.repository.DefaultJpaStoreImpl;
 
 @RunWith(Ginkgo4jRunner.class)
 public class DefaultJpaStoreImplTest {
@@ -271,7 +270,7 @@ public class DefaultJpaStoreImplTest {
 						});
 						It("should throw a StoreAccessException", () -> {
 							assertThat(e, CoreMatchers.is(instanceOf(StoreAccessException.class)));
-							assertThat(e.getMessage(), containsString("setContent badness"));
+							assertThat(e.getCause().getMessage(), containsString("setContent badness"));
 						});
 					});
 				});

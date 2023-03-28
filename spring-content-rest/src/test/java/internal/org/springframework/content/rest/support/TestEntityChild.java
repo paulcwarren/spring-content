@@ -2,7 +2,7 @@ package internal.org.springframework.content.rest.support;
 
 import java.util.UUID;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import org.hibernate.annotations.Formula;
 import org.springframework.content.commons.annotations.ContentId;

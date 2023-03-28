@@ -1,17 +1,9 @@
 package internal.org.springframework.content.rest.storeresolver;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-
-import java.io.InputStream;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.rest.support.TestEntity2;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
@@ -19,13 +11,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
+import java.io.InputStream;
 
-import internal.org.springframework.content.rest.support.TestEntity2;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -44,6 +38,9 @@ public class StoreResolverRestConfigurationIT {
     @LocalServerPort
     int port;
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
     private Application.TEntity tEntity;
 
     private TestEntity2 existingClaim;
@@ -52,7 +49,7 @@ public class StoreResolverRestConfigurationIT {
         Describe("JpaRest", () -> {
 
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
             Context("given that claim has existing content", () -> {
@@ -70,7 +67,7 @@ public class StoreResolverRestConfigurationIT {
 
                     given()
                             .contentType("text/plain")
-                            .content(newContent.getBytes())
+                            .body(newContent.getBytes())
                             .when()
                             .post("/tEntities/" + tEntity.getId())
                             .then()

@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import org.junit.runner.RunWith;
 
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemStores;
@@ -67,7 +66,6 @@ public class HypermediaConfigurationTest {
 	}
 
 	@Document
-	@Content
 	public class TestEntity {
 		@Id
 		private String id;

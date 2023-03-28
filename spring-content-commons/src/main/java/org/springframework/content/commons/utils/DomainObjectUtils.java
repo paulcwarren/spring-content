@@ -12,7 +12,7 @@ public final class DomainObjectUtils {
 
     static {
         try {
-            JAVAX_PERSISTENCE_ID_CLASS_PRESENT = DomainObjectUtils.class.getClassLoader().loadClass("javax.persistence.Id") != null;
+            JAVAX_PERSISTENCE_ID_CLASS_PRESENT = DomainObjectUtils.class.getClassLoader().loadClass("jakarta.persistence.Id") != null;
         } catch (ClassNotFoundException e) {}
     }
 
@@ -22,13 +22,13 @@ public final class DomainObjectUtils {
 
         Object id = null;
 
-        if (JAVAX_PERSISTENCE_ID_CLASS_PRESENT && BeanUtils.hasFieldWithAnnotation(entity, javax.persistence.Id.class)) {
+        if (JAVAX_PERSISTENCE_ID_CLASS_PRESENT && BeanUtils.hasFieldWithAnnotation(entity, jakarta.persistence.Id.class)) {
 
-            id = BeanUtils.getFieldWithAnnotation(entity, javax.persistence.Id.class);
+            id = BeanUtils.getFieldWithAnnotation(entity, jakarta.persistence.Id.class);
             if (id == null) {
                 PropertyDescriptor[] propertyDescriptors = new BeanWrapperImpl(entity).getPropertyDescriptors();
                 for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-                    if (AnnotationUtils.findAnnotation(propertyDescriptor.getReadMethod(), javax.persistence.Id.class) != null) {
+                    if (AnnotationUtils.findAnnotation(propertyDescriptor.getReadMethod(), jakarta.persistence.Id.class) != null) {
                         return new BeanWrapperImpl(entity).getPropertyValue(propertyDescriptor.getName());
                     }
                 }
@@ -50,8 +50,8 @@ public final class DomainObjectUtils {
 
     public static final Field getIdField(Class<?> domainClass) {
 
-        if (JAVAX_PERSISTENCE_ID_CLASS_PRESENT && BeanUtils.findFieldWithAnnotation(domainClass, javax.persistence.Id.class) != null) {
-            return BeanUtils.findFieldWithAnnotation(domainClass, javax.persistence.Id.class);
+        if (JAVAX_PERSISTENCE_ID_CLASS_PRESENT && BeanUtils.findFieldWithAnnotation(domainClass, jakarta.persistence.Id.class) != null) {
+            return BeanUtils.findFieldWithAnnotation(domainClass, jakarta.persistence.Id.class);
         } else if (BeanUtils.findFieldWithAnnotation(domainClass, org.springframework.data.annotation.Id.class) != null) {
             return BeanUtils.findFieldWithAnnotation(domainClass, org.springframework.data.annotation.Id.class);
         }

@@ -2,12 +2,15 @@ package org.springframework.content.encryption.fs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.response.Response;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
-import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
-import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.response.MockMvcResponse;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,11 +21,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -36,17 +37,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
 import org.springframework.vault.core.VaultOperations;
+import org.springframework.web.context.WebApplicationContext;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,10 +51,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -75,15 +71,15 @@ public class EncryptionIT {
     @Autowired
     private EnvelopeEncryptionService encrypter;
 
-    @LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     private FsFile f;
 
     {
         Describe("Client-side encryption with fs storage", () -> {
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
 
                 f = repo.save(new FsFile());
             });
@@ -91,7 +87,7 @@ public class EncryptionIT {
                 BeforeEach(() -> {
                     given()
                             .contentType("text/plain")
-                            .content("Hello Client-side encryption World!")
+                            .body("Hello Client-side encryption World!")
                             .when()
                             .post("/fsFiles/" + f.getId() + "/content")
                             .then()
@@ -116,7 +112,7 @@ public class EncryptionIT {
                             .body(Matchers.equalTo("Hello Client-side encryption World!"));
                 });
                 It("should handle byte-range requests", () -> {
-                    Response r =
+                    MockMvcResponse r =
                             given()
                                     .header("accept", "text/plain")
                                     .header("range", "bytes=16-27")
@@ -151,7 +147,7 @@ public class EncryptionIT {
                     It("should update the content key version when next stored", () -> {
                         given()
                                 .contentType("text/plain")
-                                .content("Hello Client-side encryption World!")
+                                .body("Hello Client-side encryption World!")
                                 .when()
                                 .post("/fsFiles/" + f.getId() + "/content")
                                 .then()
@@ -185,7 +181,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
-    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class})
+    @ImportAutoConfiguration(ContentRestAutoConfiguration.class)
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableFilesystemStores
     static class Application {

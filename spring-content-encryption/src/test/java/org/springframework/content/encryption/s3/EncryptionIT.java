@@ -2,12 +2,12 @@ package org.springframework.content.encryption.s3;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.response.Response;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
-import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.response.MockMvcResponse;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,10 +18,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -35,19 +37,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
 import org.springframework.vault.core.VaultOperations;
+import org.springframework.web.context.WebApplicationContext;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -56,22 +60,20 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.*;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EncryptionIT {
 
+    private static final String BUCKET = "test-bucket";
+
     static {
-        try {
-            setEnv(Collections.singletonMap("AWS_REGION", "us-west-1"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        System.setProperty("spring.content.s3.bucket", BUCKET);
     }
 
     private static Object mutex = new Object();
@@ -88,8 +90,8 @@ public class EncryptionIT {
     @Autowired
     private EnvelopeEncryptionService encrypter;
 
-    @LocalServerPort
-    int port;
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     private File f;
 
@@ -101,7 +103,7 @@ public class EncryptionIT {
     {
         Describe("Client-side encryption with s3 storage", () -> {
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
 
                 synchronized(mutex) {
                     HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
@@ -125,7 +127,7 @@ public class EncryptionIT {
                 BeforeEach(() -> {
                     given()
                             .contentType("text/plain")
-                            .content("Hello Client-side encryption World!")
+                            .body("Hello Client-side encryption World!")
                             .when()
                             .post("/files/" + f.getId() + "/content")
                             .then()
@@ -156,7 +158,7 @@ public class EncryptionIT {
                             .body(Matchers.equalTo("Hello Client-side encryption World!"));
                 });
                 It("should handle byte-range requests", () -> {
-                    Response r =
+                    MockMvcResponse r =
                             given()
                                     .header("accept", "text/plain")
                                     .header("range", "bytes=16-27")
@@ -191,7 +193,7 @@ public class EncryptionIT {
                     It("should update the content key version when next stored", () -> {
                         given()
                                 .contentType("text/plain")
-                                .content("Hello Client-side encryption World!")
+                                .body("Hello Client-side encryption World!")
                                 .when()
                                 .post("/files/" + f.getId() + "/content")
                                 .then()
@@ -236,7 +238,7 @@ public class EncryptionIT {
     public void noop() {}
 
     @SpringBootApplication
-    @EnableAutoConfiguration(exclude={S3ContentAutoConfiguration.class})
+    @ImportAutoConfiguration(ContentRestAutoConfiguration.class)
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableS3Stores
     static class Application {
@@ -306,33 +308,5 @@ public class EncryptionIT {
         @ContentId private UUID contentId;
         @ContentLength private long contentLength;
         @MimeType private String contentMimeType;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static void setEnv(Map<String, String> newenv) throws Exception {
-        try {
-            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-            theEnvironmentField.setAccessible(true);
-            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-            env.putAll(newenv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
-            theCaseInsensitiveEnvironmentField.setAccessible(true);
-            Map<String, String> cienv = (Map<String, String>)theCaseInsensitiveEnvironmentField.get(null);
-            cienv.putAll(newenv);
-        } catch (NoSuchFieldException e) {
-            Class[] classes = Collections.class.getDeclaredClasses();
-            Map<String, String> env = System.getenv();
-            for(Class cl : classes) {
-                if("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
-                    Field field = cl.getDeclaredField("m");
-                    field.setAccessible(true);
-                    Object obj = field.get(env);
-                    Map<String, String> map = (Map<String, String>) obj;
-                    map.clear();
-                    map.putAll(newenv);
-                }
-            }
-        }
     }
 }

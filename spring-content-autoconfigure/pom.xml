@@ -58,12 +58,12 @@
 			<version>3.0.0-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>com.github.paulcwarren</groupId>
-			<artifactId>spring-content-docx4j</artifactId>
-			<version>3.0.0-SNAPSHOT</version>
-			<optional>true</optional>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.github.paulcwarren</groupId>-->
+<!--			<artifactId>spring-content-docx4j</artifactId>-->
+<!--			<version>3.0.0-SNAPSHOT</version>-->
+<!--			<optional>true</optional>-->
+<!--		</dependency>-->
 		<dependency>
 	      	<groupId>com.github.paulcwarren</groupId>
 	  		<artifactId>spring-content-rest</artifactId>
@@ -91,6 +91,7 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-solrj</artifactId>
+			<version>${solr-solrj.version}</version>
 			<optional>true</optional>
 			<exclusions>
 				<exclusion>
@@ -112,6 +113,7 @@
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
+			<version>${elasticsearch-rest-high-level-client.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -165,5 +167,16 @@
 			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mongodb</artifactId>
+			<version>${test-containers.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+
 </project>

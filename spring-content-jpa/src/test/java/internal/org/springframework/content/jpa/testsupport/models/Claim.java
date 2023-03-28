@@ -1,10 +1,8 @@
 package internal.org.springframework.content.jpa.testsupport.models;
 
-import org.springframework.content.commons.annotations.Content;
-
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +16,6 @@ public class Claim {
 	private String lastName;
 	private String firstName;
 	
-	@Content
 	@Embedded
 	private ClaimForm claimForm = new ClaimForm();
 

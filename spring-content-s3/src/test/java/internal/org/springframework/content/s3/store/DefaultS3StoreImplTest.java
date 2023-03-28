@@ -680,7 +680,7 @@ public class DefaultS3StoreImplTest {
 						});
 						It("should throw a StoreAccessException", () -> {
 							assertThat(e, is(instanceOf(StoreAccessException.class)));
-							assertThat(e.getMessage(), containsString("setContent badness"));
+							assertThat(e.getCause().getMessage(), containsString("setContent badness"));
 						});
 					});
 				});
@@ -907,7 +907,7 @@ public class DefaultS3StoreImplTest {
 
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
-		@javax.persistence.Id
+		@jakarta.persistence.Id
 		@ContentId
 		private String contentId;
 

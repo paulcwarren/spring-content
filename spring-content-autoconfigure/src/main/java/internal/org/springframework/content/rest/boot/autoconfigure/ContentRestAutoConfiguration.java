@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.boot.autoconfigure;
 
 import java.net.URI;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
-@Configuration
+@AutoConfiguration
 @ConditionalOnWebApplication()
 @ConditionalOnClass({ RestConfiguration.class })
 @Import(RestConfiguration.class)

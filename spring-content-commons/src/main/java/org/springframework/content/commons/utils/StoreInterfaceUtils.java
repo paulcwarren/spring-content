@@ -1,9 +1,9 @@
 package org.springframework.content.commons.utils;
 
-import org.springframework.content.commons.repository.AssociativeStore;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.ReactiveContentStore;
-import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.ReactiveContentStore;
+import org.springframework.content.commons.store.Store;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Pair;
 import org.springframework.data.util.TypeInformation;
@@ -16,22 +16,24 @@ import java.util.Optional;
 public final class StoreInterfaceUtils {
     private StoreInterfaceUtils() {}
 
-    public static Pair<Optional<Class<?>>, Class<? extends Serializable>> getStoreTypes(Class<? extends Store> storeClass) {
+    public static Pair<Optional<Class<?>>, Class<? extends Serializable>> getStoreTypes(Class<? extends org.springframework.content.commons.repository.Store> storeClass) {
         List<TypeInformation<?>> types = null;
-        try {
-            types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments();
-        } catch (IllegalArgumentException iae) {
+
+        Class<?>[] candidateStoreClasses = new Class<?>[]{
+                ContentStore.class,
+                AssociativeStore.class,
+                Store.class,
+                ReactiveContentStore.class,
+                org.springframework.content.commons.repository.ContentStore.class,
+                org.springframework.content.commons.repository.AssociativeStore.class,
+                org.springframework.content.commons.repository.Store.class,
+                org.springframework.content.commons.repository.ReactiveContentStore.class
+        };
+        for (Class<?> candidateStoreClass : candidateStoreClasses) {
             try {
-                types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(AssociativeStore.class).getTypeArguments();
-            } catch (IllegalArgumentException iae2) {
-                try {
-                    types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(Store.class).getTypeArguments();
-                } catch (IllegalArgumentException iae3) {
-                    try {
-                        types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(ReactiveContentStore.class).getTypeArguments();
-                    } catch (IllegalArgumentException iae4) {
-                    }
-                }
+                types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(candidateStoreClass).getTypeArguments();
+                break;
+            } catch (IllegalArgumentException iae) {
             }
         }
 

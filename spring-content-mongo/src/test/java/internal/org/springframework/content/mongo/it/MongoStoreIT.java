@@ -27,9 +27,9 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.GetResourceParams;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -534,7 +534,7 @@ public class MongoStoreIT {
 
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
-		@javax.persistence.Id
+		@jakarta.persistence.Id
 		@ContentId
 		private String contentId;
 

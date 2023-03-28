@@ -5,6 +5,8 @@ package org.springframework.content.commons.repository;
  * marker interface.
  * 
  * @author warrep
+ *
+ * @deprecated This class is deprecated.
  */
 public interface ContentRepository<T, ID> {
 

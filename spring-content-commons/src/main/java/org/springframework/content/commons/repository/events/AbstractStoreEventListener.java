@@ -5,6 +5,10 @@ import static org.springframework.core.GenericTypeResolver.resolveTypeArgument;
 import org.springframework.content.commons.repository.StoreEvent;
 import org.springframework.context.ApplicationListener;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.events.AbstractStoreEventListener} instead.
+ */
+@Deprecated
 public abstract class AbstractStoreEventListener<T>
 		implements ApplicationListener<StoreEvent> {
 

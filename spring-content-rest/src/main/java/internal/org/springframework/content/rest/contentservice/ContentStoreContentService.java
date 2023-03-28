@@ -10,11 +10,10 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
-import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

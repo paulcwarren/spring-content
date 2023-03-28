@@ -14,7 +14,7 @@ import org.springframework.versions.LockingAndVersioningProxyFactory;
 import org.springframework.versions.interceptors.OptimisticLockingInterceptor;
 import org.springframework.versions.interceptors.PessimisticLockingInterceptor;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 public class JpaLockingAndVersioningProxyFactoryImpl implements LockingAndVersioningProxyFactory {
 

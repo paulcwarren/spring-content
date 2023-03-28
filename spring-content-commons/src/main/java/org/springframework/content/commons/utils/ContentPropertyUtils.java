@@ -3,10 +3,10 @@ package org.springframework.content.commons.utils;
 import java.lang.reflect.Field;
 import java.util.UUID;
 
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
@@ -17,7 +17,7 @@ public final class ContentPropertyUtils {
 
     static {
         try {
-            IS_JPA_PRESENT = Class.forName("javax.persistence.OneToOne") != null;
+            IS_JPA_PRESENT = Class.forName("jakarta.persistence.OneToOne") != null;
             IS_MONGO_PRESENT = Class.forName("org.springframework.data.mongodb.core.mapping.DBRef") != null;
         } catch (ClassNotFoundException e) {
         }

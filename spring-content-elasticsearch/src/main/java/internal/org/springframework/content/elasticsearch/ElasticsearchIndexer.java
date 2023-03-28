@@ -7,9 +7,10 @@ import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import org.springframework.content.commons.annotations.StoreEventHandler;
-import org.springframework.content.commons.repository.events.AbstractStoreEventListener;
-import org.springframework.content.commons.repository.events.AfterSetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.events.AbstractStoreEventListener;
+import org.springframework.content.commons.store.events.AfterSetContentEvent;
+import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.search.IndexService;
 
 @StoreEventHandler
@@ -29,7 +30,9 @@ public class ElasticsearchIndexer extends AbstractStoreEventListener<Object> {
 
 	@Override
 	protected void onAfterSetContent(AfterSetContentEvent event) {
-		this.indexService.index(event.getSource(), event.getStore().getContent(event.getSource()));
+		if (event.getStore() instanceof ContentStore) {
+			this.indexService.index(event.getSource(), ((ContentStore)event.getStore()).getContent(event.getSource()));
+		}
 	}
 
 	@Override

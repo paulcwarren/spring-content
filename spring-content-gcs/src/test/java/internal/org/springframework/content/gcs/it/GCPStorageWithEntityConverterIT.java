@@ -14,10 +14,10 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import javax.sql.DataSource;
 
 import org.junit.Test;

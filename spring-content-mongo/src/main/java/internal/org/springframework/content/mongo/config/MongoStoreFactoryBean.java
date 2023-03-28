@@ -4,7 +4,8 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.mappingcontext.MappingContext;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.versions.LockingAndVersioningProxyFactory;
@@ -25,7 +26,11 @@ public class MongoStoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
     private LockingAndVersioningProxyFactory versioning;
 
-    @Override
+	protected MongoStoreFactoryBean(Class<? extends Store> storeInterface) {
+		super(storeInterface);
+	}
+
+	@Override
     protected void addProxyAdvice(ProxyFactory result, BeanFactory beanFactory) {
         if (versioning != null) {
             versioning.apply(result);

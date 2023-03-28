@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.repository.ReactiveContentStore;
-import org.springframework.content.commons.repository.factory.AbstractStoreFactoryBean;
+import org.springframework.content.commons.repository.Store;
+import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
 import org.springframework.context.ApplicationContext;
@@ -51,12 +52,9 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	private String bucket;
 
 
-	public S3StoreFactoryBean() {
-		// required for bean instantiation
-	}
-
 	@Autowired
-	public S3StoreFactoryBean(ApplicationContext context, S3Client client, PlacementService s3StorePlacementService) {
+	public S3StoreFactoryBean(Class<? extends Store> storeInterface, ApplicationContext context, S3Client client, PlacementService s3StorePlacementService) {
+		super(storeInterface);
 	    this.context = context;
 		this.client = client;
 		this.s3StorePlacementService = s3StorePlacementService;

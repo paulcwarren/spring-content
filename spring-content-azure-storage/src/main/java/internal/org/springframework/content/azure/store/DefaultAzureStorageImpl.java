@@ -21,7 +21,9 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.*;
+import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -40,7 +42,10 @@ import internal.org.springframework.content.commons.utils.ContentPropertyInfoTyp
 
 @Transactional
 public class DefaultAzureStorageImpl<S, SID extends Serializable>
-		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
+		implements org.springframework.content.commons.repository.Store<SID>,
+        org.springframework.content.commons.repository.AssociativeStore<S, SID>,
+        org.springframework.content.commons.repository.ContentStore<S, SID>,
+        AssociativeStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultAzureStorageImpl.class);
 
@@ -107,6 +112,11 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
         return this.getResource(entity, propertyPath, GetResourceParams.builder().build());
+    }
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath, org.springframework.content.commons.repository.GetResourceParams params) {
+        return this.getResource(entity, propertyPath, GetResourceParams.builder().range(params.getRange()).build());
     }
 
     @Override
@@ -193,7 +203,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 					@Override
 					public boolean matches(Field field) {
 						for (Annotation annotation : field.getAnnotations()) {
-							if ("javax.persistence.Id".equals(
+							if ("jakarta.persistence.Id".equals(
 									annotation.annotationType().getCanonicalName())
 									|| "org.springframework.data.annotation.Id"
 											.equals(annotation.annotationType()
@@ -218,7 +228,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             @Override
             public boolean matches(TypeDescriptor descriptor) {
                 for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
+                    if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
                                     .equals(annotation.annotationType()
@@ -417,7 +427,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 					@Override
 					public boolean matches(Field field) {
 						for (Annotation annotation : field.getAnnotations()) {
-							if ("javax.persistence.Id".equals(
+							if ("jakarta.persistence.Id".equals(
 									annotation.annotationType().getCanonicalName())
 									|| "org.springframework.data.annotation.Id"
 											.equals(annotation.annotationType()
@@ -461,7 +471,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             @Override
             public boolean matches(TypeDescriptor descriptor) {
                 for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
+                    if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
                                     .equals(annotation.annotationType()

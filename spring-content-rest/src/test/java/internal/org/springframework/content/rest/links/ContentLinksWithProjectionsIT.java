@@ -18,9 +18,9 @@ import java.io.File;
 import java.io.StringReader;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import javax.sql.DataSource;
 
 import org.hamcrest.beans.HasPropertyWithValue;

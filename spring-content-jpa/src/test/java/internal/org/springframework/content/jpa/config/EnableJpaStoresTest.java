@@ -14,14 +14,13 @@ import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import javax.sql.DataSource;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
@@ -181,7 +180,6 @@ public class EnableJpaStoresTest {
 		}
 	}
 
-	@Content
 	public class TestEntity {
 		@Id
 		private String id;

@@ -20,20 +20,25 @@ public class LocalStack extends LocalStackContainer implements Serializable {
 
     private static final DockerImageName IMAGE_NAME = DockerImageName.parse("localstack/localstack");
 
+    private static LocalStack INSTANCE = null;
+
     private LocalStack() {
         super(IMAGE_NAME);
         withServices(Service.S3);
         start();
     }
 
-    private static class Singleton {
-        private static final LocalStack INSTANCE = new LocalStack();
+    public static LocalStack singleton() {
+        if (INSTANCE == null) {
+            INSTANCE = new LocalStack();
+        }
+        return INSTANCE;
     }
 
     public static S3Client getAmazonS3Client() throws URISyntaxException {
         return S3Client.builder()
-                .endpointOverride(new URI(Singleton.INSTANCE.getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
-                .credentialsProvider(new LocalStack.CrossAwsCredentialsProvider(Singleton.INSTANCE.getDefaultCredentialsProvider()))
+                .endpointOverride(new URI(LocalStack.singleton().getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
+                .credentialsProvider(new LocalStack.CrossAwsCredentialsProvider(LocalStack.singleton().getDefaultCredentialsProvider()))
                 .build();
     }
 
@@ -50,7 +55,7 @@ public class LocalStack extends LocalStackContainer implements Serializable {
 
     @SuppressWarnings("unused") // Serializable safe singleton usage
     protected LocalStack readResolve() {
-        return Singleton.INSTANCE;
+        return singleton();
     }
 
 

@@ -6,7 +6,6 @@ import com.mongodb.client.MongoClients;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.content.commons.annotations.Content;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.mongo.config.EnableMongoContentRepositories;
@@ -195,7 +194,6 @@ public class EnableMongoStoresTest {
 		}
 	}
 
-	@Content
 	public class TestEntity {
 		@Id
 		private String id;

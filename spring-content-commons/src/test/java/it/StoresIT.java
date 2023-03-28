@@ -16,7 +16,7 @@ import java.util.List;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.factory.StoreFactory;
+import internal.org.springframework.content.commons.store.factory.StoreFactory;
 import org.springframework.content.commons.repository.factory.testsupport.TestContentStore;
 import org.springframework.content.commons.repository.factory.testsupport.TestStoreFactoryBean;
 import org.springframework.content.commons.storeservice.StoreFilter;
@@ -43,13 +43,11 @@ public class StoresIT {
             Context("when there are two stores that the filter matches but no store resolver", () -> {
 
                 BeforeEach(() -> {
-                    TestStoreFactoryBean factory1 = new TestStoreFactoryBean();
-                    factory1.setStoreInterface(WrongStore.class);
+                    TestStoreFactoryBean factory1 = new TestStoreFactoryBean(WrongStore.class);
                     factory1.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory1);
 
-                    TestStoreFactoryBean factory2 = new TestStoreFactoryBean();
-                    factory2.setStoreInterface(RightStore.class);
+                    TestStoreFactoryBean factory2 = new TestStoreFactoryBean(RightStore.class);
                     factory2.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory2);
 
@@ -88,13 +86,11 @@ public class StoresIT {
             Context("when there are two stores that the filter matches and a store resolver", () -> {
 
                 BeforeEach(() -> {
-                    TestStoreFactoryBean factory1 = new TestStoreFactoryBean();
-                    factory1.setStoreInterface(WrongStore.class);
+                    TestStoreFactoryBean factory1 = new TestStoreFactoryBean(WrongStore.class);
                     factory1.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory1);
 
-                    TestStoreFactoryBean factory2 = new TestStoreFactoryBean();
-                    factory2.setStoreInterface(RightStore.class);
+                    TestStoreFactoryBean factory2 = new TestStoreFactoryBean(RightStore.class);
                     factory2.setBeanClassLoader(this.getClass().getClassLoader());
                     factories.add(factory2);
 

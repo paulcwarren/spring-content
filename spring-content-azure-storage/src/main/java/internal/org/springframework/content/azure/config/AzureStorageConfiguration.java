@@ -3,6 +3,7 @@ package internal.org.springframework.content.azure.config;
 import java.io.Serializable;
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.content.azure.Bucket;
@@ -23,21 +24,22 @@ import com.azure.spring.autoconfigure.storage.resource.AzureStorageProtocolResol
 
 @Configuration
 @Import(AzureStorageProtocolResolver.class)
-public class AzureStorageConfiguration {
+public class AzureStorageConfiguration implements InitializingBean {
 
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
 
-	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
+//	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
 	private String bucket;
+
+	@Autowired
+	public AzureStorageConfiguration(@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}") String bucket) {
+		this.bucket = bucket;
+	}
 
 	@Bean
 	public PlacementService azureStoragePlacementService() {
 		PlacementService conversion = new PlacementServiceImpl();
-
-		addDefaultConverters(conversion, bucket);
-		addConverters(conversion);
-
 		return conversion;
 	}
 
@@ -81,5 +83,11 @@ public class AzureStorageConfiguration {
 		for (AzureStorageConfigurer configurer : configurers) {
 			configurer.configureAzureStorageConverters(registry);
 		}
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		addDefaultConverters(azureStoragePlacementService(), bucket);
+		addConverters(azureStoragePlacementService());
 	}
 }

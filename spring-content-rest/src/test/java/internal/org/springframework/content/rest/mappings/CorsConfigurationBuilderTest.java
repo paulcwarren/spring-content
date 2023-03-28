@@ -10,17 +10,12 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
 
 @RunWith(Ginkgo4jRunner.class)
 public class CorsConfigurationBuilderTest {
@@ -84,8 +79,7 @@ public class CorsConfigurationBuilderTest {
 						storeInterface = StoreWithEmptyAllowedMethods.class;
 					});
 					It("should set the default allowedMethods", () -> {
-						assertThat(config.getAllowedMethods(), hasItems("GET", "PUT",
-								"POST", "DELETE", "HEAD", "PATCH", "OPTIONS", "TRACE"));
+						assertThat(config.getAllowedMethods(), hasItems("GET", "POST", "HEAD"));
 					});
 				});
 				Context("given an allowedHeaders value", () -> {
@@ -155,7 +149,7 @@ public class CorsConfigurationBuilderTest {
 					});
 					It("should create a cors configuration with the default allow credentials value",
 							() -> {
-								assertThat(config.getAllowCredentials(), is(false));
+								assertThat(config.getAllowCredentials(), is(nullValue()));
 							});
 				});
 				Context("given a positive max-age specification", () -> {

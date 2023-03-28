@@ -1,6 +1,6 @@
 package internal.org.springframework.content.jpa.testsupport.models;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;

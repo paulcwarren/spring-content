@@ -12,10 +12,10 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.StoreAccessException;
-import org.springframework.content.commons.repository.events.AfterSetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.events.AfterSetContentEvent;
+import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.search.IndexService;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;

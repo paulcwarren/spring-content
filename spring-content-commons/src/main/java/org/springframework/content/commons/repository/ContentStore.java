@@ -7,6 +7,9 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.Resource;
 import org.springframework.versions.LockParticipant;
 
+/**
+ * @deprecated This class is deprecated. Use {@link org.springframework.content.commons.store.ContentStore} instead.
+ */
 public interface ContentStore<S, SID extends Serializable> extends AssociativeStore<S, SID>, ContentRepository<S, SID> {
 
 	@LockParticipant

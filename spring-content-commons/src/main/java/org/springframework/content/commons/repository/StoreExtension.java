@@ -5,6 +5,9 @@ import java.util.Set;
 
 import org.aopalliance.intercept.MethodInvocation;
 
+/**
+ * @deprecated This class is deprecated. Use fragments instead.
+ */
 public interface StoreExtension {
 	Set<Method> getMethods();
 

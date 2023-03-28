@@ -4,7 +4,6 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -12,15 +11,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.Principal;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Version;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.path.json.JsonPath;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.apache.http.HttpStatus;
@@ -33,7 +35,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -63,12 +65,13 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -83,14 +86,15 @@ import org.springframework.versions.jpa.config.JpaLockingAndVersioningConfig;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.path.json.JsonPath;
 import com.mongodb.client.MongoClient;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.web.context.WebApplicationContext;
+
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.*;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -103,12 +107,15 @@ public class LockingAndVersioningRestIT {
     @LocalServerPort
     int port;
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
     private VersionedDocument doc;
 
     {
         Describe("Spring Content REST Versioning With Mongo Storage", () -> {
             BeforeEach(() -> {
-                RestAssured.port = port;
+                RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
             Context("given a versionable entity with content", () -> {
                 BeforeEach(() -> {
@@ -119,7 +126,7 @@ public class LockingAndVersioningRestIT {
                 It("should be able to version an entity and its content", () -> {
                     // assert content does not exist
                     given()
-                            .auth().basic("paul123", "password")
+                            .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                             .when()
                             .get("/versionedDocumentsContent/" + doc.getId())
                             .then()
@@ -131,8 +138,8 @@ public class LockingAndVersioningRestIT {
                     // POST the new content
                     given()
                             .contentType("plain/text")
-                            .content(newContent.getBytes())
-                            .auth()./*preemptive().*/basic("paul123", "password")
+                            .body(newContent.getBytes())
+                            .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                             .when()
                             .put("/versionedDocumentsContent/" + doc.getId())
                             .then()
@@ -140,7 +147,7 @@ public class LockingAndVersioningRestIT {
 
                     // assert that it now exists
                     given()
-                            .auth().basic("paul123", "password")
+                            .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                             .header("accept", "plain/text")
                             .get("/versionedDocumentsContent/" + doc.getId())
                             .then()
@@ -150,7 +157,7 @@ public class LockingAndVersioningRestIT {
                             .body(Matchers.equalTo(newContent));
 
                     given()
-                            .auth().preemptive().basic("paul123", "password")
+                            .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                             .header("accept", "application/json")
                             .put("/versionedDocuments/" + doc.getId() + "/lock")
                             .then()
@@ -158,9 +165,9 @@ public class LockingAndVersioningRestIT {
 
                     // POST the new content as john
                     given()
-                            .auth()./*preemptive().*/basic("john123", "password")
+                            .auth().with(SecurityMockMvcRequestPostProcessors.user("john123").password("password"))
                             .contentType("plain/text")
-                            .content("john's content".getBytes())
+                            .body("john's content".getBytes())
                             .when()
                             .put("/versionedDocumentsContent/" + doc.getId())
                             .then()
@@ -168,9 +175,9 @@ public class LockingAndVersioningRestIT {
 
                     JsonPath response =
                             given()
-                                    .auth().preemptive().basic("paul123", "password")
+                                    .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                                     .contentType("application/json")
-                                    .content("{\"number\":\"1.1\",\"label\":\"some minor changes\"}".getBytes())
+                                    .body("{\"number\":\"1.1\",\"label\":\"some minor changes\"}".getBytes())
                                     .put("/versionedDocuments/" + doc.getId() + "/version")
                                     .then()
                                     .statusCode(HttpStatus.SC_OK)
@@ -179,7 +186,7 @@ public class LockingAndVersioningRestIT {
 
                     response =
                             given()
-                                    .auth().basic("paul123", "password")
+                                    .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                                     .get("/versionedDocuments/findAllVersionsLatest")
                                     .then()
                                     .statusCode(HttpStatus.SC_OK)
@@ -189,7 +196,7 @@ public class LockingAndVersioningRestIT {
 
                     response =
                             given()
-                                    .auth().basic("paul123", "password")
+                                    .auth().with(SecurityMockMvcRequestPostProcessors.user("paul123").password("password"))
                                     .get("/versionedDocuments/" + (doc.getId() + 1) + "/findAllVersions")
                                     .then()
                                     .statusCode(HttpStatus.SC_OK)
@@ -294,7 +301,7 @@ public class LockingAndVersioningRestIT {
 
     @Configuration
     @EnableWebSecurity
-    public static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+    public static class SecurityConfiguration {
 
         protected static String REALM = "SPRING_CONTENT";
 
@@ -313,20 +320,20 @@ public class LockingAndVersioningRestIT {
             return new AuthenticationEntryPoint();
         }
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             http.csrf().disable()
                     .authorizeRequests()
-                    .antMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
                     .and().httpBasic().realmName(REALM).authenticationEntryPoint(getBasicAuthEntryPoint())
                     .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
+            return http.build();
         }
 
-        @Override
-        public void configure(WebSecurity web) throws Exception {
-            web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
+        @Bean
+        public WebSecurityCustomizer webSecurityCustomizer() {
+            return (web) -> web.ignoring().requestMatchers(HttpMethod.OPTIONS, "/**");
         }
     }
 

@@ -38,10 +38,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -87,7 +84,7 @@ public class StoreRestEndpointsIT {
 
 						String content = "New multi-part content";
 
-						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
+						mvc.perform(multipart(request).file(new MockMultipartFile("file",
 								"test-file.txt", "text/plain", content.getBytes())))
 								.andExpect(status().isCreated());
 
@@ -152,7 +149,7 @@ public class StoreRestEndpointsIT {
 
 						String content = "New multi-part content";
 
-						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
+						mvc.perform(multipart(request).file(new MockMultipartFile("file",
 								"tests-file.txt", "text/plain", content.getBytes())))
 								.andExpect(status().isOk());
 
@@ -228,7 +225,7 @@ public class StoreRestEndpointsIT {
 
 						String content = "New multi-part content";
 
-						mvc.perform(fileUpload(request).file(new MockMultipartFile("file",
+						mvc.perform(multipart(request).file(new MockMultipartFile("file",
 								"tests-file.txt", "text/plain", content.getBytes())))
 								.andExpect(status().isOk());
 

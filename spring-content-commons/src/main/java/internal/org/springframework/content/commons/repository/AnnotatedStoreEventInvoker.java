@@ -24,18 +24,18 @@ import org.springframework.content.commons.annotations.HandleBeforeUnassociate;
 import org.springframework.content.commons.annotations.HandleBeforeUnsetContent;
 import org.springframework.content.commons.annotations.StoreEventHandler;
 import org.springframework.content.commons.repository.StoreEvent;
-import org.springframework.content.commons.repository.events.AfterAssociateEvent;
-import org.springframework.content.commons.repository.events.AfterGetContentEvent;
-import org.springframework.content.commons.repository.events.AfterGetResourceEvent;
-import org.springframework.content.commons.repository.events.AfterSetContentEvent;
-import org.springframework.content.commons.repository.events.AfterUnassociateEvent;
-import org.springframework.content.commons.repository.events.AfterUnsetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeAssociateEvent;
-import org.springframework.content.commons.repository.events.BeforeGetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeGetResourceEvent;
-import org.springframework.content.commons.repository.events.BeforeSetContentEvent;
-import org.springframework.content.commons.repository.events.BeforeUnassociateEvent;
-import org.springframework.content.commons.repository.events.BeforeUnsetContentEvent;
+import org.springframework.content.commons.store.events.AfterAssociateEvent;
+import org.springframework.content.commons.store.events.AfterGetContentEvent;
+import org.springframework.content.commons.store.events.AfterGetResourceEvent;
+import org.springframework.content.commons.store.events.AfterSetContentEvent;
+import org.springframework.content.commons.store.events.AfterUnassociateEvent;
+import org.springframework.content.commons.store.events.AfterUnsetContentEvent;
+import org.springframework.content.commons.store.events.BeforeAssociateEvent;
+import org.springframework.content.commons.store.events.BeforeGetContentEvent;
+import org.springframework.content.commons.store.events.BeforeGetResourceEvent;
+import org.springframework.content.commons.store.events.BeforeSetContentEvent;
+import org.springframework.content.commons.store.events.BeforeUnassociateEvent;
+import org.springframework.content.commons.store.events.BeforeUnsetContentEvent;
 import org.springframework.content.commons.utils.ReflectionService;
 import org.springframework.content.commons.utils.ReflectionServiceImpl;
 import org.springframework.context.ApplicationListener;
@@ -78,8 +78,7 @@ public class AnnotatedStoreEventInvoker
 			throws BeansException {
 
 		Class<?> beanType = ClassUtils.getUserClass(bean);
-		StoreEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType,
-				StoreEventHandler.class);
+		StoreEventHandler typeAnno = AnnotationUtils.findAnnotation(beanType, StoreEventHandler.class);
 
 		if (typeAnno == null) {
 			return bean;
@@ -90,30 +89,30 @@ public class AnnotatedStoreEventInvoker
 			@Override
 			public void doWith(Method method)
 					throws IllegalArgumentException, IllegalAccessException {
-				findHandler(bean, method, HandleBeforeGetResource.class,
-						BeforeGetResourceEvent.class);
-				findHandler(bean, method, HandleAfterGetResource.class,
-						AfterGetResourceEvent.class);
-				findHandler(bean, method, HandleBeforeAssociate.class,
-						BeforeAssociateEvent.class);
-				findHandler(bean, method, HandleAfterAssociate.class,
-						AfterAssociateEvent.class);
-				findHandler(bean, method, HandleBeforeUnassociate.class,
-						BeforeUnassociateEvent.class);
-				findHandler(bean, method, HandleAfterUnassociate.class,
-						AfterUnassociateEvent.class);
-				findHandler(bean, method, HandleBeforeGetContent.class,
-						BeforeGetContentEvent.class);
-				findHandler(bean, method, HandleAfterGetContent.class,
-						AfterGetContentEvent.class);
-				findHandler(bean, method, HandleBeforeSetContent.class,
-						BeforeSetContentEvent.class);
-				findHandler(bean, method, HandleAfterSetContent.class,
-						AfterSetContentEvent.class);
-				findHandler(bean, method, HandleBeforeUnsetContent.class,
-						BeforeUnsetContentEvent.class);
-				findHandler(bean, method, HandleAfterUnsetContent.class,
-						AfterUnsetContentEvent.class);
+				findHandler(bean, method, HandleBeforeGetResource.class,org.springframework.content.commons.repository.events.BeforeGetResourceEvent.class);
+				findHandler(bean, method, HandleAfterGetResource.class,org.springframework.content.commons.repository.events.AfterGetResourceEvent.class);
+				findHandler(bean, method, HandleBeforeAssociate.class,org.springframework.content.commons.repository.events.BeforeAssociateEvent.class);
+				findHandler(bean, method, HandleAfterAssociate.class,org.springframework.content.commons.repository.events.AfterAssociateEvent.class);
+				findHandler(bean, method, HandleBeforeUnassociate.class,org.springframework.content.commons.repository.events.BeforeUnassociateEvent.class);
+				findHandler(bean, method, HandleAfterUnassociate.class,org.springframework.content.commons.repository.events.AfterUnassociateEvent.class);
+				findHandler(bean, method, HandleBeforeGetContent.class,org.springframework.content.commons.repository.events.BeforeGetContentEvent.class);
+				findHandler(bean, method, HandleAfterGetContent.class,org.springframework.content.commons.repository.events.AfterGetContentEvent.class);
+				findHandler(bean, method, HandleBeforeSetContent.class,org.springframework.content.commons.repository.events.BeforeSetContentEvent.class);
+				findHandler(bean, method, HandleAfterSetContent.class,org.springframework.content.commons.repository.events.AfterSetContentEvent.class);
+				findHandler(bean, method, HandleBeforeUnsetContent.class,org.springframework.content.commons.repository.events.BeforeUnsetContentEvent.class);
+				findHandler(bean, method, HandleAfterUnsetContent.class,org.springframework.content.commons.repository.events.AfterUnsetContentEvent.class);
+				findHandler(bean, method, HandleBeforeGetResource.class,BeforeGetResourceEvent.class);
+				findHandler(bean, method, HandleAfterGetResource.class,AfterGetResourceEvent.class);
+				findHandler(bean, method, HandleBeforeAssociate.class,BeforeAssociateEvent.class);
+				findHandler(bean, method, HandleAfterAssociate.class,AfterAssociateEvent.class);
+				findHandler(bean, method, HandleBeforeUnassociate.class,BeforeUnassociateEvent.class);
+				findHandler(bean, method, HandleAfterUnassociate.class,AfterUnassociateEvent.class);
+				findHandler(bean, method, HandleBeforeGetContent.class,BeforeGetContentEvent.class);
+				findHandler(bean, method, HandleAfterGetContent.class,AfterGetContentEvent.class);
+				findHandler(bean, method, HandleBeforeSetContent.class,BeforeSetContentEvent.class);
+				findHandler(bean, method, HandleAfterSetContent.class,AfterSetContentEvent.class);
+				findHandler(bean, method, HandleBeforeUnsetContent.class,BeforeUnsetContentEvent.class);
+				findHandler(bean, method, HandleAfterUnsetContent.class,AfterUnsetContentEvent.class);
 			}
 
 		});
