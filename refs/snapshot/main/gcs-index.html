@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 3.0.0-SNAPSHOT,</span>
-<span id="revdate">2023-02-07</span>
+<span id="revdate">2023-03-28</span>
 </div>
 </div>
 <div id="content">
@@ -1083,11 +1083,11 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 10. Entity-based AbstractStoreEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractStoreEventListener {
 
 	@Override
 	public void onAfterSetContent(Object entity) {
@@ -1917,7 +1917,7 @@ public class GCSStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 3.0.0-SNAPSHOT<br>
-Last updated 2023-02-07 04:57:51 UTC
+Last updated 2023-03-28 03:19:52 UTC
 </div>
 </div>
 </body>
