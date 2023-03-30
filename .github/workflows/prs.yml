@@ -45,7 +45,8 @@ jobs:
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-        gpg-passphrase: MAVEN_GPG_PASSPHRASE    - name: Restore Maven packages
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE    
+    - name: Restore Maven packages
       uses: actions/cache@v2
       with:
         path: ~/.m2
