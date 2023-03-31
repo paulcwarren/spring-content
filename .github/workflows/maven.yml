@@ -5,6 +5,9 @@ on:
     branches: [ main ]
     tags:
     - '*'
+    paths:
+    - '.github/**'
+    - '*.md'
   workflow_dispatch:
 jobs:
 
