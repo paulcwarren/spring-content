@@ -103,7 +103,7 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
             throw new IllegalArgumentException(String.format("Store for path %s not found", store));
         }
 
-        if (AssociativeStore.class.isAssignableFrom(info.getInterface())) {
+        if (AssociativeStore.class.isAssignableFrom(info.getInterface()) || org.springframework.content.commons.store.AssociativeStore.class.isAssignableFrom(info.getInterface())) {
 
             String resolvedContentPropertyPath = requestMappingContext.resolveContentPropertyPath(info.getDomainObjectClass(), ContentPropertyRequest.from(pathInfo).getContentPropertyPath());
             String resolvedStoreLookupPath = ContentPropertyRequest.from(pathSegments[1], pathSegments[2], resolvedContentPropertyPath).getRequestURI();
@@ -136,7 +136,7 @@ public class ResourceHandlerMethodArgumentResolver implements HandlerMethodArgum
 
             return matchedResolver.resolve(webRequest, info, result.getEntity(), result.getProperty());
 
-        } else if (Store.class.isAssignableFrom(info.getInterface())) {
+        } else if (Store.class.isAssignableFrom(info.getInterface()) || org.springframework.content.commons.store.Store.class.isAssignableFrom(info.getInterface())) {
 
             return resolveStoreArgument(webRequest, info);
         }

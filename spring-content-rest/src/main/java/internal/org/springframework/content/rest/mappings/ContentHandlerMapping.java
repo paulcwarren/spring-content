@@ -182,7 +182,8 @@ public class ContentHandlerMapping extends StoreAwareHandlerMapping {
 	}
 
     private boolean isFullyQualifiedContentPropertyRequest(String[] path, StoreInfo info2) {
-        return AssociativeStore.class.isAssignableFrom(info2.getInterface()) && path.length >= 4;
+        return (AssociativeStore.class.isAssignableFrom(info2.getInterface()) ||
+				org.springframework.content.commons.store.AssociativeStore.class.isAssignableFrom(info2.getInterface())) && path.length >= 4;
     }
 
 	@Override
