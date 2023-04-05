@@ -36,13 +36,13 @@ public class ContentServiceFactory {
 
     public ContentService getContentService(StoreResource resource) {
 
-        if (ContentStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
+        if (ContentStore.class.isAssignableFrom(resource.getStoreInfo().getInterface()) || org.springframework.content.commons.store.ContentStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
 
             return new ContentStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), mappingContext, exportContext, byteRangeRestRequestHandler);
 
-        } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
+        } else if (AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface()) || org.springframework.content.commons.store.AssociativeStore.class.isAssignableFrom(resource.getStoreInfo().getInterface())) {
 
             Object entity = ((AssociatedStoreResource)resource).getAssociation();
             return new AssociativeStoreContentService(config, null, repoInvokerFactory.getInvokerFor(entity.getClass()), entity, byteRangeRestRequestHandler);
