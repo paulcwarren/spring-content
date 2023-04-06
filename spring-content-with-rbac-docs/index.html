@@ -143,14 +143,14 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
         &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.7.4&lt;/version&gt;
+        &lt;version&gt;3.0.5&lt;/version&gt;
     &lt;/parent&gt;
 
     &lt;artifactId&gt;spring-content-with-rbac&lt;/artifactId&gt;
 
     &lt;properties&gt;
-        &lt;java.version&gt;1.8&lt;/java.version&gt;
-        &lt;ginkgo-version&gt;1.0.14&lt;/ginkgo-version&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+        &lt;ginkgo-version&gt;1.0.15&lt;/ginkgo-version&gt;
     &lt;/properties&gt;
 
     &lt;dependencies&gt;
@@ -177,12 +177,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.8.0&lt;/version&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.8.0&lt;/version&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -206,9 +206,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;/exclusions&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
-            &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-            &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-            &lt;version&gt;2.9.0&lt;/version&gt;
+            &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-security-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-mock-mvc&lt;/artifactId&gt;
             &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
@@ -235,47 +239,54 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <pre><code>
 package gettingstarted;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
-public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+public class SpringSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
 
-	@Bean
-	public InMemoryUserDetailsManager userDetailsManager() {
-
-		UserBuilder builder = User.withDefaultPasswordEncoder();
-
-		UserDetails eric = builder.username("eric").password("wimp").roles("READER").build();
-		UserDetails paul = builder.username("paul").password("warren").roles("READER", "AUTHOR").build();
-
-		return new InMemoryUserDetailsManager(eric, paul);
+	@Autowired
+	public void configureGlobalSecurity(AuthenticationManagerBuilder auth) throws Exception {
+		auth.inMemoryAuthentication().
+				withUser(User.withDefaultPasswordEncoder().username("paul").password("warren").roles("READER", "AUTHOR")).
+				withUser(User.withDefaultPasswordEncoder().username("eric").password("wimp").roles("READER").
+						build());
 	}
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-
-        http.csrf().disable()
-                .authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/files/**/content").hasRole("READER")
-                .antMatchers(HttpMethod.PUT, "/files/**/content").hasRole("AUTHOR")
-                .anyRequest().permitAll()
-                .and().httpBasic()
-                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-    }
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+				.authorizeRequests()
+				.requestMatchers(new AntPathRequestMatcher("/files/**/content","GET")).hasRole("READER")
+				.requestMatchers(new AntPathRequestMatcher("/files/**/content","PUT")).hasRole("AUTHOR")
+				.anyRequest().permitAll()
+				.and().httpBasic()
+				.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		return http.build();
+	}
 }
 </code></pre>
 

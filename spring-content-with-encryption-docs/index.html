@@ -149,13 +149,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
  	&lt;parent&gt;
 		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
 		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;2.7.4&lt;/version&gt;
+		&lt;version&gt;3.0.5&lt;/version&gt;
 	&lt;/parent&gt;
  
 	&lt;properties&gt;
 		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
-		&lt;java.version&gt;1.8&lt;/java.version&gt;
-		&lt;ginkgo-version&gt;1.0.14&lt;/ginkgo-version&gt;
+		&lt;java.version&gt;17&lt;/java.version&gt;
+		&lt;ginkgo-version&gt;1.0.15&lt;/ginkgo-version&gt;
 	&lt;/properties&gt;
 
 	&lt;dependencies&gt;
@@ -178,12 +178,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;2.8.0&lt;/version&gt;
+			&lt;version&gt;3.0.1&lt;/version&gt;
 		&lt;/dependency&gt;
  		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;2.8.0&lt;/version&gt;
+			&lt;version&gt;3.0.1&lt;/version&gt;
 		&lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -192,7 +192,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-encryption&lt;/artifactId&gt;
-			&lt;version&gt;2.8.0&lt;/version&gt;
+			&lt;version&gt;3.0.1&lt;/version&gt;
 		&lt;/dependency&gt;
 		&lt;dependency&gt;
 			&lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
@@ -306,10 +306,10 @@ package gettingstarted;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.content.commons.annotations.ContentId;

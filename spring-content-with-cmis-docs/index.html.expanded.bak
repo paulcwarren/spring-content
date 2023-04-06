@@ -101,7 +101,7 @@
 </nav>
 
 
-<h1 id="getting-started-with-spring-content-and-cmis">Getting Started with Spring Content and CMIS</h1>
+<h1 id="getting-started-with-spring-content-and-cmis-spring-content-2x-only-deprecated">Getting Started with Spring Content and CMIS (Spring Content 2.x only - Deprecated)</h1>
 <h2 id="what-youll-build">What you'll build</h2>
 <p>You'll build a simple document management application using Spring Content and Spring Content CMIS.</p>
 <h2 id="what-youll-need">What you'll need</h2>
@@ -308,7 +308,7 @@ Content CMIS.</p>
 
     <div id="toc-collapse" class="navbar-collapse collapse card">
         <ul class="nav flex-column bs-sidenav">
-            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-and-cmis">Getting Started with Spring Content and CMIS</a></li>
+            <li class="nav-item main"><a class="nav-link" href="#getting-started-with-spring-content-and-cmis-spring-content-2x-only-deprecated">Getting Started with Spring Content and CMIS (Spring Content 2.x only - Deprecated)</a></li>
                 <li class="nav-item">
                     <a href="#what-youll-build" class="nav-link">What you'll build</a>
                 </li>

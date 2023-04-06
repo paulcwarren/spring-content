@@ -161,12 +161,12 @@ When you’re finished, you can check your results against the code in <code>spr
  	&lt;parent&gt;
 		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
 		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;2.7.4&lt;/version&gt;
+		&lt;version&gt;3.0.5&lt;/version&gt;
 	&lt;/parent&gt;
  
 	&lt;properties&gt;
 		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
-		&lt;java.version&gt;1.8&lt;/java.version&gt;
+		&lt;java.version&gt;17&lt;/java.version&gt;
 		&lt;ginkgo-version&gt;1.0.14&lt;/ginkgo-version&gt;
 	&lt;/properties&gt;
 
@@ -190,7 +190,7 @@ When you’re finished, you can check your results against the code in <code>spr
 		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;2.8.0&lt;/version&gt;
+			&lt;version&gt;3.0.1&lt;/version&gt;
 		&lt;/dependency&gt;
 		&lt;dependency&gt;
 		  &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -214,9 +214,8 @@ When you’re finished, you can check your results against the code in <code>spr
             &lt;/exclusions&gt;
 		&lt;/dependency&gt;
 		&lt;dependency&gt;
-			&lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-			&lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-			&lt;version&gt;2.9.0&lt;/version&gt;
+			&lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-mock-mvc&lt;/artifactId&gt;
 			&lt;scope&gt;test&lt;/scope&gt;
 		&lt;/dependency&gt;
 		&lt;dependency&gt;
@@ -278,10 +277,10 @@ package gettingstarted;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -335,7 +334,7 @@ public interface FileRepository extends JpaRepository&lt;File, Long&gt; {
 <pre><code>
 package gettingstarted;
 
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.store.ContentStore;
 
 public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 }

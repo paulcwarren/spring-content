@@ -145,14 +145,14 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;parent&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
         &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-        &lt;version&gt;2.7.4&lt;/version&gt;
+        &lt;version&gt;3.0.5&lt;/version&gt;
     &lt;/parent&gt;
 
     &lt;artifactId&gt;spring-content-with-fulltext&lt;/artifactId&gt;
 
     &lt;properties&gt;
-        &lt;java.version&gt;1.8&lt;/java.version&gt;
-        &lt;ginkgo-version&gt;1.0.14&lt;/ginkgo-version&gt;
+        &lt;java.version&gt;17&lt;/java.version&gt;
+        &lt;ginkgo-version&gt;1.0.15&lt;/ginkgo-version&gt;
     &lt;/properties&gt;
 
     &lt;dependencies&gt;
@@ -175,21 +175,22 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.8.0&lt;/version&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.8.0&lt;/version&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
             &lt;artifactId&gt;spring-content-elasticsearch-boot-starter&lt;/artifactId&gt;
-            &lt;version&gt;2.8.0&lt;/version&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;org.elasticsearch.client&lt;/groupId&gt;
             &lt;artifactId&gt;elasticsearch-rest-high-level-client&lt;/artifactId&gt;
+            &lt;version&gt;7.17.9&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -213,9 +214,8 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;/exclusions&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
-            &lt;groupId&gt;com.jayway.restassured&lt;/groupId&gt;
-            &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
-            &lt;version&gt;2.9.0&lt;/version&gt;
+            &lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-mock-mvc&lt;/artifactId&gt;
             &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
@@ -233,7 +233,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
             &lt;artifactId&gt;elasticsearch&lt;/artifactId&gt;
-            &lt;version&gt;1.17.6&lt;/version&gt;
+            &lt;version&gt;1.18.0&lt;/version&gt;
             &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
@@ -255,7 +255,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <pre><code>
 package gettingstarted;
 
-import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.search.Searchable;
 import org.springframework.stereotype.Component;
 
