@@ -25,7 +25,6 @@ import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsA
 @AutoConfiguration
 @AutoConfigureAfter({JpaVersionsAutoConfiguration.class})
 @ConditionalOnClass(FilesystemStoreRegistrar.class)
-
 @ConditionalOnProperty(
         prefix="spring.content.storage.type",
         name = "default",
