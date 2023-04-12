@@ -28,7 +28,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 @AutoConfiguration
 //@Configuration
 @AutoConfigureAfter({ JpaVersionsAutoConfiguration.class })
-@ConditionalOnClass(S3Client.class)
+@ConditionalOnClass({S3StoreConfiguration.class, S3Client.class})
 @ConditionalOnProperty(
         prefix="spring.content.storage.type",
         name = "default",
