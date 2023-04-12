@@ -37,6 +37,6 @@ jobs:
       run: |
         pushd spring-content-examples
           git fetch --all
-          git checkout main
+          git checkout 2.x.x
           mvn -B clean install
         popd
