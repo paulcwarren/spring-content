@@ -35,7 +35,7 @@ public class ContentProperty {
     }
 
     public Object getContentId(Object entity) {
-        if (contentLengthPropertyPath == null) {
+        if (contentIdPropertyPath == null) {
             return null;
         }
 
