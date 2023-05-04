@@ -55,7 +55,7 @@ import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class DefaultEntityResolver implements EntityResolver {
-
+    private static final  Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultEntityResolver.class);
     private static boolean ROOT_RESOURCE_INFORMATION_CLASS_PRESENT = false;
 
     static {
@@ -163,7 +163,7 @@ public class DefaultEntityResolver implements EntityResolver {
     public Object findOne(Repositories repositories, StoreInfo info, Class<?> domainObjClass, String repository, Serializable id)
             throws HttpRequestMethodNotSupportedException {
 
-        Optional<Object> domainObj = null;
+        Optional<Object> domainObj = Optional.empty();
 
         if (ROOT_RESOURCE_INFORMATION_CLASS_PRESENT) {
 
@@ -174,11 +174,13 @@ public class DefaultEntityResolver implements EntityResolver {
                     domainObj = invoker.invokeFindById(id);
                 }
             } catch (ConverterNotFoundException e) {
-
+                logger.debug("resolveRootResourceInformation failed with root resource information class present");
                 domainObj = findOneByReflection(repositories, domainObjClass, id);
+            } catch (AccessDeniedException ace) {
+                logger.debug("invoking Repository findById(id) method threw AccessDeniedException with root resource information class present");
+                throw ace;
             } catch (Exception e) {
-
-                e.printStackTrace();
+                logger.error("invoking findById(id)failed  with root resource information class present", e.getCause());
             }
         } else {
 
