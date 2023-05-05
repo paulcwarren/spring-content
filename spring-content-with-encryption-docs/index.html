@@ -142,21 +142,28 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>pom.xml</code></p>
 <pre><code class="java">
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
-  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  	&lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
   
-  &lt;artifactId&gt;spring-content-with-encryption&lt;/artifactId&gt;
-  
- 	&lt;parent&gt;
-		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-		&lt;version&gt;3.0.5&lt;/version&gt;
+  	&lt;artifactId&gt;spring-content-with-encryption&lt;/artifactId&gt;
+
+	&lt;parent&gt;
+		&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
+		&lt;artifactId&gt;gettingstarted-spring-content&lt;/artifactId&gt;
+		&lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+		&lt;relativePath&gt;../../pom.xml&lt;/relativePath&gt;
 	&lt;/parent&gt;
- 
-	&lt;properties&gt;
-		&lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
-		&lt;java.version&gt;17&lt;/java.version&gt;
-		&lt;ginkgo-version&gt;1.0.15&lt;/ginkgo-version&gt;
-	&lt;/properties&gt;
+
+	&lt;dependencyManagement&gt;
+		&lt;dependencies&gt;
+			&lt;dependency&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+				&lt;version&gt;3.0.6&lt;/version&gt;
+				&lt;type&gt;pom&lt;/type&gt;
+				&lt;scope&gt;import&lt;/scope&gt;
+			&lt;/dependency&gt;
+		&lt;/dependencies&gt;
+	&lt;/dependencyManagement&gt;
 
 	&lt;dependencies&gt;
 		&lt;dependency&gt;
@@ -178,12 +185,12 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;3.0.1&lt;/version&gt;
+			&lt;version&gt;${spring.content.version}&lt;/version&gt;
 		&lt;/dependency&gt;
  		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-rest-boot-starter&lt;/artifactId&gt;
-			&lt;version&gt;3.0.1&lt;/version&gt;
+			&lt;version&gt;${spring.content.version}&lt;/version&gt;
 		&lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -192,15 +199,8 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 		&lt;dependency&gt;
 			&lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
 			&lt;artifactId&gt;spring-content-encryption&lt;/artifactId&gt;
-			&lt;version&gt;3.0.1&lt;/version&gt;
+			&lt;version&gt;${spring.content.version}&lt;/version&gt;
 		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
-			&lt;artifactId&gt;vault&lt;/artifactId&gt;
-			&lt;version&gt;1.17.6&lt;/version&gt;
-		&lt;/dependency&gt;
-		
-		&lt;!-- Test dependencies --&gt;
 </code></pre>
 
 <h2 id="vault-testcontainer">Vault TestContainer</h2>
