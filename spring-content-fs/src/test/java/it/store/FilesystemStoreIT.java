@@ -303,14 +303,18 @@ public class FilesystemStoreIT {
 				});
 
 				Context("when content is updated", () -> {
-					BeforeEach(() ->{
-						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
-						entity = repo.save(entity);
-					});
-
 					It("should have the updated content", () -> {
-					    //content
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						String contentId = entity.getContentId();
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+						String renditionId = entity.getRenditionId();
+						assertThat(new File(loader.getFilesystemRoot(), renditionId).exists(), is(true));
+
+						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+						store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
+						entity = repo.save(entity);
+
+						//content
 						boolean matches = false;
 						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
@@ -318,11 +322,22 @@ public class FilesystemStoreIT {
 						}
 
 						//rendition
-                        matches = false;
-                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
-                            assertThat(matches, is(true));
-                        }
+						matches = false;
+						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
+							assertThat(matches, is(true));
+						}
+
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+						assertThat(new File(loader.getFilesystemRoot(), renditionId).exists(), is(true));
+
+						assertThat(entity.getContentId(), is(not(contentId)));
+						assertThat(entity.getRenditionId(), is(not(renditionId)));
+
+						assertThat(new File(loader.getFilesystemRoot(), entity.getContentId()).exists(), is(true));
+						assertThat(new File(loader.getFilesystemRoot(), entity.getRenditionId()).exists(), is(true));
+
+						int i=0;
 					});
 				});
 

@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -171,58 +173,78 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
         });
     }
 
+	protected String calculateName(String name) {
+		Pattern p = Pattern.compile("^(.+)(Id|Len|Length|MimeType|Mimetype|ContentType|(?<!Mime|Content)Type|(?<!Original)FileName|(?<!Original)Filename|OriginalFileName|OriginalFilename)$");
+		Matcher m = p.matcher(name);
+		if (m.matches() == false) {
+			return null;
+		}
+		return m.group(1);
+	}
+
 	@Override
 	@Transactional
 	public S setContent(S entity, InputStream content) {
 
-        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-        if (contentId == null) {
-
-            Serializable newId = UUID.randomUUID().toString();
-
-            Object convertedId = convertToExternalContentIdType(entity, newId);
-
-            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
-        }
-
-        Resource resource = this.getResource(entity);
-        if (resource == null) {
-            return entity;
-        }
-
-		OutputStream os = null;
-		try {
-			if (resource.exists() == false) {
-				File resourceFile = resource.getFile();
-				File parent = resourceFile.getParentFile();
-				this.fileService.mkdirs(parent);
-			}
-			if (resource instanceof WritableResource) {
-				os = ((WritableResource) resource).getOutputStream();
-				IOUtils.copy(content, os);
-			}
-		} catch (IOException e) {
-			logger.error(format("Unexpected io error setting content for entity %s", entity), e);
-			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
-		} catch (Exception e) {
-			logger.error(format("Unexpected error setting content for entity %s", entity), e);
-			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+		Field f = BeanUtils.findFieldWithAnnotation(entity, ContentId.class);
+		if (f == null) {
+			throw new StoreAccessException("no content property found");
 		}
-		finally {
-			IOUtils.closeQuietly(os);
+		String propertyName = calculateName(f.getName());
+		if (propertyName == null) {
+			throw new StoreAccessException(String.format("invalid content property name", f.getName()));
 		}
+		return this.setContent(entity, PropertyPath.from(propertyName), content);
 
-		try {
-			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
-					resource.contentLength());
-		}
-		catch (IOException e) {
-			logger.error(format(
-					"Unexpected error setting content length for content for resource %s",
-					resource.toString()), e);
-		}
 
-		return entity;
+//		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+//        if (contentId == null || replaceContent == true) {
+//
+//            Serializable newId = UUID.randomUUID().toString();
+//
+//            Object convertedId = convertToExternalContentIdType(entity, newId);
+//
+//            BeanUtils.setFieldWithAnnotation(entity, ContentId.class, convertedId);
+//        }
+//
+//        Resource resource = this.getResource(entity);
+//        if (resource == null) {
+//            return entity;
+//        }
+//
+//		OutputStream os = null;
+//		try {
+//			if (resource.exists() == false) {
+//				File resourceFile = resource.getFile();
+//				File parent = resourceFile.getParentFile();
+//				this.fileService.mkdirs(parent);
+//			}
+//			if (resource instanceof WritableResource) {
+//				os = ((WritableResource) resource).getOutputStream();
+//				IOUtils.copy(content, os);
+//			}
+//		} catch (IOException e) {
+//			logger.error(format("Unexpected io error setting content for entity %s", entity), e);
+//			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+//		} catch (Exception e) {
+//			logger.error(format("Unexpected error setting content for entity %s", entity), e);
+//			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
+//		}
+//		finally {
+//			IOUtils.closeQuietly(os);
+//		}
+//
+//		try {
+//			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class,
+//					resource.contentLength());
+//		}
+//		catch (IOException e) {
+//			logger.error(format(
+//					"Unexpected error setting content length for content for resource %s",
+//					resource.toString()), e);
+//		}
+//
+//		return entity;
 	}
 
     @Transactional
@@ -235,13 +257,15 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	public S setContent(S property, PropertyPath propertyPath, InputStream content, long contentLen) {
 
+		boolean replaceContent = true;
+
 		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
 		if (contentProperty == null) {
 			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
 		}
 
 		Object contentId = contentProperty.getContentId(property);
-		if (contentId == null) {
+		if (contentId == null || replaceContent == true) {
 
 			Serializable newId = UUID.randomUUID().toString();
 
