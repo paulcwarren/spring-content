@@ -23,6 +23,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.Part;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
@@ -39,6 +41,7 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -55,7 +58,7 @@ import internal.org.springframework.content.rest.utils.RepositoryUtils;
 import internal.org.springframework.content.rest.utils.StoreUtils;
 
 public class DefaultEntityResolver implements EntityResolver {
-
+    private static final Logger logger = LoggerFactory.getLogger(DefaultEntityResolver.class);
     private static boolean ROOT_RESOURCE_INFORMATION_CLASS_PRESENT = false;
 
     static {
@@ -163,7 +166,7 @@ public class DefaultEntityResolver implements EntityResolver {
     public Object findOne(Repositories repositories, StoreInfo info, Class<?> domainObjClass, String repository, Serializable id)
             throws HttpRequestMethodNotSupportedException {
 
-        Optional<Object> domainObj = null;
+        Optional<Object> domainObj = Optional.empty();
 
         if (ROOT_RESOURCE_INFORMATION_CLASS_PRESENT) {
 
@@ -172,13 +175,17 @@ public class DefaultEntityResolver implements EntityResolver {
                 invoker = resolveRootResourceInformation(info, repository, id, new ModelAndViewContainer(), new FakeWebBinderFactory());
                 if (invoker != null) {
                     domainObj = invoker.invokeFindById(id);
+                } else {
+                    logger.warn("Could not resolve RootResourceInformation");
                 }
             } catch (ConverterNotFoundException e) {
-
+                logger.debug("invoking Repository findById(id) method failed");
                 domainObj = findOneByReflection(repositories, domainObjClass, id);
+            } catch (AccessDeniedException ace) {
+                logger.debug("invoking Repository findById(id) method threw AccessDeniedException");
+                throw ace;
             } catch (Exception e) {
-
-                e.printStackTrace();
+                logger.error("invoking Repository findById(id) method threw exception", e.getCause());
             }
         } else {
 
