@@ -19,7 +19,10 @@ public interface ContentStore<S, SID extends Serializable> extends AssociativeSt
     @LockParticipant
     S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen);
 
-	@LockParticipant
+    @LockParticipant
+    S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params);
+
+    @LockParticipant
 	S setContent(S entity, Resource resourceContent);
 
     @LockParticipant

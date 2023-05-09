@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.Store;
 import org.springframework.core.io.Resource;
 
@@ -140,6 +141,11 @@ public class AbstractStoreFactoryBeanTest {
 
 		public Object setContent(Object property, PropertyPath propertyPath, InputStream content, long contentLen) {
 			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
 			return null;
 		}
 

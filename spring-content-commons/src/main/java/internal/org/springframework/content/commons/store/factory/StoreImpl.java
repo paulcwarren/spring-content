@@ -18,6 +18,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.store.events.AfterAssociateEvent;
 import org.springframework.content.commons.store.events.AfterGetContentEvent;
@@ -165,6 +166,78 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
             try {
                 result = castToDeprecatedContentStore(delegate).setContent(property, propertyPath, content, contentLen);
+            }
+            catch (Exception e) {
+                throw e;
+            }
+
+            org.springframework.content.commons.repository.events.AfterSetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterSetContentEvent(property, propertyPath, delegate);
+            oldAfter.setResult(result);
+            publisher.publishEvent(oldAfter);
+
+            if (contentStore != null) {
+                AfterSetContentEvent after = new AfterSetContentEvent(property, propertyPath, contentStore);
+                after.setResult(result);
+                publisher.publishEvent(after);
+            }
+        } catch (FileNotFoundException fileNotFoundException) {
+            fileNotFoundException.printStackTrace();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        } finally {
+            if (contentCopyStream != null) {
+                IOUtils.closeQuietly(contentCopyStream);
+            }
+            if (contentCopy != null) {
+                try {
+                    Files.deleteIfExists(contentCopy.toPath());
+                } catch (IOException e) {
+                    logger.error(String.format("Unable to delete content copy %s", contentCopy.toPath()), e);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public Object setContent(Object property, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        Object result = null;
+
+        File contentCopy = null;
+        TeeInputStream contentCopyStream = null;
+        try {
+            contentCopy = Files.createTempFile(copyContentRootPath, "contentCopy", ".tmp").toFile();
+            contentCopyStream = new TeeInputStream(content, new FileOutputStream(contentCopy), true);
+
+            org.springframework.content.commons.repository.events.BeforeSetContentEvent oldBefore = null;
+            BeforeSetContentEvent before = null;
+
+            oldBefore = new org.springframework.content.commons.repository.events.BeforeSetContentEvent(property, propertyPath, delegate, contentCopyStream);
+            publisher.publishEvent(oldBefore);
+
+            ContentStore contentStore = castToContentStore(delegate);
+            if (contentStore != null) {
+                before = new BeforeSetContentEvent(property, propertyPath, contentStore, contentCopyStream);
+                publisher.publishEvent(before);
+            }
+
+            // inputstream was processed and replaced
+            if (oldBefore != null && oldBefore.getInputStream() != null && oldBefore.getInputStream().equals(contentCopyStream) == false) {
+                content = oldBefore.getInputStream();
+            }
+            else if (before != null && before.getInputStream() != null && before.getInputStream().equals(contentCopyStream) == false) {
+                content = before.getInputStream();
+            }
+            // content was processed but not replaced
+            else if (contentCopyStream != null && contentCopyStream.isDirty()) {
+                while (contentCopyStream.read(new byte[4096]) != -1) {
+                }
+                content = new FileInputStream(contentCopy);
+            }
+
+            try {
+                result = ((org.springframework.content.commons.store.ContentStore)delegate).setContent(property, propertyPath, content, params);
             }
             catch (Exception e) {
                 throw e;

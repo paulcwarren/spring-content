@@ -31,6 +31,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -361,6 +362,29 @@ public class FilesystemStoreIT {
                             matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
                             assertThat(matches, is(true));
                         }
+					});
+				});
+
+				Context("when content is updated and not overwritten", () -> {
+					It("should have the updated content", () -> {
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						String contentId = entity.getContentId();
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+
+						store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+						entity = repo.save(entity);
+
+						boolean matches = false;
+						try (InputStream content = store.getContent(entity)) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+							assertThat(matches, is(true));
+						}
+
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+
+						assertThat(entity.getContentId(), is(not(contentId)));
+
+						assertThat(new File(loader.getFilesystemRoot(), entity.getContentId()).exists(), is(true));
 					});
 				});
 

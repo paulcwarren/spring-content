@@ -28,6 +28,7 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
@@ -43,7 +44,7 @@ import org.springframework.util.Assert;
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID>,
-		org.springframework.content.commons.store.AssociativeStore<S, SID> {
+		org.springframework.content.commons.store.ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -198,7 +199,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 
 //		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
-//        if (contentId == null || replaceContent == true) {
+//        if (contentId == null) {
 //
 //            Serializable newId = UUID.randomUUID().toString();
 //
@@ -256,6 +257,12 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S property, PropertyPath propertyPath, InputStream content, long contentLen) {
+		return this.setContent(property, propertyPath, content, SetContentParams.builder().contentLength(contentLen).build());
+	}
+
+	@Transactional
+	@Override
+	public S setContent(S property, PropertyPath propertyPath, InputStream content, SetContentParams params) {
 
 		boolean replaceContent = true;
 
@@ -265,7 +272,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		Object contentId = contentProperty.getContentId(property);
-		if (contentId == null || replaceContent == true) {
+		if (contentId == null || !params.isOverwriteExistingContent()) {
 
 			Serializable newId = UUID.randomUUID().toString();
 
@@ -305,7 +312,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		try {
-			long len = contentLen;
+			long len = params.getContentLength();
 			if (len == -1L) {
 				len = resource.contentLength();
 			}
