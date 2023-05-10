@@ -76,7 +76,9 @@ public class ContextPathContentLinksIT {
 
 			Context("given an Entity and a Store with a default store path", () -> {
 				BeforeEach(() -> {
-					testEntity3 = repository3.save(new TestEntity3());
+					testEntity3 = new TestEntity3();
+					contentRepository3.setContent(testEntity3, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+					testEntity3 = repository3.save(testEntity3);
 
 					contentLinkTests.setMvc(mvc);
 					contentLinkTests.setRepository(repository3);

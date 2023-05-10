@@ -7,5 +7,6 @@ import lombok.Data;
 @Builder
 public class SetContentParams {
     private long contentLength = -1;
-    private boolean overwriteExistingContent;
+    @Builder.Default
+    private boolean overwriteExistingContent = true;
 }

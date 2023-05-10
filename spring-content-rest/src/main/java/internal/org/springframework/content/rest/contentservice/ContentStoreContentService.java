@@ -188,7 +188,7 @@ public class ContentStoreContentService implements ContentService {
             }
             argsList.add(len);
         } else if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(SetContentParams.class)) {
-            SetContentParams params = new SetContentParams();
+            SetContentParams params = SetContentParams.builder().build();
 
             // if available use the original content length
             if (headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {

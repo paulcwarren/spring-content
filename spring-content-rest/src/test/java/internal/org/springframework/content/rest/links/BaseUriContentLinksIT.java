@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
+import java.io.ByteArrayInputStream;
+
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
@@ -69,7 +71,9 @@ public class BaseUriContentLinksIT {
 
 			Context("given an Entity and a Store with a default store path", () -> {
 				BeforeEach(() -> {
-					testEntity3 = repository3.save(new TestEntity3());
+					testEntity3 = new TestEntity3();
+					contentRepository3.setContent(testEntity3, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+					testEntity3 = repository3.save(testEntity3);
 
 					contentLinkTests.setMvc(mvc);
 					contentLinkTests.setRepository(repository3);

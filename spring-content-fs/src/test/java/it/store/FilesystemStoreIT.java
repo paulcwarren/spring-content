@@ -329,11 +329,8 @@ public class FilesystemStoreIT {
 							assertThat(matches, is(true));
 						}
 
-						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
-						assertThat(new File(loader.getFilesystemRoot(), renditionId).exists(), is(true));
-
-						assertThat(entity.getContentId(), is(not(contentId)));
-						assertThat(entity.getRenditionId(), is(not(renditionId)));
+						assertThat(entity.getContentId(), is(contentId));
+						assertThat(entity.getRenditionId(), is(renditionId));
 
 						assertThat(new File(loader.getFilesystemRoot(), entity.getContentId()).exists(), is(true));
 						assertThat(new File(loader.getFilesystemRoot(), entity.getRenditionId()).exists(), is(true));
