@@ -23,6 +23,11 @@ jobs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    - name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
     - name: Build and Test
       id: build
       run: |
@@ -56,7 +61,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ github.run_id }}
+        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
     - uses: actions/checkout@v2
       with:
         repository: paulcwarren/spring-content-examples
@@ -92,7 +97,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ github.run_id }}
+        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
     - uses: actions/checkout@v2
       with:
         repository: paulcwarren/spring-content-gettingstarted
