@@ -22,16 +22,22 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
     - name: Cache Maven packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
     - name: Build and Test
       run: |
         export AWS_REGION=us-west-1
         pushd spring-content
           mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
         popd
+    - name: Save Maven Cache
+      id: cache-maven-save
+      uses: actions/cache/save@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
   validate-with-examples:
     runs-on: ubuntu-latest
@@ -47,10 +53,10 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE    
     - name: Restore Maven packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
     - uses: actions/checkout@v2
       with:
         repository: paulcwarren/spring-content-examples
@@ -79,10 +85,10 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE    
     - name: Restore Maven packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ env.GITHUB_SHA }}
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
     - uses: actions/checkout@v2
       with:
         repository: paulcwarren/spring-content-gettingstarted
