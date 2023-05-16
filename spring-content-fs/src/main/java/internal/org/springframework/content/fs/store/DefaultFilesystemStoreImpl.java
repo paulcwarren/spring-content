@@ -174,30 +174,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
         });
     }
 
-	protected String calculateName(String name) {
-		Pattern p = Pattern.compile("^(.+)(Id|Len|Length|MimeType|Mimetype|ContentType|(?<!Mime|Content)Type|(?<!Original)FileName|(?<!Original)Filename|OriginalFileName|OriginalFilename)$");
-		Matcher m = p.matcher(name);
-		if (m.matches() == false) {
-			return null;
-		}
-		return m.group(1);
-	}
-
 	@Override
 	@Transactional
 	public S setContent(S entity, InputStream content) {
-
-//		Field f = BeanUtils.findFieldWithAnnotation(entity, ContentId.class);
-//		if (f == null) {
-//			throw new StoreAccessException("no content property found");
-//		}
-//		String propertyName = calculateName(f.getName());
-//		if (propertyName == null) {
-//			throw new StoreAccessException(String.format("invalid content property name", f.getName()));
-//		}
-//		return this.setContent(entity, PropertyPath.from(propertyName), content);
-
-
 		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
         if (contentId == null) {
 
@@ -262,14 +241,16 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
-		throw new UnsupportedOperationException();
+		SetContentParams params1 = SetContentParams.builder()
+				.contentLength(params.getContentLength())
+				.overwriteExistingContent(params.isOverwriteExistingContent())
+				.build();
+		return this.setContent(entity, propertyPath, content, params1);
 	}
 
 	@Transactional
 	@Override
 	public S setContent(S property, PropertyPath propertyPath, InputStream content, SetContentParams params) {
-
-		boolean replaceContent = true;
 
 		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
 		if (contentProperty == null) {
