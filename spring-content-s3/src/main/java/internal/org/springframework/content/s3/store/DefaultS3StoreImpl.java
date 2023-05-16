@@ -22,7 +22,9 @@ import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -49,7 +51,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
 				   org.springframework.content.commons.repository.AssociativeStore<S, SID>,
 				   org.springframework.content.commons.repository.ContentStore<S, SID>,
-		 		   AssociativeStore<S, SID> {
+		           ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -366,6 +368,16 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			logger.error(format("Unexpected error setting content length for entity %s", entity), e);
 		}
 		return entity;
+	}
+
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
