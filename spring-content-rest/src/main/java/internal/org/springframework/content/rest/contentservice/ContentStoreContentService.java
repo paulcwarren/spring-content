@@ -195,7 +195,7 @@ public class ContentStoreContentService implements ContentService {
                 params.setContentLength(headers.getContentLength());
             }
 
-            params.setOverwriteExistingContent(false);
+            params.setOverwriteExistingContent(config.overwriteExistingContent());
 
             argsList.add(params);
         } else if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(SetContentParams.class)) {
@@ -206,7 +206,7 @@ public class ContentStoreContentService implements ContentService {
                 params.setContentLength(headers.getContentLength());
             }
 
-            params.setOverwriteExistingContent(false);
+            params.setOverwriteExistingContent(config.overwriteExistingContent());
 
             argsList.add(params);
         }
@@ -361,18 +361,20 @@ public class ContentStoreContentService implements ContentService {
 
     public static class StoreExportedMethodsMap {
 
-        private static Method[] SETCONTENT_METHODS = null;
+        private static Method[] SETCONTENT_METHODS_3x = null;
+        private static Method[] SETCONTENT_METHODS_2x = null;
         private static Method[] UNSETCONTENT_METHODS = null;
         private static Method[] GETCONTENT_METHODS = null;
 
         static {
-            SETCONTENT_METHODS = new Method[] {
+            SETCONTENT_METHODS_3x = new Method[] {
                 ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, org.springframework.content.commons.store.SetContentParams.class),
-                ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, long.class),
                 ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, SetContentParams.class),
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, long.class),
-                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
+            };
+
+            SETCONTENT_METHODS_2x = new Method[] {
+                    ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, SetContentParams.class),
+                    ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
             };
 
             UNSETCONTENT_METHODS = new Method[] {
@@ -395,7 +397,11 @@ public class ContentStoreContentService implements ContentService {
             this.storeInterface = storeInterface;
             this.path = path;
             this.getContentMethods = calculateExports(GETCONTENT_METHODS, path, exportContext);
-            this.setContentMethods = calculateExports(SETCONTENT_METHODS, path, exportContext);
+            if (org.springframework.content.commons.store.ContentStore.class.isAssignableFrom(storeInterface)) {
+                this.setContentMethods = calculateExports(SETCONTENT_METHODS_3x, path, exportContext);
+            } else {
+                this.setContentMethods = calculateExports(SETCONTENT_METHODS_2x, path, exportContext);
+            }
             this.unsetContentMethods = calculateExports(UNSETCONTENT_METHODS, path, exportContext);
         }
 

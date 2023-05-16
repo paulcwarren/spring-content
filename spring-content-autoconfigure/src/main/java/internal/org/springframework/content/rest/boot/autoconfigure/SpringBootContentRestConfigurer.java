@@ -57,5 +57,7 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
                 }
             }
         }
+
+        config.setOverwriteExistingContent(properties.getOverwriteExistingContent());
     }
 }

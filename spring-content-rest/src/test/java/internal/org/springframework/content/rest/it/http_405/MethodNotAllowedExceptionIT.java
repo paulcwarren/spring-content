@@ -25,6 +25,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
@@ -99,7 +101,7 @@ public class MethodNotAllowedExceptionIT {
             });
         });
 
-        Describe("when no setContent methods are not exported", () -> {
+        Describe("when setContent methods are not exported", () -> {
 
             BeforeEach(() -> {
                 RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
@@ -190,7 +192,7 @@ public class MethodNotAllowedExceptionIT {
 
         @RestResource(exported=false)
         @Override
-        public TEntity setContent(TEntity property, PropertyPath path, InputStream content, long contentLen);
+        public TEntity setContent(TEntity property, PropertyPath path, InputStream content, SetContentParams params);
 
         @RestResource(exported=false)
         @Override
@@ -199,7 +201,7 @@ public class MethodNotAllowedExceptionIT {
         @RestResource(exported=false)
         @Override
         public TEntity unsetContent(TEntity property, PropertyPath path);
-}
+    }
 
     @Entity
     @Getter

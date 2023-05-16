@@ -49,7 +49,8 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 @ComponentScan("internal.org.springframework.content.rest.controllers, org.springframework.data.rest.extensions, org.springframework.data.rest.versioning")
 public class RestConfiguration implements InitializingBean {
 
-    public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
+	public static boolean OVERWRITE_EXISTING_CONTENT_DEFAULT = true;
+	public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
     public static boolean SHORTCUT_LINKS_DEFAULT = true;
 
 	private static final URI NO_URI = URI.create("");
@@ -64,6 +65,7 @@ public class RestConfiguration implements InitializingBean {
 	private StoreCorsRegistry corsRegistry;
 	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
     private boolean shortcutLinks = SHORTCUT_LINKS_DEFAULT;
+	private boolean overwriteExistingContent = OVERWRITE_EXISTING_CONTENT_DEFAULT;
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
@@ -99,6 +101,14 @@ public class RestConfiguration implements InitializingBean {
     public void setShortcutLinks(boolean shortcutLinks) {
         this.shortcutLinks = shortcutLinks;
     }
+
+	public boolean overwriteExistingContent() {
+		return this.overwriteExistingContent;
+	}
+
+	public void setOverwriteExistingContent(boolean overwriteExistingContent) {
+		this.overwriteExistingContent = overwriteExistingContent;
+	}
 
 	public StoreCorsRegistry getCorsRegistry() {
 		return corsRegistry;

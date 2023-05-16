@@ -25,6 +25,7 @@ public class ContentRestAutoConfiguration {
 		private URI baseUri;
 		private boolean fullyQualifiedLinks = RestConfiguration.FULLY_QUALIFIED_DEFAULTS_DEFAULT;
 		private ShortcutRequestMappings requestMappings = new ShortcutRequestMappings();
+		private boolean overwriteExistingContent = RestConfiguration.OVERWRITE_EXISTING_CONTENT_DEFAULT;
 
 		public URI getBaseUri() {
 			return baseUri;
@@ -48,6 +49,14 @@ public class ContentRestAutoConfiguration {
 
 		public void setShortcutRequestMappings(ShortcutRequestMappings requestMappings) {
 		    this.requestMappings = requestMappings;
+		}
+
+		public boolean getOverwriteExistingContent() {
+			return this.overwriteExistingContent;
+		}
+
+		public void setOverwriteExistingContent(boolean overwriteExistingContent) {
+			this.overwriteExistingContent = overwriteExistingContent;
 		}
 
 		public static class ShortcutRequestMappings {
