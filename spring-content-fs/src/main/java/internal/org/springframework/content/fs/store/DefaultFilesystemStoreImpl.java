@@ -260,6 +260,11 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return this.setContent(property, propertyPath, content, SetContentParams.builder().contentLength(contentLen).build());
 	}
 
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Transactional
 	@Override
 	public S setContent(S property, PropertyPath propertyPath, InputStream content, SetContentParams params) {

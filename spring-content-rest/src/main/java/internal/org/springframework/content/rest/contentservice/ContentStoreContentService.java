@@ -22,8 +22,8 @@ import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.utils.StoreInterfaceUtils;
 import org.springframework.content.rest.RestResource;
@@ -187,6 +187,17 @@ public class ContentStoreContentService implements ContentService {
                 len = headers.getContentLength();
             }
             argsList.add(len);
+        } else if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(org.springframework.content.commons.store.SetContentParams.class)) {
+            org.springframework.content.commons.store.SetContentParams params = org.springframework.content.commons.store.SetContentParams.builder().build();
+
+            // if available use the original content length
+            if (headers.containsKey(HttpHeaders.CONTENT_LENGTH)) {
+                params.setContentLength(headers.getContentLength());
+            }
+
+            params.setOverwriteExistingContent(false);
+
+            argsList.add(params);
         } else if (methodToUse.getParameters().length > 3 && methodToUse.getParameters()[3].getType().equals(SetContentParams.class)) {
             SetContentParams params = SetContentParams.builder().build();
 
@@ -356,6 +367,10 @@ public class ContentStoreContentService implements ContentService {
 
         static {
             SETCONTENT_METHODS = new Method[] {
+                ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, org.springframework.content.commons.store.SetContentParams.class),
+                ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, long.class),
+                ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
+                ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, SetContentParams.class),
                 ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class, long.class),
                 ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class),
             };

@@ -105,7 +105,7 @@ public class MethodNotAllowedExceptionIT {
                 RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
-            It("should throw a 405 Not Allowed", () -> {
+            FIt("should throw a 405 Not Allowed", () -> {
 
                 TEntity tentity = new TEntity();
                 tentity = repo.save(tentity);

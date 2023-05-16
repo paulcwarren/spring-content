@@ -19,6 +19,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
@@ -288,6 +289,11 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         }
 
         return entity;
+    }
+
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

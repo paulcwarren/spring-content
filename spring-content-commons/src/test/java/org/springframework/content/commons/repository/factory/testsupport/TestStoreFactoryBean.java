@@ -6,6 +6,7 @@ import java.io.Serializable;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.GetResourceParams;
+import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.store.Store;
 import org.springframework.content.commons.store.factory.AbstractStoreFactoryBean;
 import org.springframework.core.io.Resource;
@@ -95,6 +96,11 @@ public class TestStoreFactoryBean extends AbstractStoreFactoryBean {
 		@Override
 		public Object setContent(Object property, PropertyPath propertyPath, InputStream content, long contentLen) {
 			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
 			return null;
 		}
 
