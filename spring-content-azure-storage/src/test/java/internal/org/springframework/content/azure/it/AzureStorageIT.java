@@ -378,7 +378,6 @@ public class AzureStorageIT {
                     });
                 });
 
-
                 Context("when content is updated and not overwritten", () -> {
                     It("should have the updated content", () -> {
                         BlobContainerClient c = builder.buildClient().getBlobContainerClient("azure-test-bucket");

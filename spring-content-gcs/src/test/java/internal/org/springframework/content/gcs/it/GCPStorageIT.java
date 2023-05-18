@@ -1,12 +1,9 @@
 package internal.org.springframework.content.gcs.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import com.google.cloud.storage.BlobId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,6 +32,7 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.gcs.config.EnableGCPStorage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -299,6 +298,7 @@ public class GCPStorageIT {
 
                     store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
                     store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()));
+                    entity = repo.save(entity);
                 });
 
                 It("should be able to store new content", () -> {
@@ -369,6 +369,27 @@ public class GCPStorageIT {
                             matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
                             assertThat(matches, is(true));
                         }
+                    });
+                });
+
+                Context("when content is updated and not overwritten", () -> {
+                    It("should have the updated content", () -> {
+                        String contentId = entity.getContentId();
+                        assertThat(contentId, is(not(nullValue())));
+                        assertThat(storage.get(BlobId.of("test-bucket", contentId)).exists(), is(true));
+
+                        store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+                        entity = repo.save(entity);
+
+                        boolean matches = false;
+                        try (InputStream content = store.getContent(entity)) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
+
+                        assertThat(entity.getContentId(), is(not(contentId)));
+
+                        assertThat(storage.get(BlobId.of("test-bucket", entity.getContentId())).exists(), is(true));
                     });
                 });
 
