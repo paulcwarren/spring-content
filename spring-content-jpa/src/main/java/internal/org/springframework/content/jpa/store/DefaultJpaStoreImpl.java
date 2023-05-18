@@ -23,6 +23,7 @@ import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -41,7 +42,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
         org.springframework.content.commons.repository.AssociativeStore<S, SID>,
         org.springframework.content.commons.repository.ContentStore<S, SID>,
-        AssociativeStore<S, SID> {
+        ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
@@ -240,12 +241,28 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder()
+                .contentLength(contentLen)
+                .build());
+    }
 
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder()
+                .contentLength(params.getContentLength())
+                .overwriteExistingContent(params.isOverwriteExistingContent())
+                .build());
+    }
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         // TODO: property == null?
 
         SID contentId = getContentId(entity, propertyPath);
-        if (contentId == null) {
+        if (contentId == null || !params.isOverwriteExistingContent()) {
 
             Serializable newId = UUID.randomUUID().toString();
 
@@ -278,18 +295,13 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         property.setContentId(entity, ((BlobResource) resource).getId(), null);
 
-        long len = contentLen;
+        long len = params.getContentLength();
         if (len == -1L) {
             len = readLen;
         }
         property.setContentLength(entity, len);
 
         return entity;
-    }
-
-    @Override
-    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
-        throw new UnsupportedOperationException();
     }
 
     @Transactional
