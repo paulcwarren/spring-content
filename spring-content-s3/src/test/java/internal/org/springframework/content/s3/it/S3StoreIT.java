@@ -25,6 +25,7 @@ import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -42,9 +43,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.*;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
@@ -107,6 +106,21 @@ public class S3StoreIT {
                             .bucket(BUCKET)
                             .build();
                     client.createBucket(bucketRequest);
+
+                    boolean found = false;
+                    while (!found) {
+                        headBucketRequest = HeadBucketRequest.builder()
+                                .bucket(BUCKET)
+                                .build();
+                        try {
+                            client.headBucket(headBucketRequest);
+                            found = true;
+                        } catch (NoSuchBucketException e2) {
+                        }
+
+                        System.out.println("sleeping...");
+                        Thread.sleep(100);
+                    }
                 }
 
                 RandomString random  = new RandomString(5);
@@ -335,7 +349,6 @@ public class S3StoreIT {
                     Assert.assertEquals(entity.getRenditionLen(), 40L);
                 });
 
-
                 It("should set Content-Type of stored content to value from field annotated with @MimeType", () -> {
                     // content
                     S3StoreResource resource = (S3StoreResource) store.getResource(entity);
@@ -392,6 +405,25 @@ public class S3StoreIT {
                             matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
                             assertThat(matches, is(true));
                         }
+                    });
+                });
+
+                Context("when content is updated and not overwritten", () -> {
+                    It("should have the updated content", () -> {
+                        String contentId = entity.getContentId();
+                        client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(contentId).build());
+
+                        store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+                        entity = repo.save(entity);
+
+                        boolean matches = false;
+                        try (InputStream content = store.getContent(entity)) {
+                            matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+                            assertThat(matches, is(true));
+                        }
+
+                        assertThat(entity.getContentId(), is(not(contentId)));
+                        client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(entity.getContentId()).build());
                     });
                 });
 

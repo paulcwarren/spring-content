@@ -321,14 +321,30 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+		return this.setContent(entity, propertyPath, content,
+				org.springframework.content.commons.store.SetContentParams.builder()
+						.contentLength(contentLen)
+						.build());
+	}
 
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+		return this.setContent(entity, propertyPath, content,
+				org.springframework.content.commons.store.SetContentParams.builder()
+						.contentLength(params.getContentLength())
+						.overwriteExistingContent(params.isOverwriteExistingContent())
+						.build());
+	}
+
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
 		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
 		if (property == null) {
 			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
 		}
 
 		Object contentId = property.getContentId(entity);
-		if (contentId == null) {
+		if (contentId == null || !params.isOverwriteExistingContent()) {
 
 			Serializable newId = UUID.randomUUID().toString();
 
@@ -358,7 +374,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 
 		try {
-			long len = contentLen;
+			long len = params.getContentLength();
 			if (len == -1L) {
 				len = resource.contentLength();
 			}
@@ -368,16 +384,6 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 			logger.error(format("Unexpected error setting content length for entity %s", entity), e);
 		}
 		return entity;
-	}
-
-	@Override
-	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
