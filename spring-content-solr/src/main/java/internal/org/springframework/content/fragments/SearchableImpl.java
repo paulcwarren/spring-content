@@ -287,6 +287,10 @@ public class SearchableImpl implements Searchable<Object>, ContentStoreAware {
     public void setContentStore(ContentStore store) {
     }
 
+    @Override
+    public void setContentStore(org.springframework.content.commons.store.ContentStore store) {
+    }
+
 
     @SuppressWarnings("unchecked")
     private <T> T wrapResult(Class<T> returnType, List<Object> content, Pageable pageable, long total) {

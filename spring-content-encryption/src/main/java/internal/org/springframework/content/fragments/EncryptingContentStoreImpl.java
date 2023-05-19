@@ -1,31 +1,32 @@
 package internal.org.springframework.content.fragments;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.commons.repository.GetResourceParams;
-import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.repository.StoreAccessException;
+import org.springframework.content.commons.repository.*;
+import org.springframework.content.commons.utils.AssertUtils;
 import org.springframework.content.encryption.EnvelopeEncryptionService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
-import org.springframework.vault.core.VaultOperations;
 
 import javax.crypto.CipherInputStream;
-import java.io.*;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-public class EncryptingContentStoreImpl<S, SID extends Serializable> implements ContentStore<S, SID>, ContentStoreAware {
+public class EncryptingContentStoreImpl<S, SID extends Serializable> implements ContentStore<S, SID>, org.springframework.content.commons.store.ContentStore<S, SID>, ContentStoreAware {
 
     @Autowired(required = false)
     private MappingContext mappingContext = null;
@@ -41,6 +42,8 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     private String keyRing = "shared-key";
 
     private ContentStore delegate;
+
+    private org.springframework.content.commons.store.ContentStore storeDelegate;
 
     private Class<?> domainClass;
 
@@ -60,35 +63,70 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public S setContent(S o, PropertyPath propertyPath, InputStream inputStream) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
-        Assert.notNull(inputStream);
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(content, "content not set");
+        AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
 
-        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+        ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
-        Pair<CipherInputStream, byte[]> encryptionContext = encrypter.encrypt(inputStream, this.keyRing);
-        contentProperty.setCustomProperty(o, this.encryptionKeyContentProperty, encryptionContext.getSecond());
-        return (S) delegate.setContent(o, propertyPath, encryptionContext.getFirst());
+        Pair<CipherInputStream, byte[]> encryptionContext = encrypter.encrypt(content, this.keyRing);
+        contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, encryptionContext.getSecond());
+        if (storeDelegate != null) {
+            return (S) storeDelegate.setContent(entity, propertyPath, encryptionContext.getFirst());
+        } else if (delegate != null) {
+            return (S) delegate.setContent(entity, propertyPath, encryptionContext.getFirst());
+        }
+        throw new IllegalStateException("no store set");
     }
 
     @Override
-    public S setContent(S o, PropertyPath propertyPath, InputStream inputStream, long l) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
-        Assert.notNull(inputStream);
+    public S setContent(S entity, PropertyPath propertyPath, InputStream inputStream, long l) {
+        AssertUtils.atLeastOneNotNull(new Object[] {storeDelegate, delegate}, "store not set");
+        if (storeDelegate != null) {
+            return this.setContent(entity, propertyPath, inputStream, org.springframework.content.commons.store.SetContentParams.builder().contentLength(l).build());
+        }
+        return this.setContent(entity, propertyPath, inputStream, SetContentParams.builder().contentLength(l).build());
+    }
 
-        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(content, "content not set");
+        Assert.notNull(params, "params not set");
+        Assert.notNull(delegate, "store not set");
+
+        ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
-        Pair<CipherInputStream, byte[]> encryptionContext = encrypter.encrypt(inputStream, this.keyRing);
-        contentProperty.setCustomProperty(o, this.encryptionKeyContentProperty, encryptionContext.getSecond());
-        return (S) delegate.setContent(o, propertyPath, encryptionContext.getFirst(), l);
+        Pair<CipherInputStream, byte[]> encryptionContext = encrypter.encrypt(content, this.keyRing);
+        contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, encryptionContext.getSecond());
+        return (S) delegate.setContent(entity, propertyPath, encryptionContext.getFirst(), params);
+    }
+
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(content, "content not set");
+        Assert.notNull(params, "params not set");
+        Assert.notNull(storeDelegate, "store not set");
+
+        ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
+        if (contentProperty == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
+
+        Pair<CipherInputStream, byte[]> encryptionContext = encrypter.encrypt(content, this.keyRing);
+        contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, encryptionContext.getSecond());
+        return (S) storeDelegate.setContent(entity, propertyPath, encryptionContext.getFirst(), params);
     }
 
     @Override
@@ -97,21 +135,25 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public S setContent(S o, PropertyPath propertyPath, Resource resource) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
-        Assert.notNull(resource);
+    public S setContent(S entity, PropertyPath propertyPath, Resource resource) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(resource, "resource not set");
+        AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
 
         try {
-            ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+            ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
             if (contentProperty == null) {
                 throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
             }
 
             Pair<CipherInputStream, byte[]> encryptionContext = null;
             encryptionContext = encrypter.encrypt(resource.getInputStream(), this.keyRing);
-            contentProperty.setCustomProperty(o, this.encryptionKeyContentProperty, encryptionContext.getSecond());
-            return (S) delegate.setContent(o, propertyPath, new InputStreamResource(encryptionContext.getFirst()));
+            contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, encryptionContext.getSecond());
+            if (storeDelegate != null) {
+                return (S) delegate.setContent(entity, propertyPath, new InputStreamResource(encryptionContext.getFirst()));
+            }
+            return (S) delegate.setContent(entity, propertyPath, new InputStreamResource(encryptionContext.getFirst()));
         } catch (IOException e) {
             throw new StoreAccessException("error encrypting resource", e);
         }
@@ -123,18 +165,24 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public S unsetContent(S o, PropertyPath propertyPath) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
+    public S unsetContent(S entity, PropertyPath propertyPath) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
 
-        ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+        ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
         if (contentProperty == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
-        S entityToReturn = (S) delegate.unsetContent(o, propertyPath);
+        S entityToReturn = null;
+        if (storeDelegate != null) {
+            entityToReturn = (S) storeDelegate.unsetContent(entity, propertyPath);
+        } else if (delegate != null) {
+            entityToReturn = (S) delegate.unsetContent(entity, propertyPath);
+        }
 
-        contentProperty.setCustomProperty(o, this.encryptionKeyContentProperty, null);
+        contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, null);
 
         return entityToReturn;
     }
@@ -145,22 +193,28 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public InputStream getContent(S o, PropertyPath propertyPath) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
+    public InputStream getContent(S entity, PropertyPath propertyPath) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
 
-        InputStream encryptedContentStream = delegate.getContent(o, propertyPath);
+        InputStream encryptedContentStream = null;
+        if (storeDelegate != null) {
+            encryptedContentStream = delegate.getContent(entity, propertyPath);
+        } else if (delegate != null) {
+            encryptedContentStream = delegate.getContent(entity, propertyPath);
+        }
 
         InputStream unencryptedStream = null;
         if (encryptedContentStream != null) {
 
-            ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+            ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
             if (contentProperty == null) {
                 throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
             }
 
             // remove cast and use conversion service
-            unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), encryptedContentStream, 0, this.keyRing);
+            unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(entity, this.encryptionKeyContentProperty), encryptedContentStream, 0, this.keyRing);
         }
 
         return unencryptedStream;
@@ -172,22 +226,28 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public Resource getResource(S o, PropertyPath propertyPath) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
+    public Resource getResource(S entity, PropertyPath propertyPath) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
 
-        Resource r = delegate.getResource(o, propertyPath);
+        Resource r = null;
+        if (storeDelegate != null) {
+            r = storeDelegate.getResource(entity, propertyPath);
+        } else if (delegate != null) {
+            r = delegate.getResource(entity, propertyPath);
+        }
 
         if (r != null) {
             InputStream unencryptedStream = null;
             try {
-                ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+                ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
                 if (contentProperty == null) {
                     throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
                 }
 
                 // remove cast and use conversion service
-                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), r.getInputStream(), 0, this.keyRing);
+                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(entity, this.encryptionKeyContentProperty), r.getInputStream(), 0, this.keyRing);
                 r = new InputStreamResource(new SkipInputStream(unencryptedStream));
             } catch (IOException e) {
                 throw new StoreAccessException("error encrypting resource", e);
@@ -198,23 +258,50 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     }
 
     @Override
-    public Resource getResource(S o, PropertyPath propertyPath, GetResourceParams params) {
-        Assert.notNull(o);
-        Assert.notNull(propertyPath);
+    public Resource getResource(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.GetResourceParams params) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(storeDelegate, "store not set");
 
-        GetResourceParams ctrParams = rewriteParamsForCTR(params);
-        Resource r = delegate.getResource(o, propertyPath, ctrParams);
+        Resource r = storeDelegate.getResource(entity, propertyPath, rewriteParamsForCTR(params));
 
         if (r != null) {
             InputStream unencryptedStream = null;
             try {
-                ContentProperty contentProperty = getMappingContext().getContentProperty(o.getClass(), propertyPath.getName());
+                ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
                 if (contentProperty == null) {
                     throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
                 }
 
                 // remove cast and use conversion service
-                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(o, this.encryptionKeyContentProperty), r.getInputStream(), getOffset(r, params), this.keyRing);
+                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(entity, this.encryptionKeyContentProperty), r.getInputStream(), getOffset(r, params), this.keyRing);
+                r = new InputStreamResource(unencryptedStream);
+            } catch (IOException e) {
+                throw new StoreAccessException("error encrypting resource", e);
+            }
+        }
+
+        return r;
+    }
+
+    @Override
+    public Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params) {
+        Assert.notNull(entity, "entity not set");
+        Assert.notNull(propertyPath, "propertyPath not set");
+        Assert.notNull(delegate, "store not set");
+
+        Resource r = delegate.getResource(entity, propertyPath, rewriteParamsForCTR(params));
+
+        if (r != null) {
+            InputStream unencryptedStream = null;
+            try {
+                ContentProperty contentProperty = getMappingContext().getContentProperty(entity.getClass(), propertyPath.getName());
+                if (contentProperty == null) {
+                    throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+                }
+
+                // remove cast and use conversion service
+                unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(entity, this.encryptionKeyContentProperty), r.getInputStream(), getOffset(r, params), this.keyRing);
                 r = new InputStreamResource(unencryptedStream);
             } catch (IOException e) {
                 throw new StoreAccessException("error encrypting resource", e);
@@ -233,7 +320,27 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         return GetResourceParams.builder().range("bytes=" + blockBegin + "-" + StringUtils.substringAfter(params.getRange(), "-")).build();
     }
 
+    private org.springframework.content.commons.store.GetResourceParams rewriteParamsForCTR(org.springframework.content.commons.store.GetResourceParams params) {
+        if (params.getRange() == null) {
+            return params;
+        }
+        int begin = Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
+        int blockBegin = begin - (begin % 16);
+        return org.springframework.content.commons.store.GetResourceParams.builder().range("bytes=" + blockBegin + "-" + StringUtils.substringAfter(params.getRange(), "-")).build();
+    }
+
     private int getOffset(Resource r, GetResourceParams params) {
+        int offset = 0;
+
+        if (r instanceof RangeableResource == false)
+            return offset;
+        if (params.getRange() == null)
+            return offset;
+
+        return Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
+    }
+
+    private int getOffset(Resource r, org.springframework.content.commons.store.GetResourceParams params) {
         int offset = 0;
 
         if (r instanceof RangeableResource == false)
@@ -281,6 +388,11 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
     @Override
     public void setContentStore(ContentStore store) {
         this.delegate = store;
+    }
+
+    @Override
+    public void setContentStore(org.springframework.content.commons.store.ContentStore store) {
+        this.storeDelegate = store;
     }
 
     public void setStoreInterfaceClass(Class<? extends Store> storeInterfaceClass) {

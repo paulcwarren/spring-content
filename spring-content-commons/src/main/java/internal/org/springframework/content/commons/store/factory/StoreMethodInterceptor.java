@@ -29,11 +29,14 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 	private Map<Method, Method> methodCache = new ConcurrentReferenceHashMap<>();
 
 	// ContentStoreAware methods
+	private static Method deprecatedSetContentStoreMethod;
 	private static Method setContentStoreMethod;
 
 	static {
-		setContentStoreMethod = ReflectionUtils.findMethod(ContentStoreAware.class, "setContentStore", ContentStore.class);
-		Assert.notNull(setContentStoreMethod);
+		deprecatedSetContentStoreMethod = ReflectionUtils.findMethod(ContentStoreAware.class, "setContentStore", ContentStore.class);
+		Assert.notNull(deprecatedSetContentStoreMethod, "setContentStore method not found");
+		setContentStoreMethod = ReflectionUtils.findMethod(ContentStoreAware.class, "setContentStore", org.springframework.content.commons.store.ContentStore.class);
+		Assert.notNull(setContentStoreMethod, "setContentStore method not found");
 	}
 
 	public StoreMethodInterceptor() {
@@ -60,6 +63,9 @@ public class StoreMethodInterceptor implements MethodInterceptor {
 			fragment.orElseThrow(() -> new IllegalStateException(format("No fragment found for method %s", invocation.getMethod())));
 
 			StoreFragment f = fragment.get();
+			if (f.hasImplementationMethod(deprecatedSetContentStoreMethod)) {
+				ReflectionUtils.invokeMethod(deprecatedSetContentStoreMethod, f.getImplementation(), invocation.getThis());
+			}
 			if (f.hasImplementationMethod(setContentStoreMethod)) {
 				ReflectionUtils.invokeMethod(setContentStoreMethod, f.getImplementation(), invocation.getThis());
 			}
