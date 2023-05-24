@@ -6,20 +6,19 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -289,6 +288,27 @@ public class Content {
                             .contextPath(contextPath)
                             )
                     .andExpect(status().isOk());
+
+                    Optional<ContentEntity> fetched = repository.findById(entity.getId());
+                    assertThat(fetched.isPresent(), is(true));
+                    assertThat(fetched.get().getContentId(), is(not(nullValue())));
+                    assertThat(fetched.get().getOriginalFileName(), is("tests-file-modified.txt"));
+                    assertThat(fetched.get().getMimeType(), is("text/plain"));
+                    assertThat(fetched.get().getLen(), is(new Long(content.length())));
+                });
+            });
+            Context("a PUT to /{store}/{id} with a multi-part request", () -> {
+                It("should overwrite the content and return 200", () -> {
+
+                    String content = "This is Modified Spring Content!";
+
+                    mvc.perform(multipart(HttpMethod.PUT, url)
+                                    .file(new MockMultipartFile("file",
+                                            "tests-file-modified.txt",
+                                            "text/plain", content.getBytes()))
+                                    .contextPath(contextPath)
+                            )
+                            .andExpect(status().isOk());
 
                     Optional<ContentEntity> fetched = repository.findById(entity.getId());
                     assertThat(fetched.isPresent(), is(true));

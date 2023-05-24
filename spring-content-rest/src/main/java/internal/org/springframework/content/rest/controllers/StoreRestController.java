@@ -121,10 +121,10 @@ public class StoreRestController implements InitializingBean  {
     @ResponseBody
     public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
             @RequestParam("file") MultipartFile multiPart,
-            StoreResource resource)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
 
-        StoreResource storeResource = resource;
+        StoreResource storeResource = (StoreResource)resource;
 
         ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
