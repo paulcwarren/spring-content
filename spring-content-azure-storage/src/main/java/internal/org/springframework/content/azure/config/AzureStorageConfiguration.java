@@ -29,8 +29,9 @@ public class AzureStorageConfiguration implements InitializingBean {
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
 
-//	@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}")
 	private String bucket;
+	
+	private PlacementService conversion = new PlacementServiceImpl();
 
 	@Autowired
 	public AzureStorageConfiguration(@Value("${spring.content.azure.bucket:#{environment.AZURE_STORAGE_BUCKET}}") String bucket) {
@@ -39,7 +40,6 @@ public class AzureStorageConfiguration implements InitializingBean {
 
 	@Bean
 	public PlacementService azureStoragePlacementService() {
-		PlacementService conversion = new PlacementServiceImpl();
 		return conversion;
 	}
 
@@ -87,7 +87,7 @@ public class AzureStorageConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		addDefaultConverters(azureStoragePlacementService(), bucket);
-		addConverters(azureStoragePlacementService());
+		addDefaultConverters(conversion, bucket);
+		addConverters(conversion);
 	}
 }
