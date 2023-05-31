@@ -22,6 +22,7 @@ import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
@@ -351,7 +352,22 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
+        return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
+    }
 
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
+        int ordinal = params.getDisposition().ordinal();
+        org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
+                .disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+                .build();
+        return this.unsetContent(entity, propertyPath, params1);
+    }
+
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             // TODO
@@ -361,7 +377,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
             id = -1L;
         }
         Resource resource = loader.getResource(id.toString());
-        if (resource instanceof DeletableResource) {
+        if (resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
             try {
                 ((DeletableResource) resource).delete();
             } catch (Exception e) {
@@ -375,7 +391,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         return entity;
     }
 
-	protected Object convertToExternalContentIdType(S property, Object contentId) {
+    protected Object convertToExternalContentIdType(S property, Object contentId) {
 		ConversionService converter = new DefaultConversionService();
 		if (converter.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,

@@ -36,6 +36,7 @@ import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.SetContentParams;
+import org.springframework.content.commons.store.UnsetContentParams;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -402,7 +403,7 @@ public class AzureStorageIT {
                     });
                 });
 
-                Context("when content is deleted", () -> {
+                Context("when content is unset", () -> {
                     BeforeEach(() -> {
                         resourceLocation = entity.getContentId().toString();
                         entity = store.unsetContent(entity);
@@ -419,13 +420,37 @@ public class AzureStorageIT {
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
 
+                        BlobContainerClient c = builder.buildClient().getBlobContainerClient("azure-test-bucket");
+                        assertThat(c.getBlobClient(resourceLocation).getBlockBlobClient().exists(), is(false));
+
                         //rendition
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
                             assertThat(content, is(Matchers.nullValue()));
                         }
 
+                        assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
+                        Assert.assertEquals(entity.getRenditionLen(), 0);
+                    });
+                });
+
+                Context("when content is unset but kept", () -> {
+                    BeforeEach(() -> {
+                        resourceLocation = entity.getContentId().toString();
+                        entity = store.unsetContent(entity, PropertyPath.from("content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+                        entity = repo.save(entity);
+                    });
+
+                    It("should have no content", () -> {
+                        //content
+                        try (InputStream content = store.getContent(entity)) {
+                            assertThat(content, is(Matchers.nullValue()));
+                        }
+
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
+
+                        BlobContainerClient c = builder.buildClient().getBlobContainerClient("azure-test-bucket");
+                        assertThat(c.getBlobClient(resourceLocation).getBlockBlobClient().exists(), is(true));
                     });
                 });
 

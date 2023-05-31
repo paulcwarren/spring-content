@@ -29,10 +29,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.SetContentParams;
-import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.*;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -385,7 +382,7 @@ public class FilesystemStoreIT {
 					});
 				});
 
-				Context("when content is deleted", () -> {
+				Context("when content is unset", () -> {
 					BeforeEach(() -> {
 						resourceLocation = entity.getContentId().toString();
 						entity = store.unsetContent(entity);
@@ -409,6 +406,30 @@ public class FilesystemStoreIT {
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
+
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(false));
+					});
+				});
+
+				Context("when content is unset but kept", () -> {
+					BeforeEach(() -> {
+						resourceLocation = entity.getContentId().toString();
+						entity = store.unsetContent(entity, PropertyPath.from("content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+						entity = repo.save(entity);
+					});
+
+					It("should have no content", () -> {
+						//content
+						try (InputStream content = store.getContent(entity)) {
+							assertThat(content, is(Matchers.nullValue()));
+						}
+
+						assertThat(entity.getContentId(), is(Matchers.nullValue()));
+						Assert.assertEquals(entity.getContentLen(), 0);
+
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(true));
 					});
 				});
 

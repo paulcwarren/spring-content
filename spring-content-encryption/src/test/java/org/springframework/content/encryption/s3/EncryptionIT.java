@@ -208,8 +208,6 @@ public class EncryptionIT {
                         f = repo.findById(f.getId()).get();
                         assertThat(f.getContentKey(), is(nullValue()));
 
-                        //todo: refactor to check s3 bucket
-//                        assertThat(new java.io.File(filesystemRoot, contentId).exists(), is(false));
                         HeadObjectRequest getObjectRequest = HeadObjectRequest.builder()
                                 .bucket("test-bucket")
                                 .key(contentId)

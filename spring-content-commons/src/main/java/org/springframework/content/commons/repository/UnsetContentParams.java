@@ -6,8 +6,12 @@ import lombok.Data;
 @Deprecated
 @Data
 @Builder
-public class SetContentParams {
-    private long contentLength = -1;
+public class UnsetContentParams {
+
     @Builder.Default
-    private boolean overwriteExistingContent = true;
+    private Disposition disposition = Disposition.Remove;
+
+    public enum Disposition {
+        Keep, Remove
+    }
 }

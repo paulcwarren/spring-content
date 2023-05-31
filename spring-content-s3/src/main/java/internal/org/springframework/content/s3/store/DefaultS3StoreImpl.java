@@ -23,6 +23,7 @@ import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
@@ -482,37 +483,55 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
-
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-
-        if (entity == null)
-            return entity;
-
-        deleteIfExists(entity, propertyPath);
-
-        // reset content fields
-        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-                    @Override
-                    public boolean matches(TypeDescriptor descriptor) {
-                        for (Annotation annotation : descriptor.getAnnotations()) {
-                            if ("jakarta.persistence.Id".equals(
-                                    annotation.annotationType().getCanonicalName())
-                                    || "org.springframework.data.annotation.Id"
-                                            .equals(annotation.annotationType()
-                                                    .getCanonicalName())) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                });
-        property.setContentLength(entity, 0);
-
-        return entity;
+		return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
     }
+
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
+		org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
+				.disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+				.build();
+		return this.unsetContent(entity, propertyPath, params1);
+	}
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		if (entity == null)
+			return entity;
+
+		if (params.getDisposition().equals(org.springframework.content.commons.store.UnsetContentParams.Disposition.Remove)) {
+			deleteIfExists(entity, propertyPath);
+		}
+
+		// reset content fields
+		property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+			@Override
+			public boolean matches(TypeDescriptor descriptor) {
+				for (Annotation annotation : descriptor.getAnnotations()) {
+					if ("jakarta.persistence.Id".equals(
+							annotation.annotationType().getCanonicalName())
+							|| "org.springframework.data.annotation.Id"
+							.equals(annotation.annotationType()
+									.getCanonicalName())) {
+						return false;
+					}
+				}
+				return true;
+			}
+		});
+		property.setContentLength(entity, 0);
+
+		return entity;
+	}
 
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;

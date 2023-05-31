@@ -36,6 +36,9 @@ public interface ContentStore<S, SID extends Serializable> extends AssociativeSt
     @LockParticipant
     S unsetContent(S entity, PropertyPath propertyPath);
 
+    @LockParticipant
+    S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params);
+
 	InputStream getContent(S entity);
 
     InputStream getContent(S entity, PropertyPath propertyPath);

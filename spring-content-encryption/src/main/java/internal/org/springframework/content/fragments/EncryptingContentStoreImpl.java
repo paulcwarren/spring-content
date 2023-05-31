@@ -166,6 +166,21 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
+        return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
+    }
+
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
+        int ordinal = params.getDisposition().ordinal();
+        org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
+                .disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+                .build();
+        return this.unsetContent(entity, propertyPath, params1);
+    }
+
+
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
         Assert.notNull(entity, "entity not set");
         Assert.notNull(propertyPath, "propertyPath not set");
         AssertUtils.atLeastOneNotNull(new Object[]{storeDelegate, delegate}, "store not set");
@@ -177,9 +192,13 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
         S entityToReturn = null;
         if (storeDelegate != null) {
-            entityToReturn = (S) storeDelegate.unsetContent(entity, propertyPath);
+            entityToReturn = (S) storeDelegate.unsetContent(entity, propertyPath, params);
         } else if (delegate != null) {
-            entityToReturn = (S) delegate.unsetContent(entity, propertyPath);
+            int ordinal = params.getDisposition().ordinal();
+            org.springframework.content.commons.repository.UnsetContentParams params1 = org.springframework.content.commons.repository.UnsetContentParams.builder()
+                    .disposition(org.springframework.content.commons.repository.UnsetContentParams.Disposition.values()[ordinal])
+                    .build();
+            entityToReturn = (S) delegate.unsetContent(entity, propertyPath, params1);
         }
 
         contentProperty.setCustomProperty(entity, this.encryptionKeyContentProperty, null);

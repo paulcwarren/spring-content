@@ -30,6 +30,8 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.UnsetContentParams;
+import org.springframework.content.commons.store.UnsetContentParams.Disposition;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
@@ -404,28 +406,41 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
     @Transactional
     @Override
-    public S unsetContent(S property, PropertyPath propertyPath) {
-
-        if (property == null)
-            return property;
-
-        Resource resource = getResource(property, propertyPath);
-
-        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
-            try {
-                ((DeletableResource) resource).delete();
-            } catch (IOException e) {
-                logger.warn(format("Unable to get file for resource %s", resource));
-            }
-        }
-
-        // reset content fields
-        unassociate(property, propertyPath);
-        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-        contentProperty.setContentLength(property, 0);
-
-        return property;
+    public S unsetContent(S entity, PropertyPath propertyPath) {
+        return unsetContent(entity, propertyPath, UnsetContentParams.builder().disposition(Disposition.Remove).build());
     }
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.repository.UnsetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
+		return unsetContent(entity, propertyPath, UnsetContentParams.builder().disposition(Disposition.values()[ordinal]).build());
+	}
+
+	@Transactional
+	@Override
+	public S unsetContent(S property, PropertyPath propertyPath, UnsetContentParams params) {
+
+		if (property == null)
+			return property;
+
+		Resource resource = getResource(property, propertyPath);
+
+		if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(Disposition.Remove)) {
+			try {
+				((DeletableResource) resource).delete();
+			} catch (IOException e) {
+				logger.warn(format("Unable to get file for resource %s", resource));
+			}
+		}
+
+		// reset content fields
+		unassociate(property, propertyPath);
+		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
+		contentProperty.setContentLength(property, 0);
+
+		return property;
+	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {
 		if (placer.canConvert(TypeDescriptor.forObject(contentId),

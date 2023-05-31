@@ -26,6 +26,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.StoreAccessException;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.SetContentParams;
+import org.springframework.content.commons.store.UnsetContentParams;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +59,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -427,7 +429,7 @@ public class S3StoreIT {
                     });
                 });
 
-                Context("when content is deleted", () -> {
+                Context("when content is unset", () -> {
                     BeforeEach(() -> {
                         resourceLocation = entity.getContentId().toString();
                         entity = store.unsetContent(entity);
@@ -444,13 +446,39 @@ public class S3StoreIT {
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
 
+                        try {
+                            client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(resourceLocation).build());
+                            fail("expected content to be removed but is still exists");
+                        } catch (NoSuchKeyException nske) {
+                        }
+
                         //rendition
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
                             assertThat(content, is(Matchers.nullValue()));
                         }
 
+                        assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
+                        Assert.assertEquals(entity.getRenditionLen(), 0);
+                    });
+                });
+
+                Context("when content is unset but kept", () -> {
+                    BeforeEach(() -> {
+                        resourceLocation = entity.getContentId().toString();
+                        entity = store.unsetContent(entity, PropertyPath.from("content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+                        entity = repo.save(entity);
+                    });
+
+                    It("should have no content", () -> {
+                        //content
+                        try (InputStream content = store.getContent(entity)) {
+                            assertThat(content, is(Matchers.nullValue()));
+                        }
+
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
+
+                        client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(resourceLocation).build());
                     });
                 });
 

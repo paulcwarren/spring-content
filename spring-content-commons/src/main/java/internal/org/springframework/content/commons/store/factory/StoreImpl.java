@@ -10,16 +10,14 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.SetContentParams;
-import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.*;
 import org.springframework.content.commons.store.events.AfterAssociateEvent;
 import org.springframework.content.commons.store.events.AfterGetContentEvent;
 import org.springframework.content.commons.store.events.AfterGetResourceEvent;
@@ -444,33 +442,78 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object unsetContent(Object property, PropertyPath propertyPath) {
+        return this.unsetContent(property, propertyPath, UnsetContentParams.builder().build());
+    }
 
-        org.springframework.content.commons.repository.events.BeforeUnsetContentEvent oldBefore = new org.springframework.content.commons.repository.events.BeforeUnsetContentEvent(property, propertyPath, delegate);
+    @Override
+    public Object unsetContent(Object entity, PropertyPath propertyPath, org.springframework.content.commons.repository.UnsetContentParams params) {
+
+        return this.internalUnsetContent(entity, propertyPath,
+        () -> {
+            Object result;
+            try {
+                if (delegate instanceof org.springframework.content.commons.repository.ContentStore) {
+                    return castToDeprecatedContentStore(delegate).unsetContent(entity, propertyPath, params);
+                } else {
+                    int ordinal = params.getDisposition().ordinal();
+                    UnsetContentParams params1 = UnsetContentParams.builder()
+                            .disposition(UnsetContentParams.Disposition.values()[ordinal])
+                            .build();
+
+                    return castToContentStore(delegate).unsetContent(entity, propertyPath, params1);
+                }
+            }
+            catch (Exception e) {
+                throw e;
+            }
+        });
+    }
+
+    @Override
+    public Object unsetContent(Object entity, PropertyPath propertyPath, UnsetContentParams params) {
+        return this.internalUnsetContent(entity, propertyPath,
+        () -> {
+            Object result;
+            try {
+                if (delegate instanceof org.springframework.content.commons.repository.ContentStore) {
+                    int ordinal = params.getDisposition().ordinal();
+                    org.springframework.content.commons.repository.UnsetContentParams params1 = org.springframework.content.commons.repository.UnsetContentParams.builder()
+                            .disposition(org.springframework.content.commons.repository.UnsetContentParams.Disposition.values()[ordinal])
+                            .build();
+                    return castToDeprecatedContentStore(delegate).unsetContent(entity, propertyPath, params1);
+                } else {
+                    return castToContentStore(delegate).unsetContent(entity, propertyPath, params);
+                }
+            }
+            catch (Exception e) {
+                throw e;
+            }
+        });
+    }
+
+    public Object internalUnsetContent(Object entity, PropertyPath propertyPath, Supplier invocation) {
+
+        org.springframework.content.commons.repository.events.BeforeUnsetContentEvent oldBefore = new org.springframework.content.commons.repository.events.BeforeUnsetContentEvent(entity, propertyPath, delegate);
         publisher.publishEvent(oldBefore);
 
         ContentStore contentStore = castToContentStore(delegate);
         if (contentStore != null) {
-            BeforeUnsetContentEvent before = new BeforeUnsetContentEvent(property, propertyPath, contentStore);
+            BeforeUnsetContentEvent before = new BeforeUnsetContentEvent(entity, propertyPath, contentStore);
             publisher.publishEvent(before);
         }
 
-        Object result;
-        try {
-            result = castToDeprecatedContentStore(delegate).unsetContent(property, propertyPath);
-        }
-        catch (Exception e) {
-            throw e;
-        }
+        Object result = invocation.get();
 
-        org.springframework.content.commons.repository.events.AfterUnsetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterUnsetContentEvent(property, propertyPath, delegate);
+        org.springframework.content.commons.repository.events.AfterUnsetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterUnsetContentEvent(entity, propertyPath, delegate);
         oldAfter.setResult(result);
         publisher.publishEvent(oldAfter);
 
         if (contentStore != null) {
-            AfterUnsetContentEvent after = new AfterUnsetContentEvent(property, propertyPath, contentStore);
+            AfterUnsetContentEvent after = new AfterUnsetContentEvent(entity, propertyPath, contentStore);
             after.setResult(result);
             publisher.publishEvent(after);
         }
+
         return result;
     }
 
