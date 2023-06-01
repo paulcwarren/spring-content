@@ -202,7 +202,7 @@ public class ContentStoreIT {
 							It("should have the updated content", () -> {
 								String contentId = claim.getClaimForm().getContentId();
 
-								claimFormStore.setContent(claim, PropertyPath.from("claimForm/content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+								claimFormStore.setContent(claim, PropertyPath.from("claimForm/content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
 								claim = claimRepo.save(claim);
 
 								boolean matches = false;

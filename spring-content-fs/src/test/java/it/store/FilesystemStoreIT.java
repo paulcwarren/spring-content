@@ -365,7 +365,7 @@ public class FilesystemStoreIT {
 						String contentId = entity.getContentId();
 						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
 
-						store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+						store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
 						entity = repo.save(entity);
 
 						boolean matches = false;

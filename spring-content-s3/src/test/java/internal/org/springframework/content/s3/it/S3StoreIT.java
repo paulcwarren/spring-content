@@ -415,7 +415,7 @@ public class S3StoreIT {
                         String contentId = entity.getContentId();
                         client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(contentId).build());
 
-                        store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().overwriteExistingContent(false).build());
+                        store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
                         entity = repo.save(entity);
 
                         boolean matches = false;

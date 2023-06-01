@@ -263,7 +263,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         // TODO: property == null?
 
         SID contentId = getContentId(entity, propertyPath);
-        if (contentId == null || !params.isOverwriteExistingContent()) {
+        if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
             Serializable newId = UUID.randomUUID().toString();
 

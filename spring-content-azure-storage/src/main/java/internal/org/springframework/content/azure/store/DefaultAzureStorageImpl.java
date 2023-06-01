@@ -308,7 +308,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         }
 
         Object contentId = property.getContentId(entity);
-        if (contentId == null || !params.isOverwriteExistingContent()) {
+        if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
             Serializable newId = UUID.randomUUID().toString();
 
