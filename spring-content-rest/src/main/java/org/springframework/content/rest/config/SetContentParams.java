@@ -1,4 +1,4 @@
-package org.springframework.content.commons.store;
+package org.springframework.content.rest.config;
 
 import lombok.Builder;
 import lombok.Data;
@@ -6,13 +6,11 @@ import lombok.Data;
 @Data
 @Builder
 public class SetContentParams {
-    private long contentLength = -1;
-    @Builder.Default
-    private boolean overwriteExistingContent = true;
+
     @Builder.Default
     private ContentDisposition disposition = ContentDisposition.Overwrite;
 
-    public enum ContentDisposition {
+    private enum ContentDisposition {
         Overwrite, CreateNew
     }
 }

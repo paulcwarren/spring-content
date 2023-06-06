@@ -7,8 +7,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.content.rest.config.SetContentDisposition;
+import org.springframework.content.rest.config.UnsetContentDisposition;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,9 @@ public class ContentRestAutoConfiguration {
 		private boolean fullyQualifiedLinks = RestConfiguration.FULLY_QUALIFIED_DEFAULTS_DEFAULT;
 		private ShortcutRequestMappings requestMappings = new ShortcutRequestMappings();
 		private boolean overwriteExistingContent = RestConfiguration.OVERWRITE_EXISTING_CONTENT_DEFAULT;
+
+		private SetContentDisposition setContentDisposition = RestConfiguration.SETCONTENT_CONTENT_DISPOSITION_DEFAULT;
+		private UnsetContentDisposition unsetContentDisposition = RestConfiguration.UNSETCONTENT_CONTENT_DISPOSITION_DEFAULT;
 
 		public URI getBaseUri() {
 			return baseUri;
@@ -57,6 +61,22 @@ public class ContentRestAutoConfiguration {
 
 		public void setOverwriteExistingContent(boolean overwriteExistingContent) {
 			this.overwriteExistingContent = overwriteExistingContent;
+		}
+
+		public SetContentDisposition getSetContentDisposition() {
+			return this.setContentDisposition;
+		}
+
+		public void setSetContentDisposition(SetContentDisposition setContentDisposition) {
+			this.setContentDisposition = setContentDisposition;
+		}
+
+		public UnsetContentDisposition getUnsetContentDisposition() {
+			return this.unsetContentDisposition;
+		}
+
+		public void setUnsetContentDisposition(UnsetContentDisposition unsetContentDisposition) {
+			this.unsetContentDisposition = unsetContentDisposition;
 		}
 
 		public static class ShortcutRequestMappings {

@@ -32,7 +32,6 @@ import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
-import org.springframework.web.context.request.WebRequestInterceptor;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -50,6 +49,8 @@ import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequ
 public class RestConfiguration implements InitializingBean {
 
 	public static boolean OVERWRITE_EXISTING_CONTENT_DEFAULT = true;
+	public static SetContentDisposition SETCONTENT_CONTENT_DISPOSITION_DEFAULT = SetContentDisposition.Overwrite;
+	public static UnsetContentDisposition UNSETCONTENT_CONTENT_DISPOSITION_DEFAULT = UnsetContentDisposition.Remove;
 	public static boolean FULLY_QUALIFIED_DEFAULTS_DEFAULT = true;
     public static boolean SHORTCUT_LINKS_DEFAULT = true;
 
@@ -66,6 +67,8 @@ public class RestConfiguration implements InitializingBean {
 	private boolean fullyQualifiedLinks = FULLY_QUALIFIED_DEFAULTS_DEFAULT;
     private boolean shortcutLinks = SHORTCUT_LINKS_DEFAULT;
 	private boolean overwriteExistingContent = OVERWRITE_EXISTING_CONTENT_DEFAULT;
+	private SetContentDisposition setContentDisposition = SETCONTENT_CONTENT_DISPOSITION_DEFAULT;
+	private UnsetContentDisposition unsetContentDisposition = UNSETCONTENT_CONTENT_DISPOSITION_DEFAULT;
 	private ConverterRegistry converters = new DefaultConversionService();
 
 	private Map<Class<?>, DomainTypeConfig> domainTypeConfigMap = new HashMap<>();
@@ -108,6 +111,22 @@ public class RestConfiguration implements InitializingBean {
 
 	public void setOverwriteExistingContent(boolean overwriteExistingContent) {
 		this.overwriteExistingContent = overwriteExistingContent;
+	}
+
+	public SetContentDisposition getSetContentDisposition() {
+		return setContentDisposition;
+	}
+
+	public void setSetContentDisposition(SetContentDisposition setContentDisposition) {
+		this.setContentDisposition = setContentDisposition;
+	}
+
+	public UnsetContentDisposition getUnsetContentDisposition() {
+		return unsetContentDisposition;
+	}
+
+	public void setUnsetContentDisposition(UnsetContentDisposition unsetContentDisposition) {
+		this.unsetContentDisposition = unsetContentDisposition;
 	}
 
 	public StoreCorsRegistry getCorsRegistry() {
