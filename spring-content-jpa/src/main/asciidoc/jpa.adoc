@@ -36,14 +36,12 @@ public static class ApplicationConfig {
 
   @Bean
   public DataSource dataSource() {
-
     EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
     return builder.setType(EmbeddedDatabaseType.HSQL).build();
   }
 
   @Bean
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setGenerateDdl(true);
 
@@ -56,25 +54,41 @@ public static class ApplicationConfig {
 
   @Bean
   public PlatformTransactionManager transactionManager() {
-
     JpaTransactionManager txManager = new JpaTransactionManager();
     txManager.setEntityManagerFactory(entityManagerFactory());
     return txManager;
   }
-	
+
+  @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")
+  private Resource dropRepositoryTables;
+
+  @Value("/org/springframework/content/jpa/schema-hsqldb.sql")
+  private Resource createRepositoryTables;
+
+  @Bean
+  DataSourceInitializer datasourceInitializer() {
+    ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+
+    databasePopulator.addScript(dropRepositoryTables);
+    databasePopulator.addScript(createRepositoryTables);
+    databasePopulator.setIgnoreFailedDrops(true);
+
+    DataSourceInitializer initializer = new DataSourceInitializer();
+    initializer.setDataSource(dataSource());
+    initializer.setDatabasePopulator(databasePopulator);
+
+    return initializer;
+  }
 }
 ----
 ====
 
-This configuration class sets up an embedded HSQL database using the EmbeddedDatabaseBuilder API from spring-jdbc.  We
-then set up an EntityManagerFactory and use Hibernate as the persistence provider.  The last infrastructure component
-declared here is the JpaTransactionManager.
+This configuration class sets up an embedded HSQL database.  The first three beans are standard for any spring JPA application; `dataSource`, `entityManageFactory` and `transactionManager`.
+
+The last bean prepares the database to be able to store content by creating database schema.  Replace the `dropRepositoryTables` and `createRepositoryTables` resources with the appropriate ones for your database (`h2`, `hsqldb`, `mysql`, `oracle`, `postgresql`, `sqlserver`).  Creating this bean manually is only requires when using `spring-content-jpa` directly.  The spring-content-jpa boot starter will create this bean if not present.
 
 We activate Spring Data JPA repositories using the `@EnableJpaRepositories` annotation.  We activate Spring Content JPA
-stores using `@EnableJpaStores` and enable transaction management with the `@EnableTransactionManagement` annotation.
-
-If no base packages are configured both Spring Data JPA and Spring Content JPA will use the package that the
-configuration class resides in as the base package.
+stores using `@EnableJpaStores` (also only required when not using the boot starter) and enable transaction management with the `@EnableTransactionManagement` annotation.
 
 == Accessing Content
 
