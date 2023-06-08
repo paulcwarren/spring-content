@@ -44,7 +44,10 @@ public class S3StoreFactoryBeanTest {
 				context.registerBean("amazonS3", S3Client.class, () -> client);
 				context.refresh();
 
-				factory = new S3StoreFactoryBean(S3StoreFactoryBeanTest.TestStore.class, context, client, placer);
+				factory = new S3StoreFactoryBean(S3StoreFactoryBeanTest.TestStore.class/*, context, client, placer*/);
+				factory.setContext(context);
+				factory.setClient(client);
+				factory.setS3StorePlacementService(placer);
 			});
 			Context("#getStore", () -> {
 				BeforeEach(() -> {

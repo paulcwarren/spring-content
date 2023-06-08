@@ -20,15 +20,14 @@ import internal.org.springframework.content.azure.store.DefaultAzureStorageImpl;
 @SuppressWarnings("rawtypes")
 public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 
-    @Autowired
     private ApplicationContext context;
 
-	@Autowired
 	private BlobServiceClientBuilder clientBuilder;
     private BlobServiceClient client;
 
-	@Autowired
 	private PlacementService storePlacementService;
+
+	private AzureStorageProtocolResolver resolver;
 
 //	@Autowired(required=false)
 //	private MultiTenantS3ClientProvider s3Provider = null;
@@ -39,15 +38,30 @@ public class AzureStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
 
-	@Autowired
-	private AzureStorageProtocolResolver resolver;
+
+	public AzureStorageFactoryBean(Class<? extends Store> storeInterface) {
+		super(storeInterface);
+	}
 
 	@Autowired
-	public AzureStorageFactoryBean(Class<? extends Store> storeInterface, ApplicationContext context, BlobServiceClientBuilder client, PlacementService storePlacementService) {
-		super(storeInterface);
-	    this.context = context;
-		this.client = client.buildClient();
+	public void setContext(ApplicationContext context) {
+		this.context = context;
+	}
+
+	@Autowired
+	public void setClientBuilder(BlobServiceClientBuilder clientBuilder) {
+		this.clientBuilder = clientBuilder;
+		this.client = clientBuilder.buildClient();
+	}
+
+	@Autowired
+	public void setStorePlacementService(PlacementService storePlacementService) {
 		this.storePlacementService = storePlacementService;
+	}
+
+	@Autowired
+	public void setResolver(AzureStorageProtocolResolver resolver) {
+		this.resolver = resolver;
 	}
 
 	@Override
