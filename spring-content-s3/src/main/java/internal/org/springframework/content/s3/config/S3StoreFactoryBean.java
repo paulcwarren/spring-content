@@ -25,19 +25,14 @@ import software.amazon.awssdk.services.s3.S3Client;
 @SuppressWarnings("rawtypes")
 public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 
-//	public static final S3ObjectIdResolver<Serializable> DEFAULT_S3OBJECTID_RESOLVER_STORE = S3ObjectIdResolver.createDefaultS3ObjectIdHelper();
-
-    @Autowired
     private ApplicationContext context;
 
-	@Autowired
 	private S3Client client;
+
+	private PlacementService s3StorePlacementService;
 
     @Autowired(required=false)
     private S3AsyncClient asyncClient;
-
-	@Autowired
-	private PlacementService s3StorePlacementService;
 
 	@Autowired(required=false)
 	private MultiTenantS3ClientProvider s3Provider = null;
@@ -51,12 +46,22 @@ public class S3StoreFactoryBean extends AbstractStoreFactoryBean {
 	@Value("${spring.content.s3.bucket:#{environment.AWS_BUCKET}}")
 	private String bucket;
 
+	public S3StoreFactoryBean(Class<? extends Store> storeInterface) {
+		super(storeInterface);
+	}
 
 	@Autowired
-	public S3StoreFactoryBean(Class<? extends Store> storeInterface, ApplicationContext context, S3Client client, PlacementService s3StorePlacementService) {
-		super(storeInterface);
-	    this.context = context;
+	public void setContext(ApplicationContext context) {
+		this.context = context;
+	}
+
+	@Autowired
+	public void setClient(S3Client client) {
 		this.client = client;
+	}
+
+	@Autowired
+	public void setS3StorePlacementService(PlacementService s3StorePlacementService) {
 		this.s3StorePlacementService = s3StorePlacementService;
 	}
 

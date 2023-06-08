@@ -20,16 +20,13 @@ import internal.org.springframework.content.gcs.store.DefaultGCPStorageImpl;
 @SuppressWarnings("rawtypes")
 public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 
-//	public static final S3ObjectIdResolver<Serializable> DEFAULT_S3OBJECTID_RESOLVER_STORE = S3ObjectIdResolver.createDefaultS3ObjectIdHelper();
-
-    @Autowired
     private ApplicationContext context;
 
-	@Autowired
 	private Storage client;
 
-	@Autowired
 	private PlacementService s3StorePlacementService;
+
+	private GoogleStorageProtocolResolver resolver;
 
 //	@Autowired(required=false)
 //	private MultiTenantS3ClientProvider s3Provider = null;
@@ -40,18 +37,34 @@ public class GCPStorageFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
 	private LockingAndVersioningProxyFactory versioning;
 
-	@Autowired
-	private GoogleStorageProtocolResolver resolver;
-
 	@Value("${spring.content.gcp.storage.bucket:#{environment.GCP_STORAGE_BUCKET}}")
 	private String bucket;
 
-	@Autowired
-	public GCPStorageFactoryBean(Class<? extends Store> storeInterface, ApplicationContext context, Storage client, PlacementService s3StorePlacementService) {
+	public GCPStorageFactoryBean(Class<? extends Store> storeInterface) {
 		super(storeInterface);
 	    this.context = context;
 		this.client = client;
 		this.s3StorePlacementService = s3StorePlacementService;
+	}
+
+	@Autowired
+	public void setContext(ApplicationContext context) {
+		this.context = context;
+	}
+
+	@Autowired
+	public void setClient(Storage client) {
+		this.client = client;
+	}
+
+	@Autowired
+	public void setS3StorePlacementService(PlacementService s3StorePlacementService) {
+		this.s3StorePlacementService = s3StorePlacementService;
+	}
+
+	@Autowired
+	public void setResolver(GoogleStorageProtocolResolver resolver) {
+		this.resolver = resolver;
 	}
 
 	@Override
