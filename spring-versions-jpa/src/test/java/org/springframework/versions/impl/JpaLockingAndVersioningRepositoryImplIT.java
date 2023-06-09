@@ -90,6 +90,11 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
     private Exception e;
 
+    //////////////////////////////////////////////////
+    // this entity and repository ensure that multiple repositories can implement LockingAndVersioningRepository at the same time
+    @Autowired
+    private OtherTestRepository otherRepo;
+
     {
         Describe("given a locking and versioning repository and a security context", () -> {
 
@@ -102,6 +107,9 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                 BeforeEach(() -> {
                     e1 = new TestEntity();
                     e2 = new TestEntity();
+
+                    // ensure the other instantiate fragment is valid
+                    OtherTestEntity ote = otherRepo.save(new OtherTestEntity());
                 });
 
                 Context("#lock", () -> {
@@ -450,7 +458,7 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                     });
 
                     It("should return only the latest version of the entities", () -> {
-                        List<TestEntity> results = repo.findAllVersionsLatest();
+                        List<TestEntity> results = repo.findAllVersionsLatest((Class<TestEntity>) e1.getClass());
                         assertThat(results, Matchers.hasItems(
                                 hasProperty("xid", is(e1v11.getXid())),
                                 hasProperty("xid", is(e2v2.getXid())),
@@ -934,6 +942,15 @@ public class JpaLockingAndVersioningRepositoryImplIT {
     }
 
     public interface TestRepository extends JpaRepository<TestEntity, Long>, LockingAndVersioningRepository<TestEntity, Long> {}
+
+    @Getter
+    @Setter
+    @Entity
+    public static class OtherTestEntity {
+        @Id @GeneratedValue private Long id;
+    }
+
+    public interface OtherTestRepository extends JpaRepository<OtherTestEntity, Long>, LockingAndVersioningRepository<OtherTestEntity, Long> {}
 
     private static void setupSecurityContext(String principal, boolean isAuthenticated) {
         SecurityContext sc = new SecurityContext() {

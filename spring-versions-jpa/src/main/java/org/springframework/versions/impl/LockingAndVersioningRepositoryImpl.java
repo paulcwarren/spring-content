@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
@@ -23,9 +24,13 @@ import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.support.JpaEntityInformation;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.versions.AncestorId;
 import org.springframework.versions.AncestorRootId;
@@ -45,13 +50,14 @@ import internal.org.springframework.versions.jpa.EntityInformationFacade;
 import internal.org.springframework.versions.jpa.JpaCloningServiceImpl;
 import internal.org.springframework.versions.jpa.VersioningService;
 
+@Repository
 public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> implements LockingAndVersioningRepository<T, ID> {
 
     private static Log logger = LogFactory.getLog(JpaCloningServiceImpl.class);
 
     private EntityManager em;
     private EntityInformationFacade entityInfo;
-    private EntityInformation<T, ?> entityInformation;
+    private Map<Class<?>, EntityInformation<T, ?>> entityInformationMap = new ConcurrentHashMap<>();
     private AuthenticationFacade auth;
     private LockingService lockingService;
     private VersioningService versioner;
@@ -131,9 +137,8 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
-        if (entityInformation == null) {
-            this.entityInformation = this.entityInfo.getEntityInformation(entity.getClass(), em);
-        }
+        EntityInformation<T, ?> entityInformation = this.getEntityInformation(entity.getClass());
+        Assert.notNull(entityInformation, String.format("Unable to get entity information for entity class '%s'", entity.getClass()));
 
         if (entityInformation.isNew(entity)) {
             BeanUtils.setFieldWithAnnotation(entity, VersionNumber.class, "1.0");
@@ -277,25 +282,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
     @Override
     public <S extends T> List<S> findAllVersionsLatest() {
-
-        Class<S> clz = (Class<S>) this.entityInformation.getJavaType();
-        if (this.entityInformation == null) {
-            logger.warn("Unknown entity context.  Try findAllVersionsLatest(Class<S> entityClass)");
-            return new ArrayList<>();
-        }
-
-        String sql = "select t from ${entityClass} t where t.${successorId} = null and t.${id} NOT IN (select f1.${id} FROM ${entityClass} f1 inner join ${entityClass} f2 on f1.${ancestorId} = f2.${id} and f2.${successorId} = null)";
-
-        StringSubstitutor sub = new StringSubstitutor(getAttributeMap(clz));
-        sql = sub.replace(sql);
-
-        TypedQuery<S> q = em.createQuery(sql, clz);
-
-        try {
-            return q.getResultList();
-        } catch (NoResultException nre) {
-            return new ArrayList<>();
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -553,5 +540,14 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             return null;
         }
         return id;
+    }
+
+    protected EntityInformation<T,?> getEntityInformation(Class<?> entityClass) {
+        EntityInformation<T,?> entityInformation = this.entityInformationMap.get(entityClass);
+        if (entityInformation == null) {
+            entityInformation = this.entityInfo.getEntityInformation(entityClass, em);
+            this.entityInformationMap.put(entityClass,  entityInformation);
+        }
+        return entityInformation;
     }
 }

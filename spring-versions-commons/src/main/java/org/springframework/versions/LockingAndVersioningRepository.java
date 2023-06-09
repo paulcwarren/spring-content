@@ -157,5 +157,4 @@ public interface LockingAndVersioningRepository<T, ID extends Serializable> {
      * @return the working copy if it exists, or null
      */
     <S extends T> S findWorkingCopy(S entity);
-
 }
