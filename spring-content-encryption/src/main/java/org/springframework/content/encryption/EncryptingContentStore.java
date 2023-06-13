@@ -4,6 +4,7 @@ import org.springframework.content.commons.fragments.ContentStoreAware;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.GetResourceParams;
 import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.core.io.Resource;
 
 import java.io.InputStream;
@@ -22,4 +23,6 @@ public interface EncryptingContentStore<S, SID extends Serializable> extends Con
     Resource getResource(S entity, PropertyPath propertyPath, GetResourceParams params);
     Resource getResource(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.GetResourceParams params);
     S unsetContent(S entity, PropertyPath propertyPath);
+    S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params);
+    S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params);
 }
