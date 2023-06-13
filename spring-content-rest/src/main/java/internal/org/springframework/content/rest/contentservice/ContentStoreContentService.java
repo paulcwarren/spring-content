@@ -24,7 +24,7 @@ import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.SetContentParams;
 import org.springframework.content.commons.repository.Store;
-import org.springframework.content.commons.store.UnsetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.utils.StoreInterfaceUtils;
 import org.springframework.content.rest.RestResource;
@@ -246,14 +246,14 @@ public class ContentStoreContentService implements ContentService {
         Object targetObj = storeResource.getStoreInfo().getImplementation(ContentStore.class);
 
         Object unsetParams = null;
-        if (methodsToUse[0].getParameters().length == 2 && methodsToUse[0].getParameters()[2].getType().equals(org.springframework.content.commons.store.UnsetContentParams.class)) {
+        if (methodsToUse[0].getParameters().length == 3 && methodsToUse[0].getParameters()[2].getType().equals(org.springframework.content.commons.store.UnsetContentParams.class)) {
             org.springframework.content.commons.store.UnsetContentParams params = org.springframework.content.commons.store.UnsetContentParams.builder().build();
 
             int ordinal = config.getUnsetContentDisposition().ordinal();
-            params.setDisposition(UnsetContentParams.Disposition.values()[ordinal]);
+            params.setDisposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal]);
 
             unsetParams = params;
-        } else if (methodsToUse[0].getParameters().length == 2 && methodsToUse[0].getParameters()[2].getType().equals(UnsetContentParams.class)) {
+        } else if (methodsToUse[0].getParameters().length == 3 && methodsToUse[0].getParameters()[2].getType().equals(UnsetContentParams.class)) {
             UnsetContentParams params = UnsetContentParams.builder().build();
 
             int ordinal = config.getUnsetContentDisposition().ordinal();

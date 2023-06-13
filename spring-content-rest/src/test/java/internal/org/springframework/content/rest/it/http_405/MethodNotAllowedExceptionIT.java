@@ -26,6 +26,7 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -107,7 +108,7 @@ public class MethodNotAllowedExceptionIT {
                 RestAssuredMockMvc.webAppContextSetup(webApplicationContext);
             });
 
-            FIt("should throw a 405 Not Allowed", () -> {
+            It("should throw a 405 Not Allowed", () -> {
 
                 TEntity tentity = new TEntity();
                 tentity = repo.save(tentity);
@@ -200,7 +201,7 @@ public class MethodNotAllowedExceptionIT {
 
         @RestResource(exported=false)
         @Override
-        public TEntity unsetContent(TEntity property, PropertyPath path);
+        public TEntity unsetContent(TEntity property, PropertyPath path, UnsetContentParams params);
     }
 
     @Entity
