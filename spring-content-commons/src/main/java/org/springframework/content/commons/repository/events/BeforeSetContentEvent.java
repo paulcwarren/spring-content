@@ -42,6 +42,12 @@ public class BeforeSetContentEvent extends StoreEvent {
         this.resource = resource;
     }
 
+    public BeforeSetContentEvent(Object source, PropertyPath propertyPath, Store<Serializable> store, InputStream is, Resource resource) {
+        super(source, propertyPath, store);
+        this.inputStream = is;
+        this.resource = resource;
+    }
+
     /**
      * Deprecated.
      *
