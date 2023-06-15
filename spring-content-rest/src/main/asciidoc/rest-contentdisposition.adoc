@@ -1,0 +1,5 @@
+== Content Disposition
+For easier management of the content in the backend storage `setContent` methods overwrite existing content and `unsetContent` methods delete it.  This is easy and typically a good starting point but some applications may want to preserve old content no longer referenced by the application.
+
+Using the `spring.content.rest.set-content-disposition=CreateNew` and `spring.content.rest.unset-content-disposition=Keep` properties this behavior can be changed to preserve the old content.  Please note that as far as Spring Content is concerned this old content is then orphaned from the application and must be managed out-of-band.  This behavior change is application-wide.
+
