@@ -73,7 +73,7 @@ public class DeprecatedGCPStorageIT {
     private String resourceLocation;
 
     static {
-        System.setProperty("spring.content.gcp.storage.bucket", "test");
+        System.setProperty("spring.content.gcp.storage.bucket", "test-bucket");
     }
 
     {

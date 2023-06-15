@@ -19,7 +19,10 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -37,7 +40,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
         org.springframework.content.commons.repository.AssociativeStore<S, SID>,
         org.springframework.content.commons.repository.ContentStore<S, SID>,
-        AssociativeStore<S, SID> {
+        ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultMongoStoreImpl.class);
 
@@ -243,14 +246,27 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder().contentLength(contentLen).build());
+    }
 
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
+        return this.setContent(entity, propertyPath, content,
+                org.springframework.content.commons.store.SetContentParams.builder()
+                        .contentLength(params.getContentLength())
+                        .overwriteExistingContent(params.isOverwriteExistingContent())
+                        .build());
+    }
+
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
         Object contentId = property.getContentId(entity);
-        if (contentId == null) {
+        if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
             Serializable newId = UUID.randomUUID().toString();
 
@@ -277,7 +293,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         }
 
         try {
-            long len = contentLen;
+            long len = params.getContentLength();
             if (len == -1L) {
                 len = resource.contentLength();
             }
@@ -411,7 +427,20 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
+        return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
+    }
 
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
+        int ordinal = params.getDisposition().ordinal();
+        org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
+                .disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+                .build();
+        return this.unsetContent(entity, propertyPath, params1);
+    }
+
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
@@ -427,28 +456,27 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         try {
             String location = placer.convert(contentId, String.class);
             Resource resource = gridFs.getResource(location);
-            if (resource != null && resource.exists()) {
+            if (resource != null && resource.exists() && params.getDisposition().equals(org.springframework.content.commons.store.UnsetContentParams.Disposition.Remove)) {
                 gridFs.delete(query(whereFilename().is(resource.getFilename())));
-
-                // reset content fields
-                property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-                    @Override
-                    public boolean matches(TypeDescriptor descriptor) {
-                        for (Annotation annotation : descriptor.getAnnotations()) {
-                            if ("jakarta.persistence.Id".equals(
-                                    annotation.annotationType().getCanonicalName())
-                                    || "org.springframework.data.annotation.Id"
-                                            .equals(annotation.annotationType()
-                                                    .getCanonicalName())) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                });
-
-                property.setContentLength(entity, 0);
             }
+
+            // reset content fields
+            property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+                @Override
+                public boolean matches(TypeDescriptor descriptor) {
+                    for (Annotation annotation : descriptor.getAnnotations()) {
+                        if ("jakarta.persistence.Id".equals(
+                                annotation.annotationType().getCanonicalName())
+                                || "org.springframework.data.annotation.Id"
+                                .equals(annotation.annotationType()
+                                        .getCanonicalName())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            });
+            property.setContentLength(entity, 0);
         }
         catch (Exception ase) {
             logger.error(format("Unexpected error unsetting content for entity %s", entity), ase);
@@ -458,7 +486,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
         return entity;
     }
 
-	protected Object convertToExternalContentIdType(S property, Object contentId) {
+    protected Object convertToExternalContentIdType(S property, Object contentId) {
 		if (placer.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,
 						ContentId.class)))) {

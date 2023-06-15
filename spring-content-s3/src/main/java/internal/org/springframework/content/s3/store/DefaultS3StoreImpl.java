@@ -22,7 +22,10 @@ import org.springframework.content.commons.io.RangeableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -49,7 +52,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
 				   org.springframework.content.commons.repository.AssociativeStore<S, SID>,
 				   org.springframework.content.commons.repository.ContentStore<S, SID>,
-		 		   AssociativeStore<S, SID> {
+		           ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultS3StoreImpl.class);
 
@@ -319,14 +322,30 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+		return this.setContent(entity, propertyPath, content,
+				org.springframework.content.commons.store.SetContentParams.builder()
+						.contentLength(contentLen)
+						.build());
+	}
 
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+		return this.setContent(entity, propertyPath, content,
+				org.springframework.content.commons.store.SetContentParams.builder()
+						.contentLength(params.getContentLength())
+						.overwriteExistingContent(params.isOverwriteExistingContent())
+						.build());
+	}
+
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
 		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
 		if (property == null) {
 			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
 		}
 
 		Object contentId = property.getContentId(entity);
-		if (contentId == null) {
+		if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
 			Serializable newId = UUID.randomUUID().toString();
 
@@ -356,7 +375,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 
 		try {
-			long len = contentLen;
+			long len = params.getContentLength();
 			if (len == -1L) {
 				len = resource.contentLength();
 			}
@@ -464,37 +483,55 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
-
-        ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        if (property == null) {
-            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
-        }
-
-        if (entity == null)
-            return entity;
-
-        deleteIfExists(entity, propertyPath);
-
-        // reset content fields
-        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-                    @Override
-                    public boolean matches(TypeDescriptor descriptor) {
-                        for (Annotation annotation : descriptor.getAnnotations()) {
-                            if ("jakarta.persistence.Id".equals(
-                                    annotation.annotationType().getCanonicalName())
-                                    || "org.springframework.data.annotation.Id"
-                                            .equals(annotation.annotationType()
-                                                    .getCanonicalName())) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                });
-        property.setContentLength(entity, 0);
-
-        return entity;
+		return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
     }
+
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
+		org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
+				.disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+				.build();
+		return this.unsetContent(entity, propertyPath, params1);
+	}
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
+
+		if (entity == null)
+			return entity;
+
+		if (params.getDisposition().equals(org.springframework.content.commons.store.UnsetContentParams.Disposition.Remove)) {
+			deleteIfExists(entity, propertyPath);
+		}
+
+		// reset content fields
+		property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+			@Override
+			public boolean matches(TypeDescriptor descriptor) {
+				for (Annotation annotation : descriptor.getAnnotations()) {
+					if ("jakarta.persistence.Id".equals(
+							annotation.annotationType().getCanonicalName())
+							|| "org.springframework.data.annotation.Id"
+							.equals(annotation.annotationType()
+									.getCanonicalName())) {
+						return false;
+					}
+				}
+				return true;
+			}
+		});
+		property.setContentLength(entity, 0);
+
+		return entity;
+	}
 
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;

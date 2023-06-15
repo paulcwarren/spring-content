@@ -1,29 +1,23 @@
 package internal.org.springframework.content.rest.links;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.text.MatchesPattern.matchesPattern;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.io.ByteArrayInputStream;
-import java.io.StringReader;
-
+import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import com.theoryinpractise.halbuilder.api.RepresentationFactory;
+import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+import lombok.Setter;
 import org.hamcrest.beans.HasPropertyWithValue;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
-import com.theoryinpractise.halbuilder.api.RepresentationFactory;
-import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
+import java.io.StringReader;
 
-import lombok.Setter;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Setter
 public class ContentLinkTests {
@@ -42,8 +36,6 @@ public class ContentLinkTests {
 	{
 		Context("given content is associated", () -> {
 			BeforeEach(() -> {
-				store.setContent(testEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-				repository.save(testEntity);
 			});
 			Context("a GET to /{api}?/{repository}/{id}", () -> {
 				It("should provide a response with a content link", () -> {

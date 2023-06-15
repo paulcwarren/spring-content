@@ -25,6 +25,7 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 
     private static final Log LOGGER = LogFactory.getLog(RenderableImpl.class);
 
+    private org.springframework.content.commons.store.ContentStore store;
 	private ContentStore<Object, Serializable> contentStore;
 
     private MappingContext mappingContext;
@@ -33,7 +34,7 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 
     private List<RenditionProvider> providers = new ArrayList<>();
 
-	public RenderableImpl() {
+    public RenderableImpl() {
        this.mappingContext = new MappingContext("/", ".");
 	}
 
@@ -57,7 +58,12 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 		this.contentStore = store;
 	}
 
-	public RenditionService getRenditionService() {
+    @Override
+    public void setContentStore(org.springframework.content.commons.store.ContentStore store) {
+        this.store = store;
+    }
+
+    public RenditionService getRenditionService() {
 	    if (this.renditionService == null) {
 	        this.renditionService = new RenditionServiceImpl(providers.toArray(new RenditionProvider[0]));
 	    }
@@ -80,7 +86,11 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 		if (this.getRenditionService().canConvert(fromMimeType, mimeType)) {
 			InputStream content = null;
 			try {
-				content = contentStore.getContent(entity);
+                if (store != null) {
+                    content = store.getContent(entity);
+                } else if (contentStore != null) {
+                    content = contentStore.getContent(entity);
+                }
 				if (content != null) {
 					return this.getRenditionService().convert(fromMimeType, content, mimeType);
 				}
@@ -110,7 +120,12 @@ public class RenderableImpl implements Renderable, ContentStoreAware {
 
         if (this.getRenditionService().canConvert(fromMimeType.toString(), mimeType)) {
             try {
-                Resource r = contentStore.getResource(entity, propertyPath);
+                Resource r = null;
+                if (store != null) {
+                    r = store.getResource(entity, propertyPath);
+                } else if (contentStore != null) {
+                    r = contentStore.getResource(entity, propertyPath);
+                }
                 if (r != null) {
                     try (InputStream content = r.getInputStream()) {
                         if (content != null) {

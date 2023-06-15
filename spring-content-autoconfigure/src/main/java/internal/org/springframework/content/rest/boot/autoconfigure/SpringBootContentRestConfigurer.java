@@ -57,5 +57,10 @@ public class SpringBootContentRestConfigurer implements ContentRestConfigurer {
                 }
             }
         }
+
+        config.setOverwriteExistingContent(properties.getOverwriteExistingContent());
+
+        config.setSetContentDisposition(properties.getSetContentDisposition());
+        config.setUnsetContentDisposition(properties.getUnsetContentDisposition());
     }
 }

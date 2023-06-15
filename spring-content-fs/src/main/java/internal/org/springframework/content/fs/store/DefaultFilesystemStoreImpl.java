@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -26,7 +28,10 @@ import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.store.GetResourceParams;
+import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.UnsetContentParams;
+import org.springframework.content.commons.store.UnsetContentParams.Disposition;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.FileService;
@@ -41,7 +46,7 @@ import org.springframework.util.Assert;
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID>,
-		org.springframework.content.commons.store.AssociativeStore<S, SID> {
+		org.springframework.content.commons.store.ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultFilesystemStoreImpl.class);
 
@@ -174,8 +179,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Override
 	@Transactional
 	public S setContent(S entity, InputStream content) {
-
-        Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
+		Object contentId = BeanUtils.getFieldWithAnnotation(entity, ContentId.class);
         if (contentId == null) {
 
             Serializable newId = UUID.randomUUID().toString();
@@ -234,6 +238,21 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 	@Transactional
 	@Override
 	public S setContent(S property, PropertyPath propertyPath, InputStream content, long contentLen) {
+		return this.setContent(property, propertyPath, content, SetContentParams.builder().contentLength(contentLen).build());
+	}
+
+	@Override
+	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
+		SetContentParams params1 = SetContentParams.builder()
+				.contentLength(params.getContentLength())
+				.overwriteExistingContent(params.isOverwriteExistingContent())
+				.build();
+		return this.setContent(entity, propertyPath, content, params1);
+	}
+
+	@Transactional
+	@Override
+	public S setContent(S property, PropertyPath propertyPath, InputStream content, SetContentParams params) {
 
 		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
 		if (contentProperty == null) {
@@ -241,7 +260,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		Object contentId = contentProperty.getContentId(property);
-		if (contentId == null) {
+		if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
 			Serializable newId = UUID.randomUUID().toString();
 
@@ -281,7 +300,7 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		try {
-			long len = contentLen;
+			long len = params.getContentLength();
 			if (len == -1L) {
 				len = resource.contentLength();
 			}
@@ -387,28 +406,41 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
     @Transactional
     @Override
-    public S unsetContent(S property, PropertyPath propertyPath) {
-
-        if (property == null)
-            return property;
-
-        Resource resource = getResource(property, propertyPath);
-
-        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
-            try {
-                ((DeletableResource) resource).delete();
-            } catch (IOException e) {
-                logger.warn(format("Unable to get file for resource %s", resource));
-            }
-        }
-
-        // reset content fields
-        unassociate(property, propertyPath);
-        ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-        contentProperty.setContentLength(property, 0);
-
-        return property;
+    public S unsetContent(S entity, PropertyPath propertyPath) {
+        return unsetContent(entity, propertyPath, UnsetContentParams.builder().disposition(Disposition.Remove).build());
     }
+
+	@Transactional
+	@Override
+	public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.repository.UnsetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
+		return unsetContent(entity, propertyPath, UnsetContentParams.builder().disposition(Disposition.values()[ordinal]).build());
+	}
+
+	@Transactional
+	@Override
+	public S unsetContent(S property, PropertyPath propertyPath, UnsetContentParams params) {
+
+		if (property == null)
+			return property;
+
+		Resource resource = getResource(property, propertyPath);
+
+		if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(Disposition.Remove)) {
+			try {
+				((DeletableResource) resource).delete();
+			} catch (IOException e) {
+				logger.warn(format("Unable to get file for resource %s", resource));
+			}
+		}
+
+		// reset content fields
+		unassociate(property, propertyPath);
+		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
+		contentProperty.setContentLength(property, 0);
+
+		return property;
+	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {
 		if (placer.canConvert(TypeDescriptor.forObject(contentId),

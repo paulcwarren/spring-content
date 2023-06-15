@@ -21,7 +21,10 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.commons.store.AssociativeStore;
+import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.utils.BeanUtils;
@@ -40,7 +43,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
         org.springframework.content.commons.repository.AssociativeStore<S, SID>,
         org.springframework.content.commons.repository.ContentStore<S, SID>,
-        AssociativeStore<S, SID> {
+        ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
@@ -239,12 +242,28 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder()
+                .contentLength(contentLen)
+                .build());
+    }
 
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder()
+                .contentLength(params.getContentLength())
+                .overwriteExistingContent(params.isOverwriteExistingContent())
+                .build());
+    }
+
+    @Transactional
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         // TODO: property == null?
 
         SID contentId = getContentId(entity, propertyPath);
-        if (contentId == null) {
+        if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
             Serializable newId = UUID.randomUUID().toString();
 
@@ -277,7 +296,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         property.setContentId(entity, ((BlobResource) resource).getId(), null);
 
-        long len = contentLen;
+        long len = params.getContentLength();
         if (len == -1L) {
             len = readLen;
         }
@@ -333,7 +352,22 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
+        return this.unsetContent(entity, propertyPath, org.springframework.content.commons.store.UnsetContentParams.builder().build());
+    }
 
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
+        int ordinal = params.getDisposition().ordinal();
+        org.springframework.content.commons.repository.UnsetContentParams params1 = org.springframework.content.commons.repository.UnsetContentParams.builder()
+                .disposition(org.springframework.content.commons.repository.UnsetContentParams.Disposition.values()[ordinal])
+                .build();
+        return this.unsetContent(entity, propertyPath, params1);
+    }
+
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             // TODO
@@ -343,7 +377,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
             id = -1L;
         }
         Resource resource = loader.getResource(id.toString());
-        if (resource instanceof DeletableResource) {
+        if (resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
             try {
                 ((DeletableResource) resource).delete();
             } catch (Exception e) {
@@ -357,7 +391,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         return entity;
     }
 
-	protected Object convertToExternalContentIdType(S property, Object contentId) {
+    protected Object convertToExternalContentIdType(S property, Object contentId) {
 		ConversionService converter = new DefaultConversionService();
 		if (converter.canConvert(TypeDescriptor.forObject(contentId),
 				TypeDescriptor.valueOf(BeanUtils.getFieldWithAnnotationType(property,

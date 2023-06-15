@@ -1,13 +1,7 @@
 package internal.org.springframework.content.mongo.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
@@ -27,9 +21,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.*;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.mongo.config.EnableMongoStores;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -86,6 +78,8 @@ public class MongoStoreIT {
 				context = new AnnotationConfigApplicationContext();
 				context.register(TestConfig.class);
 				context.refresh();
+
+				gridFsTemplate = context.getBean(GridFsTemplate.class);
 
 				repo = context.getBean(TestEntityRepository.class);
 				store = context.getBean(TestEntityStore.class);
@@ -359,7 +353,29 @@ public class MongoStoreIT {
                     });
                 });
 
-                Context("when content is deleted", () -> {
+				Context("when content is updated and not overwritten", () -> {
+					It("should have the updated content", () -> {
+						String contentId = entity.getContentId();
+						assertThat(gridFsTemplate.getResource(contentId).exists(), is(true));
+
+						store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
+						entity = repo.save(entity);
+
+						boolean matches = false;
+						try (InputStream content = store.getContent(entity)) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+							assertThat(matches, is(true));
+						}
+
+						assertThat(gridFsTemplate.getResource(contentId).exists(), is(true));
+
+						assertThat(entity.getContentId(), is(not(contentId)));
+
+						assertThat(gridFsTemplate.getResource(entity.getContentId()).exists(), is(true));
+					});
+				});
+
+				Context("when content is unset", () -> {
                     BeforeEach(() -> {
                         resourceLocation = entity.getContentId().toString();
                         entity = store.unsetContent(entity);
@@ -376,7 +392,9 @@ public class MongoStoreIT {
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
 
-                        //rendition
+						assertThat(gridFsTemplate.getResource(resourceLocation).exists(), is(false));
+
+						//rendition
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
                             assertThat(content, is(Matchers.nullValue()));
                         }
@@ -385,6 +403,26 @@ public class MongoStoreIT {
                         Assert.assertEquals(entity.getContentLen(), 0);
                     });
                 });
+
+				Context("when content is unset but kept", () -> {
+					BeforeEach(() -> {
+						resourceLocation = entity.getContentId().toString();
+						entity = store.unsetContent(entity, PropertyPath.from("content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+						entity = repo.save(entity);
+					});
+
+					It("should have no content", () -> {
+						//content
+						try (InputStream content = store.getContent(entity)) {
+							assertThat(content, is(Matchers.nullValue()));
+						}
+
+						assertThat(entity.getContentId(), is(Matchers.nullValue()));
+						Assert.assertEquals(entity.getContentLen(), 0);
+
+						assertThat(gridFsTemplate.getResource(resourceLocation).exists(), is(true));
+					});
+				});
 
                 Context("when an invalid property path is used to setContent", () -> {
                     It("should throw an error", () -> {

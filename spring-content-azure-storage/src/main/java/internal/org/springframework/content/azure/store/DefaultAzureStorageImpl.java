@@ -21,9 +21,8 @@ import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.store.AssociativeStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.store.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
@@ -45,7 +44,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 		implements org.springframework.content.commons.repository.Store<SID>,
         org.springframework.content.commons.repository.AssociativeStore<S, SID>,
         org.springframework.content.commons.repository.ContentStore<S, SID>,
-        AssociativeStore<S, SID> {
+        ContentStore<S, SID> {
 
 	private static Log logger = LogFactory.getLog(DefaultAzureStorageImpl.class);
 
@@ -290,14 +289,26 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
+        return this.setContent(entity, propertyPath, content, org.springframework.content.commons.store.SetContentParams.builder().contentLength(contentLen).build());
+    }
 
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+        return this.setContent(entity, propertyPath, content,
+                org.springframework.content.commons.store.SetContentParams.builder()
+                        .contentLength(params.getContentLength())
+                        .overwriteExistingContent(params.isOverwriteExistingContent()).build());
+    }
+
+    @Override
+    public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
         Object contentId = property.getContentId(entity);
-        if (contentId == null) {
+        if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
 
             Serializable newId = UUID.randomUUID().toString();
 
@@ -323,7 +334,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         }
 
         try {
-            long lenToSet = contentLen;
+            long lenToSet = params.getContentLength();
             if (lenToSet == -1L) {
                 lenToSet = resource.contentLength();
             }
@@ -446,7 +457,22 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
+        return this.unsetContent(entity, propertyPath, UnsetContentParams.builder().build());
+    }
 
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.repository.UnsetContentParams params) {
+        int ordinal = params.getDisposition().ordinal();
+        UnsetContentParams params1 = UnsetContentParams.builder()
+                .disposition(UnsetContentParams.Disposition.values()[ordinal])
+                .build();
+        return this.unsetContent(entity, propertyPath, params1);
+    }
+
+    @Transactional
+    @Override
+    public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
@@ -456,7 +482,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             return entity;
 
         Resource resource = this.getResource(entity, propertyPath);
-        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
+        if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
 
             try {
                 ((DeletableResource)resource).delete();
@@ -474,8 +500,8 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
                     if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
-                                    .equals(annotation.annotationType()
-                                            .getCanonicalName())) {
+                            .equals(annotation.annotationType()
+                                    .getCanonicalName())) {
                         return false;
                     }
                 }
@@ -488,7 +514,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         return entity;
     }
 
-	private String absolutify(String bucket, String location) {
+    private String absolutify(String bucket, String location) {
 		String locationToUse = null;
 		Assert.state(location.startsWith("azure-blob://") == false);
 		if (location.startsWith("/")) {

@@ -130,7 +130,9 @@ public class ContentLinkRelIT {
 
 	            Context("given a store specifying a linkRel and an entity with a top-level uncorrelated content property", () -> {
 	                BeforeEach(() -> {
-	                    testEntity = repository.save(new TestEntity());
+                        testEntity = new TestEntity();
+                        contentRepository.setContent(testEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                        testEntity = repository.save(testEntity);
 
 	                    contentLinkTests.setMvc(mvc);
 	                    contentLinkTests.setRepository(repository);
@@ -145,8 +147,9 @@ public class ContentLinkRelIT {
 
 	            Context("given a store specifying a linkRel and an entity with top-level correlated content properties", () -> {
 	                BeforeEach(() -> {
-
-	                    testEntity5 = repository5.save(new TestEntity5());
+                        testEntity5 = new TestEntity5();
+                        store5.setContent(testEntity5, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+	                    testEntity5 = repository5.save(testEntity5);
 
 	                    contentLinkTests.setMvc(mvc);
 	                    contentLinkTests.setRepository(repository5);
@@ -162,9 +165,8 @@ public class ContentLinkRelIT {
 	            Context("given a store specifying a linkrel and an entity a nested content property", () -> {
 	              BeforeEach(() -> {
 	                  testEntity2 = new TestEntity2();
-	                  testEntity2.getChild().setContentId(UUID.randomUUID());
-	                  testEntity2.getChild().setContentLen(1L);
 	                  testEntity2.getChild().setMimeType("text/plain");
+                      store2.setContent(testEntity2, PropertyPath.from("child"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 	                  testEntity2 = repository2.save(testEntity2);
 
 	                  contentLinkTests.setMvc(mvc);
@@ -181,13 +183,12 @@ public class ContentLinkRelIT {
 	            Context("given a store specifying a linkrel and an entity with nested content properties", () -> {
 	              BeforeEach(() -> {
 	                  testEntity10 = new TestEntity10();
-	                  testEntity10.getChild().setContentId(UUID.randomUUID());
-	                  testEntity10.getChild().setContentLen(1L);
 	                  testEntity10.getChild().setContentMimeType("text/plain");
 	                  testEntity10.getChild().setContentFileName("test");
-	                  testEntity10.getChild().setPreviewId(UUID.randomUUID());
-	                  testEntity10.getChild().setPreviewLen(1L);
+                      store10.setContent(testEntity10, PropertyPath.from("child/content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+
 	                  testEntity10.getChild().setPreviewMimeType("text/plain");
+                      store10.setContent(testEntity10, PropertyPath.from("child/preview"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
 	                  testEntity10 = repository10.save(testEntity10);
 
 	                  contentLinkTests.setMvc(mvc);

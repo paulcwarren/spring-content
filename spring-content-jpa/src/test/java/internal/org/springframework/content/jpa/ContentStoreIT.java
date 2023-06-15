@@ -1,12 +1,9 @@
 package internal.org.springframework.content.jpa;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static internal.org.springframework.content.jpa.StoreIT.getContextName;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
@@ -22,6 +19,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.commons.store.SetContentParams;
+import org.springframework.content.commons.store.UnsetContentParams;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -199,6 +198,23 @@ public class ContentStoreIT {
 							});
 						});
 
+						Context("when content is updated and not overwritten", () -> {
+							It("should have the updated content", () -> {
+								String contentId = claim.getClaimForm().getContentId();
+
+								claimFormStore.setContent(claim, PropertyPath.from("claimForm/content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
+								claim = claimRepo.save(claim);
+
+								boolean matches = false;
+								try (InputStream content = claimFormStore.getContent(claim, PropertyPath.from("claimForm/content"))) {
+									matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+									assertThat(matches, is(true));
+								}
+
+								assertThat(claim.getClaimForm().getContentId(), is(not(contentId)));
+							});
+						});
+
 						Context("when content is deleted", () -> {
 						    BeforeEach(() -> {
 		                        id = claim.getClaimForm().getContentId();
@@ -241,6 +257,34 @@ public class ContentStoreIT {
 							});
 						});
 
+						Context("when content is deleted", () -> {
+							BeforeEach(() -> {
+								id = claim.getClaimForm().getContentId();
+								claimFormStore.unsetContent(claim, PropertyPath.from("claimForm/content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+								claim = claimRepo.save(claim);
+							});
+
+							AfterEach(() -> {
+								claimRepo.delete(claim);
+							});
+
+							It("should have no content", () -> {
+								ClaimForm deletedClaimForm = new ClaimForm();
+								deletedClaimForm.setContentId((String)id);
+
+								// content
+								doInTransaction(ptm, () -> {
+									try (InputStream content = claimFormStore.getContent(claim, PropertyPath.from("claimForm/content"))) {
+										Assert.assertThat(content, is(nullValue()));
+									} catch (IOException e) {
+									}
+									return null;
+								});
+
+								Assert.assertThat(claim.getClaimForm().getContentId(), is(nullValue()));
+								Assert.assertEquals(claim.getClaimForm().getContentLength(), 0);
+							});
+						});
 					});
 				});
 			}

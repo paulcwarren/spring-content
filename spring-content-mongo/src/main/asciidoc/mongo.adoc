@@ -66,24 +66,20 @@ The module id for the `spring.content.storage.type.default` property is `gridfs`
 
 === Setting Content
 
-Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
+Storing content is achieved using the `ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)` method.
 
-The fields annotated with @ContentId and @ContentLength will be updated on `entity`.  
+The `PropertyPath` will be used to resolve the content property to update.
 
-If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in `java.util.UUID`.
 
-==== How the @ContentId field is handled 
+The `@ContentId` and `@ContentLength` annotations will be updated on `entity`.
 
-The MongoDB Store uses a dedicated `ConversionService` to convert the content entity's ID into a resource path.  
-
-It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) `org.springframework.content.mongo.config.MongoStoreConverter` beans.  
+If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using `ContentDisposition.Create` on the `SetContentParams` a new Id will be assigned and content stored, leaving the existing content in place and orphaned.
 
 === Getting Content
 
-Content can be accessed using the `ContentStore.getContent(entity)` method.  
+Content can be accessed using the `ContentStore.getContent(T entity, PropertyPath path)` method.
 
 === Unsetting Content
 
-Content can be removed using the `ContentStore.unsetContent(entity)` method.
-
-When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values; 
+Content can be removed using the `ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)` method.  Using `ContentDisposition.Keep` on `UnsetContentParams` will leave the content in storage and orphaned.

@@ -100,23 +100,25 @@ convert the value to a String location.
 
 See <<configuring_converters,Configuring a Spring Converter>> for more information on how to register a converter.
 
-=== Setting Content using a ContentStore
+=== Setting Content
 
-Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
+Storing content is achieved using the `ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)` method.
 
-If content has not yet been associated with this entity before and an ID has not been assigned by the application, one will be generated based on `java.util.UUID` and converted to the type of the @ContentId field.  
+The `PropertyPath` will be used to resolve the content property to update.
 
-The @ContentId and @ContentLength annotations will be updated on `entity`.  
+If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in `java.util.UUID`.
 
-If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.
+The `@ContentId` and `@ContentLength` annotations will be updated on `entity`.
 
-=== Getting Content from a ContentStore
+If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using `ContentDisposition.Create` on the `SetContentParams` a new Id will be assigned and content stored, leaving the existing content in place and orphaned.
 
-Content can be accessed using the `ContentStore.getContent(entity)` method.  
+=== Getting Content
 
-=== Unsetting Content from a ContentStore
+Content can be accessed using the `ContentStore.getContent(T entity, PropertyPath path)` method.
 
-Content can be removed using the `ContentStore.unsetContent(entity)` method.
+=== Unsetting Content
+
+Content can be removed using the `ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)` method.  Using `ContentDisposition.Keep` on `UnsetContentParams` will leave the content in storage and orphaned.
 
 === Storage Customization
 [[configuring_converters]]

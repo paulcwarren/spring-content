@@ -121,10 +121,10 @@ public class StoreRestController implements InitializingBean  {
     @ResponseBody
     public void putMultipartContent(HttpServletRequest request, HttpServletResponse response, @RequestHeader HttpHeaders headers,
             @RequestParam("file") MultipartFile multiPart,
-            StoreResource resource)
+            Resource resource)
                     throws IOException, MethodNotAllowedException {
 
-        StoreResource storeResource = resource;
+        StoreResource storeResource = (StoreResource)resource;
 
         ContentService contentService = contentServiceFactory.getContentService(storeResource);
 
@@ -179,8 +179,7 @@ public class StoreRestController implements InitializingBean  {
     }
 
     @RequestMapping(value = STORE_REQUEST_MAPPING, method = RequestMethod.DELETE, headers = "accept!=application/hal+json")
-    public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response,
-            Resource resource)
+    public void deleteContent(@RequestHeader HttpHeaders headers, HttpServletResponse response, Resource resource)
                     throws IOException, MethodNotAllowedException {
 
         StoreResource storeResource = (StoreResource)resource;

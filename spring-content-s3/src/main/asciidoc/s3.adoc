@@ -207,19 +207,20 @@ public class S3StoreConfiguration  {
 
 === Setting Content
 
-Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.
+Storing content is achieved using the `ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)` method.
 
-If content has not yet been stored with this entity and an Id has not been assigned one will be generated
-based in `java.util.UUID`.
+The `PropertyPath` will be used to resolve the content property to update.
+
+If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in `java.util.UUID`.
 
 The `@ContentId` and `@ContentLength` annotations will be updated on `entity`.
 
-If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.
+If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using `ContentDisposition.Create` on the `SetContentParams` a new Id will be assigned and content stored, leaving the existing content in place and orphaned.
 
 === Getting Content
 
-Content can be accessed using the `ContentStore.getContent(entity)` method.
+Content can be accessed using the `ContentStore.getContent(T entity, PropertyPath path)` method.
 
 === Unsetting Content
 
-Content can be removed using the `ContentStore.unsetContent(entity)` method.
+Content can be removed using the `ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)` method.  Using `ContentDisposition.Keep` on `UnsetContentParams` will leave the content in storage and orphaned.

@@ -25,6 +25,8 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.commons.repository.GetResourceParams;
+import org.springframework.content.commons.repository.SetContentParams;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.content.jpa.config.EnableJpaContentRepositories;
 import org.springframework.content.jpa.config.EnableJpaStores;
 import org.springframework.content.jpa.io.BlobResourceLoader;
@@ -273,6 +275,11 @@ public class EnableJpaStoresTest {
 		}
 
 		@Override
+		public TestEntity setContent(TestEntity entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+			return null;
+		}
+
+		@Override
         public TestEntity setContent(TestEntity property, PropertyPath propertyPath, Resource resourceContent) {
             // TODO Auto-generated method stub
             return null;
@@ -284,7 +291,12 @@ public class EnableJpaStoresTest {
             return null;
         }
 
-        @Override
+		@Override
+		public TestEntity unsetContent(TestEntity entity, PropertyPath propertyPath, UnsetContentParams params) {
+			return null;
+		}
+
+		@Override
         public InputStream getContent(TestEntity property, PropertyPath propertyPath) {
             // TODO Auto-generated method stub
             return null;

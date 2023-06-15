@@ -144,22 +144,20 @@ of whatever driver version is in use will apply.
 
 === Setting Content
 
-Storing content is achieved using the `ContentStore.setContent(entity, InputStream)` method.  
+Storing content is achieved using the `ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)` method.
 
-The entity's `@ContentId` and `@ContentLength` fields will be updated.
+The `PropertyPath` will be used to resolve the content property to update.
 
-If content has been previously stored this will overwritten with the new content updating just the `@ContentLength`
-field, if appropriate.
+If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based on `java.util.UUID`.
 
-==== How the @ContentId field is handled 
+The `@ContentId` and `@ContentLength` annotations will be updated on `entity`.
 
-Spring Data JPA requires that content entities have an `@ContentId` field for identity that will be generated when
-content is initially set.
+If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using `ContentDisposition.Create` on the `SetContentParams` a new Id will be assigned and content stored, leaving the existing content in place and orphaned.
 
 === Getting Content
 
-Content can be accessed using the `ContentStore.getContent(entity)` method.  
+Content can be accessed using the `ContentStore.getContent(T entity, PropertyPath path)` method.
 
 === Unsetting Content
 
-Content can be removed using the `ContentStore.unsetContent(entity)` method.
+Content can be removed using the `ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)` method.  Using `ContentDisposition.Keep` on `UnsetContentParams` will leave the content in storage and orphaned.

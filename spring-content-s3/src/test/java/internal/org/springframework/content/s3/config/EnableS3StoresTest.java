@@ -47,7 +47,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 @RunWith(Ginkgo4jRunner.class)
 public class EnableS3StoresTest {
 
-	private static final String BUCKET = "test-bucket";
+	private static final String BUCKET = "aws-test-bucket";
 
 	static {
 		System.setProperty("spring.content.s3.bucket", BUCKET);

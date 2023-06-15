@@ -1,15 +1,15 @@
 package internal.org.springframework.content.rest.links;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
 
+import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -101,7 +101,9 @@ public class ContentLinksIT {
 
             Context("given a store and an entity with a top-level uncorrelated content property", () -> {
                 BeforeEach(() -> {
-                    testEntity3 = repository3.save(new TestEntity3());
+                    testEntity3 = new TestEntity3();
+                    contentRepository3.setContent(testEntity3, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                    testEntity3 = repository3.save(testEntity3);
 
                     contentLinkTests.setMvc(mvc);
                     contentLinkTests.setRepository(repository3);
@@ -116,7 +118,9 @@ public class ContentLinksIT {
 
             Context("given a store and an entity with top-level correlated content properties", () -> {
                 BeforeEach(() -> {
-                    testEntity5 = repository5.save(new TestEntity5());
+                    testEntity5 = new TestEntity5();
+                    store5.setContent(testEntity5, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                    testEntity5 = repository5.save(testEntity5);
 
                     contentLinkTests.setMvc(mvc);
                     contentLinkTests.setRepository(repository5);
@@ -132,9 +136,8 @@ public class ContentLinksIT {
             Context("given a store specifying a linkrel and an entity a nested content property", () -> {
               BeforeEach(() -> {
                   testEntity2 = new TestEntity2();
-                  testEntity2.getChild().setContentId(UUID.randomUUID());
-                  testEntity2.getChild().setContentLen(1L);
                   testEntity2.getChild().setMimeType("text/plain");
+                  store2.setContent(testEntity2, PropertyPath.from("child"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
                   testEntity2 = repository2.save(testEntity2);
 
                   contentLinkTests.setMvc(mvc);
@@ -151,12 +154,10 @@ public class ContentLinksIT {
             Context("given a store specifying a linkrel and an entity with nested content properties", () -> {
               BeforeEach(() -> {
                   testEntity10 = new TestEntity10();
-                  testEntity10.getChild().setContentId(UUID.randomUUID());
-                  testEntity10.getChild().setContentLen(1L);
+                  store10.setContent(testEntity10, PropertyPath.from("child/content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
                   testEntity10.getChild().setContentMimeType("text/plain");
                   testEntity10.getChild().setContentFileName("test");
-                  testEntity10.getChild().setPreviewId(UUID.randomUUID());
-                  testEntity10.getChild().setPreviewLen(1L);
+                  store10.setContent(testEntity10, PropertyPath.from("child/preview"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
                   testEntity10.getChild().setPreviewMimeType("text/plain");
                   testEntity10 = repository10.save(testEntity10);
 

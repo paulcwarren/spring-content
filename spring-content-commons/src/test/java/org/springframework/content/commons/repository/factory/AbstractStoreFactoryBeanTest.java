@@ -13,9 +13,7 @@ import java.util.UUID;
 
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.Store;
+import org.springframework.content.commons.store.*;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
@@ -144,6 +142,11 @@ public class AbstractStoreFactoryBeanTest {
 		}
 
 		@Override
+		public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+			return null;
+		}
+
+		@Override
         public Object setContent(Object property, PropertyPath propertyPath, Resource resourceContent) {
             // TODO Auto-generated method stub
             return null;
@@ -155,7 +158,12 @@ public class AbstractStoreFactoryBeanTest {
             return null;
         }
 
-        @Override
+		@Override
+		public Object unsetContent(Object entity, PropertyPath propertyPath, UnsetContentParams params) {
+			return null;
+		}
+
+		@Override
         public InputStream getContent(Object property, PropertyPath propertyPath) {
             // TODO Auto-generated method stub
             return null;

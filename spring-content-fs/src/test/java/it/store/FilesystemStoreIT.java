@@ -29,9 +29,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.property.PropertyPath;
-import org.springframework.content.commons.store.ContentStore;
-import org.springframework.content.commons.store.GetResourceParams;
-import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.*;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -303,14 +301,18 @@ public class FilesystemStoreIT {
 				});
 
 				Context("when content is updated", () -> {
-					BeforeEach(() ->{
-						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
-						entity = repo.save(entity);
-					});
-
 					It("should have the updated content", () -> {
-					    //content
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						String contentId = entity.getContentId();
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+						String renditionId = entity.getRenditionId();
+						assertThat(new File(loader.getFilesystemRoot(), renditionId).exists(), is(true));
+
+						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
+						store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
+						entity = repo.save(entity);
+
+						//content
 						boolean matches = false;
 						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
@@ -318,11 +320,19 @@ public class FilesystemStoreIT {
 						}
 
 						//rendition
-                        matches = false;
-                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
-                            assertThat(matches, is(true));
-                        }
+						matches = false;
+						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
+							assertThat(matches, is(true));
+						}
+
+						assertThat(entity.getContentId(), is(contentId));
+						assertThat(entity.getRenditionId(), is(renditionId));
+
+						assertThat(new File(loader.getFilesystemRoot(), entity.getContentId()).exists(), is(true));
+						assertThat(new File(loader.getFilesystemRoot(), entity.getRenditionId()).exists(), is(true));
+
+						int i=0;
 					});
 				});
 
@@ -349,7 +359,30 @@ public class FilesystemStoreIT {
 					});
 				});
 
-				Context("when content is deleted", () -> {
+				Context("when content is updated and not overwritten", () -> {
+					It("should have the updated content", () -> {
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						String contentId = entity.getContentId();
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+
+						store.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), SetContentParams.builder().disposition(SetContentParams.ContentDisposition.CreateNew).build());
+						entity = repo.save(entity);
+
+						boolean matches = false;
+						try (InputStream content = store.getContent(entity)) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
+							assertThat(matches, is(true));
+						}
+
+						assertThat(new File(loader.getFilesystemRoot(), contentId).exists(), is(true));
+
+						assertThat(entity.getContentId(), is(not(contentId)));
+
+						assertThat(new File(loader.getFilesystemRoot(), entity.getContentId()).exists(), is(true));
+					});
+				});
+
+				Context("when content is unset", () -> {
 					BeforeEach(() -> {
 						resourceLocation = entity.getContentId().toString();
 						entity = store.unsetContent(entity);
@@ -373,6 +406,30 @@ public class FilesystemStoreIT {
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
                         Assert.assertEquals(entity.getContentLen(), 0);
+
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(false));
+					});
+				});
+
+				Context("when content is unset but kept", () -> {
+					BeforeEach(() -> {
+						resourceLocation = entity.getContentId().toString();
+						entity = store.unsetContent(entity, PropertyPath.from("content"), UnsetContentParams.builder().disposition(UnsetContentParams.Disposition.Keep).build());
+						entity = repo.save(entity);
+					});
+
+					It("should have no content", () -> {
+						//content
+						try (InputStream content = store.getContent(entity)) {
+							assertThat(content, is(Matchers.nullValue()));
+						}
+
+						assertThat(entity.getContentId(), is(Matchers.nullValue()));
+						Assert.assertEquals(entity.getContentLen(), 0);
+
+						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
+						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(true));
 					});
 				});
 
