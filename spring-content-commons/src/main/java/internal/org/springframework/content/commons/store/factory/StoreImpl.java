@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
@@ -51,12 +52,12 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object setContent(Object entity, InputStream content) {
-        return this.internalSetContent(entity, null, content, () -> {
+        return this.internalSetContent(entity, null, content, (actualContent) -> {
             try {
                 if (delegate instanceof org.springframework.content.commons.store.ContentStore) {
-                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, content);
+                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, actualContent);
                 } else {
-                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, content);
+                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, actualContent);
                 }
             }
             catch (Exception e) {
@@ -67,12 +68,12 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object setContent(Object entity, PropertyPath propertyPath, InputStream content) {
-        return this.internalSetContent(entity, propertyPath, content, () -> {
+        return this.internalSetContent(entity, propertyPath, content, (actualContent) -> {
             try {
                 if (delegate instanceof org.springframework.content.commons.store.ContentStore) {
-                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, propertyPath, content);
+                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, propertyPath, actualContent);
                 } else {
-                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, content);
+                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, actualContent);
                 }
             }
             catch (Exception e) {
@@ -83,12 +84,12 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, long contentLen) {
-        return this.internalSetContent(entity, propertyPath, content, () -> {
+        return this.internalSetContent(entity, propertyPath, content, (actualContent) -> {
             try {
                 if (delegate instanceof org.springframework.content.commons.store.ContentStore) {
-                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, propertyPath, content, contentLen);
+                    return ((org.springframework.content.commons.store.ContentStore)(delegate)).setContent(entity, propertyPath, actualContent, contentLen);
                 } else {
-                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, content, contentLen);
+                    return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, actualContent, contentLen);
                 }
             }
             catch (Exception e) {
@@ -99,9 +100,9 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
-        return this.internalSetContent(entity, propertyPath, content, () -> {
+        return this.internalSetContent(entity, propertyPath, content, (actualContent) -> {
             try {
-                return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, content, params);
+                return ((org.springframework.content.commons.repository.ContentStore)(delegate)).setContent(entity, propertyPath, actualContent, params);
             }
             catch (Exception e) {
                 throw e;
@@ -111,9 +112,9 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
     @Override
     public Object setContent(Object entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
-        return this.internalSetContent(entity, propertyPath, content, () -> {
+        return this.internalSetContent(entity, propertyPath, content, (actualContent) -> {
             try {
-                return ((org.springframework.content.commons.store.ContentStore) delegate).setContent(entity, propertyPath, content, params);
+                return ((org.springframework.content.commons.store.ContentStore) delegate).setContent(entity, propertyPath, actualContent, params);
             }
             catch (Exception e) {
                 throw e;
@@ -121,7 +122,7 @@ public class StoreImpl implements org.springframework.content.commons.repository
         });
     }
 
-    public Object internalSetContent(Object property, PropertyPath propertyPath, InputStream content, Supplier invocation) {
+    public Object internalSetContent(Object property, PropertyPath propertyPath, InputStream content, Function<InputStream, Object> invocation) {
         Object result = null;
 
         File contentCopy = null;
@@ -156,7 +157,7 @@ public class StoreImpl implements org.springframework.content.commons.repository
                 content = new FileInputStream(contentCopy);
             }
 
-            result = invocation.get();
+            result = invocation.apply(content);
 
             org.springframework.content.commons.repository.events.AfterSetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterSetContentEvent(property, propertyPath, delegate);
             oldAfter.setResult(result);

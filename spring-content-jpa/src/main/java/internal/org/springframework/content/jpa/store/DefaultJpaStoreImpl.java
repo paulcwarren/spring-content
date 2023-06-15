@@ -359,8 +359,8 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath, org.springframework.content.commons.store.UnsetContentParams params) {
         int ordinal = params.getDisposition().ordinal();
-        org.springframework.content.commons.store.UnsetContentParams params1 = org.springframework.content.commons.store.UnsetContentParams.builder()
-                .disposition(org.springframework.content.commons.store.UnsetContentParams.Disposition.values()[ordinal])
+        org.springframework.content.commons.repository.UnsetContentParams params1 = org.springframework.content.commons.repository.UnsetContentParams.builder()
+                .disposition(org.springframework.content.commons.repository.UnsetContentParams.Disposition.values()[ordinal])
                 .build();
         return this.unsetContent(entity, propertyPath, params1);
     }
