@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 3.0.5-SNAPSHOT,</span>
-<span id="revdate">2023-06-13</span>
+<span id="revdate">2023-06-15</span>
 </div>
 </div>
 <div id="content">
@@ -1762,33 +1762,31 @@ of whatever driver version is in use will apply.</p>
 <div class="sect3">
 <h4 id="_setting_content">2.4.1. Setting Content</h4>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>The entity&#8217;s <code>@ContentId</code> and <code>@ContentLength</code> fields will be updated.</p>
+<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored this will overwritten with the new content updating just the <code>@ContentLength</code>
-field, if appropriate.</p>
+<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based on <code>java.util.UUID</code>.</p>
 </div>
-<div class="sect4">
-<h5 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h5>
 <div class="paragraph">
-<p>Spring Data JPA requires that content entities have an <code>@ContentId</code> field for identity that will be generated when
-content is initially set.</p>
+<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
 </div>
+<div class="paragraph">
+<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_getting_content">2.4.2. Getting Content</h4>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_unsetting_content">2.4.3. Unsetting Content</h4>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
 </div>
 </div>
 </div>
@@ -1893,7 +1891,7 @@ content is initially set.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.0.5-SNAPSHOT<br>
-Last updated 2023-06-13 03:53:49 UTC
+Last updated 2023-06-15 05:07:15 UTC
 </div>
 </div>
 </body>

@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 3.0.5-SNAPSHOT,</span>
-<span id="revdate">2023-06-13</span>
+<span id="revdate">2023-06-15</span>
 </div>
 </div>
 <div id="content">
@@ -543,6 +543,7 @@ Copies of this document may be made for your own use and for distribution to oth
 </li>
 <li><a href="#_store_resolver">5.5. Store Resolver</a></li>
 <li><a href="#_putpost_content_handling">5.6. Put/Post Content Handling</a></li>
+<li><a href="#_content_disposition">5.7. Content Disposition</a></li>
 </ul>
 </li>
 </ul>
@@ -2067,13 +2068,22 @@ public static class ApplicationConfig {
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_content_disposition">5.7. Content Disposition</h3>
+<div class="paragraph">
+<p>For easier management of the content in the backend storage <code>setContent</code> methods overwrite existing content and <code>unsetContent</code> methods delete it.  This is easy and typically a good starting point but some applications may want to preserve old content no longer referenced by the application.</p>
+</div>
+<div class="paragraph">
+<p>Using the <code>spring.content.rest.set-content-disposition=CreateNew</code> and <code>spring.content.rest.unset-content-disposition=Keep</code> properties this behavior can be changed to preserve the old content.  Please note that as far as Spring Content is concerned this old content is then orphaned from the application and must be managed out-of-band.  This behavior change is application-wide.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 3.0.5-SNAPSHOT<br>
-Last updated 2023-06-13 03:53:49 UTC
+Last updated 2023-06-15 05:07:15 UTC
 </div>
 </div>
 </body>

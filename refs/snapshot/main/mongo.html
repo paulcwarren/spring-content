@@ -540,37 +540,31 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 <div class="sect2">
 <h3 id="_setting_content">Setting Content</h3>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>The fields annotated with @ContentId and @ContentLength will be updated on <code>entity</code>.</p>
+<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
-</div>
-<div class="sect3">
-<h4 id="_how_the_contentid_field_is_handled">How the @ContentId field is handled</h4>
-<div class="paragraph">
-<p>The MongoDB Store uses a dedicated <code>ConversionService</code> to convert the content entity&#8217;s ID into a resource path.</p>
+<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in <code>java.util.UUID</code>.</p>
 </div>
 <div class="paragraph">
-<p>It is possible to influence this conversion and therefore the storage model by configuring your application to contribute one (or more) <code>org.springframework.content.mongo.config.MongoStoreConverter</code> beans.</p>
+<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
 </div>
+<div class="paragraph">
+<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_getting_content">Getting Content</h3>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_unsetting_content">Unsetting Content</h3>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>When content is unset the fields annotated with @ContentId and @ContentLength will also be reset to default values;</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
 </div>
 </div>
 </div>
@@ -578,7 +572,7 @@ public static class ApplicationConfig extends AbstractMongoConfiguration { <b cl
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-06-13 03:53:49 UTC
+Last updated 2023-06-15 05:07:15 UTC
 </div>
 </div>
 </body>

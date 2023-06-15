@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 3.0.5-SNAPSHOT,</span>
-<span id="revdate">2023-06-13</span>
+<span id="revdate">2023-06-15</span>
 </div>
 </div>
 <div id="content">
@@ -1750,30 +1750,33 @@ convert the value to a String location.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_setting_content_using_a_contentstore">2.4.3. Setting Content using a ContentStore</h4>
+<h4 id="_setting_content">2.4.3. Setting Content</h4>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>If content has not yet been associated with this entity before and an ID has not been assigned by the application, one will be generated based on <code>java.util.UUID</code> and converted to the type of the @ContentId field.</p>
+<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
 </div>
 <div class="paragraph">
-<p>The @ContentId and @ContentLength annotations will be updated on <code>entity</code>.</p>
+<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in <code>java.util.UUID</code>.</p>
 </div>
 <div class="paragraph">
-<p>If content has been previously stored it will overwritten updating just the @ContentLength attribute, if appropriate.</p>
+<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
+</div>
+<div class="paragraph">
+<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_getting_content_from_a_contentstore">2.4.4. Getting Content from a ContentStore</h4>
+<h4 id="_getting_content">2.4.4. Getting Content</h4>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unsetting_content_from_a_contentstore">2.4.5. Unsetting Content from a ContentStore</h4>
+<h4 id="_unsetting_content">2.4.5. Unsetting Content</h4>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2008,7 +2011,7 @@ backing store at <code>/path/to/my-file</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 3.0.5-SNAPSHOT<br>
-Last updated 2023-06-13 03:53:49 UTC
+Last updated 2023-06-15 05:07:15 UTC
 </div>
 </div>
 </body>

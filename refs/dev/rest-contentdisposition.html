@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.18">
-<title>JPA Content Stores</title>
+<title>Content Disposition</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,223 +438,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>JPA Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_maven_central_coordinates">Maven Central Coordinates</h2>
+<h2 id="_content_disposition">Content Disposition</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The maven coordinates for this Spring Content library are as follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-content-jpa&lt;/artifactId&gt;
-&lt;/dependency&gt;</code></pre>
-</div>
+<p>For easier management of the content in the backend storage <code>setContent</code> methods overwrite existing content and <code>unsetContent</code> methods delete it.  This is easy and typically a good starting point but some applications may want to preserve old content no longer referenced by the application.</p>
 </div>
 <div class="paragraph">
-<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
-    &lt;version&gt;${spring-content-version}&lt;/version&gt;
-    &lt;type&gt;pom&lt;/type&gt;
-    &lt;scope&gt;import&lt;/scope&gt;
-&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation based configuration</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content JPA Stores are enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 1. Spring Content JPA Stores using Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableJpaRepositories
-@EnableJpaStores
-@EnableTransactionManagement
-public static class ApplicationConfig {
-
-  @Bean
-  public DataSource dataSource() {
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.HSQL).build();
-  }
-
-  @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-    vendorAdapter.setGenerateDdl(true);
-
-    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-    factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("com.acme.domain");
-    factory.setDataSource(dataSource());
-    return factory;
-  }
-
-  @Bean
-  public PlatformTransactionManager transactionManager() {
-    JpaTransactionManager txManager = new JpaTransactionManager();
-    txManager.setEntityManagerFactory(entityManagerFactory());
-    return txManager;
-  }
-
-  @Value("/org/springframework/content/jpa/schema-drop-hsqldb.sql")
-  private Resource dropRepositoryTables;
-
-  @Value("/org/springframework/content/jpa/schema-hsqldb.sql")
-  private Resource createRepositoryTables;
-
-  @Bean
-  DataSourceInitializer datasourceInitializer() {
-    ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
-
-    databasePopulator.addScript(dropRepositoryTables);
-    databasePopulator.addScript(createRepositoryTables);
-    databasePopulator.setIgnoreFailedDrops(true);
-
-    DataSourceInitializer initializer = new DataSourceInitializer();
-    initializer.setDataSource(dataSource());
-    initializer.setDatabasePopulator(databasePopulator);
-
-    return initializer;
-  }
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This configuration class sets up an embedded HSQL database.  The first three beans are standard for any spring JPA application; <code>dataSource</code>, <code>entityManageFactory</code> and <code>transactionManager</code>.</p>
-</div>
-<div class="paragraph">
-<p>The last bean prepares the database to be able to store content by creating database schema.  Replace the <code>dropRepositoryTables</code> and <code>createRepositoryTables</code> resources with the appropriate ones for your database (<code>h2</code>, <code>hsqldb</code>, <code>mysql</code>, <code>oracle</code>, <code>postgresql</code>, <code>sqlserver</code>).  Creating this bean manually is only requires when using <code>spring-content-jpa</code> directly.  The spring-content-jpa boot starter will create this bean if not present.</p>
-</div>
-<div class="paragraph">
-<p>We activate Spring Data JPA repositories using the <code>@EnableJpaRepositories</code> annotation.  We activate Spring Content JPA
-stores using <code>@EnableJpaStores</code> (also only required when not using the boot starter) and enable transaction management with the <code>@EnableTransactionManagement</code> annotation.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_signature_types">Signature Types</h3>
-<div id="signature_types" class="paragraph">
-<p>JPA Storage supports the following signature types:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>org.springframework.content.jpa.store.JpaContentStore</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The module id for the <code>spring.content.storage.type.default</code> property is <code>jpa</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_content_streaming">Content Streaming</h3>
-<div class="paragraph">
-<p>Spring Content JPA attempts to provide streams that chunk BLOBs through the memory space of the JVM rather that loading
-the entire BLOB into memory.  In order to do this the following database-specific implementation are used.</p>
-</div>
-<div class="sect3">
-<h4 id="_mysql">MySQL</h4>
-<div class="paragraph">
-<p>Despite the JDBC API that returns <code>InputStream</code>'s for streaming BLOBs.  By default the MySQL JConnector JDBC Driver
-will load the entire BLOB into the memory-space of the JVM running the JDBC client.  This risks <code>OutOfMemoryException</code>'s
-being thrown, the likelihood of which increase as the size of the BLOBs being stored increase.</p>
-</div>
-<div class="paragraph">
-<p>However, a feature called "locator emulation" switches the implementation that is used for the getBlob() JDBC API to one
-that actually does stream the content properly (i.e. in reasonable size chunks) through the memory-space of the JVM.</p>
-</div>
-<div class="paragraph">
-<p>Spring Content JPA is designed to be used with this feature and therefore you must add the property
-<code>emulateLocators=true</code> to your <a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-implementation-notes.html">JDBC Connection string URL</a></p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_postgresql">Postgresql</h3>
-<div class="paragraph">
-<p>The Postgresql implementation uses the OID field type and the Large Object API.  Whilst this provides properly chuncked
-streams it does come with a significant performance disadvantage over bytea fields.</p>
-</div>
-<div class="paragraph">
-<p>Large Objects <strong>must</strong> be accessed within a transaction.  Therefore, Store API access must also be within a transaction.  For
-convenience <code>ContentStore</code> modification methods are already marked as <code>@Transactional</code>.  Note, however query methods are not and
-therefore the transaction must be handled by the consumer.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_sql_server">SQL Server</h3>
-<div class="paragraph">
-<p>The SQL Server implementation uses <a href="https://docs.microsoft.com/en-us/sql/connect/jdbc/using-adaptive-buffering?view=sql-server-2017#setting-adaptive-buffering">adaptive buffering</a>
-to serve BLOBs in a memory efficient way.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_oracle">Oracle</h3>
-<div class="paragraph">
-<p>The oracle implementation relies on the ability of the Oracle JDBC driver to perform chunked operations on the
-streams. This functionality has been tested against the com.oracle.database.jdbc ojdbc instance at version 12.2.0.1,
-where the default prefetch size is 4000 bytes. Whilst the driver supports the ability to modify this prefetch size
-for tuning performance, there currently is no way to over-ride this setting via the spring-content API, so the default
-of whatever driver version is in use will apply.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_persisting_content">Persisting Content</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
-</div>
-<div class="paragraph">
-<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based on <code>java.util.UUID</code>.</p>
-</div>
-<div class="paragraph">
-<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
-</div>
+<p>Using the <code>spring.content.rest.set-content-disposition=CreateNew</code> and <code>spring.content.rest.unset-content-disposition=Keep</code> properties this behavior can be changed to preserve the old content.  Please note that as far as Spring Content is concerned this old content is then orphaned from the application and must be managed out-of-band.  This behavior change is application-wide.</p>
 </div>
 </div>
 </div>
