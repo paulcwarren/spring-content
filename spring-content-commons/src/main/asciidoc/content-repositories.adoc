@@ -109,7 +109,7 @@ public class Application {
 			}
 
 			// associate the Resource with the Entity
-			store.associate(jbauer, PropertyPath("profilePicture"), "/some/picture.jpeg");
+			store.associate(jbauer, PropertyPath.from("profilePicture"), "/some/picture.jpeg");
 
 			// save the user
 			repository.save(jbauer);
