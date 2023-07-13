@@ -3,11 +3,13 @@ package org.springframework.content.commons.mappingcontext;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.NullValueInNestedPathException;
 import org.springframework.core.convert.TypeDescriptor;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.util.Assert;
 
 @Getter
 @Setter
@@ -16,6 +18,7 @@ public class ContentProperty {
 
     private String contentPropertyPath;
     private String contentIdPropertyPath;
+    private TypeDescriptor contentIdType;
     private String contentLengthPropertyPath;
     private String mimeTypePropertyPath;
     private String originalFileNamePropertyPath;
@@ -23,24 +26,32 @@ public class ContentProperty {
     public Object getCustomProperty(Object entity, String propertyName) {
         String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyValue(customContentPropertyPath);
+        BeanWrapper wrapper = getBeanWrapperForRead(entity);
+        try {
+            return wrapper.getPropertyValue(customContentPropertyPath);
+        } catch (NullValueInNestedPathException nvinpe) {
+            return null;
+        }
     }
 
     public void setCustomProperty(Object entity, String propertyName, Object value) {
         String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(customContentPropertyPath, value);
     }
 
     public Object getContentId(Object entity) {
-        if (contentLengthPropertyPath == null) {
+        if (contentIdPropertyPath == null) {
             return null;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyValue(contentIdPropertyPath);
+        BeanWrapper wrapper = getBeanWrapperForRead(entity);
+        try {
+            return wrapper.getPropertyValue(contentIdPropertyPath);
+        } catch (NullValueInNestedPathException nvinpe) {
+            return null;
+        }
     }
 
     public void setContentId(Object entity, Object value, Condition condition) {
@@ -48,7 +59,7 @@ public class ContentProperty {
             return;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        BeanWrapper wrapper = getBeanWrapperForWrite(entity);
 
         if (condition != null) {
             TypeDescriptor t = wrapper.getPropertyTypeDescriptor(contentIdPropertyPath);
@@ -61,12 +72,17 @@ public class ContentProperty {
     }
 
     public TypeDescriptor getContentIdType(Object entity) {
-        if (contentIdPropertyPath == null) {
-            return null;
-        }
+        Assert.notNull(this.contentIdType, "content id property type must be set");
+        return this.contentIdType;
+    }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyTypeDescriptor(contentIdPropertyPath);
+    public TypeDescriptor getContentIdType() {
+        Assert.notNull(this.contentIdType, "content id property type must be set");
+        return this.contentIdType;
+    }
+
+    public void setContentIdType(TypeDescriptor descriptor) {
+        this.contentIdType = descriptor;
     }
 
     public Object getContentLength(Object entity) {
@@ -74,8 +90,12 @@ public class ContentProperty {
             return 0L;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyValue(contentLengthPropertyPath);
+        BeanWrapper wrapper = getBeanWrapperForRead(entity);
+        try {
+            return wrapper.getPropertyValue(contentLengthPropertyPath);
+        } catch (NullValueInNestedPathException nvinpe) {
+            return null;
+        }
     }
 
     public void setContentLength(Object entity, Object value) {
@@ -83,7 +103,7 @@ public class ContentProperty {
             return;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(contentLengthPropertyPath, value);
     }
 
@@ -92,8 +112,12 @@ public class ContentProperty {
             return null;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyValue(mimeTypePropertyPath);
+        BeanWrapper wrapper = getBeanWrapperForRead(entity);
+        try {
+            return wrapper.getPropertyValue(mimeTypePropertyPath);
+        } catch (NullValueInNestedPathException nvinpe) {
+            return null;
+        }
     }
 
     public void setMimeType(Object entity, Object value) {
@@ -101,7 +125,7 @@ public class ContentProperty {
             return;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(mimeTypePropertyPath, value);
     }
 
@@ -110,7 +134,7 @@ public class ContentProperty {
             return;
         }
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(originalFileNamePropertyPath, value);
     }
 
@@ -119,7 +143,22 @@ public class ContentProperty {
             return null;
         }
 
+        BeanWrapper wrapper = getBeanWrapperForRead(entity);
+        try {
+            return wrapper.getPropertyValue(originalFileNamePropertyPath);
+        } catch (NullValueInNestedPathException nvinpe) {
+            return null;
+        }
+    }
+
+    private BeanWrapper getBeanWrapperForRead(Object entity) {
         BeanWrapper wrapper = new BeanWrapperImpl(entity);
-        return wrapper.getPropertyValue(originalFileNamePropertyPath);
+        return wrapper;
+    }
+
+    private BeanWrapper getBeanWrapperForWrite(Object entity) {
+        BeanWrapper wrapper = new BeanWrapperImpl(entity);
+        wrapper.setAutoGrowNestedPaths(true);
+        return wrapper;
     }
 }

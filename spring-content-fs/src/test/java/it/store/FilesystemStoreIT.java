@@ -1,10 +1,6 @@
 package it.store;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.AfterEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -20,11 +16,12 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.sql.DataSource;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -80,6 +77,9 @@ public class FilesystemStoreIT {
 	private TestEntityRepository repo;
 	private TestEntityStore store;
 
+	private EmbeddedRepository embeddedRepo;
+	private EmbeddedStore embeddedStore;
+
 	private String resourceLocation;
 
 	{
@@ -95,6 +95,9 @@ public class FilesystemStoreIT {
 
 				RandomString random  = new RandomString(5);
 				resourceLocation = random.nextString();
+
+				embeddedRepo = context.getBean(EmbeddedRepository.class);
+				embeddedStore = context.getBean(EmbeddedStore.class);
 			});
 
 			AfterEach(() -> {
@@ -437,6 +440,28 @@ public class FilesystemStoreIT {
 						assertThat(sharedIdContentIdEntity.getContentLen(), is(0L));
 					});
 				});
+
+				Context("given a entity with a null embedded content object", () -> {
+					It("should return null when content is fetched", () -> {
+						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+						assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+					});
+
+					It("should be successful when content is set", () -> {
+						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+						embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+						try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+							assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+						}
+					});
+
+					It("should return null when content is unset", () -> {
+						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+						EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+						assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+						int i=0;
+					});
+				});
 			});
 		});
 	}
@@ -609,4 +634,33 @@ public class FilesystemStoreIT {
 
 	public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
 	public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Entity
+	@Table(name="entity_with_embedded")
+	public static class EntityWithEmbeddedContent {
+
+		@Id
+		private String id = UUID.randomUUID().toString();
+
+		@Embedded
+		private EmbeddedContent content;
+	}
+
+	@Embeddable
+	@NoArgsConstructor
+	@Data
+	public static class EmbeddedContent {
+
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private Long contentLen;
+	}
+
+	public interface EmbeddedRepository extends JpaRepository<EntityWithEmbeddedContent, String> {}
+	public interface EmbeddedStore extends ContentStore<EntityWithEmbeddedContent, String> {}
 }
