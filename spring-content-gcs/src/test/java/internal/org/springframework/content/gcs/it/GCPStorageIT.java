@@ -1,27 +1,16 @@
 package internal.org.springframework.content.gcs.it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.UUID;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import javax.sql.DataSource;
-
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
+import jakarta.persistence.*;
+import junit.framework.Assert;
+import lombok.*;
+import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -48,18 +37,17 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
+import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
 
-import junit.framework.Assert;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import net.bytebuddy.utility.RandomString;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads=1)
@@ -75,6 +63,9 @@ public class GCPStorageIT {
     private TestEntityRepository repo;
     private TestEntityStore store;
     private Storage storage;
+
+    private EmbeddedRepository embeddedRepo;
+    private EmbeddedStore embeddedStore;
 
     private String resourceLocation;
 
@@ -93,6 +84,9 @@ public class GCPStorageIT {
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
                 storage = context.getBean(Storage.class);
+
+                embeddedRepo = context.getBean(EmbeddedRepository.class);
+                embeddedStore = context.getBean(EmbeddedStore.class);
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -504,6 +498,30 @@ public class GCPStorageIT {
 //                    });
 //                });
 
+
+                Context("@Embedded content", () -> {
+                    Context("given a entity with a null embedded content object", () -> {
+                        It("should return null when content is fetched", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+                        });
+
+                        It("should be successful when content is set", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                            try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+                                assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+                            }
+                        });
+
+                        It("should return null when content is unset", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+                            assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+                            int i = 0;
+                        });
+                    });
+                });
             });
         });
     }
@@ -621,4 +639,33 @@ public class GCPStorageIT {
 //
 //    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
 //    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    @Table(name="entity_with_embedded")
+    public static class EntityWithEmbeddedContent {
+
+        @Id
+        private String id = UUID.randomUUID().toString();
+
+        @Embedded
+        private EmbeddedContent content;
+    }
+
+    @Embeddable
+    @NoArgsConstructor
+    @Data
+    public static class EmbeddedContent {
+
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private Long contentLen;
+    }
+
+    public interface EmbeddedRepository extends JpaRepository<EntityWithEmbeddedContent, String> {}
+    public interface EmbeddedStore extends ContentStore<EntityWithEmbeddedContent, String> {}
 }

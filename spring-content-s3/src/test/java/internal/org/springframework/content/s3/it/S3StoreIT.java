@@ -4,14 +4,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageResource;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import junit.framework.Assert;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
@@ -80,6 +75,9 @@ public class S3StoreIT {
 
     private TestEntityRepository repo;
     private TestEntityStore store;
+    private EmbeddedRepository embeddedRepo;
+    private EmbeddedStore embeddedStore;
+
     private S3Client client;
 
     private String resourceLocation;
@@ -95,6 +93,9 @@ public class S3StoreIT {
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
                 client = context.getBean(S3Client.class);
+
+                embeddedRepo = context.getBean(EmbeddedRepository.class);
+                embeddedStore = context.getBean(EmbeddedStore.class);
 
                 HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
                         .bucket(BUCKET)
@@ -549,6 +550,29 @@ public class S3StoreIT {
 //                    });
 //                });
 
+                Context("@Embedded content", () -> {
+                    Context("given a entity with a null embedded content object", () -> {
+                        It("should return null when content is fetched", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+                        });
+
+                        It("should be successful when content is set", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                            try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+                                assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+                            }
+                        });
+
+                        It("should return null when content is unset", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+                            assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+                            int i = 0;
+                        });
+                    });
+                });
             });
         });
     }
@@ -671,4 +695,33 @@ public class S3StoreIT {
 //
 //    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
 //    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    @Table(name="entity_with_embedded")
+    public static class EntityWithEmbeddedContent {
+
+        @Id
+        private String id = UUID.randomUUID().toString();
+
+        @Embedded
+        private EmbeddedContent content;
+    }
+
+    @Embeddable
+    @NoArgsConstructor
+    @Data
+    public static class EmbeddedContent {
+
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private Long contentLen;
+    }
+
+    public interface EmbeddedRepository extends JpaRepository<EntityWithEmbeddedContent, String> {}
+    public interface EmbeddedStore extends ContentStore<EntityWithEmbeddedContent, String> {}
 }

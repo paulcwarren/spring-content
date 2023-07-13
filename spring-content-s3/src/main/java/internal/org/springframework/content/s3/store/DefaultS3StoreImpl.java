@@ -508,12 +508,14 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		if (entity == null)
 			return entity;
 
+		Resource resource = this.getResource(entity, propertyPath);
+
 		if (params.getDisposition().equals(org.springframework.content.commons.store.UnsetContentParams.Disposition.Remove)) {
-			deleteIfExists(entity, propertyPath);
+			deleteIfExists(entity, resource);
 		}
 
 		// reset content fields
-		property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+		if (resource != null) {property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
 			@Override
 			public boolean matches(TypeDescriptor descriptor) {
 				for (Annotation annotation : descriptor.getAnnotations()) {
@@ -528,7 +530,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 				return true;
 			}
 		});
-		property.setContentLength(entity, 0);
+		property.setContentLength(entity, 0);}
 
 		return entity;
 	}
@@ -559,11 +561,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 	}
 
-    private void deleteIfExists(S entity, PropertyPath path) {
-
-        Resource resource = this.getResource(entity, path);
+    private void deleteIfExists(S entity, Resource resource) {
         if (resource != null && resource.exists() && resource instanceof DeletableResource) {
-
             try {
                 ((DeletableResource)resource).delete();
             } catch (Exception e) {

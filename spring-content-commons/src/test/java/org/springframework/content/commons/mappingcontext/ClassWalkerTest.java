@@ -20,6 +20,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.util.ReflectionUtils;
 
@@ -47,6 +48,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("content");
                 expectedProperty.setContentIdPropertyPath("contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedProperty.setContentLengthPropertyPath("contentLength");
                 expectedProperty.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
@@ -55,6 +57,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedSubClassProperty = new ContentProperty();
                 expectedSubClassProperty.setContentPropertyPath("child.content");
                 expectedSubClassProperty.setContentIdPropertyPath("child.contentId");
+                expectedSubClassProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedSubClassProperty.setContentLengthPropertyPath("child.contentLength");
                 expectedSubClassProperty.setMimeTypePropertyPath("child.contentMimeType");
                 expectedSubClassProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
@@ -63,6 +66,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedSubSubClassProperty = new ContentProperty();
                 expectedSubSubClassProperty.setContentPropertyPath("child.subChild.content");
                 expectedSubSubClassProperty.setContentIdPropertyPath("child.subChild.contentId");
+                expectedSubSubClassProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedSubSubClassProperty.setContentLengthPropertyPath("child.subChild.contentLength");
                 expectedSubSubClassProperty.setMimeTypePropertyPath("child.subChild.contentMimeType");
                 expectedSubSubClassProperty.setOriginalFileNamePropertyPath("child.subChild.contentOriginalFileName");
@@ -71,6 +75,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedCamelCaseProperty = new ContentProperty();
                 expectedCamelCaseProperty.setContentPropertyPath("camelCaseProperty.camelCaseProperty");
                 expectedCamelCaseProperty.setContentIdPropertyPath("camelCaseProperty.camelCasePropertyId");
+                expectedCamelCaseProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedCamelCaseProperty.setContentLengthPropertyPath("camelCaseProperty.camelCasePropertyLen");
                 expectedCamelCaseProperty.setMimeTypePropertyPath("camelCaseProperty.camelCasePropertyMimeType");
                 expectedCamelCaseProperty.setOriginalFileNamePropertyPath("camelCaseProperty.camelCasePropertyOriginalFileName");
@@ -79,6 +84,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedOtherCamelCaseProperty = new ContentProperty();
                 expectedOtherCamelCaseProperty.setContentPropertyPath("otherCamelCaseProperty.camelCaseProperty");
                 expectedOtherCamelCaseProperty.setContentIdPropertyPath("otherCamelCaseProperty.camelCasePropertyIds");
+                expectedOtherCamelCaseProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedOtherCamelCaseProperty.setContentLengthPropertyPath("otherCamelCaseProperty.camelCasePropertyLens");
                 expectedOtherCamelCaseProperty.setMimeTypePropertyPath("otherCamelCaseProperty.camelCasePropertyMimetypes");
                 expectedOtherCamelCaseProperty.setOriginalFileNamePropertyPath("otherCamelCaseProperty.camelCasePropertyFilenames");
@@ -95,6 +101,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
                 expectedProperty2.setContentIdPropertyPath("contentId");
+                expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("len");
                 expectedProperty2.setMimeTypePropertyPath("mimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("originalFileName");
@@ -111,6 +118,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("content");
                 expectedProperty2.setContentIdPropertyPath("contentId");
+                expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("contentLen");
                 expectedProperty2.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("contentOriginalFileName");
@@ -127,6 +135,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.content");
                 expectedProperty.setContentIdPropertyPath("child.contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.len");
                 expectedProperty.setMimeTypePropertyPath("child.mimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.originalFileName");
@@ -153,6 +162,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("content");
                 expectedProperty.setContentIdPropertyPath("contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedProperty.setContentLengthPropertyPath("contentLength");
                 expectedProperty.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
@@ -160,7 +170,7 @@ public class ClassWalkerTest {
             });
         });
 
-        Context("given a class with multple child content property objects", () -> {
+        Context("given a class with multiple child content property objects", () -> {
             It("should return two content properties", () -> {
                 ContentPropertyMappingContextVisitor visitor = new ContentPropertyMappingContextVisitor("/", ".");
                 ClassWalker walker = new ClassWalker(visitor);
@@ -169,6 +179,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child1.content");
                 expectedProperty.setContentIdPropertyPath("child1.contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child1.len");
                 expectedProperty.setMimeTypePropertyPath("child1.mimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child1.originalFileName");
@@ -177,6 +188,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty3 = new ContentProperty();
                 expectedProperty3.setContentPropertyPath("child2.content");
                 expectedProperty3.setContentIdPropertyPath("child2.contentId");
+                expectedProperty3.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty3.setContentLengthPropertyPath("child2.len");
                 expectedProperty3.setMimeTypePropertyPath("child2.mimeType");
                 expectedProperty3.setOriginalFileNamePropertyPath("child2.originalFileName");
@@ -193,6 +205,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.content");
                 expectedProperty.setContentIdPropertyPath("child.contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.contentLen");
                 expectedProperty.setMimeTypePropertyPath("child.contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
@@ -201,6 +214,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty3 = new ContentProperty();
                 expectedProperty3.setContentPropertyPath("child.preview");
                 expectedProperty3.setContentIdPropertyPath("child.previewId");
+                expectedProperty3.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty3.setContentLengthPropertyPath("child.previewLen");
                 expectedProperty3.setMimeTypePropertyPath("child.previewMimeType");
                 expectedProperty3.setOriginalFileNamePropertyPath("child.previewOriginalFileName");
@@ -217,6 +231,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty = new ContentProperty();
                 expectedProperty.setContentPropertyPath("child.child.content");
                 expectedProperty.setContentIdPropertyPath("child.child.contentId");
+                expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.child.contentLen");
                 expectedProperty.setMimeTypePropertyPath("child.child.contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.child.contentOriginalFileName");
@@ -225,6 +240,7 @@ public class ClassWalkerTest {
                 ContentProperty expectedProperty2 = new ContentProperty();
                 expectedProperty2.setContentPropertyPath("child.child.preview");
                 expectedProperty2.setContentIdPropertyPath("child.child.previewId");
+                expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("child.child.previewLen");
                 expectedProperty2.setMimeTypePropertyPath("child.child.previewMimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("child.child.previewOriginalFileName");
