@@ -463,25 +463,29 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
         if (entity == null)
             return entity;
 
-        deleteIfExists(entity, propertyPath);
+		Resource resource = this.getResource(entity, propertyPath);
+
+        deleteIfExists(entity, resource);
 
         // reset content fields
-        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-                    @Override
-                    public boolean matches(TypeDescriptor descriptor) {
-                        for (Annotation annotation : descriptor.getAnnotations()) {
-                            if ("javax.persistence.Id".equals(
-                                    annotation.annotationType().getCanonicalName())
-                                    || "org.springframework.data.annotation.Id"
-                                            .equals(annotation.annotationType()
-                                                    .getCanonicalName())) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                });
-        property.setContentLength(entity, 0);
+		if (resource != null) {
+			property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+				@Override
+				public boolean matches(TypeDescriptor descriptor) {
+					for (Annotation annotation : descriptor.getAnnotations()) {
+						if ("javax.persistence.Id".equals(
+								annotation.annotationType().getCanonicalName())
+								|| "org.springframework.data.annotation.Id"
+								.equals(annotation.annotationType()
+										.getCanonicalName())) {
+							return false;
+						}
+					}
+					return true;
+				}
+			});
+			property.setContentLength(entity, 0);
+		}
 
         return entity;
     }
@@ -512,11 +516,8 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		}
 	}
 
-    private void deleteIfExists(S entity, PropertyPath path) {
-
-        Resource resource = this.getResource(entity, path);
+    private void deleteIfExists(S entity, Resource resource) {
         if (resource != null && resource.exists() && resource instanceof DeletableResource) {
-
             try {
                 ((DeletableResource)resource).delete();
             } catch (Exception e) {
