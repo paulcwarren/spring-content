@@ -290,42 +290,44 @@ public class FilesystemStoreIT {
 					entity = repo.save(entity);
 
 					store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-                    store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()));
+					store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()));
 				});
 
 				It("should be able to store new content", () -> {
-				    // content
+					// content
 					try (InputStream content = store.getContent(entity)) {
 						assertThat(IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring Content World!".getBytes()), content), is(true));
-					} catch (IOException ioe) {}
+					} catch (IOException ioe) {
+					}
 
 					//rendition
-                    try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                        assertThat(IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()), content), is(true));
-                    } catch (IOException ioe) {}
+					try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+						assertThat(IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring Content World!</html>".getBytes()), content), is(true));
+					} catch (IOException ioe) {
+					}
 				});
 
 				It("should have content metadata", () -> {
-				    // content
+					// content
 					assertThat(entity.getContentId(), is(notNullValue()));
 					assertThat(entity.getContentId().trim().length(), greaterThan(0));
 					Assert.assertEquals(entity.getContentLen(), 27L);
 
 					//rendition
-                    assertThat(entity.getRenditionId(), is(notNullValue()));
-                    assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getRenditionLen(), 40L);
+					assertThat(entity.getRenditionId(), is(notNullValue()));
+					assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
+					Assert.assertEquals(entity.getRenditionLen(), 40L);
 				});
 
 				Context("when content is updated", () -> {
-					BeforeEach(() ->{
+					BeforeEach(() -> {
 						store.setContent(entity, new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
+						store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()));
 						entity = repo.save(entity);
 					});
 
 					It("should have the updated content", () -> {
-					    //content
+						//content
 						boolean matches = false;
 						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Updated Spring Content World!".getBytes()), content);
@@ -333,22 +335,22 @@ public class FilesystemStoreIT {
 						}
 
 						//rendition
-                        matches = false;
-                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
-                            assertThat(matches, is(true));
-                        }
+						matches = false;
+						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Updated Spring Content World!</html>".getBytes()), content);
+							assertThat(matches, is(true));
+						}
 					});
 				});
 
 				Context("when content is updated with shorter content", () -> {
 					BeforeEach(() -> {
 						store.setContent(entity, new ByteArrayInputStream("Hello Spring World!".getBytes()));
-                        store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()));
+						store.setContent(entity, PropertyPath.from("rendition"), new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()));
 						entity = repo.save(entity);
 					});
 					It("should store only the new content", () -> {
-					    //content
+						//content
 						boolean matches = false;
 						try (InputStream content = store.getContent(entity)) {
 							matches = IOUtils.contentEquals(new ByteArrayInputStream("Hello Spring World!".getBytes()), content);
@@ -356,11 +358,11 @@ public class FilesystemStoreIT {
 						}
 
 						//rendition
-                        matches = false;
-                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
-                            assertThat(matches, is(true));
-                        }
+						matches = false;
+						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+							matches = IOUtils.contentEquals(new ByteArrayInputStream("<html>Hello Spring World!</html>".getBytes()), content);
+							assertThat(matches, is(true));
+						}
 					});
 				});
 
@@ -368,12 +370,12 @@ public class FilesystemStoreIT {
 					BeforeEach(() -> {
 						resourceLocation = entity.getContentId().toString();
 						entity = store.unsetContent(entity);
-                        entity = store.unsetContent(entity, PropertyPath.from("rendition"));
+						entity = store.unsetContent(entity, PropertyPath.from("rendition"));
 						entity = repo.save(entity);
 					});
 
 					It("should have no content", () -> {
-					    //content
+						//content
 						try (InputStream content = store.getContent(entity)) {
 							assertThat(content, is(Matchers.nullValue()));
 						}
@@ -382,47 +384,47 @@ public class FilesystemStoreIT {
 						Assert.assertEquals(entity.getContentLen(), 0);
 
 						//rendition
-                        try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            assertThat(content, is(Matchers.nullValue()));
-                        }
+						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
+							assertThat(content, is(Matchers.nullValue()));
+						}
 
-                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+						assertThat(entity.getContentId(), is(Matchers.nullValue()));
+						Assert.assertEquals(entity.getContentLen(), 0);
 					});
 				});
 
 				Context("when an invalid property path is used to setContent", () -> {
-                    It("should throw an error", () -> {
-                        try {
-                            store.setContent(entity, PropertyPath.from("does.not.exist"), new ByteArrayInputStream("foo".getBytes()));
-                        } catch (Exception sae) {
-                            this.e = sae;
-                        }
-                        assertThat(e, is(instanceOf(StoreAccessException.class)));
-                    });
+					It("should throw an error", () -> {
+						try {
+							store.setContent(entity, PropertyPath.from("does.not.exist"), new ByteArrayInputStream("foo".getBytes()));
+						} catch (Exception sae) {
+							this.e = sae;
+						}
+						assertThat(e, is(instanceOf(StoreAccessException.class)));
+					});
 				});
 
-                Context("when an invalid property path is used to getContent", () -> {
-                    It("should throw an error", () -> {
-                        try {
-                            store.getContent(entity, PropertyPath.from("does.not.exist"));
-                        } catch (Exception sae) {
-                            this.e = sae;
-                        }
-                        assertThat(e, is(instanceOf(StoreAccessException.class)));
-                    });
-                });
+				Context("when an invalid property path is used to getContent", () -> {
+					It("should throw an error", () -> {
+						try {
+							store.getContent(entity, PropertyPath.from("does.not.exist"));
+						} catch (Exception sae) {
+							this.e = sae;
+						}
+						assertThat(e, is(instanceOf(StoreAccessException.class)));
+					});
+				});
 
-                Context("when an invalid property path is used to unsetContent", () -> {
-                    It("should throw an error", () -> {
-                        try {
-                            store.unsetContent(entity, PropertyPath.from("does.not.exist"));
-                        } catch (Exception sae) {
-                            this.e = sae;
-                        }
-                        assertThat(e, is(instanceOf(StoreAccessException.class)));
-                    });
-                });
+				Context("when an invalid property path is used to unsetContent", () -> {
+					It("should throw an error", () -> {
+						try {
+							store.unsetContent(entity, PropertyPath.from("does.not.exist"));
+						} catch (Exception sae) {
+							this.e = sae;
+						}
+						assertThat(e, is(instanceOf(StoreAccessException.class)));
+					});
+				});
 
 				Context("when content is deleted and the id field is shared with javax id", () -> {
 
@@ -441,25 +443,27 @@ public class FilesystemStoreIT {
 					});
 				});
 
-				Context("given a entity with a null embedded content object", () -> {
-					It("should return null when content is fetched", () -> {
-						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
-						assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
-					});
+				Context("@eEmbedded content", () -> {
+					Context("given a entity with a null embedded content object", () -> {
+						It("should return null when content is fetched", () -> {
+							EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+							assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+						});
 
-					It("should be successful when content is set", () -> {
-						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
-						embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
-						try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
-							assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
-						}
-					});
+						It("should be successful when content is set", () -> {
+							EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+							embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+							try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+								assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+							}
+						});
 
-					It("should return null when content is unset", () -> {
-						EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
-						EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
-						assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
-						int i=0;
+						It("should return null when content is unset", () -> {
+							EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+							EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+							assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+							int i = 0;
+						});
 					});
 				});
 			});

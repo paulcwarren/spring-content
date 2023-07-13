@@ -18,12 +18,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.sql.DataSource;
 
+import lombok.*;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -60,9 +58,6 @@ import com.azure.storage.blob.models.BlobItem;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
 
 @RunWith(Ginkgo4jRunner.class)
@@ -90,6 +85,9 @@ public class AzureStorageIT {
     private TestEntityRepository repo;
     private TestEntityStore store;
 
+    private EmbeddedRepository embeddedRepo;
+    private EmbeddedStore embeddedStore;
+
     private String resourceLocation;
 
     {
@@ -102,6 +100,9 @@ public class AzureStorageIT {
 
                 repo = context.getBean(TestEntityRepository.class);
                 store = context.getBean(TestEntityStore.class);
+
+                embeddedRepo = context.getBean(EmbeddedRepository.class);
+                embeddedStore = context.getBean(EmbeddedStore.class);
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
@@ -473,6 +474,29 @@ public class AzureStorageIT {
 //                    });
 //                });
 
+                Context("@eEmbedded content", () -> {
+                    Context("given a entity with a null embedded content object", () -> {
+                        It("should return null when content is fetched", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+                        });
+
+                        It("should be successful when content is set", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+                            try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+                                assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+                            }
+                        });
+
+                        It("should return null when content is unset", () -> {
+                            EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+                            EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+                            assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+                            int i = 0;
+                        });
+                    });
+                });
             });
         });
     }
@@ -589,5 +613,33 @@ public class AzureStorageIT {
 //
 //    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
 //    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    @Table(name="entity_with_embedded")
+    public static class EntityWithEmbeddedContent {
+
+        @Id
+        private String id = UUID.randomUUID().toString();
+
+        @Embedded
+        private EmbeddedContent content;
+    }
+
+    @Embeddable
+    @NoArgsConstructor
+    @Data
+    public static class EmbeddedContent {
+
+        @ContentId
+        private String contentId;
+
+        @ContentLength
+        private Long contentLen;
+    }
+
+    public interface EmbeddedRepository extends JpaRepository<EntityWithEmbeddedContent, String> {}
+    public interface EmbeddedStore extends ContentStore<EntityWithEmbeddedContent, String> {}
 }
-//            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();

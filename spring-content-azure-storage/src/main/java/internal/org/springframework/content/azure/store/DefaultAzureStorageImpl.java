@@ -457,23 +457,25 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         }
 
         // reset content fields
-        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-            @Override
-            public boolean matches(TypeDescriptor descriptor) {
-                for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
-                            annotation.annotationType().getCanonicalName())
-                            || "org.springframework.data.annotation.Id"
-                                    .equals(annotation.annotationType()
-                                            .getCanonicalName())) {
-                        return false;
+        if (resource != null) {
+            property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+                @Override
+                public boolean matches(TypeDescriptor descriptor) {
+                    for (Annotation annotation : descriptor.getAnnotations()) {
+                        if ("javax.persistence.Id".equals(
+                                annotation.annotationType().getCanonicalName())
+                                || "org.springframework.data.annotation.Id"
+                                .equals(annotation.annotationType()
+                                        .getCanonicalName())) {
+                            return false;
+                        }
                     }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
 
-        property.setContentLength(entity, 0);
+            property.setContentLength(entity, 0);
+        }
 
         return entity;
     }
