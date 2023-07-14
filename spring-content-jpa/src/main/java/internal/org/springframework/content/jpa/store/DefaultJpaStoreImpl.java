@@ -260,7 +260,9 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.store.SetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        // TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         SID contentId = getContentId(entity, propertyPath);
         if (contentId == null || params.getDisposition().equals(org.springframework.content.commons.store.SetContentParams.ContentDisposition.CreateNew)) {
@@ -370,14 +372,12 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
-            // TODO
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-        Object id = property.getContentId(entity);
-        if (id == null) {
-            id = -1L;
-        }
-        Resource resource = loader.getResource(id.toString());
-        if (resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
+
+        Resource resource = this.getResource(entity, propertyPath);
+
+        if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
             try {
                 ((DeletableResource) resource).delete();
             } catch (Exception e) {
@@ -385,8 +385,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
                 throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
             }
         }
-        unassociate(entity, propertyPath);
-        property.setContentLength(entity, 0);
+
+        if (resource != null) {
+            unassociate(entity, propertyPath);
+            property.setContentLength(entity, 0);
+        }
 
         return entity;
     }

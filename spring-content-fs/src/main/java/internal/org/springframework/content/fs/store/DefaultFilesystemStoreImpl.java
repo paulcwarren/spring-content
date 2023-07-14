@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -159,10 +160,10 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
     @Override
     public void unassociate(S entity, PropertyPath propertyPath) {
 
-        setContentId(entity, propertyPath, null, new Condition() {
+        setContentId(entity, propertyPath, null, new org.springframework.content.commons.mappingcontext.Condition() {
             @Override
-            public boolean matches(Field field) {
-                for (Annotation annotation : field.getAnnotations()) {
+            public boolean matches(TypeDescriptor descriptor) {
+                for (Annotation annotation : descriptor.getAnnotations()) {
                     if ("javax.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
@@ -435,9 +436,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		// reset content fields
-		unassociate(property, propertyPath);
+		if (resource != null) {unassociate(property, propertyPath);
 		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-		contentProperty.setContentLength(property, 0);
+		contentProperty.setContentLength(property, 0);}
 
 		return property;
 	}
@@ -454,16 +455,15 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		return contentId.toString();
 	}
 
-    private void setContentId(S entity, PropertyPath propertyPath, SID contentId, Condition condition) {
+    private void setContentId(S entity, PropertyPath propertyPath, SID contentId, org.springframework.content.commons.mappingcontext.Condition condition) {
 
         Assert.notNull(entity, "entity must not be null");
         Assert.notNull(propertyPath, "propertyPath must not be null");
 
-        BeanWrapper wrapper = new BeanWrapperImpl(entity);
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-        wrapper.setPropertyValue(property.getContentIdPropertyPath(), contentId);
+        property.setContentId(entity, contentId, condition);
     }
 }

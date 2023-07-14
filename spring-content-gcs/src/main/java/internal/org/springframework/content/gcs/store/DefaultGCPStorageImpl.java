@@ -491,7 +491,7 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		}
 
 		// reset content fields
-		property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+		if (resource != null) {property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
 			@Override
 			public boolean matches(TypeDescriptor descriptor) {
 				for (Annotation annotation : descriptor.getAnnotations()) {
@@ -506,7 +506,7 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 				return true;
 			}
 		});
-		property.setContentLength(entity, 0);
+		property.setContentLength(entity, 0);}
 
 		return entity;
 	}

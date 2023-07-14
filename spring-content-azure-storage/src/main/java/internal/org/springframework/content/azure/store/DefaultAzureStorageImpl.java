@@ -493,11 +493,12 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         }
 
         // reset content fields
-        property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-            @Override
-            public boolean matches(TypeDescriptor descriptor) {
-                for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("jakarta.persistence.Id".equals(
+        if (resource != null) {
+            property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
+                @Override
+                public boolean matches(TypeDescriptor descriptor) {
+                    for (Annotation annotation : descriptor.getAnnotations()) {
+                        if ("jakarta.persistence.Id".equals(
                             annotation.annotationType().getCanonicalName())
                             || "org.springframework.data.annotation.Id"
                             .equals(annotation.annotationType()
@@ -509,7 +510,8 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             }
         });
 
-        property.setContentLength(entity, 0);
+            property.setContentLength(entity, 0);
+        }
 
         return entity;
     }

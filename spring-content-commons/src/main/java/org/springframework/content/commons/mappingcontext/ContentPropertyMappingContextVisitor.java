@@ -13,6 +13,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.StringUtils;
 
 import lombok.Getter;
@@ -82,6 +83,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
                 if (property.getContentIdPropertyPath() != null) {
                     contentProperty.setContentPropertyPath(property.getContentPropertyPath());
                     contentProperty.setContentIdPropertyPath(property.getContentIdPropertyPath());
+                    contentProperty.setContentIdType(property.getContentIdType());
                 }
                 if (property.getContentLengthPropertyPath() != null) {
                     contentProperty.setContentLengthPropertyPath(property.getContentLengthPropertyPath());
@@ -122,6 +124,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
                 }
                 updateContentProperty(property::setContentPropertyPath, fullyQualify(path, this.propertyName(f.getName()), this.getContentPropertySeparator()));
                 updateContentProperty(property::setContentIdPropertyPath, fullyQualify(path, f.getName(), this.getContentPropertySeparator()));
+                property.setContentIdType(TypeDescriptor.valueOf(f.getType()));
             }
         } else if (f.isAnnotationPresent(ContentLength.class)) {
             LOGGER.trace(String.format("%s.%s is @ContentLength", f.getDeclaringClass().getCanonicalName(), f.getName()));
