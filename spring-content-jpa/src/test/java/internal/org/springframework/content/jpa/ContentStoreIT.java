@@ -13,15 +13,23 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.function.Supplier;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.UnsetContentParams;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -39,6 +47,8 @@ import internal.org.springframework.content.jpa.testsupport.models.Claim;
 import internal.org.springframework.content.jpa.testsupport.models.ClaimForm;
 import internal.org.springframework.content.jpa.testsupport.repositories.ClaimRepository;
 import internal.org.springframework.content.jpa.testsupport.stores.ClaimStore;
+
+import jakarta.persistence.*;
 
 @RunWith(Ginkgo4jRunner.class)
 @Ginkgo4jConfiguration(threads = 1)
@@ -61,6 +71,9 @@ public class ContentStoreIT {
 	protected ClaimRepository claimRepo;
 	protected ClaimStore claimFormStore;
 
+	private EmbeddedRepository embeddedRepo;
+	private EmbeddedStore embeddedStore;
+
 	protected Claim claim;
     protected Object id;
 
@@ -80,6 +93,9 @@ public class ContentStoreIT {
 						ptm = context.getBean(PlatformTransactionManager.class);
 						claimRepo = context.getBean(ClaimRepository.class);
 						claimFormStore = context.getBean(ClaimStore.class);
+
+						embeddedRepo = context.getBean(EmbeddedRepository.class);
+						embeddedStore = context.getBean(EmbeddedStore.class);
 
 						if (ptm == null) {
 							ptm = mock(PlatformTransactionManager.class);
@@ -285,6 +301,30 @@ public class ContentStoreIT {
 								Assert.assertEquals(claim.getClaimForm().getContentLength(), 0);
 							});
 						});
+
+						Context("@Embedded content", () -> {
+							Context("given a entity with a null embedded content object", () -> {
+								It("should return null when content is fetched", () -> {
+									EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+									assertThat(embeddedStore.getContent(entity, PropertyPath.from("content")), is(nullValue()));
+								});
+
+								It("should be successful when content is set", () -> {
+									EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+									embeddedStore.setContent(entity, PropertyPath.from("content"), new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
+									try (InputStream is = embeddedStore.getContent(entity, PropertyPath.from("content"))) {
+										assertThat(IOUtils.contentEquals(is, new ByteArrayInputStream("Hello Spring Content World!".getBytes())), is(true));
+									}
+								});
+
+								It("should return null when content is unset", () -> {
+									EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
+									EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
+									assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
+									int i = 0;
+								});
+							});
+						});
 					});
 				});
 			}
@@ -356,4 +396,33 @@ public class ContentStoreIT {
 			}
 		}
 	}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Entity
+	@Table(name="entity_with_embedded")
+	public static class EntityWithEmbeddedContent {
+
+		@Id
+		private String id = UUID.randomUUID().toString();
+
+		@Embedded
+		private EmbeddedContent content;
+	}
+
+	@Embeddable
+	@NoArgsConstructor
+	@Data
+	public static class EmbeddedContent {
+
+		@ContentId
+		private String contentId;
+
+		@ContentLength
+		private Long contentLen;
+	}
+
+	public interface EmbeddedRepository extends JpaRepository<EntityWithEmbeddedContent, String> {}
+	public interface EmbeddedStore extends ContentStore<EntityWithEmbeddedContent, String> {}
 }
