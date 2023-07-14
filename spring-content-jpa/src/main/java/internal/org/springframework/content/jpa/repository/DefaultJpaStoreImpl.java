@@ -341,8 +341,11 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
                 throw new StoreAccessException(format("Unsetting content for entity %s", entity), e);
             }
         }
-        unassociate(entity, propertyPath);
-        property.setContentLength(entity, 0);
+
+        if (resource != null) {
+            unassociate(entity, propertyPath);
+            property.setContentLength(entity, 0);
+        }
 
         return entity;
     }
