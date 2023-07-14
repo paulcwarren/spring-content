@@ -1,15 +1,5 @@
 package internal.org.springframework.content.jpa.repository;
 
-import static java.lang.String.format;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +23,16 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
+import static java.lang.String.format;
 
 public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		implements Store<SID>, AssociativeStore<S, SID>, ContentStore<S, SID> {
@@ -331,7 +331,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         Resource resource = this.getResource(entity, propertyPath);
 
-        if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
+        if (resource != null && resource.exists() && resource instanceof DeletableResource) {
             try {
                 ((DeletableResource) resource).delete();
             } catch (Exception e) {
