@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren</span><br>
 <span id="revnumber">version 3.0.5-SNAPSHOT,</span>
-<span id="revdate">2023-07-07</span>
+<span id="revdate">2023-07-14</span>
 </div>
 </div>
 <div id="content">
@@ -671,7 +671,7 @@ public class Application {
 			}
 
 			// associate the Resource with the Entity
-			store.associate(jbauer, PropertyPath("profilePicture"), "/some/picture.jpeg");
+			store.associate(jbauer, PropertyPath.from("profilePicture"), "/some/picture.jpeg");
 
 			// save the user
 			repository.save(jbauer);
@@ -1919,7 +1919,7 @@ public class GCSStoreConfiguration  {
 <div id="footer">
 <div id="footer-text">
 Version 3.0.5-SNAPSHOT<br>
-Last updated 2023-07-07 04:32:18 UTC
+Last updated 2023-07-14 04:08:21 UTC
 </div>
 </div>
 </body>

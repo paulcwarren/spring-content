@@ -591,7 +591,7 @@ public class Application {
 			}
 
 			// associate the Resource with the Entity
-			store.associate(jbauer, PropertyPath("profilePicture"), "/some/picture.jpeg");
+			store.associate(jbauer, PropertyPath.from("profilePicture"), "/some/picture.jpeg");
 
 			// save the user
 			repository.save(jbauer);
@@ -1508,7 +1508,7 @@ public interface ChapterStore extends ContentStore&lt;Chapter, UUID&gt; {}</code
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2023-07-07 04:32:18 UTC
+Last updated 2023-07-14 04:08:21 UTC
 </div>
 </div>
 </body>
