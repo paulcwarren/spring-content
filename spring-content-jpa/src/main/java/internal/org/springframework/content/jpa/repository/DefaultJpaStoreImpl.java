@@ -229,9 +229,10 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S setContent(S entity, PropertyPath propertyPath, InputStream content, long contentLen) {
-
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
-        // TODO: property == null?
+        if (property == null) {
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+        }
 
         SID contentId = getContentId(entity, propertyPath);
         if (contentId == null) {
@@ -323,17 +324,14 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
     @Transactional
     @Override
     public S unsetContent(S entity, PropertyPath propertyPath) {
-
         ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
         if (property == null) {
-            // TODO
+            throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
-        Object id = property.getContentId(entity);
-        if (id == null) {
-            id = -1L;
-        }
-        Resource resource = loader.getResource(id.toString());
-        if (resource instanceof DeletableResource) {
+
+        Resource resource = this.getResource(entity, propertyPath);
+
+        if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(UnsetContentParams.Disposition.Remove)) {
             try {
                 ((DeletableResource) resource).delete();
             } catch (Exception e) {
