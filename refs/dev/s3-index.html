@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.17">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
 <title>Spring Content S3 - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -85,10 +85,10 @@ code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;
 ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
 ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
-ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
-ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
+ul.square{list-style-type:square}
+ul.circle ul:not([class]),ul.disc ul:not([class]),ul.square ul:not([class]){list-style:inherit}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -442,8 +442,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Spring Content S3 - Reference Documentation</h1>
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
-<span id="revnumber">version 2.10.0-SNAPSHOT,</span>
-<span id="revdate">2023-07-14</span>
+<span id="revnumber">version 3.0.5-SNAPSHOT,</span>
+<span id="revdate">2023-08-07</span>
 </div>
 </div>
 <div id="content">
@@ -671,7 +671,7 @@ public class Application {
 			}
 
 			// associate the Resource with the Entity
-			store.associate(jbauer, PropertyPath("profilePicture"), "/some/picture.jpeg");
+			store.associate(jbauer, PropertyPath.from("profilePicture"), "/some/picture.jpeg");
 
 			// save the user
 			repository.save(jbauer);
@@ -1083,11 +1083,11 @@ source of the event.  The second takes the event object.  The latter can be usef
 methods that return results to the caller.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 10. Entity-based AbstractContentRepositoryEventListener</div>
+<div class="title">Example 10. Entity-based AbstractStoreEventListener</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractContentRepositoryEventListener {
+<pre class="highlight"><code class="language-java" data-lang="java">public class ExampleEventListener extends AbstractStoreEventListener {
 
 	@Override
 	public void onAfterSetContent(Object entity) {
@@ -1872,29 +1872,31 @@ public class S3StoreConfiguration  {
 <div class="sect3">
 <h4 id="_setting_content">2.4.5. Setting Content</h4>
 <div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(entity, InputStream)</code> method.</p>
+<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
 </div>
 <div class="paragraph">
-<p>If content has not yet been stored with this entity and an Id has not been assigned one will be generated
-based in <code>java.util.UUID</code>.</p>
+<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
+</div>
+<div class="paragraph">
+<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in <code>java.util.UUID</code>.</p>
 </div>
 <div class="paragraph">
 <p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
 </div>
 <div class="paragraph">
-<p>If content has previously been stored it will overwritten updating just the @ContentLength attribute, if present.</p>
+<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_getting_content">2.4.6. Getting Content</h4>
 <div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(entity)</code> method.</p>
+<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_unsetting_content">2.4.7. Unsetting Content</h4>
 <div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(entity)</code> method.</p>
+<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
 </div>
 </div>
 </div>
@@ -1998,8 +2000,8 @@ based in <code>java.util.UUID</code>.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 2.10.0-SNAPSHOT<br>
-Last updated 2023-07-14 06:31:56 UTC
+Version 3.0.5-SNAPSHOT<br>
+Last updated 2023-08-07 19:26:36 UTC
 </div>
 </div>
 </body>
