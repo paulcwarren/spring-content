@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -37,7 +38,7 @@ public class Version {
     private MockMvc mvc;
     private String url;
     private CrudRepository repo;
-    private ContentStore store;
+    private Store store;
     private String etag;
     private ContentEntity entity;
 
@@ -118,7 +119,7 @@ public class Version {
                     assertThat(fetched.get().getContentId(), is(nullValue()));
                     assertThat(fetched.get().getLen(), is(0L));
                     assertThat(fetched.get().getMimeType(), is(nullValue()));
-                    assertThat(store.getContent(fetched.get()), is(nullValue()));
+                    assertThat(((ContentStore)store).getContent(fetched.get()), is(nullValue()));
                 }
             });
         });

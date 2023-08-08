@@ -399,7 +399,7 @@ public class ContentStoreContentService implements ContentService {
             };
 
             UNSETCONTENT_METHODS_3x = new Method[] {
-                    ReflectionUtils.findMethod(ContentStore.class, "unsetContent", Object.class, PropertyPath.class, org.springframework.content.commons.store.UnsetContentParams.class),
+                    ReflectionUtils.findMethod(org.springframework.content.commons.store.ContentStore.class, "unsetContent", Object.class, PropertyPath.class, org.springframework.content.commons.store.UnsetContentParams.class),
             };
 
             UNSETCONTENT_METHODS_2x = new Method[] {

@@ -6,6 +6,7 @@ import com.theoryinpractise.halbuilder.standard.StandardRepresentationFactory;
 import lombok.Setter;
 import org.hamcrest.beans.HasPropertyWithValue;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,7 +26,7 @@ public class ContentLinkTests {
 	private MockMvc mvc;
 
 	private CrudRepository repository;
-	private ContentStore store;
+	private Store store;
 
 	private Object testEntity;
 	private String url;
