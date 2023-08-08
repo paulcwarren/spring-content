@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.Store;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -36,7 +37,7 @@ public class Content {
     private String contextPath = "";
     private ContentEntity entity;
     private CrudRepository repository;
-    private ContentStore store;
+    private Store store;
 
     public static Content tests() {
         return new Content();
@@ -72,7 +73,7 @@ public class Content {
                 assertThat(fetched.get().getContentId(), is(not(nullValue())));
                 assertThat(fetched.get().getLen(), is(31L));
                 assertThat(fetched.get().getMimeType(), is("text/plain"));
-                assertThat(IOUtils.toString(store.getContent(fetched.get()), Charset.defaultCharset()), is(content));
+                assertThat(IOUtils.toString(((ContentStore)store).getContent(fetched.get()), Charset.defaultCharset()), is(content));
             });
         });
         Context("a DELETE to /{store}/{id} with a mime-type", () -> {
@@ -97,14 +98,14 @@ public class Content {
                 assertThat(fetched.get().getContentId(), is(not(nullValue())));
                 assertThat(fetched.get().getOriginalFileName(), is("表单ID及字段.txt"));
                 assertThat(fetched.get().getMimeType(), is("text/plain"));
-                assertThat(fetched.get().getLen(), is(new Long(content.length())));
+                assertThat(fetched.get().getLen(), is(Long.valueOf(content.length())));
             });
         });
 
         Context("given the Entity has text/plain content", () -> {
             BeforeEach(() -> {
                 String content = "Hello Spring Content World!";
-                entity = (ContentEntity) store.setContent(entity, new ByteArrayInputStream(content.getBytes()));
+                entity = (ContentEntity) ((ContentStore)store).setContent(entity, new ByteArrayInputStream(content.getBytes()));
                 entity.setMimeType("text/plain");
                 entity.setOriginalFileName("表单ID及字段.txt");
                 entity = (ContentEntity) repository.save(entity);
@@ -156,7 +157,7 @@ public class Content {
             Context("a GET to /{store}/{id} with a mime type that matches a renderer and the original content-type", () -> {
 
                 BeforeEach(() -> {
-                    entity = (ContentEntity) store.setContent(entity, new ByteArrayInputStream("<html><body>original content</body></html>".getBytes()));
+                    entity = (ContentEntity) ((ContentStore)store).setContent(entity, new ByteArrayInputStream("<html><body>original content</body></html>".getBytes()));
                     entity.setMimeType("text/html");
                     entity = (ContentEntity) repository.save(entity);
                 });
@@ -273,7 +274,7 @@ public class Content {
                             .contentType("text/plain"))
                     .andExpect(status().isOk());
 
-                    assertThat(IOUtils.toString(store.getContent(entity), Charset.defaultCharset()), is("Hello Modified Spring Content World!"));
+                    assertThat(IOUtils.toString(((ContentStore)store).getContent(entity), Charset.defaultCharset()), is("Hello Modified Spring Content World!"));
                 });
             });
             Context("a POST to /{store}/{id} with a multi-part request", () -> {
@@ -294,7 +295,7 @@ public class Content {
                     assertThat(fetched.get().getContentId(), is(not(nullValue())));
                     assertThat(fetched.get().getOriginalFileName(), is("tests-file-modified.txt"));
                     assertThat(fetched.get().getMimeType(), is("text/plain"));
-                    assertThat(fetched.get().getLen(), is(new Long(content.length())));
+                    assertThat(fetched.get().getLen(), is(Long.valueOf(content.length())));
                 });
             });
             Context("a PUT to /{store}/{id} with a multi-part request", () -> {
@@ -315,7 +316,7 @@ public class Content {
                     assertThat(fetched.get().getContentId(), is(not(nullValue())));
                     assertThat(fetched.get().getOriginalFileName(), is("tests-file-modified.txt"));
                     assertThat(fetched.get().getMimeType(), is("text/plain"));
-                    assertThat(fetched.get().getLen(), is(new Long(content.length())));
+                    assertThat(fetched.get().getLen(), is(Long.valueOf(content.length())));
                 });
             });
             Context("a DELETE to /{store}/{id} with the mimetype", () -> {
@@ -331,7 +332,7 @@ public class Content {
                     assertThat(fetched.get().getContentId(), is(nullValue()));
                     assertThat(fetched.get().getLen(), is(0L));
                     assertThat(fetched.get().getMimeType(), is(nullValue()));
-                    assertThat(store.getContent(entity), is(nullValue()));
+                    assertThat(((ContentStore)store).getContent(entity), is(nullValue()));
                 });
             });
         });
