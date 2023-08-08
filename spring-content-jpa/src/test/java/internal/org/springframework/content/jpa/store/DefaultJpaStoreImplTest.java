@@ -390,35 +390,35 @@ public class DefaultJpaStoreImplTest {
 
 	}
 
-    public static class JakartaTestEntity {
-        @Id
-        @ContentId
-        private String contentId;
-        @ContentLength
-        private long contentLen;
+	public static class JakartaTestEntity {
+		@Id
+		@ContentId
+		private String contentId;
+		@ContentLength
+		private long contentLen;
 
-        public JakartaTestEntity() {
-            this.contentId = null;
-        }
+		public JakartaTestEntity() {
+			this.contentId = null;
+		}
 
-        public JakartaTestEntity(String contentId) {
-            this.contentId = contentId;
-        }
+		public JakartaTestEntity(String contentId) {
+			this.contentId = contentId;
+		}
 
-        public String getContentId() {
-            return this.contentId;
-        }
+		public String getContentId() {
+			return this.contentId;
+		}
 
-        public void setContentId(String contentId) {
-            this.contentId = contentId;
-        }
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
 
-        public long getContentLen() {
-            return contentLen;
-        }
+		public long getContentLen() {
+			return contentLen;
+		}
 
-        public void setContentLen(long contentLen) {
-            this.contentLen = contentLen;
-        }
-    }
+		public void setContentLen(long contentLen) {
+			this.contentLen = contentLen;
+		}
+	}
 }
