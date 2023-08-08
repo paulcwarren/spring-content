@@ -53,7 +53,7 @@ public class DefaultJpaStoreImplTest {
 	private BlobResourceLoader blobResourceLoader;
 
 	private TestEntity entity;
-    private JakartaTestEntity jakartaAnnotatedEntity;
+	private JakartaTestEntity jakartaAnnotatedEntity;
 	private InputStream stream;
 	private InputStream inputStream;
 	private Resource inputResource;
