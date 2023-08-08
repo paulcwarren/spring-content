@@ -115,11 +115,10 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
             @Override
             public boolean matches(TypeDescriptor descriptor) {
                 for (Annotation annotation : descriptor.getAnnotations()) {
-                    if ("javax.persistence.Id".equals(
-                            annotation.annotationType().getCanonicalName())
-                            || "org.springframework.data.annotation.Id"
-                                    .equals(annotation.annotationType()
-                                            .getCanonicalName())) {
+                    String canonicalName = annotation.annotationType().getCanonicalName();
+                    if ("javax.persistence.Id".equals(canonicalName)
+                            || "jakarta.persistence.Id".equals(canonicalName)
+                            || "org.springframework.data.annotation.Id".equals(canonicalName)) {
                         return false;
                     }
                 }
@@ -140,11 +139,10 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 					@Override
 					public boolean matches(Field field) {
 						for (Annotation annotation : field.getAnnotations()) {
-							if ("javax.persistence.Id".equals(
-									annotation.annotationType().getCanonicalName())
-									|| "org.springframework.data.annotation.Id"
-											.equals(annotation.annotationType()
-													.getCanonicalName())) {
+                            String canonicalName = annotation.annotationType().getCanonicalName();
+                            if ("javax.persistence.Id".equals(canonicalName)
+                                    || "jakarta.persistence.Id".equals(canonicalName)
+									|| "org.springframework.data.annotation.Id".equals(canonicalName)) {
 								return false;
 							}
 						}

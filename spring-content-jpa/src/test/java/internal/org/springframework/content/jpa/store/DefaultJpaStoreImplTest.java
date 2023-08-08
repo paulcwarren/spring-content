@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
+import java.util.UUID;
 
+import jakarta.persistence.Id;
 import org.hamcrest.CoreMatchers;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
@@ -51,6 +53,7 @@ public class DefaultJpaStoreImplTest {
 	private BlobResourceLoader blobResourceLoader;
 
 	private TestEntity entity;
+	private JakartaTestEntity jakartaAnnotatedEntity;
 	private InputStream stream;
 	private InputStream inputStream;
 	private Resource inputResource;
@@ -307,6 +310,52 @@ public class DefaultJpaStoreImplTest {
 				});
 			});
 		});
+
+        Describe("DefaultJpaStoreImpl jakartaAnnotatedEntity", () -> {
+            JustBeforeEach(() -> {
+                store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null));
+            });
+
+            Describe("Store", () -> {
+                BeforeEach(() -> {
+                    blobResourceLoader = mock(BlobResourceLoader.class);
+                });
+                Context("#getResource", () -> {
+                    Context("given an id", () -> {
+                        BeforeEach(() -> {
+                            id = "1";
+                        });
+                        JustBeforeEach(() -> {
+                            resource = store.getResource(id);
+                        });
+                        It("should use the blob resource loader to load a blob resource",
+                                () -> {
+                                    verify(blobResourceLoader).getResource(id.toString());
+                                });
+                    });
+                });
+            });
+            Describe("AssociativeStore", () -> {
+                BeforeEach(() -> {
+                    blobResourceLoader = mock(BlobResourceLoader.class);
+                });
+                Context("#unassociate jakarta annotated entity", () -> {
+                    BeforeEach(() -> {
+                        id = "12345";
+
+                        jakartaAnnotatedEntity = new JakartaTestEntity();
+                        jakartaAnnotatedEntity.setContentId(id);
+                        jakartaAnnotatedEntity.setContentLen(20L);
+                    });
+                    JustBeforeEach(() -> {
+                        store.unassociate(jakartaAnnotatedEntity);
+                    });
+                    It("should NOT reset the @ContentId", () -> {
+                        assertThat(jakartaAnnotatedEntity.getContentId(), CoreMatchers.is(id));
+                    });
+                });
+            });
+        });
 	}
 
 	public static class TestEntity {
@@ -341,4 +390,35 @@ public class DefaultJpaStoreImplTest {
 
 	}
 
+	public static class JakartaTestEntity {
+		@Id
+		@ContentId
+		private String contentId;
+		@ContentLength
+		private long contentLen;
+
+		public JakartaTestEntity() {
+			this.contentId = null;
+		}
+
+		public JakartaTestEntity(String contentId) {
+			this.contentId = contentId;
+		}
+
+		public String getContentId() {
+			return this.contentId;
+		}
+
+		public void setContentId(String contentId) {
+			this.contentId = contentId;
+		}
+
+		public long getContentLen() {
+			return contentLen;
+		}
+
+		public void setContentLen(long contentLen) {
+			this.contentLen = contentLen;
+		}
+	}
 }
