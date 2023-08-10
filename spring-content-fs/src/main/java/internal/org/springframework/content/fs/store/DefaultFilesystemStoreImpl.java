@@ -400,7 +400,11 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 		// reset content fields
 		unassociate(entity);
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+
+		Class<?> contentLenType = BeanUtils.getFieldWithAnnotationType(entity, ContentLength.class);
+		if (contentLenType != null) {
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, BeanUtils.getDefaultValueForType(contentLenType));
+		}
 
 		return entity;
 	}
@@ -420,12 +424,16 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Transactional
 	@Override
-	public S unsetContent(S property, PropertyPath propertyPath, UnsetContentParams params) {
+	public S unsetContent(S entity, PropertyPath propertyPath, UnsetContentParams params) {
+		ContentProperty property = this.mappingContext.getContentProperty(entity.getClass(), propertyPath.getName());
+		if (property == null) {
+			throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
+		}
 
-		if (property == null)
-			return property;
+		if (entity == null)
+			return entity;
 
-		Resource resource = getResource(property, propertyPath);
+		Resource resource = getResource(entity, propertyPath);
 
 		if (resource != null && resource.exists() && resource instanceof DeletableResource && params.getDisposition().equals(Disposition.Remove)) {
 			try {
@@ -436,11 +444,12 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 		}
 
 		// reset content fields
-		if (resource != null) {unassociate(property, propertyPath);
-		ContentProperty contentProperty = this.mappingContext.getContentProperty(property.getClass(), propertyPath.getName());
-		contentProperty.setContentLength(property, 0);}
+		if (resource != null) {
+			unassociate(entity, propertyPath);
 
-		return property;
+			property.setContentLength(entity, BeanUtils.getDefaultValueForType(property.getContentLengthType().getType()));
+		}
+		return entity;
 	}
 
 	private Object convertToExternalContentIdType(S property, Object contentId) {

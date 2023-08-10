@@ -330,7 +330,7 @@ public class Content {
                     Optional<ContentEntity> fetched = repository.findById(entity.getId());
                     assertThat(fetched.isPresent(), is(true));
                     assertThat(fetched.get().getContentId(), is(nullValue()));
-                    assertThat(fetched.get().getLen(), is(0L));
+                    assertThat(fetched.get().getLen(), is(nullValue()));
                     assertThat(fetched.get().getMimeType(), is(nullValue()));
                     assertThat(((ContentStore)store).getContent(entity), is(nullValue()));
                 });

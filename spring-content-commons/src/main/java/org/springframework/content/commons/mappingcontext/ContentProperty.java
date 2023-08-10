@@ -20,6 +20,7 @@ public class ContentProperty {
     private String contentIdPropertyPath;
     private TypeDescriptor contentIdType;
     private String contentLengthPropertyPath;
+    private TypeDescriptor contentLengthType;
     private String mimeTypePropertyPath;
     private String originalFileNamePropertyPath;
 
@@ -105,6 +106,15 @@ public class ContentProperty {
 
         BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(contentLengthPropertyPath, value);
+    }
+
+    public TypeDescriptor getContentLengthType() {
+        Assert.notNull(this.contentLengthType, "content length property type must be set");
+        return this.contentLengthType;
+    }
+
+    public void setContentLengthType(TypeDescriptor descriptor) {
+        this.contentLengthType = descriptor;
     }
 
     public Object getMimeType(Object entity) {

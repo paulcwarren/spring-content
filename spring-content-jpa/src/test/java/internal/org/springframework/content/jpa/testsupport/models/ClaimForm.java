@@ -18,7 +18,7 @@ public class ClaimForm {
 	private String contentId;
 
 	@ContentLength
-	private long contentLength = 0L;
+	private Long contentLength = 0L;
 
 	@MimeType
 	private String contentMimeType = "text/plain";

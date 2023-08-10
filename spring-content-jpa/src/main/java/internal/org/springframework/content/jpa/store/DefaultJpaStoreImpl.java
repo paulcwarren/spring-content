@@ -344,7 +344,10 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 			}
 		}
 		unassociate(metadata);
-		BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, 0);
+        Class<?> contentLenType = BeanUtils.getFieldWithAnnotationType(metadata, ContentLength.class);
+        if (contentLenType != null) {
+            BeanUtils.setFieldWithAnnotation(metadata, ContentLength.class, BeanUtils.getDefaultValueForType(contentLenType));
+        }
 
 		return metadata;
 	}
@@ -386,7 +389,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
         if (resource != null) {
             unassociate(entity, propertyPath);
-            property.setContentLength(entity, 0);
+            property.setContentLength(entity, BeanUtils.getDefaultValueForType(property.getContentLengthType().getType()));
         }
 
         return entity;

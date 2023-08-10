@@ -143,7 +143,7 @@ public class ContentStoreIT {
 						    // content
 							Assert.assertThat(claim.getClaimForm().getContentId(), is(notNullValue()));
 							Assert.assertThat(claim.getClaimForm().getContentId().trim().length(), greaterThan(0));
-							Assert.assertEquals(claim.getClaimForm().getContentLength(), 27L);
+							Assert.assertEquals(claim.getClaimForm().getContentLength(), Long.valueOf(27L));
 
 							// renditoin
                             Assert.assertThat(claim.getClaimForm().getRenditionId(), is(notNullValue()));
@@ -257,7 +257,7 @@ public class ContentStoreIT {
 		                        });
 
                                 Assert.assertThat(claim.getClaimForm().getContentId(), is(nullValue()));
-                                Assert.assertEquals(claim.getClaimForm().getContentLength(), 0);
+								assertThat(claim.getClaimForm().getContentLength(), is(nullValue()));
 
 	                            // rendition
                                 doInTransaction(ptm, () -> {
@@ -298,7 +298,7 @@ public class ContentStoreIT {
 								});
 
 								Assert.assertThat(claim.getClaimForm().getContentId(), is(nullValue()));
-								Assert.assertEquals(claim.getClaimForm().getContentLength(), 0);
+								assertThat(claim.getClaimForm().getContentLength(), is(nullValue()));
 							});
 						});
 
@@ -378,9 +378,9 @@ public class ContentStoreIT {
                 claimFormStore.unsetContent(existingClaim, PropertyPath.from("claimForm/rendition"));
 				if (existingClaim.getClaimForm() != null) {
 					Assert.assertThat(existingClaim.getClaimForm().getContentId(), is(nullValue()));
-					Assert.assertEquals(existingClaim.getClaimForm().getContentLength(), 0);
+					Assert.assertThat(existingClaim.getClaimForm().getContentLength(), is(nullValue()));
                     Assert.assertThat(existingClaim.getClaimForm().getRenditionId(), is(nullValue()));
-                    Assert.assertEquals(existingClaim.getClaimForm().getRenditionLen(), 0);
+                    Assert.assertThat(existingClaim.getClaimForm().getRenditionLen(), is(Long.valueOf(0)));
 
 					// double check the content got removed
 					InputStream content = doInTransaction(ptm, () -> claimFormStore.getContent(existingClaim, PropertyPath.from("claimForm/content")));
