@@ -250,4 +250,23 @@ public final class BeanUtils {
 			}
 		}
 	}
+
+	public static Object getDefaultValueForType(Class<?> fieldType) {
+		if (fieldType == int.class || fieldType == double.class) {
+			return 0;
+		} else if (fieldType == boolean.class) {
+			return false;
+		} else if (fieldType == char.class) {
+			return '\u0000';
+		} else if (fieldType == byte.class) {
+			return (byte) 0;
+		} else if (fieldType == short.class) {
+			return (short) 0;
+		} else if (fieldType == long.class) {
+			return 0L;
+		} else if (fieldType == float.class) {
+			return 0.0f;
+		}
+		return null; // For non-primitive types
+	}
 }

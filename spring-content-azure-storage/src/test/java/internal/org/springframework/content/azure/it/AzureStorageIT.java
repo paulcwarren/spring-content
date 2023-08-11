@@ -148,7 +148,7 @@ public class AzureStorageIT {
                             try (InputStream expected = new ByteArrayInputStream("Hello Spring Content World!".getBytes())) {
                                 try (InputStream actual = genericResource.getInputStream()) {
                                     matches = IOUtils.contentEquals(expected, actual);
-                                    assertThat(matches, Matchers.is(true));
+                                    assertThat(matches, is(true));
                                 }
                             }
                         });
@@ -317,7 +317,7 @@ public class AzureStorageIT {
                     // content
                     assertThat(entity.getContentId(), is(notNullValue()));
                     assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
+                    Assert.assertEquals(entity.getContentLen(), Long.valueOf(27L));
 
                     //rendition
                     assertThat(entity.getRenditionId(), is(notNullValue()));
@@ -407,21 +407,21 @@ public class AzureStorageIT {
                     It("should have no content", () -> {
                         //content
                         try (InputStream content = store.getContent(entity)) {
-                            assertThat(content, is(Matchers.nullValue()));
+                            assertThat(content, is(nullValue()));
                         }
 
-                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentId(), is(nullValue()));
+                        assertThat(entity.getContentLen(), is(nullValue()));
 
                         BlobContainerClient c = builder.buildClient().getBlobContainerClient("azure-test-bucket");
                         assertThat(c.getBlobClient(resourceLocation).getBlockBlobClient().exists(), is(false));
 
                         //rendition
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            assertThat(content, is(Matchers.nullValue()));
+                            assertThat(content, is(nullValue()));
                         }
 
-                        assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
+                        assertThat(entity.getRenditionId(), is(nullValue()));
                         Assert.assertEquals(entity.getRenditionLen(), 0);
                     });
                 });
@@ -436,11 +436,11 @@ public class AzureStorageIT {
                     It("should have no content", () -> {
                         //content
                         try (InputStream content = store.getContent(entity)) {
-                            assertThat(content, is(Matchers.nullValue()));
+                            assertThat(content, is(nullValue()));
                         }
 
-                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentId(), is(nullValue()));
+                        assertThat(entity.getContentLen(), is(nullValue()));
 
                         BlobContainerClient c = builder.buildClient().getBlobContainerClient("azure-test-bucket");
                         assertThat(c.getBlobClient(resourceLocation).getBlockBlobClient().exists(), is(true));
@@ -604,7 +604,7 @@ public class AzureStorageIT {
         private String contentId;
 
         @ContentLength
-        private long contentLen;
+        private Long contentLen;
 
         @ContentId
         private String renditionId;

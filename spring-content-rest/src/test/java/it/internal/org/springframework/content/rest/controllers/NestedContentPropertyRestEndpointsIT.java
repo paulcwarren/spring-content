@@ -62,7 +62,7 @@ public class NestedContentPropertyRestEndpointsIT {
    @Autowired private TestEntity8Repository repository2;
    @Autowired private TestEntity8Store store;
 
-   private TestEntity8 testEntity2;
+   private TestEntity8 testEntity8;
 
 	@Autowired
    private WebApplicationContext context;
@@ -79,7 +79,7 @@ public class NestedContentPropertyRestEndpointsIT {
 		});
 		Context("given an Entity with a simple content property", () -> {
 		  BeforeEach(() -> {
-			  testEntity2 = repository2.save(new TestEntity8());
+			  testEntity8 = repository2.save(new TestEntity8());
 		  });
 
 		  Context("given a request to a non-existent entity", () -> {
@@ -93,7 +93,7 @@ public class NestedContentPropertyRestEndpointsIT {
           Context("given a request to a non-existent content property", () -> {
               It("should return 404", () -> {
                   mvc.perform(
-                          get("/testEntity8s/" + testEntity2.getId() + "/doesnotexist"))
+                          get("/testEntity8s/" + testEntity8.getId() + "/doesnotexist"))
                           .andExpect(status().isNotFound());
               });
           });
@@ -102,7 +102,7 @@ public class NestedContentPropertyRestEndpointsIT {
 			  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
 				  It("should return 404", () -> {
 					  mvc.perform(
-							  get("/testEntity8s/" + testEntity2.getId() + "/child"))
+							  get("/testEntity8s/" + testEntity8.getId() + "/child"))
 							  .andExpect(status().isNotFound());
 				  });
 			  });
@@ -110,12 +110,12 @@ public class NestedContentPropertyRestEndpointsIT {
 				  It("should create the content", () -> {
 
 					  mvc.perform(
-							  put("/testEntity8s/" + testEntity2.getId() + "/child")
+							  put("/testEntity8s/" + testEntity8.getId() + "/child")
 									  .content("Hello New Spring Content World!")
 									  .contentType("text/plain"))
 							  .andExpect(status().is2xxSuccessful());
 
-					  Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
+					  Optional<TestEntity8> fetched = repository2.findById(testEntity8.getId());
 					  assertThat(fetched.isPresent(), is(true));
 					  assertThat(fetched.get().getChild().contentId,is(not(nullValue())));
 					  assertThat(fetched.get().getChild().contentLen, is(31L));
@@ -129,12 +129,12 @@ public class NestedContentPropertyRestEndpointsIT {
 			      It("should set the content and return 201", () -> {
 			          String content = "{\"content\":\"Hello New Spring Content World!\"}";
 			          mvc.perform(
-                            put("/testEntity8s/" + testEntity2.getId() + "/child")
+                            put("/testEntity8s/" + testEntity8.getId() + "/child")
                             .content(content)
                             .contentType("application/json"))
 			          .andExpect(status().isCreated());
 
-			          Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
+			          Optional<TestEntity8> fetched = repository2.findById(testEntity8.getId());
 			          assertThat(fetched.isPresent(), is(true));
 			          assertThat(fetched.get().getChild().getContentId(), is(not(nullValue())));
 			          assertThat(fetched.get().getChild().getContentLen(), is(45L));
@@ -149,36 +149,36 @@ public class NestedContentPropertyRestEndpointsIT {
 			  BeforeEach(() -> {
 				  String content = "Hello Spring Content World!";
 
-				  testEntity2.getChild().contentMimeType = "text/plain";
+				  testEntity8.getChild().contentMimeType = "text/plain";
 				  UUID contentId = UUID.randomUUID();
-				  store.associate(testEntity2, PropertyPath.from("child"), contentId);
-				  WritableResource r = (WritableResource)store.getResource(testEntity2, PropertyPath.from("child"));
+				  store.associate(testEntity8, PropertyPath.from("child"), contentId);
+				  WritableResource r = (WritableResource)store.getResource(testEntity8, PropertyPath.from("child"));
 				  try (OutputStream out = r.getOutputStream()) {
 				      out.write(content.getBytes());
 				  }
-				  testEntity2 = repository2.save(testEntity2);
+				  testEntity8 = repository2.save(testEntity8);
 
 				  versionTests.setMvc(mvc);
-				  versionTests.setUrl("/testEntity8s/" + testEntity2.getId() + "/child");
+				  versionTests.setUrl("/testEntity8s/" + testEntity8.getId() + "/child");
 				  versionTests.setRepo(repository2);
 				  versionTests.setStore(store);
-				  versionTests.setEtag(format("\"%s\"", testEntity2.getVersion()));
+				  versionTests.setEtag(format("\"%s\"", testEntity8.getVersion()));
 
 				  lastModifiedDateTests.setMvc(mvc);
-				  lastModifiedDateTests.setUrl("/testEntity8s/" + testEntity2.getId() + "/child");
-				  lastModifiedDateTests.setLastModifiedDate(testEntity2.getModifiedDate());
-				  lastModifiedDateTests.setEtag(testEntity2.getVersion().toString());
+				  lastModifiedDateTests.setUrl("/testEntity8s/" + testEntity8.getId() + "/child");
+				  lastModifiedDateTests.setLastModifiedDate(testEntity8.getModifiedDate());
+				  lastModifiedDateTests.setEtag(testEntity8.getVersion().toString());
 				  lastModifiedDateTests.setContent(content);
 			  });
 			  Context("a GET to /{repository}/{id}/{contentProperty}", () -> {
 				  It("should return the content", () -> {
 					  MockHttpServletResponse response = mvc
-							  .perform(get("/testEntity8s/" + testEntity2.getId() + "/child")
+							  .perform(get("/testEntity8s/" + testEntity8.getId() + "/child")
 									  .accept("text/plain"))
 							  .andExpect(status().isOk())
 							  .andExpect(header().string("etag", is("\"1\"")))
 							  .andExpect(header().string("last-modified", LastModifiedDate
-									  .isWithinASecond(testEntity2.getModifiedDate())))
+									  .isWithinASecond(testEntity8.getModifiedDate())))
 							  .andReturn().getResponse();
 
 					  assertThat(response, is(not(nullValue())));
@@ -189,7 +189,7 @@ public class NestedContentPropertyRestEndpointsIT {
 				  It("should return the rendition and 200", () -> {
 					  MockHttpServletResponse response = mvc
 							  .perform(get(
-									  "/testEntity8s/" + testEntity2.getId()
+									  "/testEntity8s/" + testEntity8.getId()
 											  + "/child")
 									  .accept("text/html"))
 							  .andExpect(status().isOk()).andReturn()
@@ -204,7 +204,7 @@ public class NestedContentPropertyRestEndpointsIT {
 				  It("should return the original content and 200", () -> {
 					  MockHttpServletResponse response = mvc
 							  .perform(get("/testEntity8s/"
-									  + testEntity2.getId()
+									  + testEntity8.getId()
 									  + "/child").accept(
 									  new String[] {"text/xml",
 											  "text/plain"}))
@@ -219,13 +219,13 @@ public class NestedContentPropertyRestEndpointsIT {
 			  Context("a PUT to /{repository}/{id}/{contentProperty}", () -> {
 				  It("should create the content", () -> {
 					  mvc.perform(
-							  put("/testEntity8s/" + testEntity2.getId() + "/child")
+							  put("/testEntity8s/" + testEntity8.getId() + "/child")
 									  .content("Hello New Spring Content World!")
 									  .contentType("text/plain"))
 							  .andExpect(status().is2xxSuccessful());
 
 					  Optional<TestEntity8> fetched = repository2
-							  .findById(testEntity2.getId());
+							  .findById(testEntity8.getId());
 					  assertThat(fetched.isPresent(), is(true));
 					  assertThat(fetched.get().getChild().contentId,is(not(nullValue())));
 					  assertThat(fetched.get().getChild().contentLen, is(31L));
@@ -235,13 +235,13 @@ public class NestedContentPropertyRestEndpointsIT {
 			  Context("a DELETE to /{repository}/{id}/{contentProperty}", () -> {
 				  It("should delete the content", () -> {
 					  mvc.perform(delete(
-							  "/testEntity8s/" + testEntity2.getId() + "/child"))
+							  "/testEntity8s/" + testEntity8.getId() + "/child"))
 							  .andExpect(status().isNoContent());
 
-					  Optional<TestEntity8> fetched = repository2.findById(testEntity2.getId());
+					  Optional<TestEntity8> fetched = repository2.findById(testEntity8.getId());
 					  assertThat(fetched.isPresent(), is(true));
 					  assertThat(fetched.get().getChild().contentId, is(nullValue()));
-					  assertThat(fetched.get().getChild().contentLen, is(0L));
+					  assertThat(fetched.get().getChild().contentLen, is(nullValue()));
                       assertThat(fetched.get().getChild().contentMimeType, is(nullValue()));
 				  });
 			  });

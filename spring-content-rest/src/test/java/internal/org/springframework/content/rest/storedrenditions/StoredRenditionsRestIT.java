@@ -148,7 +148,7 @@ public class StoredRenditionsRestIT {
                             Optional<TestEntity5> fetched = repo.findById(id);
                             assertThat(fetched.isPresent(), is(true));
                             assertThat(fetched.get().getContentId(), is(nullValue()));
-                            assertThat(fetched.get().getContentLen(), is(0L));
+                            assertThat(fetched.get().getContentLen(), is(nullValue()));
                             assertThat(fetched.get().getContentMimeType(), is(nullValue()));
 
                             assertThat(fetched.get().getRenditionId(), is(nullValue()));

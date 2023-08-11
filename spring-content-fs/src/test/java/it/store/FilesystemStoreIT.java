@@ -296,7 +296,7 @@ public class FilesystemStoreIT {
 					// content
 					assertThat(entity.getContentId(), is(notNullValue()));
 					assertThat(entity.getContentId().trim().length(), greaterThan(0));
-					Assert.assertEquals(entity.getContentLen(), 27L);
+					Assert.assertEquals(entity.getContentLen(), Long.valueOf(27L));
 
 					//rendition
 					assertThat(entity.getRenditionId(), is(notNullValue()));
@@ -400,15 +400,15 @@ public class FilesystemStoreIT {
 						}
 
 						assertThat(entity.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(entity.getContentLen(), 0);
+						assertThat(entity.getContentLen(), is(nullValue()));
 
 						//rendition
 						try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
 							assertThat(content, is(Matchers.nullValue()));
 						}
 
-						assertThat(entity.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(entity.getContentLen(), 0);
+						assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
+						assertThat(entity.getRenditionLen(), is(0L));
 
 						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
 						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(false));
@@ -429,7 +429,7 @@ public class FilesystemStoreIT {
 						}
 
 						assertThat(entity.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(entity.getContentLen(), 0);
+						assertThat(entity.getContentLen(), is(nullValue()));
 
 						FileSystemResourceLoader loader = context.getBean(FileSystemResourceLoader.class);
 						assertThat(new File(loader.getFilesystemRoot(), resourceLocation).exists(), is(true));
@@ -482,7 +482,7 @@ public class FilesystemStoreIT {
 						String id = sharedIdContentIdEntity.getContentId();
 						sharedIdContentIdEntity = sharedIdStore.unsetContent(sharedIdContentIdEntity);
 						assertThat(sharedIdContentIdEntity.getContentId(), is(id));
-						assertThat(sharedIdContentIdEntity.getContentLen(), is(0L));
+						assertThat(sharedIdContentIdEntity.getContentLen(), is(nullValue()));
 					});
 				});
 
@@ -577,9 +577,9 @@ public class FilesystemStoreIT {
 
 		void setContentId(String contentId);
 
-		long getContentLen();
+		Long getContentLen();
 
-		void setContentLen(long contentLen);
+		void setContentLen(Long contentLen);
 	}
 
 	@Entity
@@ -593,7 +593,7 @@ public class FilesystemStoreIT {
 		private String contentId;
 
 		@ContentLength
-		private long contentLen;
+		private Long contentLen;
 
         @ContentId
         private String renditionId;
@@ -615,12 +615,12 @@ public class FilesystemStoreIT {
 		}
 
 		@Override
-        public long getContentLen() {
+        public Long getContentLen() {
 			return contentLen;
 		}
 
 		@Override
-        public void setContentLen(long contentLen) {
+        public void setContentLen(Long contentLen) {
 			this.contentLen = contentLen;
 		}
 
@@ -653,7 +653,7 @@ public class FilesystemStoreIT {
 		private String contentId = UUID.randomUUID().toString();
 
 		@ContentLength
-		private long contentLen;
+		private Long contentLen;
 
 		public SharedIdContentIdEntity() {
 		}
@@ -669,12 +669,12 @@ public class FilesystemStoreIT {
 		}
 
 		@Override
-        public long getContentLen() {
+        public Long getContentLen() {
 			return contentLen;
 		}
 
 		@Override
-        public void setContentLen(long contentLen) {
+        public void setContentLen(Long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}

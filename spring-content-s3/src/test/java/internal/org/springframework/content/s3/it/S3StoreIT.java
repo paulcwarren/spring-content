@@ -344,12 +344,12 @@ public class S3StoreIT {
                     // content
                     assertThat(entity.getContentId(), is(notNullValue()));
                     assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
+                    assertThat(entity.getContentLen(), is(Long.valueOf(27L)));
 
                     //rendition
                     assertThat(entity.getRenditionId(), is(notNullValue()));
                     assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getRenditionLen(), 40L);
+                    assertThat(entity.getRenditionLen(), is(Long.valueOf(40L)));
                 });
 
                 It("should set Content-Type of stored content to value from field annotated with @MimeType", () -> {
@@ -445,7 +445,7 @@ public class S3StoreIT {
                         }
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentLen(), is(nullValue()));
 
                         try {
                             client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(resourceLocation).build());
@@ -459,7 +459,7 @@ public class S3StoreIT {
                         }
 
                         assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getRenditionLen(), 0);
+                        assertThat(entity.getRenditionLen(), is(0L));
                     });
                 });
 
@@ -477,7 +477,7 @@ public class S3StoreIT {
                         }
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentLen(), is(nullValue()));
 
                         client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(resourceLocation).build());
                     });
@@ -640,7 +640,7 @@ public class S3StoreIT {
         private String contentId;
 
         @ContentLength
-        private long contentLen;
+        private Long contentLen;
 
         @MimeType
         private String contentType;

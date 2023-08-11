@@ -87,6 +87,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
                 }
                 if (property.getContentLengthPropertyPath() != null) {
                     contentProperty.setContentLengthPropertyPath(property.getContentLengthPropertyPath());
+                    contentProperty.setContentLengthType(property.getContentLengthType());
                 }
                 if (property.getMimeTypePropertyPath() != null) {
                     contentProperty.setMimeTypePropertyPath(property.getMimeTypePropertyPath());
@@ -137,6 +138,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
                     classProperties.put(propertyName, property);
                 }
                 updateContentProperty(property::setContentLengthPropertyPath, fullyQualify(path, f.getName(), this.getContentPropertySeparator()));
+                property.setContentLengthType(TypeDescriptor.valueOf(f.getType()));
             }
         } else if (f.isAnnotationPresent(MimeType.class)) {
             LOGGER.trace(String.format("%s.%s is @MimeType", f.getDeclaringClass().getCanonicalName(), f.getName()));
