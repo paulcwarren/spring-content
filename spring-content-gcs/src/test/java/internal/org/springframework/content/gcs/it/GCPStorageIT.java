@@ -308,7 +308,7 @@ public class GCPStorageIT {
                     // content
                     assertThat(entity.getContentId(), is(notNullValue()));
                     assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
+                    Assert.assertEquals(entity.getContentLen(), Long.valueOf(27L));
 
                     //rendition
                     assertThat(entity.getRenditionId(), is(notNullValue()));
@@ -399,7 +399,7 @@ public class GCPStorageIT {
                         }
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentLen(), is(nullValue()));
                         assertThat(storage.get(BlobId.of("test-bucket", resourceLocation)), is(nullValue()));
 
                         //rendition
@@ -408,7 +408,7 @@ public class GCPStorageIT {
                         }
 
                         assertThat(entity.getRenditionId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getRenditionLen(), 0);
+                        assertThat(entity.getRenditionLen(), is(0L));
                     });
                 });
 
@@ -426,7 +426,7 @@ public class GCPStorageIT {
                         }
 
                         assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentLen(), is(nullValue()));
                         assertThat(storage.get(BlobId.of("test-bucket", resourceLocation)).exists(), is(true));
                     });
                 });
@@ -590,7 +590,7 @@ public class GCPStorageIT {
         private String contentId;
 
         @ContentLength
-        private long contentLen;
+        private Long contentLen;
 
         @ContentId
         private String renditionId;

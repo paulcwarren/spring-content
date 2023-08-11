@@ -22,7 +22,7 @@
  		<dependency>
  			<groupId>com.google.cloud</groupId>
  			<artifactId>spring-cloud-gcp-storage</artifactId>
- 			<version>4.7.1</version>
+ 			<version>4.7.2</version>
  		</dependency>
  		<dependency>
 		    <groupId>com.google.cloud</groupId>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>spring-cloud-gcp-core</artifactId>
-            <version>4.7.1</version>
+            <version>4.7.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

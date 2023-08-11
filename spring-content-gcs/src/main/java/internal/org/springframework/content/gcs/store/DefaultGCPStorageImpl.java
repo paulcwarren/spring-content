@@ -449,7 +449,11 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 						return true;
 					}
 				});
-		BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, 0);
+
+		Class<?> contentLenType = BeanUtils.getFieldWithAnnotationType(entity, ContentLength.class);
+		if (contentLenType != null) {
+			BeanUtils.setFieldWithAnnotation(entity, ContentLength.class, BeanUtils.getDefaultValueForType(contentLenType));
+		}
 
 		return entity;
 	}
@@ -492,21 +496,22 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 
 		// reset content fields
 		if (resource != null) {property.setContentId(entity, null, new org.springframework.content.commons.mappingcontext.Condition() {
-			@Override
-			public boolean matches(TypeDescriptor descriptor) {
-				for (Annotation annotation : descriptor.getAnnotations()) {
-					if ("jakarta.persistence.Id".equals(
-							annotation.annotationType().getCanonicalName())
-							|| "org.springframework.data.annotation.Id"
-							.equals(annotation.annotationType()
-									.getCanonicalName())) {
-						return false;
+				@Override
+				public boolean matches(TypeDescriptor descriptor) {
+					for (Annotation annotation : descriptor.getAnnotations()) {
+						if ("jakarta.persistence.Id".equals(
+								annotation.annotationType().getCanonicalName())
+								|| "org.springframework.data.annotation.Id"
+								.equals(annotation.annotationType()
+										.getCanonicalName())) {
+							return false;
+						}
 					}
+					return true;
 				}
-				return true;
-			}
-		});
-		property.setContentLength(entity, 0);}
+			});
+			property.setContentLength(entity, BeanUtils.getDefaultValueForType(property.getContentLengthType().getType()));
+		}
 
 		return entity;
 	}

@@ -50,6 +50,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedProperty.setContentLengthPropertyPath("contentLength");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("content", expectedProperty));
@@ -59,6 +60,7 @@ public class ClassWalkerTest {
                 expectedSubClassProperty.setContentIdPropertyPath("child.contentId");
                 expectedSubClassProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedSubClassProperty.setContentLengthPropertyPath("child.contentLength");
+                expectedSubClassProperty.setContentLengthType(TypeDescriptor.valueOf(long.class));
                 expectedSubClassProperty.setMimeTypePropertyPath("child.contentMimeType");
                 expectedSubClassProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child", expectedSubClassProperty));
@@ -68,6 +70,7 @@ public class ClassWalkerTest {
                 expectedSubSubClassProperty.setContentIdPropertyPath("child.subChild.contentId");
                 expectedSubSubClassProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedSubSubClassProperty.setContentLengthPropertyPath("child.subChild.contentLength");
+                expectedSubSubClassProperty.setContentLengthType(TypeDescriptor.valueOf(int.class));
                 expectedSubSubClassProperty.setMimeTypePropertyPath("child.subChild.contentMimeType");
                 expectedSubSubClassProperty.setOriginalFileNamePropertyPath("child.subChild.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/subChild", expectedSubSubClassProperty));
@@ -77,6 +80,7 @@ public class ClassWalkerTest {
                 expectedCamelCaseProperty.setContentIdPropertyPath("camelCaseProperty.camelCasePropertyId");
                 expectedCamelCaseProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedCamelCaseProperty.setContentLengthPropertyPath("camelCaseProperty.camelCasePropertyLen");
+                expectedCamelCaseProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedCamelCaseProperty.setMimeTypePropertyPath("camelCaseProperty.camelCasePropertyMimeType");
                 expectedCamelCaseProperty.setOriginalFileNamePropertyPath("camelCaseProperty.camelCasePropertyOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("camelCaseProperty", expectedCamelCaseProperty));
@@ -86,6 +90,7 @@ public class ClassWalkerTest {
                 expectedOtherCamelCaseProperty.setContentIdPropertyPath("otherCamelCaseProperty.camelCasePropertyIds");
                 expectedOtherCamelCaseProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedOtherCamelCaseProperty.setContentLengthPropertyPath("otherCamelCaseProperty.camelCasePropertyLens");
+                expectedOtherCamelCaseProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedOtherCamelCaseProperty.setMimeTypePropertyPath("otherCamelCaseProperty.camelCasePropertyMimetypes");
                 expectedOtherCamelCaseProperty.setOriginalFileNamePropertyPath("otherCamelCaseProperty.camelCasePropertyFilenames");
                 assertThat(visitor.getProperties(), hasEntry("otherCamelCaseProperty", expectedOtherCamelCaseProperty));
@@ -103,6 +108,7 @@ public class ClassWalkerTest {
                 expectedProperty2.setContentIdPropertyPath("contentId");
                 expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("len");
+                expectedProperty2.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty2.setMimeTypePropertyPath("mimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("content", expectedProperty2));
@@ -120,6 +126,7 @@ public class ClassWalkerTest {
                 expectedProperty2.setContentIdPropertyPath("contentId");
                 expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("contentLen");
+                expectedProperty2.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty2.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("content", expectedProperty2));
@@ -137,6 +144,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("child.contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.len");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty.setMimeTypePropertyPath("child.mimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child", expectedProperty));
@@ -164,6 +172,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(String.class));
                 expectedProperty.setContentLengthPropertyPath("contentLength");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(int.class));
                 expectedProperty.setMimeTypePropertyPath("contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("content", expectedProperty));
@@ -181,6 +190,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("child1.contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child1.len");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty.setMimeTypePropertyPath("child1.mimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child1.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child1", expectedProperty));
@@ -190,6 +200,7 @@ public class ClassWalkerTest {
                 expectedProperty3.setContentIdPropertyPath("child2.contentId");
                 expectedProperty3.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty3.setContentLengthPropertyPath("child2.len");
+                expectedProperty3.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty3.setMimeTypePropertyPath("child2.mimeType");
                 expectedProperty3.setOriginalFileNamePropertyPath("child2.originalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child2", expectedProperty3));
@@ -207,6 +218,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("child.contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.contentLen");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty.setMimeTypePropertyPath("child.contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/content", expectedProperty));
@@ -216,6 +228,7 @@ public class ClassWalkerTest {
                 expectedProperty3.setContentIdPropertyPath("child.previewId");
                 expectedProperty3.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty3.setContentLengthPropertyPath("child.previewLen");
+                expectedProperty3.setContentLengthType(TypeDescriptor.valueOf(Integer.class));
                 expectedProperty3.setMimeTypePropertyPath("child.previewMimeType");
                 expectedProperty3.setOriginalFileNamePropertyPath("child.previewOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/preview", expectedProperty3));
@@ -233,6 +246,7 @@ public class ClassWalkerTest {
                 expectedProperty.setContentIdPropertyPath("child.child.contentId");
                 expectedProperty.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty.setContentLengthPropertyPath("child.child.contentLen");
+                expectedProperty.setContentLengthType(TypeDescriptor.valueOf(Long.class));
                 expectedProperty.setMimeTypePropertyPath("child.child.contentMimeType");
                 expectedProperty.setOriginalFileNamePropertyPath("child.child.contentOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/child/content", expectedProperty));
@@ -242,6 +256,7 @@ public class ClassWalkerTest {
                 expectedProperty2.setContentIdPropertyPath("child.child.previewId");
                 expectedProperty2.setContentIdType(TypeDescriptor.valueOf(UUID.class));
                 expectedProperty2.setContentLengthPropertyPath("child.child.previewLen");
+                expectedProperty2.setContentLengthType(TypeDescriptor.valueOf(Integer.class));
                 expectedProperty2.setMimeTypePropertyPath("child.child.previewMimeType");
                 expectedProperty2.setOriginalFileNamePropertyPath("child.child.previewOriginalFileName");
                 assertThat(visitor.getProperties(), hasEntry("child/child/preview", expectedProperty2));
@@ -275,7 +290,7 @@ public class ClassWalkerTest {
         @ContentId
         private String contentId;
         @ContentLength
-        private Long contentLength;
+        private long contentLength;
         @MimeType
         private Long contentMimeType;
         @OriginalFileName
@@ -287,7 +302,7 @@ public class ClassWalkerTest {
         @ContentId
         private String contentId;
         @ContentLength
-        private Long contentLength;
+        private int contentLength;
         @MimeType
         private Long contentMimeType;
         @OriginalFileName
@@ -351,7 +366,7 @@ public class ClassWalkerTest {
         private @OriginalFileName String contentOriginalFileName;
 
         private @ContentId UUID previewId;
-        private @ContentLength Long previewLen;
+        private @ContentLength Integer previewLen;
         private @MimeType String previewMimeType;
         private @OriginalFileName String previewOriginalFileName;
     }

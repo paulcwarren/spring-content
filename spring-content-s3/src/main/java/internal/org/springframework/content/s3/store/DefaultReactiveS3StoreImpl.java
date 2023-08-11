@@ -15,6 +15,7 @@ import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.ReactiveContentStore;
 import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.s3.S3ObjectId;
 import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
@@ -204,7 +205,7 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
                             return true;
                         }
                     });
-                    property.setContentLength(entity, 0);
+                    property.setContentLength(entity, BeanUtils.getDefaultValueForType(property.getContentLengthType().getType()));
                     return entity;
                 }
               );

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import lombok.Data;
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
 import org.hamcrest.Matchers;
@@ -129,7 +130,7 @@ public class MongoStoreIT {
 							try (InputStream expected = new ByteArrayInputStream("Hello Spring Content World!".getBytes())) {
 								try (InputStream actual = genericResource.getInputStream()) {
 									matches = IOUtils.contentEquals(expected, actual);
-									assertThat(matches, Matchers.is(true));
+									assertThat(matches, is(true));
 								}
 							}
 						});
@@ -298,7 +299,7 @@ public class MongoStoreIT {
                     // content
                     assertThat(entity.getContentId(), is(notNullValue()));
                     assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    Assert.assertEquals(entity.getContentLen(), 27L);
+					assertThat(entity.getContentLen(), is(27L));
 
                     //rendition
                     assertThat(entity.getRenditionId(), is(notNullValue()));
@@ -386,21 +387,21 @@ public class MongoStoreIT {
                     It("should have no content", () -> {
                         //content
                         try (InputStream content = store.getContent(entity)) {
-                            assertThat(content, is(Matchers.nullValue()));
+                            assertThat(content, is(nullValue()));
                         }
 
-                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getContentId(), is(nullValue()));
+						assertThat(entity.getContentLen(), is(nullValue()));
 
 						assertThat(gridFsTemplate.getResource(resourceLocation).exists(), is(false));
 
 						//rendition
                         try (InputStream content = store.getContent(entity, PropertyPath.from("rendition"))) {
-                            assertThat(content, is(Matchers.nullValue()));
+                            assertThat(content, is(nullValue()));
                         }
 
-                        assertThat(entity.getContentId(), is(Matchers.nullValue()));
-                        Assert.assertEquals(entity.getContentLen(), 0);
+                        assertThat(entity.getRenditionId(), is(nullValue()));
+						assertThat(entity.getRenditionLen(), is(0L));
                     });
                 });
 
@@ -414,11 +415,11 @@ public class MongoStoreIT {
 					It("should have no content", () -> {
 						//content
 						try (InputStream content = store.getContent(entity)) {
-							assertThat(content, is(Matchers.nullValue()));
+							assertThat(content, is(nullValue()));
 						}
 
-						assertThat(entity.getContentId(), is(Matchers.nullValue()));
-						Assert.assertEquals(entity.getContentLen(), 0);
+						assertThat(entity.getContentId(), is(nullValue()));
+						assertThat(entity.getContentLen(), is(nullValue()));
 
 						assertThat(gridFsTemplate.getResource(resourceLocation).exists(), is(true));
 					});
@@ -470,7 +471,7 @@ public class MongoStoreIT {
 						String id = sharedIdContentIdEntity.getContentId();
 						sharedIdContentIdEntity = sharedIdStore.unsetContent(sharedIdContentIdEntity);
 						assertThat(sharedIdContentIdEntity.getContentId(), is(id));
-						assertThat(sharedIdContentIdEntity.getContentLen(), is(0L));
+						assertThat(sharedIdContentIdEntity.getContentLen(), is(nullValue()));
 					});
 				});
 
@@ -487,7 +488,7 @@ public class MongoStoreIT {
 						String id = SharedSpringIdContentIdEntity.getContentId();
 						SharedSpringIdContentIdEntity = SharedSpringIdStore.unsetContent(SharedSpringIdContentIdEntity);
 						assertThat(SharedSpringIdContentIdEntity.getContentId(), is(id));
-						assertThat(SharedSpringIdContentIdEntity.getContentLen(), is(0L));
+						assertThat(SharedSpringIdContentIdEntity.getContentLen(), is(nullValue()));
 					});
 				});
 			});
@@ -537,9 +538,9 @@ public class MongoStoreIT {
 
 		void setContentId(String contentId);
 
-		long getContentLen();
+		Long getContentLen();
 
-		void setContentLen(long contentLen);
+		void setContentLen(Long contentLen);
 	}
 
 	@Getter
@@ -550,7 +551,7 @@ public class MongoStoreIT {
 		private String contentId;
 
 		@ContentLength
-		private long contentLen;
+		private Long contentLen;
 
         @ContentId
         private String renditionId;
@@ -570,6 +571,7 @@ public class MongoStoreIT {
 	public interface TestEntityRepository extends MongoRepository<TestEntity, String> {}
 	public interface TestEntityStore extends ContentStore<TestEntity, String> {}
 
+	@Data
 	public static class SharedIdContentIdEntity implements ContentProperty {
 
 		@jakarta.persistence.Id
@@ -577,36 +579,17 @@ public class MongoStoreIT {
 		private String contentId;
 
 		@ContentLength
-		private long contentLen;
+		private Long contentLen;
 
 		public SharedIdContentIdEntity() {
 			this.contentId = null;
-		}
-
-		@Override
-        public String getContentId() {
-			return this.contentId;
-		}
-
-		@Override
-        public void setContentId(String contentId) {
-			this.contentId = contentId;
-		}
-
-		@Override
-        public long getContentLen() {
-			return contentLen;
-		}
-
-		@Override
-        public void setContentLen(long contentLen) {
-			this.contentLen = contentLen;
 		}
 	}
 
 	public interface SharedIdRepository extends MongoRepository<SharedIdContentIdEntity, String> {}
 	public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
 
+	@Data
 	public static class SharedSpringIdContentIdEntity implements ContentProperty {
 
 		@org.springframework.data.annotation.Id
@@ -614,30 +597,10 @@ public class MongoStoreIT {
 		private String contentId;
 
 		@ContentLength
-		private long contentLen;
+		private Long contentLen;
 
 		public SharedSpringIdContentIdEntity() {
 			this.contentId = null;
-		}
-
-		@Override
-        public String getContentId() {
-			return this.contentId;
-		}
-
-		@Override
-        public void setContentId(String contentId) {
-			this.contentId = contentId;
-		}
-
-		@Override
-        public long getContentLen() {
-			return contentLen;
-		}
-
-		@Override
-        public void setContentLen(long contentLen) {
-			this.contentLen = contentLen;
 		}
 	}
 

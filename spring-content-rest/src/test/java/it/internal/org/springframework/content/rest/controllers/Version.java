@@ -117,7 +117,7 @@ public class Version {
                     Optional<ContentEntity> fetched = repo.findById(entity.getId());
                     assertThat(fetched.isPresent(), is(true));
                     assertThat(fetched.get().getContentId(), is(nullValue()));
-                    assertThat(fetched.get().getLen(), is(0L));
+                    assertThat(fetched.get().getLen(), is(nullValue()));
                     assertThat(fetched.get().getMimeType(), is(nullValue()));
                     assertThat(((ContentStore)store).getContent(fetched.get()), is(nullValue()));
                 }

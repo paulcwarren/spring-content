@@ -414,7 +414,10 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
 								return true;
 							}
 						});
-				BeanUtils.setFieldWithAnnotation(property, ContentLength.class, 0);
+                Class<?> contentLenType = BeanUtils.getFieldWithAnnotationType(property, ContentLength.class);
+                if (contentLenType != null) {
+                    BeanUtils.setFieldWithAnnotation(property, ContentLength.class, BeanUtils.getDefaultValueForType(contentLenType));
+                }
 			}
 		}
 		catch (Exception ase) {
@@ -476,7 +479,7 @@ public class DefaultMongoStoreImpl<S, SID extends Serializable>
                     return true;
                 }
             });
-            property.setContentLength(entity, 0);
+            property.setContentLength(entity, BeanUtils.getDefaultValueForType(property.getContentLengthType().getType()));
         }
         catch (Exception ase) {
             logger.error(format("Unexpected error unsetting content for entity %s", entity), ase);
