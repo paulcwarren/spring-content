@@ -250,7 +250,7 @@ public class RestResourceMappedRestEndpointsIT {
 					  Optional<TestEntity11> fetched = repo.findById(testEntity11.getId());
 					  assertThat(fetched.isPresent(), is(true));
 					  assertThat(fetched.get().get_package().contentId, is(nullValue()));
-					  assertThat(fetched.get().get_package().contentLen, is(0L));
+					  assertThat(fetched.get().get_package().contentLen, is(nullValue()));
                       assertThat(fetched.get().get_package().contentMimeType, is(nullValue()));
 				  });
 			  });
