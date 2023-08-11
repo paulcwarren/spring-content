@@ -24,6 +24,7 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.support.ExecutorServiceAdapter;
 
+import org.springframework.util.FastByteArrayOutputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
@@ -242,8 +243,7 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
         private final CompletionService<CompletedPart> completionService;
 
         @SuppressWarnings("FieldMayBeFinal")
-        private ByteArrayOutputStream currentOutputStream = new ByteArrayOutputStream(
-                BUFFER_SIZE);
+        private FastByteArrayOutputStream currentOutputStream = new FastByteArrayOutputStream();
 
         private int partNumberCounter = 1;
 
