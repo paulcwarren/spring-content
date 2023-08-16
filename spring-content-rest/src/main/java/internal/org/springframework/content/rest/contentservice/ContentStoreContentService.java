@@ -1,19 +1,14 @@
 package internal.org.springframework.content.rest.contentservice;
 
-import static java.lang.String.format;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.util.*;
-
+import internal.org.springframework.content.rest.controllers.BadRequestException;
+import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
+import internal.org.springframework.content.rest.io.AssociatedStoreResource;
+import internal.org.springframework.content.rest.io.RenderedResource;
+import internal.org.springframework.content.rest.io.StoreResource;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
+import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +37,15 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
-import internal.org.springframework.content.rest.io.AssociatedStoreResource;
-import internal.org.springframework.content.rest.io.RenderedResource;
-import internal.org.springframework.content.rest.io.StoreResource;
-import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.util.*;
+
+import static java.lang.String.format;
 
 public class ContentStoreContentService implements ContentService {
 
@@ -146,6 +145,10 @@ public class ContentStoreContentService implements ContentService {
 
     @Override
     public void setContent(HttpServletRequest request, HttpServletResponse response, HttpHeaders headers, Resource source, MediaType sourceMimeType, Resource target) throws IOException, MethodNotAllowedException {
+
+        if (sourceMimeType == null) {
+            throw new BadRequestException("Missing Content-Type header");
+        }
 
         AssociatedStoreResource storeResource = (AssociatedStoreResource)target;
         ContentProperty property = storeResource.getContentProperty();
