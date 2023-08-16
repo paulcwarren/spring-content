@@ -298,6 +298,15 @@ public class Content {
                     assertThat(fetched.get().getLen(), is(Long.valueOf(content.length())));
                 });
             });
+            Context("a POST to /{store}/{id} with a missing content-type", () -> {
+                It("should return 400 Bad Request", () -> {
+                    mvc.perform(post(url)
+                                    .content("some content")
+                                    .contextPath(contextPath)
+                            )
+                            .andExpect(status().isBadRequest());
+                });
+            });
             Context("a PUT to /{store}/{id} with a multi-part request", () -> {
                 It("should overwrite the content and return 200", () -> {
 
