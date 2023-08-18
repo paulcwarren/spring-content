@@ -1,12 +1,6 @@
 package org.springframework.content.commons.mappingcontext;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import lombok.Getter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.annotations.ContentId;
@@ -16,7 +10,10 @@ import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.StringUtils;
 
-import lombok.Getter;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Returns a map of "path"'s to content properties for the given class.
@@ -115,7 +112,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
 
         if (f.isAnnotationPresent(ContentId.class)) {
             LOGGER.trace(String.format("%s.%s is @ContentId", f.getDeclaringClass().getCanonicalName(), f.getName()));
-            String propertyName = fullyQualify(path, this.propertyName(f.getName()), this.getKeySeparator());
+            String propertyName = fullyQualify(path, ClassWalker.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 Map<String,ContentProperty> classProperties = properties.get(key(path, klazz));
                 ContentProperty property = classProperties.get(propertyName);
@@ -123,13 +120,13 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
                     property = new ContentProperty();
                     classProperties.put(propertyName, property);
                 }
-                updateContentProperty(property::setContentPropertyPath, fullyQualify(path, this.propertyName(f.getName()), this.getContentPropertySeparator()));
+                updateContentProperty(property::setContentPropertyPath, fullyQualify(path, ClassWalker.propertyName(f.getName()), this.getContentPropertySeparator()));
                 updateContentProperty(property::setContentIdPropertyPath, fullyQualify(path, f.getName(), this.getContentPropertySeparator()));
                 property.setContentIdType(TypeDescriptor.valueOf(f.getType()));
             }
         } else if (f.isAnnotationPresent(ContentLength.class)) {
             LOGGER.trace(String.format("%s.%s is @ContentLength", f.getDeclaringClass().getCanonicalName(), f.getName()));
-            String propertyName = fullyQualify(path, this.propertyName(f.getName()), this.getKeySeparator());
+            String propertyName = fullyQualify(path, ClassWalker.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 Map<String,ContentProperty> classProperties = properties.get(key(path, klazz));
                 ContentProperty property = classProperties.get(propertyName);
@@ -142,7 +139,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
             }
         } else if (f.isAnnotationPresent(MimeType.class)) {
             LOGGER.trace(String.format("%s.%s is @MimeType", f.getDeclaringClass().getCanonicalName(), f.getName()));
-            String propertyName = fullyQualify(path, this.propertyName(f.getName()), this.getKeySeparator());
+            String propertyName = fullyQualify(path, ClassWalker.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 Map<String,ContentProperty> classProperties = properties.get(key(path, klazz));
                 ContentProperty property = classProperties.get(propertyName);
@@ -154,7 +151,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
             }
         } else if (f.isAnnotationPresent(OriginalFileName.class)) {
             LOGGER.trace(String.format("%s.%s is @OriginalFileName", f.getDeclaringClass().getCanonicalName(), f.getName()));
-            String propertyName = fullyQualify(path, this.propertyName(f.getName()), this.getKeySeparator());
+            String propertyName = fullyQualify(path, ClassWalker.propertyName(f.getName()), this.getKeySeparator());
             if (StringUtils.hasLength(propertyName)) {
                 Map<String,ContentProperty> classProperties = properties.get(key(path, klazz));
                 ContentProperty property = classProperties.get(propertyName);
@@ -182,47 +179,7 @@ public class ContentPropertyMappingContextVisitor implements ClassVisitor {
         return fqName;
     }
 
-    protected String propertyName(String name) {
-        if (!StringUtils.hasLength(name)) {
-            return name;
-        }
-
-        String propertyName = calculateName(name);
-        if (propertyName != null) {
-            return propertyName;
-        }
-
-        String[] segments = split(name);
-        if (segments.length == 1) {
-            return segments[0];
-        }
-        else {
-            StringBuilder b = new StringBuilder();
-            for (int i=0; i < segments.length - 1; i++) {
-                b.append(segments[i]);
-            }
-            return b.toString();
-        }
-    }
-
     protected boolean isNotRootContentProperty(String path) {
         return StringUtils.hasLength(path);
-    }
-
-    protected String calculateName(String name) {
-        Pattern p = Pattern.compile("^(.+)(Id|Len|Length|MimeType|Mimetype|ContentType|(?<!Mime|Content)Type|(?<!Original)FileName|(?<!Original)Filename|OriginalFileName|OriginalFilename)$");
-        Matcher m = p.matcher(name);
-        if (m.matches() == false) {
-            return null;
-        }
-        return m.group(1);
-    }
-
-    protected static String[] split(String name) {
-        if (!StringUtils.hasLength(name)) {
-            return new String[]{};
-        }
-
-        return name.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
     }
 }

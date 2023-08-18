@@ -1,20 +1,7 @@
 package org.springframework.content.commons.mappingcontext;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsMapContaining.hasEntry;
-
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import jakarta.persistence.*;
 import org.junit.runner.RunWith;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
@@ -24,7 +11,13 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.util.ReflectionUtils;
 
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 
 @RunWith(Ginkgo4jRunner.class)
 public class ClassWalkerTest {

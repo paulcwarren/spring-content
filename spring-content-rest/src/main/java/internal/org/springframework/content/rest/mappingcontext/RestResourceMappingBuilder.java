@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.mappingcontext;
 
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.mappingcontext.ClassVisitor;
+import org.springframework.content.commons.mappingcontext.ClassWalker;
 import org.springframework.content.commons.utils.ContentPropertyUtils;
 import org.springframework.content.rest.RestResource;
 import org.springframework.util.StringUtils;
@@ -50,20 +51,20 @@ public class RestResourceMappingBuilder implements ClassVisitor {
                     segments.push(segment);
                 } else {
                     if (f.isAnnotationPresent(ContentId.class)) {
-                        segments.push(propertyName(f.getName()));
+                        segments.push(ClassWalker.propertyName(f.getName()));
                     } else  {
                         segments.push(f.getName());
                     }
                 }
             } else {
                 if (f.isAnnotationPresent(ContentId.class)) {
-                    segments.push(propertyName(f.getName()));
+                    segments.push(ClassWalker.propertyName(f.getName()));
                 } else  {
                     segments.push(f.getName());
                 }
             }
             if (f.isAnnotationPresent(ContentId.class)) {
-                uriSegments.push(propertyName(f.getName()));
+                uriSegments.push(ClassWalker.propertyName(f.getName()));
             } else {
                 uriSegments.push(f.getName());
             }
@@ -122,21 +123,5 @@ public class RestResourceMappingBuilder implements ClassVisitor {
             fqPath += segments.get(i);
         }
         return fqPath;
-    }
-
-    protected String propertyName(String name) {
-        if (!StringUtils.hasLength(name)) {
-            return name;
-        }
-        String[] segments = split(name);
-        return segments[0];
-    }
-
-    private static String[] split(String name) {
-        if (!StringUtils.hasLength(name)) {
-            return new String[]{};
-        }
-
-        return name.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
     }
 }
