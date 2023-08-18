@@ -193,8 +193,9 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
         // Modified to show download
         Object originalFileName = this.getContentProperty().getOriginalFileName(this.getAssociation());
         if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
-            ContentDisposition.Builder builder = ContentDisposition.builder("form-data").name( "attachment").filename((String)originalFileName, Charset.defaultCharset());
-            headers.setContentDisposition(builder.build());
+            headers.setContentDisposition(ContentDisposition.attachment().filename((String) originalFileName, Charset.defaultCharset()).build());
+        } else {
+            headers.setContentDisposition(ContentDisposition.attachment().build());
         }
         return headers;
     }
