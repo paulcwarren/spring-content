@@ -11,6 +11,7 @@ import java.net.URL;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -193,7 +194,7 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
         // Modified to show download
         Object originalFileName = this.getContentProperty().getOriginalFileName(this.getAssociation());
         if (originalFileName != null && StringUtils.hasText(originalFileName.toString())) {
-            headers.setContentDisposition(ContentDisposition.attachment().filename((String) originalFileName, Charset.defaultCharset()).build());
+            headers.setContentDisposition(ContentDisposition.attachment().filename((String) originalFileName, StandardCharsets.UTF_8).build());
         } else {
             headers.setContentDisposition(ContentDisposition.attachment().build());
         }
