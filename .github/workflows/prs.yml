@@ -68,7 +68,7 @@ jobs:
         pushd spring-content-examples
           git fetch --all
           git checkout main
-          mvn -B clean install
+          SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd
     - name: Setup tmate session if anything fails
       if: ${{ failure() }}
