@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import internal.org.springframework.content.rest.io.StoreResource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -52,7 +53,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private static final Log log = LogFactory.getLog(ContentLinksResourceProcessor.class);
 
-	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, Resource.class);
+	private static Method GET_CONTENT_METHOD = ReflectionUtils.findMethod(StoreRestController.class, "getContent", HttpServletRequest.class, HttpServletResponse.class, HttpHeaders.class, StoreResource.class);
 
 	static {
 		Assert.notNull(GET_CONTENT_METHOD, "Unable to find StoreRestController.getContent method");

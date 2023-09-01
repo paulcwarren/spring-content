@@ -283,7 +283,6 @@ public class RestConfiguration implements InitializingBean {
 
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-
 			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, requestMappingContext, mappingContext, entityResolvers));
 		}
 
