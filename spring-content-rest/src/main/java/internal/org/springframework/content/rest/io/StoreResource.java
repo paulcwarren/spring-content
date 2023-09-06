@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import org.springframework.content.commons.io.DeletableResource;
 import org.springframework.content.commons.storeservice.StoreInfo;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
