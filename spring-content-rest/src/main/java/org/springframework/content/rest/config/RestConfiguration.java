@@ -29,6 +29,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.DefaultRepositoryInvokerFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.data.web.ProxyingHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
@@ -283,8 +284,7 @@ public class RestConfiguration implements InitializingBean {
 
 		@Override
 		public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-
-			argumentResolvers.add(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, requestMappingContext, mappingContext, entityResolvers));
+			insertBeforeOrAppend(new ResourceHandlerMethodArgumentResolver(context, config, repositories, stores, requestMappingContext, mappingContext, entityResolvers), argumentResolvers, ProxyingHandlerMethodArgumentResolver.class);
 		}
 
 		@Override
@@ -296,6 +296,23 @@ public class RestConfiguration implements InitializingBean {
 
 			if (repoInvokerFactory == null) {
 				repoInvokerFactory = new DefaultRepositoryInvokerFactory(repositories);
+			}
+		}
+
+		private static <T> void insertBeforeOrAppend(T elementToInsert, List<T> listToInsertInto, Class<? extends T> elementTypeToInsertBefore) {
+			int index = -1;
+
+			for (int i = 0; i < listToInsertInto.size(); i++) {
+				if (elementTypeToInsertBefore.isInstance(listToInsertInto.get(i))) {
+					index = i;
+					break;
+				}
+			}
+
+			if (index != -1) {
+				listToInsertInto.add(index, elementToInsert);
+			} else {
+				listToInsertInto.add(elementToInsert);
 			}
 		}
 	}
