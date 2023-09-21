@@ -1,15 +1,14 @@
 package it;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +18,8 @@ import org.springframework.content.commons.repository.Store;
 import internal.org.springframework.content.commons.store.factory.StoreFactory;
 import org.springframework.content.commons.repository.factory.testsupport.TestContentStore;
 import org.springframework.content.commons.repository.factory.testsupport.TestStoreFactoryBean;
+import org.springframework.content.commons.store.ContentStore;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
@@ -133,8 +134,47 @@ public class StoresIT {
                 });
             });
         });
+
+        Describe("StoreExceptionTranslatorInterceptor", ( )-> {
+            BeforeEach(() -> {
+                // All TestContentStore methods throw an UnsupportedOperationException, this test relies on this
+                TestStoreFactoryBean factory = new TestStoreFactoryBean(RuntimeExceptionThrowingStore.class);
+                factory.setBeanClassLoader(this.getClass().getClassLoader());
+                factories.add(factory);
+
+                context = new GenericApplicationContext();
+                context.registerBean("factory", StoreFactory.class, () -> {return factory;});
+            });
+
+            JustBeforeEach(() -> {
+                context.refresh();
+                stores = new StoresImpl(context);
+                stores.afterPropertiesSet();
+            });
+
+            It("should re-throw RuntimeException as StoreAccessException", () -> {
+                StoreInfo storeInfo = stores.getStore(Store.class, new StoreFilter() {
+                        @Override
+                        public String name() {
+                            return "test";
+                        }
+
+                        @Override
+                        public boolean matches(StoreInfo info) {
+                            return true;
+                        }
+            });
+                ContentStore store = storeInfo.getImplementation(ContentStore.class);
+                try {
+                    store.setContent(new Object(), new ByteArrayInputStream("".getBytes()));
+                } catch (Exception e) {
+                    assertThat(e, isA(StoreAccessException.class));
+                }
+            });
+        });
     }
 
     public interface RightStore extends TestContentStore<Object, Serializable>{};
     public interface WrongStore extends TestContentStore<Object, Serializable>{};
+    public interface RuntimeExceptionThrowingStore extends TestContentStore<Object, Serializable>{};
 }
