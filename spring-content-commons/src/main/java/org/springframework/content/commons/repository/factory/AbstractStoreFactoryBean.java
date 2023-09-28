@@ -222,7 +222,7 @@ public abstract class AbstractStoreFactoryBean
 		}
 		intercepter.setStoreFragments(storeFragments);
 
-		result.addAdvice(new StoreExceptionTranslatorInterceptor());
+		result.addAdvice(new StoreExceptionTranslatorInterceptor(beanFactory));
 		result.addAdvice(intercepter);
 
 		return (Store<? extends Serializable>) result.getProxy(classLoader);

@@ -20,6 +20,7 @@ import org.springframework.content.commons.repository.factory.testsupport.TestCo
 import org.springframework.content.commons.repository.factory.testsupport.TestStoreFactoryBean;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.StoreAccessException;
+import org.springframework.content.commons.store.StoreExceptionTranslator;
 import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
@@ -146,14 +147,47 @@ public class StoresIT {
                 context.registerBean("factory", StoreFactory.class, () -> {return factory;});
             });
 
-            JustBeforeEach(() -> {
-                context.refresh();
-                stores = new StoresImpl(context);
-                stores.afterPropertiesSet();
+            Context("given there is no store exception translator registered", () -> {
+                JustBeforeEach(() -> {
+                    context.refresh();
+                    stores = new StoresImpl(context);
+                    stores.afterPropertiesSet();
+                });
+                It("should re-throw RuntimeException as StoreAccessException", () -> {
+                    StoreInfo storeInfo = stores.getStore(Store.class, new StoreFilter() {
+                            @Override
+                            public String name() {
+                                return "test";
+                            }
+
+                            @Override
+                            public boolean matches(StoreInfo info) {
+                                return true;
+                            }
+                    });
+                    ContentStore store = storeInfo.getImplementation(ContentStore.class);
+                    try {
+                        store.setContent(new Object(), new ByteArrayInputStream("".getBytes()));
+                    } catch (Exception e) {
+                        assertThat(e, isA(UnsupportedOperationException.class));
+                    }
+                });
             });
 
-            It("should re-throw RuntimeException as StoreAccessException", () -> {
-                StoreInfo storeInfo = stores.getStore(Store.class, new StoreFilter() {
+            Context("given there is a store exception translator registered", () -> {
+                JustBeforeEach(() -> {
+                    context.registerBean("translator", StoreExceptionTranslator.class, () -> {return new StoreExceptionTranslator() {
+                        @Override
+                        public StoreAccessException translate(RuntimeException re) {
+                            return new StoreAccessException(re.getMessage(), re);
+                        }
+                    };});
+                    context.refresh();
+                    stores = new StoresImpl(context);
+                    stores.afterPropertiesSet();
+                });
+                It("should re-throw RuntimeException as StoreAccessException", () -> {
+                    StoreInfo storeInfo = stores.getStore(Store.class, new StoreFilter() {
                         @Override
                         public String name() {
                             return "test";
@@ -163,13 +197,14 @@ public class StoresIT {
                         public boolean matches(StoreInfo info) {
                             return true;
                         }
-            });
-                ContentStore store = storeInfo.getImplementation(ContentStore.class);
-                try {
-                    store.setContent(new Object(), new ByteArrayInputStream("".getBytes()));
-                } catch (Exception e) {
-                    assertThat(e, isA(StoreAccessException.class));
-                }
+                    });
+                    ContentStore store = storeInfo.getImplementation(ContentStore.class);
+                    try {
+                        store.setContent(new Object(), new ByteArrayInputStream("".getBytes()));
+                    } catch (Exception e) {
+                        assertThat(e, isA(StoreAccessException.class));
+                    }
+                });
             });
         });
     }
