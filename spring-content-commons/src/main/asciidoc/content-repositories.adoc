@@ -272,7 +272,7 @@ public class Application {
 
 Currently, S3 is the only storage module that supports this experimental API. 
 
-=== Content Properties
+== Content Properties
 
 As we can see above content is "associated" by adding additional metadata about the content to the Entity.  This additional metadata is annotated with Spring Content annotations.  There are several.  The only mandatory annotation is `@ContentId`.  Other optional annotations include `@ContentLength`, `@MimeType` and `@OriginalFileName`.  These may be added to your entities when you need to capture this additional infomation about your associated content. 
 
@@ -389,7 +389,7 @@ store.setContent(user, PropertyPath.from("images/avatar"), avatarStream);
 ====
 
 [[content-repositories.multimodule]]
-=== Using Stores with Multiple Spring Content Storage Modules
+== Using Stores with Multiple Spring Content Storage Modules
 
 Using a single Spring Content storage module in your application keeps things simple because all Storage beans 
 will use to that one Spring Content storage module as their implementation.  Sometimes, applications require 
@@ -398,7 +398,7 @@ more than one Spring Content storage module.  In such cases, a store definition 
 
 See <<signature_types,Signature Types>> for the signature types for the storage modules you are using.
 
-==== Manual Storage Override
+=== Manual Storage Override
 
 Because Spring Content provides an abstraction over storage it is also common to use one storage module for testing but another 
 for production.  For these cases it is possible to again include multiple Spring Content storage modules, 
@@ -406,7 +406,7 @@ but use generic Store interfaces, rather than signature types, and instead speci
 property to manually set the storage implementation to be injected into your Storage beans.
 
 [[content-repositories.events]]
-=== Events
+== Events
 
 Spring Content emits twelve events.  Roughly speaking one for each Store method.  They are:
 
@@ -434,7 +434,7 @@ Spring Content emits twelve events.  Roughly speaking one for each Store method.
 
 * AfterUnsetContent
 
-==== Writing an ApplicationListener
+=== Writing an ApplicationListener
 
 If you wish to extend Spring Content's functionality you can subclass the abstract class `AbstractStoreEventListener` and
 override the methods that you are interested in.  When these events occur your handlers will be called.
@@ -464,7 +464,7 @@ public class ExampleEventListener extends AbstractStoreEventListener {
 
 The down-side of this approach is that it does not filter events based on Entity.
 
-==== Writing an Annotated StoreEventHandler
+=== Writing an Annotated StoreEventHandler
 
 Another approach is to use an annotated handler, which does filter events based on Entity.
 
@@ -559,7 +559,7 @@ public class ContentStoreConfiguration {
 ====
 
 [[content-repositories.search]]
-=== Searchable Stores
+== Searchable Stores
 Applications that handle documents and other media usually have search capabilities allowing relevant content to be
 found by looking inside of it for keywords or phrases, so called full-text search.
 
@@ -596,7 +596,7 @@ For `search` to return actual results full-text indexing must be enabled.  See <
 for more information on how to do this.
 
 [[content-repositories.renditions]]
-=== Renderable Stores
+== Renderable Stores
 Applications that handle files and other media usually also have rendition capabilities allowing content to be transformed
 from one format to another.
 
@@ -616,6 +616,32 @@ Returns a `mimeType` rendition of the content associated with `entity`.
 
 Renditions must be enabled and renderers provided.  See <<renditions,Renditions>> for more
 information on how to do this.
+
+[[content-repositories.exceptions]]
+== Error Translation
+
+When using Stores, you must decide how to handle the storage technology’s native exception classes.  Typically, storage layers throw runtime exceptions and do not have to be declared or caught.  You may also have to deal with `IllegalArgumentException` and `IllegalStateException`. This means that callers can only treat exceptions as being generally fatal, unless they want to depend on the storage technology’s own exception structure.  This trade-off might be acceptable to applications that are strongly aligned to a particular storage or do not need any special exception treatment (or both).  However, Spring Content lets exception translation be applied transparently through the @Store annotations.  The following examples show how to contribute a bean that implements `StoreExceptionTranslator` that translates RuntimeException's to StoreAccessExceptions:
+
+.StoreExceptionTranslator interface
+====
+[source,java]
+----
+@Configuration
+public class Config {
+
+    @Bean
+    public StoreExceptionTranslator translator() {
+        return new StoreExceptionTranslator() {
+            @Override
+            public StoreAccessException translate(RuntimeException re) {
+                ...
+            }
+        };
+    }
+	InputStream getRendition(E entity, String mimeType);
+}
+----
+====
 
 [[content-repositories.creation]]
 == Creating Content Store Instances
@@ -706,133 +732,4 @@ public class SomeClass {
 }
 ----
 <1> Spring Content will update the `@ContentId` and `@ContentLength` fields
-====
-
-== Patterns of Content Association
-
-Content can be associated with a Spring Data Entity in several ways.
-
-=== Entity Association
-
-The simplest, allowing you to associate one Entity with one Resource, is to decorate your Spring Data Entity with the Spring Content attributes.
-
-The following example shows a Resource associated with an Entity `Dvd`.
-
-====
-[source, java]
-----
-@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-
-	...
-}
-
-public interface DvdRepository extends CrudRepository<Dvd, Long> {}
-
-public interface DvdStore extends ContentStore<Dvd, UUID> {}
-----
-====
-
-=== Property Association
-
-Sometimes you might want to associate multiple different Resources with an Entity.  To do this it is also possible to associate Resources with one or more Entity properties.
-
-The following example shows two Resources associated with a `Dvd` entity.  The first Resource is the Dvd's cover Image and the second is the Dvd's Stream.
-
-====
-[source, java]
-----
-@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
-
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "image_id")
-	private Image image;
-
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "stream_id")
-	private Stream stream;
-
-	...
-}
-
-@Entity
-public class Image {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	@OneToOne
-	private Dvd dvd;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-@Entity
-public class Stream {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	@OneToOne
-	private Dvd dvd;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository<Dvd, Long> {}
-
-public interface ImageStore extends ContentStore<Image, UUID> {}
-
-public interface StreamStore extends ContentStore<Stream, UUID> {}
-----
-====
-
-Note how the Content attributes are placed on each property object of on the Entity itself.
-
-When using JPA with a relational database these are typically (but not always) also Entity associations.  However when using NoSQL databases like MongoDB that are capable of storing hierarchical data they are true property associations.
-
-==== Property Collection Associations
-
-In addition to associating many different types of Resource with a single Entity.  It is also possible to associate one Entity with many Resources using a `java.util.Collection` property, as the following example shows.
-
-====
-[source, java]
-----
-@Entity
-public class Dvd {
-	private @Id @GeneratedValue Long id;
-	private String title;
-
-	@OneToMany
-	@JoinColumn(name = "chapter_id")
-	private List<Chapter> chapters;
-
-	...
-}
-
-@Entity
-public class Chapter {
-	// Spring Data managed attribute
-	private @Id @GeneratedValue Long id;
-
-	// Spring Content managed attributes
-	private @ContentId UUID contentId;
-	private @ContentLength Long contentLen;
-}
-
-public interface DvdRepository extends CrudRepository<Dvd, Long> {}
-
-public interface ChapterStore extends ContentStore<Chapter, UUID> {}
-----
 ====
