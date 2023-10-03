@@ -1,24 +1,8 @@
 package internal.org.springframework.content.fs.store;
 
-import static java.lang.String.format;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.io.DeletableResource;
@@ -43,6 +27,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import java.io.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
+import static java.lang.String.format;
 
 @Transactional(readOnly = true)
 public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
@@ -91,7 +82,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 		return null;
 	}
-
 
     @Override
     public Resource getResource(S entity, PropertyPath propertyPath) {
@@ -206,11 +196,9 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 				os = ((WritableResource) resource).getOutputStream();
 				IOUtils.copy(content, os);
 			}
+
 		} catch (IOException e) {
 			logger.error(format("Unexpected io error setting content for entity %s", entity), e);
-			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
-		} catch (Exception e) {
-			logger.error(format("Unexpected error setting content for entity %s", entity), e);
 			throw new StoreAccessException(format("Setting content for entity %s", entity), e);
 		}
 		finally {
@@ -291,9 +279,6 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 			}
 		} catch (IOException e) {
 			logger.error(format("Unexpected io error setting content for entity %s", property), e);
-			throw new StoreAccessException(format("Setting content for entity %s", property), e);
-		} catch (Exception e) {
-			logger.error(format("Unexpected error setting content for entity %s", property), e);
 			throw new StoreAccessException(format("Setting content for entity %s", property), e);
 		}
 		finally {
