@@ -7,7 +7,7 @@
     <parent>
         <artifactId>spring-content</artifactId>
         <groupId>com.github.paulcwarren</groupId>
-        <version>3.0.6-SNAPSHOT</version>
+        <version>3.0.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>spring-content-encryption</artifactId>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-commons</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.vault</groupId>
@@ -85,25 +85,25 @@
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-fs-boot-starter</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-jpa-boot-starter</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-s3-boot-starter</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.paulcwarren</groupId>
             <artifactId>spring-content-rest-boot-starter</artifactId>
-            <version>3.0.6-SNAPSHOT</version>
+            <version>3.0.7-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
