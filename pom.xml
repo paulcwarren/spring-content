@@ -55,7 +55,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <commonsio-version>2.15.0</commonsio-version>
         <commons-lang.version>2.6</commons-lang.version>
         <common-logging.version>1.2</common-logging.version>
-        <commons-text.version>1.10.0</commons-text.version>
+        <commons-text.version>1.11.0</commons-text.version>
         <jakarta-persistence-api.version>3.1.0</jakarta-persistence-api.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
         <hibernate-orm.version>6.1.7.Final</hibernate-orm.version>
