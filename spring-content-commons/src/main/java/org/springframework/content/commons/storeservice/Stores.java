@@ -17,7 +17,7 @@ public interface Stores {
     };
 
     static StoreFilter withDomainClass(Class<?> domainClass) {
-        Assert.notNull(domainClass);
+        Assert.notNull(domainClass, "domainClass must not be null");
 
         return new StoreFilter() {
             @Override

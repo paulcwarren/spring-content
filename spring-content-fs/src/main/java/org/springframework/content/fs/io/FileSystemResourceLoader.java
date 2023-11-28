@@ -35,7 +35,7 @@ public class FileSystemResourceLoader
 	private FileService fileService = null;
 
 	public FileSystemResourceLoader(String root) {
-		Assert.notNull(root);
+		Assert.notNull(root, "root must not be null");
 		logger.info(String.format("Defaulting filesystem root to %s", root));
 		this.root = new FileSystemResource(suffixPath(cleanPath(root)));
 		this.fileService = new FileServiceImpl();
@@ -59,7 +59,7 @@ public class FileSystemResourceLoader
 
 	@Override
 	public Resource getResource(String location) {
-		Assert.notNull(root);
+		Assert.notNull(root, "root must not be null");
 		Resource resource = root.createRelative(location);
 		if (resource instanceof FileSystemResource) {
 			resource = new FileSystemDeletableResource((FileSystemResource) resource, fileService);

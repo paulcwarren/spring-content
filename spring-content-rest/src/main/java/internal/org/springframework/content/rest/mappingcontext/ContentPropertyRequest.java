@@ -36,7 +36,7 @@ public class ContentPropertyRequest {
      * @return a ContentPropertyRequest
      */
     public static ContentPropertyRequest from(String storeLookupPath) {
-        Assert.notNull(storeLookupPath);
+        Assert.notNull(storeLookupPath, "storeLookupPath must not be null");
 
         String[] path = storeLookupPath.split("/");
         if (path.length < 3) {

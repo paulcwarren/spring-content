@@ -32,21 +32,21 @@ public class OptimisticLockingInterceptor implements MethodInterceptor {
 
     static {
         getContentMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class);
-        Assert.notNull(getContentMethod);
+        Assert.notNull(getContentMethod, "Unable to find getContent method");
         getContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class, "getContent", Object.class, PropertyPath.class);
-        Assert.notNull(getContentPropertyPathMethod);
+        Assert.notNull(getContentPropertyPathMethod, "Unable to find getContent method");
         setContentMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, InputStream.class);
-        Assert.notNull(setContentMethod);
+        Assert.notNull(setContentMethod, "Unable to find setContent method");
         setContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, InputStream.class);
-        Assert.notNull(setContentPropertyPathMethod);
+        Assert.notNull(setContentPropertyPathMethod, "Unable to find setContent method");
         setContentMethodWithResource = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, Resource.class);
-        Assert.notNull(setContentMethodWithResource);
+        Assert.notNull(setContentMethodWithResource, "Unable to find setContent method");
         setContentMethodWithPropertyPathAndResource = ReflectionUtils.findMethod(ContentStore.class, "setContent", Object.class, PropertyPath.class, Resource.class);
-        Assert.notNull(setContentMethodWithPropertyPathAndResource);
+        Assert.notNull(setContentMethodWithPropertyPathAndResource, "Unable to find setContent method");
         unsetContentMethod = ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class);
-        Assert.notNull(unsetContentMethod);
+        Assert.notNull(unsetContentMethod, "Unable to find unsetContent method");
         unsetContentPropertyPathMethod = ReflectionUtils.findMethod(ContentStore.class,"unsetContent", Object.class, PropertyPath.class);
-        Assert.notNull(unsetContentPropertyPathMethod);
+        Assert.notNull(unsetContentPropertyPathMethod, "Unable to find unsetContent method");
     }
 
     private final EntityManager em;
