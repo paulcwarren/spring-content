@@ -110,7 +110,7 @@ public class StoreContentService implements ContentService {
     @Override
     public void unsetContent(Resource resource) {
 
-        Assert.notNull(resource);
+        Assert.notNull(resource, "resource must not be null");
         if (resource instanceof DeletableResource) {
             try {
                 ((DeletableResource) resource).delete();

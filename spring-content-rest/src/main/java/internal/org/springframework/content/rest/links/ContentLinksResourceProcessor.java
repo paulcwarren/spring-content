@@ -181,7 +181,7 @@ public class ContentLinksResourceProcessor implements RepresentationModelProcess
 
 	private Link fullyQualifiedLink(URI baseUri, StoreInfo store, Object id, Map.Entry<String, ContentProperty> contentPropertyEntry) {
 
-        Assert.notNull(id);
+        Assert.notNull(id, "id must not be null");
 
         LinkBuilder builder = StoreLinkBuilder.linkTo(new BaseUri(baseUri), store);
 
