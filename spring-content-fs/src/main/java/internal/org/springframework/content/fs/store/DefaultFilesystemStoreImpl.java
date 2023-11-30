@@ -232,9 +232,11 @@ public class DefaultFilesystemStoreImpl<S, SID extends Serializable>
 
 	@Override
 	public S setContent(S entity, PropertyPath propertyPath, InputStream content, org.springframework.content.commons.repository.SetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
 		SetContentParams params1 = SetContentParams.builder()
 				.contentLength(params.getContentLength())
 				.overwriteExistingContent(params.isOverwriteExistingContent())
+				.disposition(org.springframework.content.commons.store.SetContentParams.ContentDisposition.values()[ordinal])
 				.build();
 		return this.setContent(entity, propertyPath, content, params1);
 	}
