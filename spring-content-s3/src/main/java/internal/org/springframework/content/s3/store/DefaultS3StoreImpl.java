@@ -330,10 +330,12 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	@Override
 	public S setContent(S entity, PropertyPath propertyPath, InputStream content, SetContentParams params) {
+		int ordinal = params.getDisposition().ordinal();
 		return this.setContent(entity, propertyPath, content,
 				org.springframework.content.commons.store.SetContentParams.builder()
 						.contentLength(params.getContentLength())
 						.overwriteExistingContent(params.isOverwriteExistingContent())
+						.disposition(org.springframework.content.commons.store.SetContentParams.ContentDisposition.values()[ordinal])
 						.build());
 	}
 
