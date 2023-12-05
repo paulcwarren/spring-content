@@ -22,7 +22,6 @@ public class JpaVersioningServiceImpl implements VersioningService {
     @Override
     public Object establishAncestralRoot(Object entity) {
         Object id = getId(entity);
-        Assert.notNull("Missing @Id field");
 
         if (BeanUtils.hasFieldWithAnnotation(entity, AncestorId.class)) {
             BeanUtils.setFieldWithAnnotation(entity, AncestorId.class, null);
