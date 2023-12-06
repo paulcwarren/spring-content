@@ -36,7 +36,7 @@ public class FileSystemResourceLoader
 
 	public FileSystemResourceLoader(String root) {
 		Assert.notNull(root, "root must not be null");
-		logger.info(String.format("Defaulting filesystem root to %s", root));
+		logger.info(String.format("Defaulting filesystem root to '%s'", root));
 		this.root = new FileSystemResource(suffixPath(cleanPath(root)));
 		this.fileService = new FileServiceImpl();
 	}
