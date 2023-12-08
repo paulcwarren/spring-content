@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
@@ -226,7 +227,7 @@ public class EncryptionIT {
     @Test
     public void noop() {}
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={FilesystemContentAutoConfiguration.class})
     @ImportAutoConfiguration(ContentRestAutoConfiguration.class)
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableS3Stores

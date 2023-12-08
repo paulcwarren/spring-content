@@ -5,6 +5,7 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
 import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import jakarta.persistence.Entity;
@@ -180,7 +181,7 @@ public class EncryptionIT {
     @Test
     public void noop() {}
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={S3ContentAutoConfiguration.class})
     @ImportAutoConfiguration(ContentRestAutoConfiguration.class)
     @EnableJpaRepositories(considerNestedRepositories = true)
     @EnableFilesystemStores
