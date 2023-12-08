@@ -520,7 +520,7 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;
-		Assert.state(location.startsWith("gs://") == false);
+		Assert.state(location.startsWith("gs://") == false, "Only gs:// locations supported");
 		if (location.startsWith("/")) {
 			locationToUse = location.substring(1);
 		}
