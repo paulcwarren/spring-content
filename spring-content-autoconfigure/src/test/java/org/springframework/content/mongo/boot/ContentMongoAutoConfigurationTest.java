@@ -4,6 +4,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import com.mongodb.client.MongoClient;
 import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -70,7 +73,7 @@ public class ContentMongoAutoConfigurationTest {
 		}
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(InfrastructureConfig.class)
 	public static class TestConfig {
 	}
