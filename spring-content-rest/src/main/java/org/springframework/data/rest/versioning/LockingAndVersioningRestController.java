@@ -76,8 +76,8 @@ public class LockingAndVersioningRestController {
 	@ResponseBody
 	@RequestMapping(value = ENTITY_LOCK_MAPPING, method = RequestMethod.PUT)
 	public ResponseEntity<EntityModel<?>>  lock(RootResourceInformation repoInfo,
-											@PathVariable String repository,
-											@PathVariable String id, Principal principal)
+											@PathVariable("repository") String repository,
+											@PathVariable("id") String id, Principal principal)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
 		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
@@ -94,8 +94,8 @@ public class LockingAndVersioningRestController {
 	@ResponseBody
 	@RequestMapping(value = ENTITY_LOCK_MAPPING, method = RequestMethod.DELETE)
 	public ResponseEntity<EntityModel<?>>  unlock(RootResourceInformation repoInfo,
-											  @PathVariable String repository,
-											  @PathVariable String id, Principal principal)
+											  @PathVariable("repository") String repository,
+											  @PathVariable("id") String id, Principal principal)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
 		Object domainObj = repoInfo.getInvoker().invokeFindById(id).get();
@@ -112,8 +112,8 @@ public class LockingAndVersioningRestController {
 	@ResponseBody
 	@RequestMapping(value = ENTITY_VERSION_MAPPING, method = RequestMethod.PUT)
 	public ResponseEntity<EntityModel<?>>  version(RootResourceInformation repoInfo,
-											   @PathVariable String repository,
-											   @PathVariable String id,
+											   @PathVariable("repository") String repository,
+											   @PathVariable("id") String id,
 											   @RequestBody VersionInfo info,
 											   Principal principal,
 											   PersistentEntityResourceAssembler assembler)
@@ -134,7 +134,7 @@ public class LockingAndVersioningRestController {
 	@RequestMapping(value = ENTITY_FINDALLLATESTVERSION_MAPPING, method = RequestMethod.GET)
 	public CollectionModel<?>  findAllLatestVersion(RootResourceInformation repoInfo,
 												  PersistentEntityResourceAssembler assembler,
-												  @PathVariable String repository)
+												  @PathVariable("repository") String repository)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
 			RepositoryInformation repositoryInfo = RepositoryUtils.findRepositoryInformation(repositories, repository);
@@ -151,8 +151,8 @@ public class LockingAndVersioningRestController {
 	@RequestMapping(value = FINDALLVERSIONS_METHOD_MAPPING, method = RequestMethod.GET)
 	public CollectionModel<?> findAllVersions(RootResourceInformation repoInfo,
 											 PersistentEntityResourceAssembler assembler,
-											 @PathVariable String repository,
-											 @PathVariable String id,
+											 @PathVariable("repository") String repository,
+											 @PathVariable("id") String id,
 											 Sort sort)
 			throws ResourceNotFoundException, HttpRequestMethodNotSupportedException {
 
