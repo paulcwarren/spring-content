@@ -543,7 +543,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 
 	private String absolutify(String bucket, String location) {
 		String locationToUse = null;
-		Assert.state(location.startsWith("s3://") == false);
+		Assert.state(location.startsWith("s3://") == false, "only s3:// supported");
 		if (location.startsWith("/")) {
 			locationToUse = location.substring(1);
 		}

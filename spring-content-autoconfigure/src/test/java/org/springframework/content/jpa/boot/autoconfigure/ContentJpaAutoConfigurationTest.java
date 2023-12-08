@@ -5,6 +5,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaDatabaseInitializer;
 import internal.org.springframework.content.jpa.boot.autoconfigure.ContentJpaProperties;
 import internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
@@ -107,13 +110,13 @@ public class ContentJpaAutoConfigurationTest {
 		}
 	}
 
-	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/default.properties")
 	public static class TestConfig {
 	}
 
-	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	public static class CustomBeanConfig extends TestConfig {
 		@Bean
@@ -122,12 +125,12 @@ public class ContentJpaAutoConfigurationTest {
 		}
 	}
 
-	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@EnableJpaStores
 	public static class ConfigWithExplicitEnableJpaStores {}
 
-	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class})
+	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/custom-jpa.properties")
 	public static class CustomPropertiesConfig extends TestConfig {

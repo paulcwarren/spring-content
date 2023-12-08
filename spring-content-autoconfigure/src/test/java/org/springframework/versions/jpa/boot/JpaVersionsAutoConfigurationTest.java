@@ -2,6 +2,9 @@ package org.springframework.versions.jpa.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsDatabaseInitializer;
 import org.assertj.core.api.Assertions;
@@ -93,12 +96,12 @@ public class JpaVersionsAutoConfigurationTest {
         }
     }
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
     @Import(JpaTestConfig.class)
     public static class StarterConfig /*extends BaseConfig*/ {
     }
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
     @EnableJpaRepositories(basePackages="org.springframework.versions",
                            considerNestedRepositories=true)
     @Import(JpaTestConfig.class)

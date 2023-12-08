@@ -2,12 +2,18 @@ package org.springframework.content.s3.boot.autoconfigure;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfigureRegistrar;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.content.fs.boot.defaultstorage.FilesystemAutoConfigurationTest;
 import org.springframework.content.s3.config.EnableS3Stores;
 import org.springframework.content.s3.store.S3ContentStore;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +37,7 @@ public class ContentS3AutoConfigurationTest {
 	private ApplicationContextRunner contextRunner;
 
 	{
-		Describe("FilesystemContentAutoConfiguration", () -> {
+		Describe("S3ContentAutoConfiguration", () -> {
 			BeforeEach(() -> {
 				contextRunner = new ApplicationContextRunner()
 						.withConfiguration(AutoConfigurations.of(S3ContentAutoConfiguration.class));
@@ -85,7 +91,7 @@ public class ContentS3AutoConfigurationTest {
 		});
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={FilesystemContentAutoConfiguration.class, MongoContentAutoConfiguration.class, SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class})
 	public static class TestConfig {
 
 		@Bean

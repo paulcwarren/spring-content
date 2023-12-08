@@ -2,6 +2,7 @@ package org.springframework.content.s3.boot.defaultstorage;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
+import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
@@ -71,7 +72,7 @@ public class S3AutoConfigurationTest {
 		});
 	}
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={ElasticsearchAutoConfiguration.class})
 	@EnableS3Stores(basePackageClasses=S3AutoConfigurationTest.class)
 	public static class TestConfigWithoutBeans {
 		// will be supplied by auto-configuration

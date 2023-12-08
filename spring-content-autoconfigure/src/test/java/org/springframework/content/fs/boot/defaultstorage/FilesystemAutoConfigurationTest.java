@@ -3,6 +3,9 @@ package org.springframework.content.fs.boot.defaultstorage;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -65,7 +68,7 @@ public class FilesystemAutoConfigurationTest {
         });
 	}
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude={SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	public static class TestConfig {
 	}
 

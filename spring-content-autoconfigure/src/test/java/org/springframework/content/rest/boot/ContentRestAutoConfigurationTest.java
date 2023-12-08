@@ -5,7 +5,12 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import internal.org.springframework.content.rest.boot.autoconfigure.HypermediaAutoConfiguration;
 import internal.org.springframework.content.rest.boot.autoconfigure.SpringBootContentRestConfigurer;
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
+import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensionAutoConfiguration;
+import internal.org.springframework.versions.jpa.boot.autoconfigure.JpaVersionsAutoConfiguration;
 import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -84,7 +89,7 @@ public class ContentRestAutoConfigurationTest {
 		});
 	}
 
-	@SpringBootApplication
+	@SpringBootApplication(exclude={SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@ImportAutoConfiguration({ HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class, RepositoryRestMvcAutoConfiguration.class,
 			JacksonAutoConfiguration.class, ContentRestAutoConfiguration.class})

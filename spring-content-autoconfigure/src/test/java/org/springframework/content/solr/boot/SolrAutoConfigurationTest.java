@@ -2,6 +2,7 @@ package org.springframework.content.solr.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.elasticsearch.boot.autoconfigure.ElasticsearchAutoConfiguration;
 import internal.org.springframework.content.solr.SolrFulltextIndexServiceImpl;
 import internal.org.springframework.content.solr.boot.autoconfigure.SolrAutoConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
@@ -49,7 +50,7 @@ public class SolrAutoConfigurationTest {
    public void test() {
    }
 
-   @SpringBootApplication
+   @SpringBootApplication(exclude= ElasticsearchAutoConfiguration.class)
    public static class TestConfig {
 
       @Autowired

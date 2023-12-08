@@ -121,7 +121,7 @@ public class ContentSearchRestController {
             DefaultedPageable pageable,
             Sort sort,
             PersistentEntityResourceAssembler assembler,
-            @PathVariable String repository,
+            @PathVariable("repository") String repository,
             @RequestParam(name = "queryString") String queryString) {
 
         return searchContentInternal(repoInfo, repository, pageable, sort, assembler, "search", new String[] { queryString });
@@ -131,7 +131,7 @@ public class ContentSearchRestController {
     @StoreType("contentstore")
     @ResponseBody
     @RequestMapping(value = ENTITY_SEARCHMETHOD_MAPPING, method = RequestMethod.GET)
-    public CollectionModel<?> searchContent(RootResourceInformation repoInfo, DefaultedPageable pageable, Sort sort, PersistentEntityResourceAssembler assembler, @PathVariable String repository, @RequestParam(name = "keyword") List<String> keywords) {
+    public CollectionModel<?> searchContent(RootResourceInformation repoInfo, DefaultedPageable pageable, Sort sort, PersistentEntityResourceAssembler assembler, @PathVariable("repository") String repository, @RequestParam(name = "keyword") List<String> keywords) {
 
         return searchContentInternal(repoInfo, repository, pageable, sort, assembler, "findKeyword", keywords.toArray(new String[] {}));
     }
