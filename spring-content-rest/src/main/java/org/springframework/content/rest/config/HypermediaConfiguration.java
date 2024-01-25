@@ -12,7 +12,7 @@ import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 
 @Configuration
-@Import(RestConfiguration.class)
+@Import({RestConfiguration.class})
 public class HypermediaConfiguration {
 
 	@Bean

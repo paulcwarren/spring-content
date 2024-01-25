@@ -25,6 +25,7 @@ include::rest-store.adoc[]
 
 include::rest-repository.adoc[]
 
+include::rest-entitycontent.adoc[leveloffset=+1]
 include::{spring-content-solr-docs}/solr-rest.adoc[leveloffset=+1]
 
 == Locking and Versioning

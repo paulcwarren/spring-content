@@ -102,7 +102,7 @@ public class BaseUriIT {
 						entityTests.setUrl("/api/testEntity3s/" + testEntity3.id);
 						entityTests.setEntity(testEntity3);
 						entityTests.setRepository(repo3);
-						entityTests.setLinkRel("testEntity");
+						entityTests.setLinkRel("testEntity3");
 
 						contentTests.setMvc(mvc);
 						contentTests.setUrl("/contentApi/testEntity3s/" + testEntity3.getId());

@@ -72,7 +72,7 @@ public class NaturalIdIT {
 						entityTests.setUrl("/testEntity7s/foo-" + name);
 						entityTests.setEntity(testEntity7);
 						entityTests.setRepository(repo7);
-						entityTests.setLinkRel("testEntity");
+						entityTests.setLinkRel("testEntity7");
 
 						contentTests.setMvc(mvc);
 						contentTests.setUrl("/testEntity7s/foo-" + name);

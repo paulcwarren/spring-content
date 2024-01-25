@@ -1,14 +1,8 @@
 package internal.org.springframework.content.rest.support;
 
-import java.util.Date;
-import java.util.UUID;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Version;
-
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -17,8 +11,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -36,4 +30,7 @@ public class TestEntity4 implements ContentEntity {
 	private @LastModifiedDate Date modifiedDate;
 	private @OriginalFileName String originalFileName;
 	private String title;
+
+	@OneToOne(mappedBy="testEntity4")
+	private TestEntity3 testEntity3;
 }

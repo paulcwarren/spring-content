@@ -3,6 +3,7 @@ package internal.org.springframework.content.rest.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
@@ -10,7 +11,11 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.EmbeddedWrappers;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 public final class ControllerUtils {
@@ -18,6 +23,15 @@ public final class ControllerUtils {
     private static final EmbeddedWrappers WRAPPERS = new EmbeddedWrappers(false);
 
     private ControllerUtils() {}
+
+    public static <R extends RepresentationModel<?>> ResponseEntity<RepresentationModel<?>> toResponseEntity(HttpStatus status, HttpHeaders headers, Optional<R> resource) {
+        HttpHeaders hdrs = new HttpHeaders();
+        if (headers != null) {
+            hdrs.putAll(headers);
+        }
+
+        return new ResponseEntity((RepresentationModel)resource.orElse(null), hdrs, status);
+    }
 
     protected static CollectionModel<?> entitiesToResources(Page<Object> page,
             PagedResourcesAssembler<Object> prAssembler,

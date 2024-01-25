@@ -2,6 +2,7 @@ package internal.org.springframework.content.rest.support;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -27,6 +28,11 @@ public class TestEntity8 {
     @Id
     @GeneratedValue
     private Long id;
+
+    private String name;
+
+    @JsonIgnore
+    private String hidden;
 
     private @Version Long version;
     private @CreatedDate Date createdDate;
