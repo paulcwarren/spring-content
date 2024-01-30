@@ -1,6 +1,11 @@
 package org.springframework.data.rest.extensions.entitycontent;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.InvalidPropertyException;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpHeaders;
@@ -12,10 +17,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.server.ServletServerHttpRequest;
 
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessageConverter<Object> {
@@ -60,12 +67,26 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
             return null;
         }
 
-        Map<String, String> paramsMap = new HashMap<>();
+        BeanWrapper wrapper = new BeanWrapperImpl(clazz);
+        Map<String, Object> paramsMap = new HashMap<>();
         Enumeration<String> paramNames = ((ServletServerHttpRequest)inputMessage).getServletRequest().getParameterNames();
         while (paramNames.hasMoreElements()) {
             String paramName = paramNames.nextElement();
-            String paramValue = ((ServletServerHttpRequest)inputMessage).getServletRequest().getParameter(paramName);
-            paramsMap.put(paramName, paramValue);
+
+            PropertyDescriptor descriptor = null;
+            try {
+                descriptor = wrapper.getPropertyDescriptor(paramName);
+            } catch (InvalidPropertyException ipe) {
+                descriptor = findJsonProperty(clazz, paramName, wrapper);
+            }
+
+            if (descriptor != null) {
+                if (descriptor.getPropertyType().isArray() || Collection.class.isAssignableFrom(descriptor.getPropertyType())) {
+                    paramsMap.put(paramName, ((ServletServerHttpRequest) inputMessage).getServletRequest().getParameterValues(paramName));
+                } else {
+                    paramsMap.put(paramName, ((ServletServerHttpRequest) inputMessage).getServletRequest().getParameter(paramName));
+                }
+            }
         }
 
         HttpHeaders headers = new HttpHeaders(inputMessage.getHeaders());
@@ -74,7 +95,9 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
         return this.converter.read(clazz, new HttpInputMessage() {
             @Override
             public InputStream getBody() throws IOException {
-                return new ByteArrayInputStream(new ObjectMapper().writeValueAsString(paramsMap).getBytes());
+                ObjectMapper mapper = new ObjectMapper();
+                String convertedFormData = mapper.writeValueAsString(paramsMap);
+                return new ByteArrayInputStream(convertedFormData.getBytes());
             }
 
             @Override
@@ -87,5 +110,30 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
     @Override
     public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         throw new UnsupportedEncodingException();
+    }
+
+    private PropertyDescriptor findJsonProperty(Class<?> clazz, String propertyName, BeanWrapper beanWrapper) {
+        // Iterate through all properties and find those with @JsonProperty annotation
+        for (PropertyDescriptor propertyDescriptor : beanWrapper.getPropertyDescriptors()) {
+            String name = propertyDescriptor.getName();
+            Field field = findField(clazz, name);
+
+            if (field != null && field.isAnnotationPresent(JsonProperty.class)) {
+                JsonProperty jsonPropertyAnnotation = field.getAnnotation(JsonProperty.class);
+                String jsonPropertyName = jsonPropertyAnnotation.value();
+                if (jsonPropertyName.equals(propertyName)) {
+                    return propertyDescriptor;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Field findField(Class<?> clazz, String propertyName) {
+        try {
+            return clazz.getDeclaredField(propertyName);
+        } catch (NoSuchFieldException e) {
+            return null;
+        }
     }
 }

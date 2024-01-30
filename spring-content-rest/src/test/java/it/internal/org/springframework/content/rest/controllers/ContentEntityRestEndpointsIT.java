@@ -2,9 +2,7 @@ package it.internal.org.springframework.content.rest.controllers;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -233,6 +231,8 @@ public class ContentEntityRestEndpointsIT {
 									.file(file)
 									.param("name", "foo")
 									.param("hidden", "bar")
+									.param("ying", "yang")
+									.param("things", "one", "two")
 									.param("testEntity4", "/testEntity4s/" + testEntity4Id))
 
 							.andExpect(status().isCreated())
@@ -243,6 +243,8 @@ public class ContentEntityRestEndpointsIT {
 					Optional<TestEntity3> fetchedEntity = repo3.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
 					assertThat(fetchedEntity.get().getName(), is("foo"));
 					assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+					assertThat(fetchedEntity.get().getYang(), is("yang"));
+					assertThat(fetchedEntity.get().getThings(), hasItems("one", "two"));
 					assertThat(fetchedEntity.get().getTestEntity4(), is(not(nullValue())));
 
 					// assert that it now exists

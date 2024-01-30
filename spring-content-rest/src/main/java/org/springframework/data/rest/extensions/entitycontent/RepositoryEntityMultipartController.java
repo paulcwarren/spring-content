@@ -20,6 +20,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.data.rest.core.mapping.ResourceType;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
@@ -28,11 +29,9 @@ import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.UriTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -74,7 +73,10 @@ public class RepositoryEntityMultipartController {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @ResponseBody
     @PostMapping(value = ENTITY_POST_MAPPING, consumes = "multipart/form-data")
-    public ResponseEntity<RepresentationModel<?>> createEntityAndContent(RootResourceInformation repoInfo, PersistentEntityResource payload, PersistentEntityResourceAssembler assembler, @PathVariable("repository") String repository, @RequestHeader HttpHeaders headers, MultipartHttpServletRequest req, HttpServletResponse resp) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException, MethodNotAllowedException {
+    public ResponseEntity<RepresentationModel<?>> createEntityAndContent(RootResourceInformation repoInfo, PersistentEntityResource payload, PersistentEntityResourceAssembler assembler, @PathVariable("repository") String repository, @RequestHeader HttpHeaders headers, MultipartHttpServletRequest req, HttpServletResponse resp)
+            throws IOException, MethodNotAllowedException, HttpRequestMethodNotSupportedException {
+
+        repoInfo.verifySupportedMethod(HttpMethod.POST, ResourceType.COLLECTION);
 
         Class<?> domainType = repoInfo.getDomainType();
 
@@ -91,18 +93,16 @@ public class RepositoryEntityMultipartController {
         String store = pathSegments[1];
 
         StoreInfo info = this.stores.getStore(Store.class, StoreUtils.withStorePath(store));
-        if (info == null) {
-            throw new IllegalArgumentException(String.format("Store for path %s not found", store));
-        }
+        if (info != null) {
+            ContentStoreContentService service = new ContentStoreContentService(restConfig, info, repoInvokerFactory.getInvokerFor(domainType), mappingContext, exportedMappingContext, byteRangeRestRequestHandler);
+            MultiValueMap<String, MultipartFile> files = req.getMultiFileMap();
+            for (String path : files.keySet()) {
+                MultipartFile file = files.get(path).get(0);
 
-        ContentStoreContentService service = new ContentStoreContentService(restConfig, info, repoInvokerFactory.getInvokerFor(domainType), mappingContext, exportedMappingContext, byteRangeRestRequestHandler);
-        MultiValueMap<String, MultipartFile> files = req.getMultiFileMap();
-        for (String path : files.keySet()) {
-            MultipartFile file = files.get(path).get(0);
+                Resource storeResource = new AssociativeStoreResourceResolver(mappingContext).resolve(new InternalWebRequest(req, resp), info, savedEntity, PropertyPath.from(file.getName()));
 
-            Resource storeResource = new AssociativeStoreResourceResolver(mappingContext).resolve(new InternalWebRequest(req, resp), info, savedEntity, PropertyPath.from(file.getName()));
-
-            service.setContent(req, resp, headers, new InputStreamResource(file.getInputStream()), MediaType.parseMediaType(file.getContentType()), storeResource);
+                service.setContent(req, resp, headers, new InputStreamResource(file.getInputStream()), MediaType.parseMediaType(file.getContentType()), storeResource);
+            }
         }
 
         Optional<PersistentEntityResource> resource = Optional.ofNullable(assembler.toFullResource(savedEntity));
