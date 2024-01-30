@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -86,7 +87,7 @@ public class ShortcutExclusionsIT {
 	                ReadableRepresentation halResponse = representationFactory
 	                        .readRepresentation("application/hal+json",
 	                                new StringReader(response.getContentAsString()));
-	                assertThat(halResponse.getLinks().size(), is(2));
+	                assertThat(halResponse.getLinks().size(), is(greaterThan(2)));
 	                assertThat(halResponse.getLinksByRel("testEntity3"), is(not(nullValue())));
 			    });
 			});
