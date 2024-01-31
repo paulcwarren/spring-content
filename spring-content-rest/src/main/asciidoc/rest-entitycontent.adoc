@@ -1,0 +1,17 @@
+== Entity & Content
+
+=== The Collection Resource
+Spring Data REST exposes a collection resource named after the uncapitalized, pluralized version of the domain class the exported repository is handling.
+
+Spring Content REST extends this collection resource with a handler that consumes `multipart/form-data`.  This handler allows the creation of an entity
+and association of content in a single request.
+
+==== POST
+The POST method creates a new entity populating its properties from the form's parameters and associates content from the form's multipart files.
+
+Form parameters may include relationships.
+
+Multipart file names will be used to determine the content property to use in the set content operation.
+
+===== Support Media Types
+This POST method supports the `multipart/form-data` media type.

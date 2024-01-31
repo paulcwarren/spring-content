@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringRegularExpression.matchesRegex;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -55,8 +56,9 @@ public class Entity {
 				ReadableRepresentation halResponse = representationFactory
 						.readRepresentation("application/hal+json",
 								new StringReader(response.getContentAsString()));
-				assertThat(halResponse.getLinks().size(), is(2));
 				assertThat(halResponse.getLinksByRel(linkRel), is(not(nullValue())));
+				assertThat(halResponse.getLinksByRel(linkRel).size(), is(1));
+				assertThat(halResponse.getLinksByRel(linkRel).get(0).getHref(), matchesRegex("http://localhost" + url));
 			});
 		});
 		Context("a PUT to /{store}/{id} with a json body", () -> {

@@ -1,17 +1,12 @@
 package it.internal.org.springframework.content.rest.controllers;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,7 +20,9 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import internal.org.springframework.content.rest.support.*;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +31,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -44,11 +42,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfiguration;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntity10;
-import internal.org.springframework.content.rest.support.TestEntity10Repository;
-import internal.org.springframework.content.rest.support.TestEntity10Store;
 
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
@@ -268,7 +261,47 @@ public class NestedContentPropertiesRestEndpointsIT {
 			  lastModifiedDateTests = LastModifiedDate.tests();
 		  });
 		});
-      });
+
+		Context("given a POST to the entity endpoint with a multipart/form request", () -> {
+		  It("should create a new entity and its content and respond with a 201 Created", () -> {
+			  // assert content does not exist
+			  String content = "This is some new content";
+			  String previewContent = "This is some new preview content";
+
+			  MockMultipartFile file1 = new MockMultipartFile("child/content", "filename.txt", "text/plain", content.getBytes());
+			  MockMultipartFile file2 = new MockMultipartFile("child/preview", "preview.txt", "text/plain", previewContent.getBytes());
+
+			  // POST the new content
+			  MockHttpServletResponse response = mvc.perform(multipart("/testEntity10s")
+							  .file(file1)
+							  .file(file2)
+							  .param("name", "foo")
+							  .param("hidden", "bar"))
+					  .andExpect(status().isCreated())
+					  .andReturn().getResponse();
+
+			  String location = response.getHeader("Location");
+
+			  Optional<TestEntity10> fetchedEntity = repository.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+			  assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+
+			  // assert that it now exists
+			  response = mvc.perform(get(location + "/child/content")
+							  .accept("text/plain"))
+					  .andExpect(status().isOk())
+					  .andReturn().getResponse();
+
+			  assertThat(response.getContentAsString(), is(content));
+
+			  response = mvc.perform(get(location + "/child/preview")
+							  .accept("text/plain"))
+					  .andExpect(status().isOk())
+					  .andReturn().getResponse();
+
+			  assertThat(response.getContentAsString(), is(previewContent));
+		  });
+	  	});
+  	  });
    }
 
 	@Test

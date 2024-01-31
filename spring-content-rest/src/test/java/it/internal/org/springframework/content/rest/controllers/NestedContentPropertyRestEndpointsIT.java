@@ -1,14 +1,14 @@
 package it.internal.org.springframework.content.rest.controllers;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
+import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -23,6 +23,9 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -88,6 +92,36 @@ public class NestedContentPropertyRestEndpointsIT {
                           get("/testEntity8s/9999999/foo"))
                           .andExpect(status().isNotFound());
               });
+		  });
+
+		  Context("given a POST to the entity endpoint with a multipart/form request", () -> {
+			  It("should create a new entity and its content and respond with a 201 Created", () -> {
+				  // assert content does not exist
+				  String newContent = "This is some new content";
+
+				  MockMultipartFile file = new MockMultipartFile("child", "filename.txt", "text/plain", newContent.getBytes());
+
+				  // POST the new content
+				  MockHttpServletResponse response = mvc.perform(multipart("/testEntity8s")
+						  .file(file)
+						  .param("name", "foo")
+						  .param("hidden", "bar"))
+						  .andExpect(status().isCreated())
+						  .andReturn().getResponse();
+
+				  String location = response.getHeader("Location");
+
+				  Optional<TestEntity8> fetchedEntity = repository2.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+				  assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+
+				  // assert that it now exists
+				  response = mvc.perform(get(location + "/child")
+						  .accept("text/plain"))
+						  .andExpect(status().isOk())
+						  .andReturn().getResponse();
+
+				  assertThat(response.getContentAsString(), is(newContent));
+			  });
 		  });
 
           Context("given a request to a non-existent content property", () -> {

@@ -2,14 +2,9 @@ package it.internal.org.springframework.content.rest.controllers;
 
 import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,13 +12,16 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Optional;
 
+import internal.org.springframework.content.rest.support.*;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -35,25 +33,6 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
-import internal.org.springframework.content.rest.support.EntityConfig;
-import internal.org.springframework.content.rest.support.StoreConfig;
-import internal.org.springframework.content.rest.support.TestEntity;
-import internal.org.springframework.content.rest.support.TestEntity3;
-import internal.org.springframework.content.rest.support.TestEntity3ContentRepository;
-import internal.org.springframework.content.rest.support.TestEntity3Repository;
-import internal.org.springframework.content.rest.support.TestEntity4;
-import internal.org.springframework.content.rest.support.TestEntity4ContentRepository;
-import internal.org.springframework.content.rest.support.TestEntity4Repository;
-import internal.org.springframework.content.rest.support.TestEntity6;
-import internal.org.springframework.content.rest.support.TestEntity6Repository;
-import internal.org.springframework.content.rest.support.TestEntity6Store;
-import internal.org.springframework.content.rest.support.TestEntity9;
-import internal.org.springframework.content.rest.support.TestEntity9Repository;
-import internal.org.springframework.content.rest.support.TestEntity9Store;
-import internal.org.springframework.content.rest.support.TestEntityContentRepository;
-import internal.org.springframework.content.rest.support.TestEntityRepository;
-import internal.org.springframework.content.rest.support.TestStore;
-
 @RunWith(Ginkgo4jSpringRunner.class)
 // @Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
@@ -62,7 +41,8 @@ import internal.org.springframework.content.rest.support.TestStore;
 		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
-		RestConfiguration.class })
+		RestConfiguration.class
+})
 @Transactional
 @ActiveProfiles("store")
 public class ContentEntityRestEndpointsIT {
@@ -123,7 +103,7 @@ public class ContentEntityRestEndpointsIT {
 			BeforeEach(() -> {
 				mvc = MockMvcBuilders.webAppContextSetup(context).build();
 			});
-			Context("given an entity is the subject of a repository and storage", () -> {
+			Context("given an entity with a single uncorrelated content properties", () -> {
 				Context("given the repository and storage are exported to the same URI", () -> {
 					BeforeEach(() -> {
 						testEntity3 = repo3.save(new TestEntity3());
@@ -134,7 +114,7 @@ public class ContentEntityRestEndpointsIT {
 						entityTests.setUrl("/testEntity3s/" + testEntity3.id);
 						entityTests.setEntity(testEntity3);
 						entityTests.setRepository(repo3);
-						entityTests.setLinkRel("testEntity");
+						entityTests.setLinkRel("testEntity3");
 
 						contentTests.setMvc(mvc);
 						contentTests.setUrl("/testEntity3s/" + testEntity3.getId());
@@ -237,7 +217,47 @@ public class ContentEntityRestEndpointsIT {
 				});
 			});
 
-            Context("given an entity with a single content property of correlated attributes", () -> {
+			Context("given a multipart/form POST to an entity with a single uncorrelated content property", () -> {
+				It("should create a new entity and its content and respond with a 201 Created", () -> {
+					// assert content does not exist
+					String newContent = "This is some new content";
+
+					MockMultipartFile file = new MockMultipartFile("content", "filename.txt", "text/plain", newContent.getBytes());
+
+					var testEntity4Id = repo4.save(new TestEntity4()).getId();
+
+					// POST the new content
+					MockHttpServletResponse response = mvc.perform(multipart("/testEntity3s")
+									.file(file)
+									.param("name", "foo")
+									.param("hidden", "bar")
+									.param("ying", "yang")
+									.param("things", "one", "two")
+									.param("testEntity4", "/testEntity4s/" + testEntity4Id))
+
+							.andExpect(status().isCreated())
+							.andReturn().getResponse();
+
+					String location = response.getHeader("Location");
+
+					Optional<TestEntity3> fetchedEntity = repo3.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+					assertThat(fetchedEntity.get().getName(), is("foo"));
+					assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+					assertThat(fetchedEntity.get().getYang(), is("yang"));
+					assertThat(fetchedEntity.get().getThings(), hasItems("one", "two"));
+					assertThat(fetchedEntity.get().getTestEntity4(), is(not(nullValue())));
+
+					// assert that it now exists
+					response = mvc.perform(get(location)
+									.accept("text/plain"))
+							.andExpect(status().isOk())
+							.andReturn().getResponse();
+
+					assertThat(response.getContentAsString(), is(newContent));
+				});
+			});
+
+			Context("given an entity with a single correlated content property", () -> {
                 BeforeEach(() -> {
                     testEntity9 = repo9.save(new TestEntity9());
                 });
@@ -268,6 +288,36 @@ public class ContentEntityRestEndpointsIT {
 
                 });
             });
+
+			Context("given a a multipart/form POST to an entity with a single correlated content property", () -> {
+				It("should create a new entity and its content and respond with a 201 Created", () -> {
+					// assert content does not exist
+					String newContent = "This is some new content";
+
+					MockMultipartFile file = new MockMultipartFile("content", "filename.txt", "text/plain", newContent.getBytes());
+
+					// POST the new content
+					MockHttpServletResponse response = mvc.perform(multipart("/testEntity9s")
+									.file(file)
+									.param("name", "foo")
+									.param("hidden", "bar"))
+							.andExpect(status().isCreated())
+							.andReturn().getResponse();
+
+					String location = response.getHeader("Location");
+
+					Optional<TestEntity9> fetchedEntity = repo9.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+					assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+
+					// assert that it now exists
+					response = mvc.perform(get(location)
+									.accept("text/plain"))
+							.andExpect(status().isOk())
+							.andReturn().getResponse();
+
+					assertThat(response.getContentAsString(), is(newContent));
+				});
+			});
 		});
 	}
 
