@@ -44,7 +44,8 @@ jobs:
             mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
         fi
 
-        mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+        #mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+        CI_DEPLOY_USERNAME=paul_c_warren CI_DEPLOY_PASSWORD=<lastpass> GPG_KEY_NAME=62D58B08 GPG_PASSPHRASE=BqjwMGN9PJfV mvn -P release clean deploy -s settings.xml
 
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
@@ -52,6 +53,10 @@ jobs:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        CI_DEPLOY_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+        CI_DEPLOY_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+        GPG_PASSPHASE: ${{ secrets.GPG_PASSPHRASE }}
 
     - name: Publish Docs
       run: |
