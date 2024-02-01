@@ -321,6 +321,15 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <profile>
             <id>ci</id>
             <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.simplify4u.plugins</groupId>
+                            <artifactId>sign-maven-plugin</artifactId>
+                            <version>1.0.1</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
                 <plugins>
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
@@ -415,15 +424,5 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-
-    <pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.simplify4u.plugins</groupId>
-                <artifactId>sign-maven-plugin</artifactId>
-                <version>1.0.1</version>
-            </plugin>
-        </plugins>
-    </pluginManagement>
 
 </project>
