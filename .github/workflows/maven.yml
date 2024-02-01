@@ -45,7 +45,7 @@ jobs:
         fi
 
         #mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
-        CI_DEPLOY_USERNAME=paul_c_warren CI_DEPLOY_PASSWORD=<lastpass> GPG_KEY_NAME=62D58B08 GPG_PASSPHRASE=BqjwMGN9PJfV mvn -P release clean deploy -s settings.xml
+        mvn -P release clean deploy -s settings.xml
 
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
