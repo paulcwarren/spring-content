@@ -45,7 +45,7 @@ jobs:
         fi
 
         #mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
-        mvn -P release clean deploy -s settings.xml
+        mvn -DskipTests=true -P ci,docs deploy -s settings.xml
 
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
