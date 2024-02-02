@@ -175,15 +175,19 @@ public class AssociatedStoreResourceImpl<S> implements HttpResource, AssociatedS
 
      // TODO: can we remove this is all properties are effectively embedded?
         Object lastModified = null; //BeanUtils.getFieldWithAnnotation(property, LastModifiedDate.class);
-        if (lastModified == null) {
+        if (lastModified == null && getDelegate() != null) {
             return getDelegate().lastModified();
         }
 
-        return Stream.of(lastModified)
-        .map(it -> getConversionService().convert(it, Date.class))//
-        .map(it -> getConversionService().convert(it, Instant.class))//
-        .map(it -> it.toEpochMilli())
-        .findFirst().orElseThrow(() -> new IllegalArgumentException(format("Invalid data type for @LastModifiedDate on Entity %s", this.getAssociation())));
+        if (lastModified != null) {
+            return Stream.of(lastModified)
+                    .map(it -> getConversionService().convert(it, Date.class))//
+                    .map(it -> getConversionService().convert(it, Instant.class))//
+                    .map(it -> it.toEpochMilli())
+                    .findFirst().orElseThrow(() -> new IllegalArgumentException(format("Invalid data type for @LastModifiedDate on Entity %s", this.getAssociation())));
+        }
+
+        return -1L;
     }
 
     @Override
