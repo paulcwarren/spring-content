@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.18">
+<meta name="generator" content="Asciidoctor 2.0.20">
 <meta name="author" content="Paul Warren, Peter Blum, Jeff Pak">
 <title>Spring Content REST - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -209,13 +209,10 @@ table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
 .exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
-.exampleblock>.content>:first-child{margin-top:0}
-.exampleblock>.content>:last-child{margin-bottom:0}
 .sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
-.sidebarblock>:first-child{margin-top:0}
-.sidebarblock>:last-child{margin-bottom:0}
 .sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
-.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content>:first-child,.sidebarblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child,.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
 .literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
 @media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
 @media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
@@ -394,7 +391,7 @@ b.conum *{color:inherit!important}
 dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
 h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
 p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
-p,blockquote,dt,td.content,span.alt,summary{font-size:1.0625rem}
+p,blockquote,dt,td.content,td.hdlist1,span.alt,summary{font-size:1.0625rem}
 p{margin-bottom:1.25rem}
 .sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
 .exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
@@ -443,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Paul Warren, Peter Blum, Jeff Pak</span><br>
 <span id="revnumber">version 3.0.8-SNAPSHOT,</span>
-<span id="revdate">2024-01-17</span>
+<span id="revdate">2024-02-02</span>
 </div>
 </div>
 <div id="content">
@@ -509,18 +506,19 @@ Copies of this document may be made for your own use and for distribution to oth
 </ul>
 </li>
 <li><a href="#_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</a>
-<ul class="sectlevel2">
-<li><a href="#search">4.1. Search</a>
 <ul class="sectlevel3">
-<li><a href="#_the_searchcontent_resource">4.1.1. The SearchContent Resource</a></li>
+<li><a href="#_entity_content">4.1. Entity &amp; Content</a></li>
+<li><a href="#search">4.2. Search</a>
+<ul class="sectlevel3">
+<li><a href="#_the_searchcontent_resource">4.2.1. The SearchContent Resource</a></li>
 </ul>
 </li>
-<li><a href="#_locking_and_versioning">4.2. Locking and Versioning</a>
+<li><a href="#_locking_and_versioning">4.3. Locking and Versioning</a>
 <ul class="sectlevel3">
-<li><a href="#_the_lock_resource">4.2.1. The Lock Resource</a></li>
-<li><a href="#_the_version_resource">4.2.2. The Version Resource</a></li>
-<li><a href="#_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</a></li>
-<li><a href="#_the_findallversions_resource">4.2.4. The FindAllVersions Resource</a></li>
+<li><a href="#_the_lock_resource">4.3.1. The Lock Resource</a></li>
+<li><a href="#_the_version_resource">4.3.2. The Version Resource</a></li>
+<li><a href="#_the_findallversionslatest_resource">4.3.3. The FindAllVersionsLatest Resource</a></li>
+<li><a href="#_the_findallversions_resource">4.3.4. The FindAllVersions Resource</a></li>
 </ul>
 </li>
 </ul>
@@ -1309,10 +1307,41 @@ Allowed</code>.</p>
 <div class="sect1">
 <h2 id="_repository_resources_spring_data_rest_extensions">4. Repository Resources (Spring Data REST Extensions)</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="search">4.1. Search</h3>
 <div class="sect3">
-<h4 id="_the_searchcontent_resource">4.1.1. The SearchContent Resource</h4>
+<h4 id="_entity_content">4.1. Entity &amp; Content</h4>
+<div class="sect4">
+<h5 id="_the_collection_resource">The Collection Resource</h5>
+<div class="paragraph">
+<p>Spring Data REST exposes a collection resource named after the uncapitalized, pluralized version of the domain class the exported repository is handling.</p>
+</div>
+<div class="paragraph">
+<p>Spring Content REST extends this collection resource with a handler that consumes <code>multipart/form-data</code>.  This handler allows the creation of an entity
+and association of content in a single request.</p>
+</div>
+<div class="sect5">
+<h6 id="_post">POST</h6>
+<div class="paragraph">
+<p>The POST method creates a new entity populating its properties from the form&#8217;s parameters and associates content from the form&#8217;s multipart files.</p>
+</div>
+<div class="paragraph">
+<p>Form parameters may include relationships.</p>
+</div>
+<div class="paragraph">
+<p>Multipart file names will be used to determine the content property to use in the set content operation.</p>
+</div>
+<div class="sect6">
+<h7 id="_support_media_types">Support Media Types</h7>
+<div class="paragraph">
+<p>This POST method supports the <code>multipart/form-data</code> media type.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="search">4.2. Search</h3>
+<div class="sect3">
+<h4 id="_the_searchcontent_resource">4.2.1. The SearchContent Resource</h4>
 <div class="paragraph">
 <p>When a Store extending <code>Searchable</code> is exported, a <code>searchContent</code> endpoint will be
 available at the <code>/{store}/searchContent</code> URI.</p>
@@ -1378,9 +1407,9 @@ elasticsearch, for more information on specifying a custom search return types.<
 </div>
 </div>
 <div class="sect2">
-<h3 id="_locking_and_versioning">4.2. Locking and Versioning</h3>
+<h3 id="_locking_and_versioning">4.3. Locking and Versioning</h3>
 <div class="sect3">
-<h4 id="_the_lock_resource">4.2.1. The Lock Resource</h4>
+<h4 id="_the_lock_resource">4.3.1. The Lock Resource</h4>
 <div class="paragraph">
 <p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a lock endpoint
 will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
@@ -1422,7 +1451,7 @@ will be available at the <code>/{repository}/{id}/lock</code> URI.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_the_version_resource">4.2.2. The Version Resource</h4>
+<h4 id="_the_version_resource">4.3.2. The Version Resource</h4>
 <div class="paragraph">
 <p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a version
 endpoint will be available at the <code>/{repository}/{id}/version</code> URI.</p>
@@ -1457,7 +1486,7 @@ Not Allowed</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_the_findallversionslatest_resource">4.2.3. The FindAllVersionsLatest Resource</h4>
+<h4 id="_the_findallversionslatest_resource">4.3.3. The FindAllVersionsLatest Resource</h4>
 <div class="paragraph">
 <p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllVersionsLatest
 endpoint will be available at the <code>/{repository}/findAllVersionsLatest</code> URI.</p>
@@ -1492,7 +1521,7 @@ Not Allowed</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_the_findallversions_resource">4.2.4. The FindAllVersions Resource</h4>
+<h4 id="_the_findallversions_resource">4.3.4. The FindAllVersions Resource</h4>
 <div class="paragraph">
 <p>When a repository extending <code>LockingAndVersioningRepository</code> is exported a findAllLatestVersions
 endpoint will be available at the <code>/{repository}/{id}/findAllVersions</code> URI.</p>
@@ -2083,7 +2112,7 @@ public static class ApplicationConfig {
 <div id="footer">
 <div id="footer-text">
 Version 3.0.8-SNAPSHOT<br>
-Last updated 2024-01-17 04:38:58 UTC
+Last updated 2024-02-02 04:20:45 UTC
 </div>
 </div>
 </body>

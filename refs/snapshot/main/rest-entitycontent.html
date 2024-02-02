@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<title>GCS Content Stores</title>
+<title>Entity &amp; Content</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -435,248 +435,35 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="book">
 <div id="header">
-<h1>GCS Content Stores</h1>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_maven_central_coordinates">Maven Central Coordinates</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The maven coordinates for this Spring Content library are as follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-content-gcs&lt;/artifactId&gt;
-&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>As it is usual to use several Spring Content libraries together importing the bom is recommended:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-content-bom&lt;/artifactId&gt;
-    &lt;version&gt;${spring-content-version}&lt;/version&gt;
-    &lt;type&gt;pom&lt;/type&gt;
-    &lt;scope&gt;import&lt;/scope&gt;
-&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_annotation_based_configuration">Annotation-based Configuration</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Spring Content GCS is enabled with the following Java Config.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 1. Enabling Spring Content GCS using Java Config</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-@EnableGCPStorage
-public static class ApplicationConfig {
-
-    @Bean
-    public Storage storage(CredentialsProvider credentialsProvider, <b class="conum">(1)</b>
-            GcpProjectIdProvider projectIdProvider) throws IOException {
-
-        return StorageOptions.newBuilder()
-                .setCredentials(credentialsProvider.getCredentials())
-                .setProjectId(projectIdProvider.getProjectId()).build().getService();
-    }
-}</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<ol>
-<li>
-<p>The Storage client used by GCP Storage</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_configuration_properties">Configuration Properties</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>The following configuration properties (prefix <code>spring.content.gcs</code>) are supported.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Required</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">bucket</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Content store location.  If not set as an application property Spring Content GCS will look for  the environment variable <code>GCP_STORAGE_BUCKET</code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_accessing_content">Accessing Content</h2>
+<h2 id="_entity_content">Entity &amp; Content</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_signature_types">Signature Types</h3>
-<div id="signature_types" class="paragraph">
-<p>Google Cloud Storage supports the following signature types:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>org.springframework.content.gcs.store.GCPStorageContentStore</code></p>
-</li>
-</ul>
+<h3 id="_the_collection_resource">The Collection Resource</h3>
+<div class="paragraph">
+<p>Spring Data REST exposes a collection resource named after the uncapitalized, pluralized version of the domain class the exported repository is handling.</p>
 </div>
 <div class="paragraph">
-<p>The module id for the <code>spring.content.storage.type.default</code> property is <code>gcs</code>.</p>
+<p>Spring Content REST extends this collection resource with a handler that consumes <code>multipart/form-data</code>.  This handler allows the creation of an entity
+and association of content in a single request.</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_storage_model">Storage Model</h3>
+<div class="sect3">
+<h4 id="_post">POST</h4>
 <div class="paragraph">
-<p>With GCP Storage (GCS), buckets and objects are the two main primitives, where objects are stored in buckets.  GCS has a
-flat structure with no hierarchy like you would see in a typical file system.  There are also no limits to the number
-of buckets or objects in buckets.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_loading_spring_resources_from_a_store_or_associativestore">Loading Spring Resources from a Store or AssociativeStore</h3>
-<div class="paragraph">
-<p>Resources returned by Google Cloud Storage are standard Spring Resources implementing the following interfaces:
-- <code>org.springframework.core.io.Resource</code>
-- <code>org.springframework.core.io.WriteableResource</code>
-- <code>org.springframework.content.commons.io.DeleteableResoure</code></p>
+<p>The POST method creates a new entity populating its properties from the form&#8217;s parameters and associates content from the form&#8217;s multipart files.</p>
 </div>
 <div class="paragraph">
-<p>When a Resource is loaded from the Store the following rules are used to determine the identify the <code>BlobId</code> of the
-object.</p>
+<p>Form parameters may include relationships.</p>
 </div>
 <div class="paragraph">
-<p>For a <code>Store</code>, when a Resource is loaded using a call to <code>getResource(ID location)</code>.</p>
+<p>Multipart file names will be used to determine the content property to use in the set content operation.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>if the Store is typed to a <code>BlobId</code> this will be used as-is.</p>
-</li>
-<li>
-<p>otherwise, if a registered Spring Converter exists that converts from Store&#8217;s ID type to a <code>BlobId</code> this
-will be used to convert the location (specified in the call to <code>getResource</code>) into an instance of <code>BlobId</code></p>
-</li>
-<li>
-<p>otherwise, a <code>BlobId</code> is created from the default bucket and the location (specified in the call to <code>getResource</code>).</p>
-</li>
-</ul>
-</div>
+<div class="sect4">
+<h5 id="_support_media_types">Support Media Types</h5>
 <div class="paragraph">
-<p>For an <code>AssociativeStore</code> (or indirectly a <code>ContentStore</code>), when a Resource is loaded from a call to <code>getResource(S entity)</code>:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>if the store&#8217;s ID type is typed to a <code>BlobId</code> this will be used as-is</p>
-</li>
-<li>
-<p>otherwise, if a registered Spring Converter exists that converts the the Store&#8217;s entity (S) type to a <code>BlobId</code> this will be used
-to establish an instance of <code>BlobId</code></p>
-</li>
-<li>
-<p>otherwise, if one of the Entity&#8217;s fields is annotated with <code>@Bucket</code>, the <code>@ContentId</code> and the <code>@Bucket</code> will be used as
-name and bucket respectively to create an instance of <code>BlobId</code></p>
-</li>
-<li>
-<p>otherwise, the <code>@ContentId</code> field and default bucket will be used as name and bucket respectively to create an
-instance of <code>BlobId</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>See <a href="#configuring_converters">Configuring a Spring Converter</a> for more information on how to register a converter.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_setting_content">Setting Content</h3>
-<div class="paragraph">
-<p>Storing content is achieved using the <code>ContentStore.setContent(T entity, PropertyPath path, InputStream content, SetContentParams params)</code> method.</p>
-</div>
-<div class="paragraph">
-<p>The <code>PropertyPath</code> will be used to resolve the content property to update.</p>
-</div>
-<div class="paragraph">
-<p>If content has not yet been stored with this entity and an Id has not been assigned, one will be generated based in <code>java.util.UUID</code>.</p>
-</div>
-<div class="paragraph">
-<p>The <code>@ContentId</code> and <code>@ContentLength</code> annotations will be updated on <code>entity</code>.</p>
-</div>
-<div class="paragraph">
-<p>If content has previously been stored it will be overwritten also updating the @ContentLength attribute, if present.  However, using <code>ContentDisposition.Create</code> on the <code>SetContentParams</code> a new Id will be assigned and content stored, leaving the existing content in place and orphaned.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_getting_content">Getting Content</h3>
-<div class="paragraph">
-<p>Content can be accessed using the <code>ContentStore.getContent(T entity, PropertyPath path)</code> method.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_unsetting_content">Unsetting Content</h3>
-<div class="paragraph">
-<p>Content can be removed using the <code>ContentStore.unsetContent(T entity, PropertyPath path, UnsetContentParams params)</code> method.  Using <code>ContentDisposition.Keep</code> on <code>UnsetContentParams</code> will leave the content in storage and orphaned.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_configuring_a_spring_converter">Configuring a Spring Converter</h3>
-<div id="configuring_converters" class="paragraph">
-<p>To configure Spring Content GCS with one or more Spring Converters that convert your Entities, or IDs, to an
-instance of BlobId the following approach can be used:</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. Configuring Spring Content GCS with a custom Spring Converter</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class GCSStoreConfiguration  {
-
-    @Bean
-    public GCPStorageConfigurer configurer() {
-        return new GCPStorageConfigurer() {
-
-            @Override
-            public void configureGCPStorageConverters(ConverterRegistry registry) {
-                registry.addConverter(new Converter&lt;TestEntity, BlobId&gt;() {
-                    @Override
-                    public BlobId convert(TestEntity entity) {
-                        return BlobId.of(entity.getCustomBucketField(), entity.getCustomContentIdField());
-                    }
-                });
-            }
-        }
-    }
-}</code></pre>
-</div>
+<p>This POST method supports the <code>multipart/form-data</code> media type.</p>
 </div>
 </div>
 </div>
