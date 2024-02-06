@@ -1,13 +1,14 @@
 package org.springframework.data.rest.extensions.entitycontent;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import java.util.List;
 
 @Configuration
+@Conditional(SpringDataRestPresentCondition.class)
 public class RepositoryEntityMultipartConfiguration {
 
     @Bean
@@ -19,4 +20,5 @@ public class RepositoryEntityMultipartConfiguration {
             }
         };
     }
+
 }
