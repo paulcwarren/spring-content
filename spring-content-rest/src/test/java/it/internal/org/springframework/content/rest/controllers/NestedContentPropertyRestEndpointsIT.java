@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -58,7 +59,8 @@ import internal.org.springframework.content.rest.support.TestEntity8Store;
       StoreConfig.class,
       DelegatingWebMvcConfiguration.class,
       RepositoryRestMvcConfiguration.class,
-      RestConfiguration.class })
+      RestConfiguration.class,
+	  HypermediaConfiguration.class})
 @Transactional
 @ActiveProfiles("store")
 public class NestedContentPropertyRestEndpointsIT {
@@ -194,6 +196,8 @@ public class NestedContentPropertyRestEndpointsIT {
 
 				  versionTests.setMvc(mvc);
 				  versionTests.setUrl("/testEntity8s/" + testEntity8.getId() + "/child");
+				  versionTests.setCollectionUrl("/testEntity8s");
+				  versionTests.setContentLinkRel("child");
 				  versionTests.setRepo(repository2);
 				  versionTests.setStore(store);
 				  versionTests.setEtag(format("\"%s\"", testEntity8.getVersion()));

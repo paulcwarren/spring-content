@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -50,7 +51,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
       StoreConfig.class,
       DelegatingWebMvcConfiguration.class,
       RepositoryRestMvcConfiguration.class,
-      RestConfiguration.class })
+      RestConfiguration.class,
+	  HypermediaConfiguration.class
+})
 @Transactional
 @ActiveProfiles("store")
 public class NestedContentPropertiesRestEndpointsIT {
@@ -171,6 +174,8 @@ public class NestedContentPropertiesRestEndpointsIT {
 
 				  versionTests.setMvc(mvc);
 				  versionTests.setUrl("/testEntity10s/" + testEntity10.getId() + "/child/content");
+				  versionTests.setCollectionUrl("/testEntity10s");
+				  versionTests.setContentLinkRel("child/content");
 				  versionTests.setRepo(repository);
 				  versionTests.setStore(store);
 				  versionTests.setEtag(format("\"%s\"", testEntity10.getVersion()));
