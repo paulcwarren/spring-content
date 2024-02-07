@@ -1,8 +1,11 @@
 package it.internal.org.springframework.content.rest.controllers;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import internal.org.springframework.content.rest.support.ContentEntity;
 import internal.org.springframework.content.rest.support.TestEntity2;
 import internal.org.springframework.content.rest.support.TestEntity4;
@@ -25,10 +28,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +37,8 @@ public class Version {
 
     private MockMvc mvc;
     private String url;
+    private String collectionUrl;
+    private String contentLinkRel;
     private CrudRepository repo;
     private Store store;
     private String etag;
@@ -47,6 +49,30 @@ public class Version {
     }
 
     {
+        Context("#Issue 1975", () -> {
+            It("should always evaluate if-match header even after content deletion", () -> {
+                String entityUrl = mvc.perform(post(collectionUrl).content("{}"))
+                        .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getHeader("Location");
+                assertThat(entityUrl, is(not(nullValue())));
+
+                String body = mvc.perform(get(entityUrl).accept("application/json"))
+                        .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode responseJson = objectMapper.readTree(body);
+                JsonNode linksNode = responseJson.get("_links");
+                JsonNode contentNode = linksNode.get(contentLinkRel);
+                String contentHref = contentNode.get("href").asText();
+
+                mvc.perform(put(contentHref).header("If-Match", "\"0\"").contentType("text/plain").content("Hello world!"))
+                        .andExpect(status().is2xxSuccessful());  // Content created
+                mvc.perform(delete(contentHref).header("If-Match", "\"1\""))
+                        .andExpect(status().is2xxSuccessful());  // User A
+                mvc.perform(put(contentHref).header("If-Match", "\"1\"").contentType("text/plain").content("foo bar"))
+                        .andExpect(status().isPreconditionFailed());  // User B
+            });
+        });
+
         Context("a GET request to /{store}/{id}", () -> {
             It("should return an etag header", () -> {
                 MockHttpServletResponse response = mvc

@@ -157,6 +157,8 @@ public class RestResourceMappedRestEndpointsIT {
 
 				  versionTests.setMvc(mvc);
 				  versionTests.setUrl("/testEntity11s/" + testEntity11.getId() + "/package/content");
+				  versionTests.setCollectionUrl("/testEntity11s");
+				  versionTests.setContentLinkRel("package/content");
 				  versionTests.setRepo(repo);
 				  versionTests.setStore(store);
 				  versionTests.setEtag(format("\"%s\"", testEntity11.getVersion()));

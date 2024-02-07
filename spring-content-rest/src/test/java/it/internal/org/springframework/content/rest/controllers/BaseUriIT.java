@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.test.context.ActiveProfiles;
@@ -44,7 +45,8 @@ import internal.org.springframework.content.rest.support.TestStore;
 		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
-		RestConfiguration.class })
+		RestConfiguration.class,
+		HypermediaConfiguration.class })
 @Transactional
 @ActiveProfiles("store")
 public class BaseUriIT {
@@ -142,6 +144,8 @@ public class BaseUriIT {
 						version.setEntity(testEntity4);
 						version.setMvc(mvc);
 						version.setUrl(url);
+						version.setCollectionUrl("/api/testEntity4s");
+						version.setContentLinkRel("content");
 						version.setRepo(repo4);
 						version.setStore(store4);
 						version.setEtag(format("\"%s\"", testEntity4.getVersion()));

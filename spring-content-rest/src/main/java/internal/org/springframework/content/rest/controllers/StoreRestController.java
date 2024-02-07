@@ -191,9 +191,8 @@ public class StoreRestController implements InitializingBean  {
 
         boolean isNew = false;
 
-        if (target.exists()) {
-            HeaderUtils.evaluateHeaderConditions(headers, targetETag != null ? targetETag.toString() : null, new Date(resolveLastModified(target)));
-        } else {
+        HeaderUtils.evaluateHeaderConditions(headers, targetETag != null ? targetETag.toString() : null, new Date(resolveLastModified(target)));
+        if (target.exists() == false) {
             isNew = true;
         }
 

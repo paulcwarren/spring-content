@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -41,7 +42,8 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 		EntityConfig.class,
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
-		RestConfiguration.class
+		RestConfiguration.class,
+		HypermediaConfiguration.class
 })
 @Transactional
 @ActiveProfiles("store")
@@ -175,6 +177,8 @@ public class ContentEntityRestEndpointsIT {
 
 						version.setMvc(mvc);
 						version.setUrl(url);
+						version.setCollectionUrl("/testEntity4s");
+						version.setContentLinkRel("content");
 						version.setRepo(repo4);
 						version.setStore(store4);
 						version.setEtag(format("\"%s\"", testEntity4.getVersion()));
