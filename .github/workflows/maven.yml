@@ -27,11 +27,12 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-    - name: Build and Test
-      run: |
-        export AWS_REGION=us-west-1
-        mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
-        bash <(curl -s https://codecov.io/bash)
+# temporary disable to test JAR publication
+#    - name: Build and Test
+#      run: |
+#        export AWS_REGION=us-west-1
+#        mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
+#        bash <(curl -s https://codecov.io/bash)
 
     - name: Publish JARs
       run: |
@@ -44,8 +45,8 @@ jobs:
             mvn org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion="${TAG}"
         fi
 
-        #mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
-        mvn -DskipTests=true -P ci,docs deploy -s settings.xml
+        mvn -B -DskipTests=true -P ci,docs deploy --file pom.xml
+        #mvn -DskipTests=true -P ci,docs deploy -s settings.xml
 
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
