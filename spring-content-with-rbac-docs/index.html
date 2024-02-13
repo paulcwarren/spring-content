@@ -155,7 +155,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;dependency&gt;
                 &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
                 &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-                &lt;version&gt;3.1.4&lt;/version&gt;
+                &lt;version&gt;3.1.5&lt;/version&gt;
                 &lt;type&gt;pom&lt;/type&gt;
                 &lt;scope&gt;import&lt;/scope&gt;
             &lt;/dependency&gt;
@@ -242,7 +242,6 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;/build&gt;
 &lt;/project&gt;
 </code></pre>
-
 <h2 id="add-security-constraints">Add Security Constraints</h2>
 <p>Enable web security.</p>
 <pre><code>
@@ -299,7 +298,6 @@ public class SpringSecurityConfig /*extends WebSecurityConfigurerAdapter*/ {
 	}
 }
 </code></pre>
-
 <p>First, define two users and two roles.  Eric is a content <code>reader</code> and Paul is a content <code>reader</code> and <code>author</code>.</p>
 <p>Second, secure the Spring Content endpoint <code>/files/**/content</code> that <code>GETs</code> and <code>SETs</code> content to the <code>reader</code> and <code>author</code> roles respectively.</p>
 <h3 id="preauthorize">@PreAuthorize</h3>
@@ -321,7 +319,6 @@ public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 
 }
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR

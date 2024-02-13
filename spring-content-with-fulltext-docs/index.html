@@ -157,7 +157,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;dependency&gt;
                 &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
                 &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-                &lt;version&gt;3.1.4&lt;/version&gt;
+                &lt;version&gt;3.1.5&lt;/version&gt;
                 &lt;type&gt;pom&lt;/type&gt;
                 &lt;scope&gt;import&lt;/scope&gt;
             &lt;/dependency&gt;
@@ -199,7 +199,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;org.elasticsearch.client&lt;/groupId&gt;
             &lt;artifactId&gt;elasticsearch-rest-high-level-client&lt;/artifactId&gt;
-            &lt;version&gt;7.17.13&lt;/version&gt;
+            &lt;version&gt;7.17.18&lt;/version&gt;
         &lt;/dependency&gt;
         &lt;dependency&gt;
           &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
@@ -242,7 +242,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
         &lt;dependency&gt;
             &lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
             &lt;artifactId&gt;elasticsearch&lt;/artifactId&gt;
-            &lt;version&gt;1.19.1&lt;/version&gt;
+            &lt;version&gt;1.19.5&lt;/version&gt;
             &lt;scope&gt;test&lt;/scope&gt;
         &lt;/dependency&gt;
     &lt;/dependencies&gt;
@@ -257,7 +257,6 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
     &lt;/build&gt;
 &lt;/project&gt;
 </code></pre>
-
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can perform full-text searches make your FileContentStore extend <code>Searchable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
@@ -272,7 +271,6 @@ import org.springframework.stereotype.Component;
 public interface FileContentStore extends ContentStore&lt;File, String&gt;, Searchable&lt;String&gt; {
 }
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
@@ -322,7 +320,6 @@ by typing:</p>
   }
 }
 </code></pre>
-
 <p>Spring Content found the second document that we added because its content
 included the keyword "Content" that we searched for.  </p>
 <h2 id="summary">Summary</h2>

@@ -138,13 +138,11 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-fulltext/complete/pom.xml 1-}
 </code></pre>
-
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can perform full-text searches make your FileContentStore extend <code>Searchable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-fulltext/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
@@ -194,7 +192,6 @@ by typing:</p>
   }
 }
 </code></pre>
-
 <p>Spring Content found the second document that we added because its content
 included the keyword "Content" that we searched for.  </p>
 <h2 id="summary">Summary</h2>

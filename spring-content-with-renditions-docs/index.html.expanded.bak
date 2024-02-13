@@ -138,7 +138,6 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/pom.xml 1-}
 </code></pre>
-
 <h2 id="update-file">Update File</h2>
 <p>To be able to return renditions we need to know the mime-type of the existing
 content.  Annotate the mimeType field with the <code>MimeType</code> annotation so that it
@@ -146,13 +145,11 @@ will be by Spring Content REST.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-33}
 </code></pre>
-
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>So that we can fetch renditions make your FileContentStore extend <code>Renderable</code>.  </p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
@@ -168,7 +165,6 @@ by typing:</p>
 <p>And you should see a response like this:</p>
 <pre><code>Hello Spring Content World!
 </code></pre>
-
 <p>Fetch the content again but this time specify that we want a jpeg rendition of the content by specify
 the mime-type <code>image/jpeg</code> as the accept header.  Let's time the operation too.  We'll use this later.  As 
 it is an image let's save it to a file:</p>
@@ -182,19 +178,16 @@ it is an image let's save it to a file:</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
-
 <h3 id="add-event-handler">Add Event Handler</h3>
 <p>Next let's add an event handler that uses the rendition service to convert the <code>text/plain</code> content to <code>image/jpeg</code> and store
 it in the second content property we just created.  Then remove it again when the content is also removed.</p>
 <p><code>src/main/java/gettingstarted/StoredRenditionsEventHandler.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/StoredRenditionsEventHandler.java 1-}
 </code></pre>
-
 <p>and register it.</p>
 <p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-renditions/complete/src/main/java/gettingstarted/SpringContentApplication.java 1-}
 </code></pre>
-
 <h2 id="test-store-renditions">Test Store Renditions</h2>
 <p>Rebuild and restart your application and let's replay the operations we performed earlier.</p>
 <p>Create an entity:</p>

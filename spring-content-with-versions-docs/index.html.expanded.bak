@@ -138,13 +138,11 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-versions/complete/pom.xml 1-}
 </code></pre>
-
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the following annotations to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-versions/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
-
 <p><code>@LockOwner</code>; tracks the current lock owner.  Optional
 <code>@AncestorId</code>; references the entity that came immediately before in the version series 
 <code>@AncestorRootId</code>; references the entity that came first in the version series
@@ -157,16 +155,13 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>src/main/java/gettingstarted/FileRepository.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-versions/complete/src/main/java/gettingstarted/FileRepository.java 1-}
 </code></pre>
-
 <h2 id="update-configuratoin">Update Configuratoin</h2>
 <p>Add a Store configuration to tell Spring Data JPA to look in the package <code>org.springframework.versions</code> for the implementation of the <code>LockingAndVersioningRepository</code>.  Because of this you will also need to tell Spring Data to find <code>FileRepository</code> in the <code>gettingstarted</code> package. </p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-versions/complete/src/main/java/gettingstarted/SpringContentApplication.java 29-32}
 </code></pre>
-
 <p>Enable web security and add an anonymous user principal.</p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-versions/complete/src/main/java/gettingstarted/SpringContentApplication.java 34-79}
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR

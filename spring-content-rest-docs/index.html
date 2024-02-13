@@ -158,7 +158,7 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 			&lt;dependency&gt;
 				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
 				&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-				&lt;version&gt;3.1.4&lt;/version&gt;
+				&lt;version&gt;3.1.5&lt;/version&gt;
 				&lt;type&gt;pom&lt;/type&gt;
 				&lt;scope&gt;import&lt;/scope&gt;
 			&lt;/dependency&gt;
@@ -248,7 +248,6 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 
 &lt;/project&gt;
 </code></pre>
-
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
@@ -288,7 +287,6 @@ public class File {
 	@MimeType private String contentMimeType = "text/plain";
 }
 </code></pre>
-
 <p>The <code>contentMimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
 annotation so that Spring Content REST will update its value on our behalf.</p>
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
@@ -307,7 +305,6 @@ import org.springframework.content.rest.StoreRestResource;
 public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 }
 </code></pre>
-
 <h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
 <p>Having made the above updates we can remove our <code>FileContentController</code>
 as it is now surplus to requirements.   Spring Content REST will provide
@@ -350,7 +347,6 @@ as they did before.</p>
   }
 }
 </code></pre>
-
 <p>Follow the <code>content</code> link relation to add content either using CURL:</p>
 <p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code> </p>
 <p>Or, if you prefer, by uploading the content via postman:</p>

@@ -138,19 +138,16 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-rbac/complete/pom.xml 1-}
 </code></pre>
-
 <h2 id="add-security-constraints">Add Security Constraints</h2>
 <p>Enable web security.</p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-rbac/complete/src/main/java/gettingstarted/SpringSecurityConfig.java 1-}
 </code></pre>
-
 <p>First, define two users and two roles.  Eric is a content <code>reader</code> and Paul is a content <code>reader</code> and <code>author</code>.</p>
 <p>Second, secure the Spring Content endpoint <code>/files/**/content</code> that <code>GETs</code> and <code>SETs</code> content to the <code>reader</code> and <code>author</code> roles respectively.</p>
 <h3 id="preauthorize">@PreAuthorize</h3>
 <p>As an alternative secure removing content to the <code>author</code> role by using an alternative approach using the <code>@PreAuthorize</code> annotation on the FileContentStore's <code>unset</code> method.</p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-with-rbac/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR

@@ -142,13 +142,11 @@ Guide so <code>cd</code> into <code>spring-content-gettingstarted/spring-content
 <p><code>pom.xml</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/pom.xml 1-}
 </code></pre>
-
 <h2 id="update-file-entity">Update File Entity</h2>
 <p>Add the <code>@MimeType</code> marker annotation to our Entity.</p>
 <p><code>src/main/java/gettingstarted/File.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/src/main/java/gettingstarted/File.java 1-}
 </code></pre>
-
 <p>The <code>contentMimeType</code> attribute is updated with the Spring Content  <code>@MimeType</code>
 annotation so that Spring Content REST will update its value on our behalf.</p>
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
@@ -158,7 +156,6 @@ API, update our <code>FileContentStore</code> by annotating it with the
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
 <pre><code>{snippet: https://raw.githubusercontent.com/paulcwarren/spring-content-gettingstarted/main/spring-content-rest/complete/src/main/java/gettingstarted/FileContentStore.java 1-}
 </code></pre>
-
 <h2 id="remove-filecontentcontroller">Remove FileContentController</h2>
 <p>Having made the above updates we can remove our <code>FileContentController</code>
 as it is now surplus to requirements.   Spring Content REST will provide
@@ -201,7 +198,6 @@ as they did before.</p>
   }
 }
 </code></pre>
-
 <p>Follow the <code>content</code> link relation to add content either using CURL:</p>
 <p><code>curl -X PUT -H 'Content-Type:text/plain' -d 'Hello Spring Content World!' http://localhost:8080/files/1/content</code> </p>
 <p>Or, if you prefer, by uploading the content via postman:</p>

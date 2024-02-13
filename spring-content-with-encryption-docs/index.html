@@ -140,7 +140,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 <p>Add the <code>com.github.paulcwarren:spring-content-encryption</code> dependency.  This provides us the implementation of a EncryptingContentStore.</p>
 <p>Also add <code>org.testcontainers:vault:1.17.6</code>.  We are going to use vault to provide a keyring for encrypting the content encryption key which in turn is used to encrypt the content. </p>
 <p><code>pom.xml</code></p>
-<pre><code class="java">
+<pre><code class="language-java">
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
   	&lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
   
@@ -158,7 +158,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 			&lt;dependency&gt;
 				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
 				&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-				&lt;version&gt;3.1.4&lt;/version&gt;
+				&lt;version&gt;3.1.5&lt;/version&gt;
 				&lt;type&gt;pom&lt;/type&gt;
 				&lt;scope&gt;import&lt;/scope&gt;
 			&lt;/dependency&gt;
@@ -202,7 +202,6 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
 			&lt;version&gt;${spring.content.version}&lt;/version&gt;
 		&lt;/dependency&gt;
 </code></pre>
-
 <h2 id="vault-testcontainer">Vault TestContainer</h2>
 <p>First we add a simple class that creates and starts a vault test container upon demand.  The vault is configured with a vault token <code>root-token</code> (referenced later) and enables the transit module that provides cryptographic functions to the encrypting content store. </p>
 <p><code>src/main/java/gettingstarted/VaultContainerSupport.java</code></p>
@@ -230,7 +229,6 @@ public class VaultContainerSupport {
     }
 }
 </code></pre>
-
 <h2 id="configuration">Configuration</h2>
 <p>Next we need to introduce a small <code>Configuration</code> class to provide a vault endpoint to our application as well as configuring our encrypting content store.  We add the following <code>@Configuration</code> to our <code>SpringContentApplication</code>.</p>
 <p><code>src/main/java/gettingstarted/SpringContentApplication.java</code></p>
@@ -293,7 +291,6 @@ public class SpringContentApplication {
 	}
 }
 </code></pre>
-
 <p>Points to note:
 - the <code>clientAuthentication</code> references the <code>root-token</code>
 - the <code>encrypter</code> bean creates an instance an <code>EnvelopeEncryptionService</code>.  This is used by the <code>EncyptingContentStore</code> to provide <a href="https://docs.aws.amazon.com/wellarchitected/latest/financial-services-industry-lens/use-envelope-encryption-with-customer-master-keys.html">envelope encryption</a> on the content.
@@ -340,7 +337,6 @@ public class File {
 	private byte[] contentKey;
 }
 </code></pre>
-
 <h2 id="update-filecontentstore">Update FileContentStore</h2>
 <p>Decorate the <code>FileContentStore</code> as an <code>EncryptingContentStore</code> to enable encryption/decryption on the content.</p>
 <p><code>src/main/java/gettingstarted/FileContentStore.java</code></p>
@@ -356,7 +352,6 @@ import org.springframework.content.rest.StoreRestResource;
 public interface FileContentStore extends ContentStore&lt;File, String&gt;, EncryptingContentStore&lt;File, String&gt; {
 }
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.
 Or you can build the JAR file with <code>mvn clean package</code> and run the JAR
@@ -366,7 +361,6 @@ by typing:</p>
 log entry that starts <code>Default filesystem storage to ...</code> and copy the file path. e.g. </p>
 <pre><code>2022-12-06 21:45:14.180  INFO 89223 --- [           main] o.s.c.fs.io.FileSystemResourceLoader     : Defaulting filesystem root to /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966
 </code></pre>
-
 <h2 id="test-encryption">Test Encryption</h2>
 <p>Create an entity:</p>
 <p><code>$ curl -X POST -H 'Content-Type:application/hal+json' -d '{}' http://localhost:8080/files/</code></p>
@@ -394,7 +388,6 @@ log entry that starts <code>Default filesystem storage to ...</code> and copy th
   }
 }
 </code></pre>
-
 <p>Copy the <code>contentId</code></p>
 <p>Check the content is encrypted:</p>
 <p><code>$ cat /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966/&lt;contnetId&gt;</code></p>
@@ -402,12 +395,10 @@ log entry that starts <code>Default filesystem storage to ...</code> and copy th
 <pre><code>$ cat /var/folders/65/d8zxcwh13sjfrkry92vgs5x80000gr/T/13946690314057106966/2d654dfc-57dc-44b7-aad9-f9ad0701c5d1
 ��H�}��l������إ�.��^
 </code></pre>
-
 <p>Fetch the content:</p>
 <pre><code>$ curl -H 'Accept:text/plain' http://localhost:8080/files/1/content
 Hello Spring Content World!
 </code></pre>
-
 <h2 id="summary">Summary</h2>
 <p>Congratulations!  You've just written a simple application that uses Spring Content and Spring Content Encryption to be store content encrypted.</p>
 <p>Spring Content Encryption is also capable of serving bytes ranges.  The default implementation uses AES CTR encryption and when used with Spring Content S3 will decrypt and serve just the byte ranges.  With any other storage the content will be fully decrypted before serving the byte range.</p>

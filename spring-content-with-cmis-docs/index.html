@@ -147,7 +147,6 @@ When you’re finished, you can check your results against the code in <code>spr
        ∟ resources
            ∟ static
 </code></pre>
-
 <p><code>pom.xml</code></p>
 <pre><code>
 &lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
@@ -256,7 +255,6 @@ When you’re finished, you can check your results against the code in <code>spr
 
 &lt;/project&gt;
 </code></pre>
-
 <p>We add several dependencies:-</p>
 <ul>
 <li>
@@ -374,7 +372,6 @@ public class SpringContentApplication {
 	}
 }
 </code></pre>
-
 <p>Let's talk through the annotations:</p>
 <ul>
 <li>
@@ -472,7 +469,6 @@ public class BaseObject {
 	}
 }
 </code></pre>
-
 <p>As you would expect we created a standard JPA Entity to capture some common metadata; <code>name</code> and <code>description</code>.  Standard audit 
 metadata; <code>createdBy</code>, <code>createdDate</code>, <code>modifiedBy</code>, <code>modifiedDate</code>, and a revision stamp; <code>vstamp</code>.  Lastly, we create a many-to-one relationship to a parent folder.</p>
 <p>You will notice that several of these fields are annotated with <code>@Cmis</code> annotations.  <code>@CmisName</code> and <code>@CmisDescription</code> map
@@ -517,7 +513,6 @@ public class Folder extends BaseObject {
 	}
 }
 </code></pre>
-
 <p>Note the <code>@CmisFolder</code> annotation that maps this entity to the cmis:folder object type.  Also note the <code>@CmisReference</code> annotation instructing Spring Content CMIS that this is the other end of the parent/child relationship.</p>
 <h2 id="create-a-document-entity">Create a Document entity</h2>
 <p>Lastly, we'll create the Document entity.  </p>
@@ -590,7 +585,6 @@ public class Document extends BaseObject {
 	}
 }
 </code></pre>
-
 <p>Again, note the <code>@CmisDocument</code> that maps this entity to the cmis:document object type.  We also see the standard Spring Versions
 JPA annotations for capturing version metadata as Documents are versioned.  </p>
 <h2 id="create-repositories-and-storage">Create Repositories and Storage</h2>
@@ -601,12 +595,10 @@ JPA annotations for capturing version metadata as Documents are versioned.  </p>
 public interface DocumentRepository extends JpaRepository&lt;Document, Long&gt;, LockingAndVersioningRepository&lt;Document, Long&gt; {
 }
 </code></pre>
-
 <p>The <code>DocumentRepository</code> extends <code>LockingAndVersioningRepository</code> making Documents versionable.</p>
 <p>And, of course, we create a Storage interface for Documents:  </p>
 <pre><code>public interface DocumentStorage extends ContentStore&lt;Document, UUID&gt; {
 </code></pre>
-
 <h2 id="build-an-executable-jar">Build an executable JAR</h2>
 <p>That's it.  That's all you need.  So let's take our application for a spin. If you are using Maven, you can run the application using <code>mvn spring-boot:run</code>.  Or you can build the JAR file with <code>mvn clean package</code> and run the JAR by typing:</p>
 <p><code>java -jar target/gettingstarted-spring-content-with-cmis-0.0.1.jar</code></p>

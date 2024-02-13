@@ -158,15 +158,14 @@
 <p><center><img alt="spring-content-arch" src="spring-content-arch.jpg" /></center>
 <center><em>Figure 1. understanding how Spring Content fits into the Spring eco-system</em></center></p>
 <h2 id="quick-start">Quick Start</h2>
-<pre><code class="xml">&lt;dependency&gt;
+<pre><code class="language-xml">&lt;dependency&gt;
     &lt;groupId&gt;com.github.paulcwarren&lt;/groupId&gt;
     &lt;artifactId&gt;spring-content-fs-boot-starter&lt;/artifactId&gt;
-    &lt;version&gt;3.0.6&lt;/version&gt;
+    &lt;version&gt;3.0.8&lt;/version&gt;
 &lt;/dependency&gt;
 </code></pre>
-
 <p>For a quick taste, look at the following domain object:</p>
-<pre><code class="java">
+<pre><code class="language-java">
 @Entity
 @Getter
 @Setter
@@ -185,17 +184,15 @@ public class File {
 	private String contentMimeType = "text/plain";
 }
 </code></pre>
-
 <p>This defines a simple JPA entity with a few structured data fields; title, authors and keywords and two Spring Content-managed data fields; <code>@ContentId</code> and <code>@ContentLength</code>.</p>
 <p>The structured data fields are managed in the usual way through a <code>CrudRepository&lt;SopDocument,String&gt;</code> interface.  </p>
 <p>Content is handled separately with a ContentStore interface:-</p>
-<pre><code class="java">
+<pre><code class="language-java">
 public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 }
 </code></pre>
-
 <p>This interface extends Spring Content’s <code>ContentStore</code> and is typed to the entity class File and the id class String.  Put this code inside a Spring Boot application with <code>spring-boot-starter-data-jpa</code> and <code>spring-content-fs-boot-starter</code> like this:</p>
-<pre><code class="java">
+<pre><code class="language-java">
 @SpringBootApplication
 public class SpringContentApplication {
 
@@ -204,7 +201,6 @@ public class SpringContentApplication {
 	}
 }
 </code></pre>
-
 <p>Launch your app and Spring Content (having been autoconfigured by Spring Boot) will automatically craft a concrete set of operations for handling the content associated with this Entity:</p>
 <ul>
 <li>
@@ -242,43 +238,43 @@ public class SpringContentApplication {
             <td>Spring Content S3</td>
             <td><a href="refs/release/2.9.0/s3-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/s3-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/s3-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/s3-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/s3-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/s3-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content GCS</td>
             <td><a href="refs/release/2.9.0/gcs-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/gcs-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/gcs-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/gcs-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/gcs-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/gcs-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content Azure Storage</td>
             <td><a href="refs/release/2.9.0/azure-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/azure-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/azure-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/azure-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/azure-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/azure-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content Filesystem</td>
             <td><a href="refs/release/2.9.0/fs-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/fs-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/fs-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/fs-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/fs-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/fs-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content Mongo (GridFS)</td>
             <td><a href="refs/release/2.9.0/mongo-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/mongo-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/mongo-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/mongo-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/mongo-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/mongo-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content JPA</td>
             <td><a href="refs/release/2.9.0/jpa-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/jpa-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/jpa-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/jpa-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/jpa-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/jpa-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <th colspan=9>Renditions</th>
@@ -287,8 +283,8 @@ public class SpringContentApplication {
             <td>Spring Content Renditions</td>
             <td><a href="refs/release/2.9.0/renditions-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/renditions-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/renditions-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/renditions-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/renditions-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/renditions-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <th colspan=9>Versioning</th>
@@ -297,8 +293,8 @@ public class SpringContentApplication {
             <td>Spring Versions JPA</td>
             <td><a href="refs/release/2.9.0/jpaversions-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/jpaversions-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/jpaversions-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/jpaversions-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/jpaversions-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/jpaversions-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <th colspan=9>Fulltext Indexing</th>
@@ -307,15 +303,15 @@ public class SpringContentApplication {
             <td>Spring Content Solr</td>
             <td><a href="refs/release/2.9.0/solr-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/solr-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/solr-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/solr-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/solr-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/solr-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content Elasticsearch</td>
             <td><a href="refs/release/2.9.0/elasticsearch-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/elasticsearch-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/elasticsearch-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/elasticsearch-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/elasticsearch-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/elasticsearch-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <th colspan=9>APIs</th>
@@ -324,15 +320,15 @@ public class SpringContentApplication {
             <td>Spring Content REST</td>
             <td><a href="refs/release/2.9.0/rest-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/rest-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/rest-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/rest-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/rest-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/rest-index.html">3.0.9</a></td>
         </tr>
         <tr>
             <td>Spring Content CMIS</td>
             <td><a href="refs/release/2.9.0/cmis-index.html">2.9.0</a></td>
             <td><a href="refs/snapshot/2.x.x/cmis-index.html">2.10.0</a></td>
-            <td><a href="refs/release/3.0.6/cmis-index.html">3.0.6</a></td>
-            <td><a href="refs/snapshot/main/cmis-index.html">3.0.7</a></td>
+            <td><a href="refs/release/3.0.8/cmis-index.html">3.0.8</a></td>
+            <td><a href="refs/snapshot/main/cmis-index.html">3.0.9</a></td>
         </tr>
     </tbody>
 </table>
@@ -455,6 +451,6 @@ public class SpringContentApplication {
 </html>
 
 <!--
-MkDocs version : 1.1.2
-Build Date UTC : 2023-10-05 03:14:08.834827+00:00
+MkDocs version : 1.5.3
+Build Date UTC : 2024-02-13 04:51:09.818947+00:00
 -->
