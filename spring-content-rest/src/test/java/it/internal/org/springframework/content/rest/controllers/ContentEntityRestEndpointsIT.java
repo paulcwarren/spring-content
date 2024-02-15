@@ -250,6 +250,8 @@ public class ContentEntityRestEndpointsIT {
 					assertThat(fetchedEntity.get().getYang(), is("yang"));
 					assertThat(fetchedEntity.get().getThings(), hasItems("one", "two"));
 					assertThat(fetchedEntity.get().getTestEntity4(), is(not(nullValue())));
+					assertThat(fetchedEntity.get().getLen(), is(file.getSize()));
+					assertThat(fetchedEntity.get().getOriginalFileName(), is(file.getOriginalFilename()));
 
 					// assert that it now exists
 					response = mvc.perform(get(location)
