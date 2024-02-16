@@ -70,10 +70,10 @@ jobs:
           git checkout main
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd
-    - name: Setup tmate session if anything fails
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
-      timeout-minutes: 360
+    # - name: Setup tmate session if anything fails
+    #   if: ${{ failure() }}
+    #   uses: mxschmitt/action-tmate@v3
+    #   timeout-minutes: 360
 
   validate-with-gettingstarteds:
     runs-on: ubuntu-latest
