@@ -42,6 +42,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Principal;
 import java.util.*;
@@ -101,7 +102,8 @@ public class RepositoryEntityMultipartController {
 
                 Resource storeResource = new AssociativeStoreResourceResolver(mappingContext).resolve(new InternalWebRequest(req, resp), info, savedEntity, PropertyPath.from(file.getName()));
 
-                service.setContent(req, resp, headers, new InputStreamResource(file.getInputStream()), MediaType.parseMediaType(file.getContentType()), storeResource);
+                headers.setContentLength(file.getSize());
+                service.setContent(req, resp, headers, new InputStreamResourceWithFilename(file.getInputStream(), file.getOriginalFilename()), MediaType.parseMediaType(file.getContentType()), storeResource);
             }
         }
 
@@ -267,6 +269,21 @@ public class RepositoryEntityMultipartController {
         @Override
         public Object getSessionMutex() {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    private final class InputStreamResourceWithFilename extends InputStreamResource {
+
+        private final String filename;
+
+        public InputStreamResourceWithFilename(InputStream inputStream, String filename) {
+            super(inputStream);
+            this.filename = filename;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
         }
     }
 }
