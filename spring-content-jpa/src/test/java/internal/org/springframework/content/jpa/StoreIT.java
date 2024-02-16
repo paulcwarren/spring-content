@@ -368,11 +368,6 @@ public class StoreIT {
 			factory.setPackagesToScan(getClass().getPackage().getName());
 			factory.setDataSource(dataSource);
 
-			factory.setJpaVendorAdapter(vendorAdapter);
-			HashMap<String, Object> properties = new HashMap<>();
-			properties.put("hibernate.dialect","org.hibernate.dialect.MySQL55Dialect");
-			factory.setJpaPropertyMap(properties);
-
 			return factory;
 		}
 
