@@ -33,6 +33,7 @@ public class LocalStack extends LocalStackContainer implements Serializable {
         return S3Client.builder()
                 .endpointOverride(new URI(Singleton.INSTANCE.getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
                 .credentialsProvider(new CrossAwsCredentialsProvider(Singleton.INSTANCE.getDefaultCredentialsProvider()))
+                .serviceConfiguration((bldr) -> bldr.pathStyleAccessEnabled(true).build())
                 .build();
     }
 
