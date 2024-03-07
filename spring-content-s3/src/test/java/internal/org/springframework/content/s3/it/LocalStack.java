@@ -14,6 +14,7 @@ import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.net.URIBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.core.ServiceConfiguration;
 import software.amazon.awssdk.services.s3.S3Client;
 
 public class LocalStack extends LocalStackContainer implements Serializable {
@@ -39,6 +40,7 @@ public class LocalStack extends LocalStackContainer implements Serializable {
         return S3Client.builder()
                 .endpointOverride(new URI(LocalStack.singleton().getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
                 .credentialsProvider(new LocalStack.CrossAwsCredentialsProvider(LocalStack.singleton().getDefaultCredentialsProvider()))
+                .serviceConfiguration((serviceBldr) -> {serviceBldr.pathStyleAccessEnabled(true);})
                 .build();
     }
 
