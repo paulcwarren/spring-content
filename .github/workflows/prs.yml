@@ -71,7 +71,7 @@ jobs:
       run: |
         pushd spring-content-examples
           git fetch --all
-          git checkout main
+          git checkout fix/issue-1869
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd
       env:

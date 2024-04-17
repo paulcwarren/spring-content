@@ -162,9 +162,11 @@ public class StoreImpl implements org.springframework.content.commons.repository
 
             result = invocation.apply(content);
 
-            org.springframework.content.commons.repository.events.AfterSetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterSetContentEvent(property, propertyPath, delegate);
-            oldAfter.setResult(result);
-            publisher.publishEvent(oldAfter);
+            if (org.springframework.content.commons.repository.ContentStore.class.isAssignableFrom(storeInterface)) {
+                org.springframework.content.commons.repository.events.AfterSetContentEvent oldAfter = new org.springframework.content.commons.repository.events.AfterSetContentEvent(property, propertyPath, delegate);
+                oldAfter.setResult(result);
+                publisher.publishEvent(oldAfter);
+            }
 
             if (org.springframework.content.commons.store.ContentStore.class.isAssignableFrom(storeInterface)) {
                 AfterSetContentEvent after = new AfterSetContentEvent(property, propertyPath, castToContentStore(delegate));
