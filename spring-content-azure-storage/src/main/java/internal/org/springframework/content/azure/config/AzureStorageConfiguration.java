@@ -3,6 +3,8 @@ package internal.org.springframework.content.azure.config;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +27,8 @@ import com.azure.spring.autoconfigure.storage.resource.AzureStorageProtocolResol
 @Configuration
 @Import(AzureStorageProtocolResolver.class)
 public class AzureStorageConfiguration implements InitializingBean {
+
+	private static Log logger = LogFactory.getLog(AzureStorageConfiguration.class);
 
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
@@ -87,6 +91,7 @@ public class AzureStorageConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		logger.info("Configuring default converters");
 		addDefaultConverters(conversion, bucket);
 		addConverters(conversion);
 	}
