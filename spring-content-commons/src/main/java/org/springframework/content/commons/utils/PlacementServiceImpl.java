@@ -140,14 +140,13 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
             // sourceType (ContentPropertyInfo) checks
             ResolvableType[] generics = sourceType.getResolvableType().getGenerics();
             Class<?> sourceEntityClass  = generics[0].resolve();
-            if (!entityClass.isAssignableFrom(sourceEntityClass)){
+            if (sourceEntityClass == null || !entityClass.isAssignableFrom(sourceEntityClass)){
                 return false;
             }
             Class<?> sourceContentIdClass  = generics[1].resolve();
-            if (!contentIdClass.isAssignableFrom(sourceContentIdClass)){
+            if (sourceContentIdClass == null || !contentIdClass.isAssignableFrom(sourceContentIdClass)){
                 return false;
             }
-            // return true;
 
             return !(this.converter instanceof ConditionalConverter) ||
                     ((ConditionalConverter) this.converter).matches(sourceType, targetType);
