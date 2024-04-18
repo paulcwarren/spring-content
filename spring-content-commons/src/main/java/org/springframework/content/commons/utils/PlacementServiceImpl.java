@@ -8,6 +8,7 @@ import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import java.util.Collections;
 import java.util.Set;
@@ -112,7 +113,9 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
             this.typeInfo = new ConvertiblePair(sourceType.toClass(), targetType.toClass());
             this.targetType = targetType;
             this.entityClass = entityClass;
+            Assert.notNull(entityClass, "entityClass cannot be null");
             this.contentIdClass = contentIdClass;
+            Assert.notNull(contentIdClass, "contentIdClass cannot be null");
         }
 
         @Override
