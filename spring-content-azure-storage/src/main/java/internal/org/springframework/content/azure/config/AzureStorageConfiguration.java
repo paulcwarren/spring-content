@@ -93,8 +93,8 @@ public class AzureStorageConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		logger.info("Configuring default converters");
 		addDefaultConverters(conversion, bucket);
 		addConverters(conversion);
+		logger.info(conversion.toString());
 	}
 }

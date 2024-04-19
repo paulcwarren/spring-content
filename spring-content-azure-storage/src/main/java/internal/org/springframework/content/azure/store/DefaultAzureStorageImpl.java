@@ -134,6 +134,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity, (SID) property.getContentId(entity), propertyPath, property);
 
             logger.info("Converting " + TypeDescriptor.valueOf(contentPropertyInfo.getClass()) + " to " + TypeDescriptor.valueOf(BlobId.class));
+            logger.info(placementService.toString());
 
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
