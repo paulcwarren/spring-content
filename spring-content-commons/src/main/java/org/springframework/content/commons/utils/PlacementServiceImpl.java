@@ -103,6 +103,10 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         }
     }
 
+    public String toStringObject() {
+        return PlacementServiceImpl.class.getName() + "@" + Integer.toHexString(hashCode());
+    }
+
     /**
      * A {@link ConditionalGenericConverter} for {@link ContentPropertyInfo} that does conversion only if
      * generic parameter types of provided {@link ContentPropertyInfo} are compatible.

@@ -26,6 +26,7 @@ import org.springframework.content.commons.store.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
@@ -135,6 +136,7 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
 
             logger.info("Converting " + TypeDescriptor.valueOf(contentPropertyInfo.getClass()) + " to " + TypeDescriptor.valueOf(BlobId.class));
             logger.info(placementService.toString());
+            logger.info(((PlacementServiceImpl)placementService).toStringObject());
 
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
