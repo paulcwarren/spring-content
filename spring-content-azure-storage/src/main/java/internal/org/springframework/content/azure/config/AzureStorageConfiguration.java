@@ -50,9 +50,11 @@ public class AzureStorageConfiguration implements InitializingBean {
 	public static void addDefaultConverters(PlacementService conversion, String bucket) {
 
 		// Serializable -> BlobId
+		logger.info("Adding Serializable->BlobId converter");
 		conversion.addConverter(new BlobIdResolverConverter(bucket));
 
 		// ContentPropertyInfo -> BlobId
+		logger.info("Adding ContentPropertyInfo->BlobId converter");
 		conversion.addConverter(new Converter<ContentPropertyInfo<Object, Serializable>, BlobId>() {
 
 			private String defaultBucket = bucket;

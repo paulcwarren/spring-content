@@ -1,5 +1,7 @@
 package org.springframework.content.commons.utils;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.content.commons.config.ContentPropertyInfo;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.TypeDescriptor;
@@ -14,6 +16,8 @@ import java.util.Collections;
 import java.util.Set;
 
 public class PlacementServiceImpl extends DefaultConversionService implements PlacementService {
+
+    private static Log logger = LogFactory.getLog(PlacementServiceImpl.class);
 
     public static final String CONTENT_PROPERTY_INFO_GENERIC_PARAMETERS_MISSING_MESSAGE = "Unable to determine entity type <S> and content id type <SID> for " +
             ContentPropertyInfo.class.getName() + "; does the class parameterize those types?";
@@ -53,13 +57,18 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
                     "Converter [" + converter.getClass().getName() + "]; does the class parameterize those types?");
         }
         ResolvableType sourceType = generics[0];
+        logger.info("generics[0] sourceType: " + sourceType.toString());
         if (sourceType.resolve() == ContentPropertyInfo.class) {
             ResolvableType targetType = generics[1];
+            logger.info("generics[1] targetType: " + targetType.toString());
 
             ResolvableType[] sourceTypeGenerics = sourceType.getGenerics();
             if (sourceTypeGenerics.length != 2) {
                 throw new IllegalArgumentException(CONTENT_PROPERTY_INFO_GENERIC_PARAMETERS_MISSING_MESSAGE);
             }
+
+            logger.info("sourceTypeGenerics[0]: " + sourceTypeGenerics[0].toString());
+            logger.info("sourceTypeGenerics[1]: " + sourceTypeGenerics[1].toString());
 
             Class<?> entityClass = sourceTypeGenerics[0].resolve();
             Class<?> contentIdClass = sourceTypeGenerics[1].resolve();
@@ -67,8 +76,10 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
                 throw new IllegalArgumentException(CONTENT_PROPERTY_INFO_GENERIC_PARAMETERS_MISSING_MESSAGE);
             }
 
+            logger.info("Adding converter as ContentPropertyInfoConverterAdapter");
             addConverter(new ContentPropertyInfoConverterAdapter(converter, sourceType, targetType, entityClass, contentIdClass));
         } else {
+            logger.info("Adding as regular converter");
             super.addConverter(converter);
         }
     }
