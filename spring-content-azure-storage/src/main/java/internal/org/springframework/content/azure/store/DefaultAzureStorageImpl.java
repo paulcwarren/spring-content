@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -40,6 +40,7 @@ import com.azure.storage.blob.BlobServiceClient;
 
 import internal.org.springframework.content.azure.io.AzureBlobResource;
 import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
+import org.springframework.util.ClassUtils;
 
 @Transactional
 public class DefaultAzureStorageImpl<S, SID extends Serializable>
@@ -139,12 +140,15 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             logger.info(placementService.toString());
             logger.info(((PlacementServiceImpl)placementService).toStringObject());
 
-            try {
-                GenericConverter converter = ((PlacementServiceImpl) placementService).getConverterPublic(TypeDescriptor.valueOf(contentPropertyInfo.getClass()), TypeDescriptor.valueOf(BlobId.class));
+            GenericConverter converter = ((PlacementServiceImpl) placementService).getConverterPublic(TypeDescriptor.valueOf(contentPropertyInfo.getClass()), TypeDescriptor.valueOf(BlobId.class));
+            if (converter != null) {
                 logger.info(converter.toString());
-            } finally {
+            } else {
                 logger.info("Converter not found");
             }
+
+            logger.info(((PlacementServiceImpl) placementService).getClassHierarchy(contentPropertyInfo.getClass()));
+            logger.info(((PlacementServiceImpl) placementService).getClassHierarchy(BlobId.class));
 
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 

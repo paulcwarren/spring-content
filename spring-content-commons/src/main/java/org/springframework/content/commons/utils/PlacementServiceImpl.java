@@ -12,9 +12,9 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 public class PlacementServiceImpl extends DefaultConversionService implements PlacementService {
 
@@ -185,6 +185,54 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         @Override
         public String toString() {
             return (this.typeInfo + " : " + this.converter);
+        }
+    }
+
+    public List<Class<?>> getClassHierarchy(Class<?> type) {
+        List<Class<?>> hierarchy = new ArrayList<>(20);
+        Set<Class<?>> visited = new HashSet<>(20);
+        addToClassHierarchy(0, ClassUtils.resolvePrimitiveIfNecessary(type), false, hierarchy, visited);
+        boolean array = type.isArray();
+
+        int i = 0;
+        while (i < hierarchy.size()) {
+            Class<?> candidate = hierarchy.get(i);
+            candidate = (array ? candidate.componentType() : ClassUtils.resolvePrimitiveIfNecessary(candidate));
+            Class<?> superclass = candidate.getSuperclass();
+            if (superclass != null && superclass != Object.class && superclass != Enum.class) {
+                addToClassHierarchy(i + 1, candidate.getSuperclass(), array, hierarchy, visited);
+            }
+            addInterfacesToClassHierarchy(candidate, array, hierarchy, visited);
+            i++;
+        }
+
+        if (Enum.class.isAssignableFrom(type)) {
+            addToClassHierarchy(hierarchy.size(), Enum.class, array, hierarchy, visited);
+            addToClassHierarchy(hierarchy.size(), Enum.class, false, hierarchy, visited);
+            addInterfacesToClassHierarchy(Enum.class, array, hierarchy, visited);
+        }
+
+        addToClassHierarchy(hierarchy.size(), Object.class, array, hierarchy, visited);
+        addToClassHierarchy(hierarchy.size(), Object.class, false, hierarchy, visited);
+        return hierarchy;
+    }
+
+    private void addToClassHierarchy(int index, Class<?> type, boolean asArray,
+                                     List<Class<?>> hierarchy, Set<Class<?>> visited) {
+
+        if (asArray) {
+            type = type.arrayType();
+        }
+        if (visited.add(type)) {
+            hierarchy.add(index, type);
+        }
+    }
+
+    private void addInterfacesToClassHierarchy(Class<?> type, boolean asArray,
+                                               List<Class<?>> hierarchy, Set<Class<?>> visited) {
+
+        for (Class<?> implementedInterface : type.getInterfaces()) {
+            addToClassHierarchy(hierarchy.size(), implementedInterface, asArray, hierarchy, visited);
         }
     }
 }
