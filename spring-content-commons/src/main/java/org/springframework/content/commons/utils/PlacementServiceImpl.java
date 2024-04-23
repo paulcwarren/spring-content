@@ -8,6 +8,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -101,6 +102,11 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         } else {
             super.addConverter(sourceType, targetType, converter);
         }
+    }
+
+    @Nullable
+    public GenericConverter getConverterPublic(TypeDescriptor sourceType, TypeDescriptor targetType) {
+        return super.getConverter(sourceType, targetType);
     }
 
     public String toStringObject() {

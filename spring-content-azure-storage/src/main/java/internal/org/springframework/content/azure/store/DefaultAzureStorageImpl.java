@@ -29,6 +29,7 @@ import org.springframework.content.commons.utils.PlacementService;
 import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -137,6 +138,13 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             logger.info("Converting " + TypeDescriptor.valueOf(contentPropertyInfo.getClass()) + " to " + TypeDescriptor.valueOf(BlobId.class));
             logger.info(placementService.toString());
             logger.info(((PlacementServiceImpl)placementService).toStringObject());
+
+            try {
+                GenericConverter converter = ((PlacementServiceImpl) placementService).getConverterPublic(TypeDescriptor.valueOf(contentPropertyInfo.getClass()), TypeDescriptor.valueOf(BlobId.class));
+                logger.info(converter.toString());
+            } finally {
+                logger.info("Converter not found");
+            }
 
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
