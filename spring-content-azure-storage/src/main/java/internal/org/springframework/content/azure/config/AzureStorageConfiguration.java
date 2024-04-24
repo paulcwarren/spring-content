@@ -23,6 +23,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
 import com.azure.spring.autoconfigure.storage.resource.AzureStorageProtocolResolver;
+import org.springframework.core.convert.converter.GenericConverter;
 
 @Configuration
 @Import(AzureStorageProtocolResolver.class)
@@ -55,7 +56,7 @@ public class AzureStorageConfiguration implements InitializingBean {
 
 		// ContentPropertyInfo -> BlobId
 		logger.info("Adding ContentPropertyInfo->BlobId converter");
-		conversion.addConverter(new Converter<ContentPropertyInfo<Object, Serializable>, BlobId>() {
+		Converter converter = new Converter<ContentPropertyInfo<Object, Serializable>, BlobId>() {
 
 			private String defaultBucket = bucket;
 
@@ -79,7 +80,8 @@ public class AzureStorageConfiguration implements InitializingBean {
 				return (key != null) ? new BlobId(strBucket, key.toString()) : null;
 			}
 
-		});
+		};
+		conversion.addConverter(converter);
 	}
 
 	private void addConverters(ConverterRegistry registry) {

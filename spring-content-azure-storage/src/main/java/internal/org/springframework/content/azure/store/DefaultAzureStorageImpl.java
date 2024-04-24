@@ -140,16 +140,6 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
             logger.info(placementService.toString());
             logger.info(((PlacementServiceImpl)placementService).toStringObject());
 
-            GenericConverter converter = ((PlacementServiceImpl) placementService).getConverterPublic(TypeDescriptor.valueOf(contentPropertyInfo.getClass()), TypeDescriptor.valueOf(BlobId.class));
-            if (converter != null) {
-                logger.info(converter.toString());
-            } else {
-                logger.info("Converter not found");
-            }
-
-            logger.info(((PlacementServiceImpl) placementService).getClassHierarchy(contentPropertyInfo.getClass()));
-            logger.info(((PlacementServiceImpl) placementService).getClassHierarchy(BlobId.class));
-
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
             if (blobId != null) {
