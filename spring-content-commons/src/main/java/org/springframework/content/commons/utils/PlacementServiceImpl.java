@@ -12,6 +12,7 @@ import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -132,8 +133,23 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         return super.getConverter(sourceType, targetType);
     }
 
-    public String toStringObject() {
-        return PlacementServiceImpl.class.getName() + "@" + Integer.toHexString(hashCode());
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ConversionService converters =\n");
+        for (String converterString : getConverterStrings()) {
+            builder.append('\t').append(converterString).append('\n');
+        }
+        return builder.toString();
+    }
+
+    private List<String> getConverterStrings() {
+        List<String> converterStrings = new ArrayList<>();
+        for (ConvertersForPair convertersForPair : this.converters.converters.values()) {
+            converterStrings.add(convertersForPair.toString());
+        }
+        Collections.sort(converterStrings);
+        return converterStrings;
     }
 
     /**
@@ -374,10 +390,6 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         private final Set<GenericConverter> globalConverters = new CopyOnWriteArraySet<>();
 
         private final Map<GenericConverter.ConvertiblePair, ConvertersForPair> converters = new ConcurrentHashMap<>(256);
-
-        public Converters() {
-            int i=0;
-        }
 
         public void add(GenericConverter converter) {
             Set<GenericConverter.ConvertiblePair> convertibleTypes = converter.getConvertibleTypes();

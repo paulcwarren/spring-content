@@ -98,6 +98,5 @@ public class AzureStorageConfiguration implements InitializingBean {
 		addDefaultConverters(conversion, bucket);
 		addConverters(conversion);
 		logger.info(conversion.toString());
-		logger.info(((PlacementServiceImpl)conversion).toStringObject());
 	}
 }
