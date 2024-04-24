@@ -45,6 +45,8 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
     // end implementation of genericconversaionservice
 
     public PlacementServiceImpl() {
+        DefaultConversionService.addDefaultConverters(this);
+
         // Issue #57
         //
         // Remove the FallbackObjectToStringConverter (Object -> String).  This converter can cause issues with Entities
