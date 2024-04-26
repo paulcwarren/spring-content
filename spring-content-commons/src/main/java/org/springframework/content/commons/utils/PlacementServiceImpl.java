@@ -128,11 +128,6 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         }
     }
 
-    @Nullable
-    public GenericConverter getConverterPublic(TypeDescriptor sourceType, TypeDescriptor targetType) {
-        return super.getConverter(sourceType, targetType);
-    }
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -338,6 +333,7 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
         }
 
         if (converter != null) {
+            logger.info("Adding converter " + converter + " to cache");
             this.converterCache.put(key, converter);
             logger.info("Returning converter " + converter);
             return converter;
