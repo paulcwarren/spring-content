@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
@@ -137,7 +138,7 @@ public class DefaultGCPStorageImpl<S, SID extends Serializable>
 		if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class))) {
 			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
 					(SID) property.getContentId(entity), propertyPath, property);
-			blobId = placementService.convert(contentPropertyInfo, BlobId.class);
+			blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
 			if (blobId != null) {
 				return this.getResourceInternal(blobId);
