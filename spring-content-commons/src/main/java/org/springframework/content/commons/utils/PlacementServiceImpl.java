@@ -273,7 +273,9 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
 //            Object result = ConversionUtils.invokeConverter(converter, source, sourceType, targetType);
             Object result = null;
             try {
+                logger.info("Calling converter " + converter);
                 result = converter.convert(source, sourceType, targetType);
+                logger.info("Got result " + result);
             }
             catch (ConversionFailedException ex) {
                 throw ex;
@@ -282,6 +284,7 @@ public class PlacementServiceImpl extends DefaultConversionService implements Pl
                 throw new ConversionFailedException(sourceType, targetType, source, ex);
             }
 
+            logger.info("Returning result " + result);
             return handleResult(sourceType, targetType, result);
         }
         return handleConverterNotFound(source, sourceType, targetType);
