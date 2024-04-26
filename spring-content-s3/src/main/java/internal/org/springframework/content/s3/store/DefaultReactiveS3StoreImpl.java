@@ -123,9 +123,19 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
 
         return Mono.fromFuture(future)
           .map((response) -> {
-            property.setContentId(entity, s3ObjectId.getKey(), null);
-            property.setContentLength(entity, contentLen);
-            return entity;
+              try {
+                  property.setContentId(entity, s3ObjectId.getKey(), null);
+              } catch (Exception e) {
+                  logger.error("Error setting content id " + s3ObjectId.getKey(), e);
+                  throw e;
+              }
+              try {
+                  property.setContentLength(entity, contentLen);
+              } catch (Exception e) {
+                  logger.error("Error setting content length " + contentLen, e);
+                  throw e;
+              }
+              return entity;
           }
         );
     }
