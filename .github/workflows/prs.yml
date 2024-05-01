@@ -23,15 +23,20 @@ jobs:
         server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
     - name: Build and Test
       id: build
       run: |
-        export AWS_REGION=us-west-1
         pushd spring-content
           mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
           project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "spring_content_version=${project_version}" >> $GITHUB_OUTPUT
         popd
+      env:
+        AWS_REGION: {{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
+
     - name: Save Maven Cache
       id: cache-maven-save
       uses: actions/cache/save@v3
@@ -64,12 +69,16 @@ jobs:
         ref: refs/heads/main
     - name: Validate against Examples
       run: |
-        export AWS_REGION=us-west-1
         pushd spring-content-examples
           git fetch --all
           git checkout main
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd
+      env:
+        AWS_REGION: {{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
+
     # - name: Setup tmate session if anything fails
     #   if: ${{ failure() }}
     #   uses: mxschmitt/action-tmate@v3
@@ -100,7 +109,10 @@ jobs:
         ref: refs/heads/feat/content-preservation
     - name: Validate against Getting Started Guides
       run: |
-        export AWS_REGION=us-west-1
         pushd spring-content-gettingstarted
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd        
+      env:
+        AWS_REGION: {{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}

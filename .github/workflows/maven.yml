@@ -29,9 +29,12 @@ jobs:
 
     - name: Build and Test
       run: |
-        export AWS_REGION=us-west-1
         mvn -B -P tests -Dmaven.javadoc.skip=true install jacoco:report  --file pom.xml
         bash <(curl -s https://codecov.io/bash)
+      env:
+        AWS_REGION: {{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID_ID_ID_ID_ID }}
+        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
 
     - name: Publish JARs
       run: |
@@ -56,6 +59,9 @@ jobs:
         CI_DEPLOY_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
         GPG_PASSPHASE: ${{ secrets.GPG_PASSPHRASE }}
+        AWS_REGION: {{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
 
     - name: Publish Docs
       run: |
