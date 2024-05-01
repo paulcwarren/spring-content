@@ -91,18 +91,6 @@
             <version>${hibernate-orm.version}</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.awspring.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-aws-context</artifactId>-->
-<!--            <version>2.4.4</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.testcontainers</groupId>-->
-<!--			<artifactId>localstack</artifactId>-->
-<!--			<version>${test-containers.version}</version>-->
-<!--			<scope>test</scope>-->
-<!--		</dependency>-->
 	</dependencies>
 
  	<repositories>
