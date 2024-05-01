@@ -94,10 +94,10 @@ public class DefaultS3StoreImplTest {
 
 				context.registerBean("s3Client", S3Client.class, new Supplier() {
 
-                    @Override
-                    public Object get() {
-                        return client;
-                    }
+                   @Override
+                   public Object get() {
+                       return client;
+                   }
 				}, new BeanDefinitionCustomizer[]{});
 				context.refresh();
 			});
@@ -156,10 +156,10 @@ public class DefaultS3StoreImplTest {
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 									placementService.addConverter(new Converter<CustomContentId, S3ObjectId>() {
 
-                                        @Override
-                                        public S3ObjectId convert(CustomContentId entity) {
-                                            return new S3ObjectId(entity.getCustomer(), entity.getObjectId());
-                                        }
+                                       @Override
+                                       public S3ObjectId convert(CustomContentId entity) {
+                                           return new S3ObjectId(entity.getCustomer(), entity.getObjectId());
+                                       }
 									});
 
 									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
@@ -192,13 +192,13 @@ public class DefaultS3StoreImplTest {
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 								});
 								Context("when called with an ID that doesn't specify a bucket either", () -> {
-                                    BeforeEach(() -> {
-                                        customId = new CustomContentId(null,"some-object-id");
-                                    });
-                                    It("should throw an error", () -> {
-                                        assertThat(e, is(instanceOf(ConversionFailedException.class)));
-                                    });
-                                });
+                                   BeforeEach(() -> {
+                                       customId = new CustomContentId(null,"some-object-id");
+                                   });
+                                   It("should throw an error", () -> {
+                                       assertThat(e, is(instanceOf(ConversionFailedException.class)));
+                                   });
+                               });
 							});
 						});
 					});
@@ -259,19 +259,19 @@ public class DefaultS3StoreImplTest {
 									entity = new TestEntity("12345-67890");
 
 									placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 									placementService.addConverter(new Converter<S3ObjectId, String>() {
-                                        @Override
-                                        public String convert(S3ObjectId source) {
-                                            return "/" + source.getKey().replaceAll("-", "/");
-                                        }
-                                    });
+                                       @Override
+                                       public String convert(S3ObjectId source) {
+                                           return "/" + source.getKey().replaceAll("-", "/");
+                                       }
+                                   });
 
 									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
 									loader = new DefaultResourceLoader();
 									((DefaultResourceLoader)loader).addProtocolResolver(s3Protocol);
-                                });
+                               });
 								It("should fetch the resource", () -> {
 									assertThat(e, is(nullValue()));
 									assertThat(r, is(instanceOf(S3StoreResource.class)));
@@ -285,8 +285,8 @@ public class DefaultS3StoreImplTest {
 											"some-other-bucket");
 									entity.setContentId("12345-67890");
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
 									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
@@ -322,12 +322,12 @@ public class DefaultS3StoreImplTest {
 
 									placementService = new PlacementServiceImpl();
 									S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-                                    placementService.addConverter(new Converter<TestEntity, S3ObjectId>() {
-                                        @Override
-                                        public S3ObjectId convert(TestEntity source) {
-                                            return new S3ObjectId( "custom-bucket", "custom-object-id");
-                                        }
-                                    });
+                                   placementService.addConverter(new Converter<TestEntity, S3ObjectId>() {
+                                       @Override
+                                       public S3ObjectId convert(TestEntity source) {
+                                           return new S3ObjectId( "custom-bucket", "custom-object-id");
+                                       }
+                                   });
 
 									SimpleStorageProtocolResolver s3Protocol = new SimpleStorageProtocolResolver(client);
 									s3Protocol.afterPropertiesSet();
@@ -344,29 +344,29 @@ public class DefaultS3StoreImplTest {
 						});
 					});
 					Context("given a custom id resolver that cannot resolve the bucket", () -> {
-                        Context("given the default bucket is not set", () -> {
-                            BeforeEach(() -> {
-                                defaultBucket = null;
-                            });
-                            Context("when called with an entity", () -> {
-                                BeforeEach(() -> {
-                                    entity = new TestEntity("12345-67890");
+                       Context("given the default bucket is not set", () -> {
+                           BeforeEach(() -> {
+                               defaultBucket = null;
+                           });
+                           Context("when called with an entity", () -> {
+                               BeforeEach(() -> {
+                                   entity = new TestEntity("12345-67890");
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
-                                    placementService.addConverter(new Converter<CustomContentId, S3ObjectId>() {
-                                        @Override
-                                        public S3ObjectId convert(CustomContentId entity) {
-                                            return new S3ObjectId(null, entity.getObjectId());
-                                        }
-                                    });
-                                });
-                                It("should throw an exception", () -> {
-                                    assertThat(e, is(instanceOf(ConversionFailedException.class)));
-                                });
-                            });
-                        });
-                    });
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService.addConverter(new Converter<CustomContentId, S3ObjectId>() {
+                                       @Override
+                                       public S3ObjectId convert(CustomContentId entity) {
+                                           return new S3ObjectId(null, entity.getObjectId());
+                                       }
+                                   });
+                               });
+                               It("should throw an exception", () -> {
+                                   assertThat(e, is(instanceOf(ConversionFailedException.class)));
+                               });
+                           });
+                       });
+                   });
 				});
 				Context("#getResource with PropertyPath", () -> {
 					JustBeforeEach(() -> {
@@ -569,8 +569,8 @@ public class DefaultS3StoreImplTest {
 								BeforeEach(() -> {
 									entity.setContentId("abcd-efgh");
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
 									when(loader.getResource(endsWith("abcd-efgh"))).thenReturn(resource);
 									output = mock(OutputStream.class);
@@ -605,10 +605,10 @@ public class DefaultS3StoreImplTest {
 								BeforeEach(() -> {
 									assertThat(entity.getContentId(), is(nullValue()));
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-                                    when(loader.getResource(matches("^s3://.*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))).thenReturn(resource);
+                                   when(loader.getResource(matches("^s3://.*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))).thenReturn(resource);
 									output = mock(OutputStream.class);
 									when(resource.getOutputStream()).thenReturn(output);
 
@@ -634,16 +634,16 @@ public class DefaultS3StoreImplTest {
 							});
 							Context("when s3 throws an S3Exception", () -> {
 							    BeforeEach(() -> {
-                                    assertThat(entity.getContentId(), is(nullValue()));
+                                   assertThat(entity.getContentId(), is(nullValue()));
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-                                    when(loader.getResource(matches("^s3://.*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))).thenReturn(resource);
-                                    output = mock(OutputStream.class);
-                                    when(resource.getOutputStream()).thenReturn(output);
+                                   when(loader.getResource(matches("^s3://.*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))).thenReturn(resource);
+                                   output = mock(OutputStream.class);
+                                   when(resource.getOutputStream()).thenReturn(output);
 
-                                    doThrow(S3Exception.builder().message("no such upload").build()).when(output).close();
+                                   doThrow(S3Exception.builder().message("no such upload").build()).when(output).close();
 							    });
 							    It("should do something", () -> {
 							        assertThat(e, is(instanceOf(S3Exception.class)));
@@ -704,10 +704,10 @@ public class DefaultS3StoreImplTest {
 									content = mock(InputStream.class);
 									entity.setContentId("abcd-efgh");
 
-                                    placementService = new PlacementServiceImpl();
-                                    S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
+                                   placementService = new PlacementServiceImpl();
+                                   S3StoreConfiguration.addDefaultS3ObjectIdConverters(placementService, defaultBucket);
 
-                                    when(loader.getResource(matches("^s3://default-defaultBucket/abcd-efgh"))).thenReturn(resource);
+                                   when(loader.getResource(matches("^s3://default-defaultBucket/abcd-efgh"))).thenReturn(resource);
 									when(resource.getInputStream()).thenReturn(content);
 								});
 								Context("and the resource already exists", () -> {
@@ -868,22 +868,22 @@ public class DefaultS3StoreImplTest {
 		}
 
 		@Override
-        public String getContentId() {
+       public String getContentId() {
 			return this.contentId;
 		}
 
 		@Override
-        public void setContentId(String contentId) {
+       public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
 		@Override
-        public long getContentLen() {
+       public long getContentLen() {
 			return contentLen;
 		}
 
 		@Override
-        public void setContentLen(long contentLen) {
+       public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -919,22 +919,22 @@ public class DefaultS3StoreImplTest {
 		}
 
 		@Override
-        public String getContentId() {
+       public String getContentId() {
 			return this.contentId;
 		}
 
 		@Override
-        public void setContentId(String contentId) {
+       public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
 		@Override
-        public long getContentLen() {
+       public long getContentLen() {
 			return contentLen;
 		}
 
 		@Override
-        public void setContentLen(long contentLen) {
+       public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}
@@ -953,22 +953,22 @@ public class DefaultS3StoreImplTest {
 		}
 
 		@Override
-        public String getContentId() {
+       public String getContentId() {
 			return this.contentId;
 		}
 
 		@Override
-        public void setContentId(String contentId) {
+       public void setContentId(String contentId) {
 			this.contentId = contentId;
 		}
 
 		@Override
-        public long getContentLen() {
+       public long getContentLen() {
 			return contentLen;
 		}
 
 		@Override
-        public void setContentLen(long contentLen) {
+       public void setContentLen(long contentLen) {
 			this.contentLen = contentLen;
 		}
 	}

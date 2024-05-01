@@ -142,7 +142,7 @@ public class DefaultS3StoreImpl<S, SID extends Serializable>
 		if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
 			ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
 					(SID) property.getContentId(entity), propertyPath, property);
-			s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
+			s3ObjectId = (S3ObjectId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class));
 			Resource r = this.getResourceInternal(s3ObjectId, params);
 			return r;
 		}

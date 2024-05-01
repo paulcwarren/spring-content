@@ -5,13 +5,13 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import jakarta.persistence.*;
-import junit.framework.Assert;
 import lombok.*;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -27,6 +27,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,6 +39,10 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
@@ -60,7 +65,8 @@ import static org.junit.Assert.fail;
 @Ginkgo4jConfiguration(threads=1)
 public class S3StoreIT {
 
-    private static final String BUCKET = "aws-test-bucket";
+//    private static final String BUCKET = "aws-test-bucket";
+    private static final String BUCKET = "spring-eg-content-s3";
 
     static {
         System.setProperty("spring.content.s3.bucket", BUCKET);
@@ -587,9 +593,19 @@ public class S3StoreIT {
     @EnableS3Stores(basePackages="internal.org.springframework.content.s3.it")
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
+
+        @Autowired
+        private Environment env;
+
         @Bean
         public S3Client client() throws URISyntaxException {
-            return LocalStack.getAmazonS3Client();
+            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
+            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
+
+            return S3Client.builder()
+                    .region(Region.US_WEST_1)
+                    .credentialsProvider(credentialsProvider)
+                    .build();
         }
     }
 

@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -47,6 +48,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -68,7 +70,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.bytebuddy.utility.RandomString;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -82,8 +88,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @Ginkgo4jConfiguration(threads=1)
 public class S3StoreWithEntityConverterIT {
 
-    private static final String BUCKET = "aws-test-bucket";
-    private static final String OTHER_BUCKET = "other-bucket";
+    private static final String BUCKET = "spring-eg-content-s3";
+    private static final String OTHER_BUCKET = "other-other-other-bucket";
     private static final String OTHER_OTHER_BUCKET = "other-other-bucket";
 
     private static TestData[] testDataSets = null;
@@ -225,9 +231,25 @@ public class S3StoreWithEntityConverterIT {
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
 
+//        @Bean
+//        public S3Client client() throws URISyntaxException {
+//            s3ClientSpy = spy(LocalStack.getAmazonS3Client());
+//            return s3ClientSpy;
+//        }
+@Autowired
+private Environment env;
+
         @Bean
         public S3Client client() throws URISyntaxException {
-            s3ClientSpy = spy(LocalStack.getAmazonS3Client());
+            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
+            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
+
+            S3Client s3Client = S3Client.builder()
+                    .region(Region.US_WEST_1)
+                    .credentialsProvider(credentialsProvider)
+                    .build();
+
+            s3ClientSpy = spy(s3Client);
             return s3ClientSpy;
         }
     }
@@ -308,7 +330,7 @@ public class S3StoreWithEntityConverterIT {
         private Long id;
 
         @Bucket
-        private String bucket = "other-bucket";
+        private String bucket = "other-other-other-bucket";
 
         @ContentId
         private String contentId;

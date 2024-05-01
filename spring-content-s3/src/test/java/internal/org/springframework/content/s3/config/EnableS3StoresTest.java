@@ -21,6 +21,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.repository.AssociativeStore;
 import org.springframework.content.commons.repository.ContentStore;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -41,6 +43,9 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 import internal.org.springframework.content.s3.io.S3StoreResource;
 import internal.org.springframework.content.s3.it.S3StoreIT;
 import lombok.Data;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -230,13 +235,18 @@ public class EnableS3StoresTest {
 	@Configuration
 	public static class InfrastructureConfig {
 
-		public Region region() {
-			return Region.US_WEST_1;
-		}
+        @Autowired
+        private Environment env;
 
         @Bean
         public S3Client client() throws URISyntaxException {
-            return S3Client.builder().build();
+            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
+            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
+
+            return S3Client.builder()
+                    .region(Region.US_WEST_1)
+                    .credentialsProvider(credentialsProvider)
+                    .build();
         }
 	}
 
