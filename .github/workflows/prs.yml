@@ -33,9 +33,9 @@ jobs:
           echo "spring_content_version=${project_version}" >> $GITHUB_OUTPUT
         popd
       env:
-        AWS_REGION: {{ secrets.AWS_REGION }}
-        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
     - name: Save Maven Cache
       id: cache-maven-save
@@ -75,9 +75,9 @@ jobs:
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd
       env:
-        AWS_REGION: {{ secrets.AWS_REGION }}
-        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
     # - name: Setup tmate session if anything fails
     #   if: ${{ failure() }}
@@ -113,6 +113,6 @@ jobs:
           SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
         popd        
       env:
-        AWS_REGION: {{ secrets.AWS_REGION }}
-        AWS_ACCESS_KEY: {{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_KEY: {{ secrets.AWS_SECRET_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}

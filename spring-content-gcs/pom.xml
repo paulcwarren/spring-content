@@ -22,7 +22,7 @@
  		<dependency>
  			<groupId>com.google.cloud</groupId>
  			<artifactId>spring-cloud-gcp-storage</artifactId>
- 			<version>5.1.0</version>
+ 			<version>5.1.2</version>
  		</dependency>
  		<dependency>
 		    <groupId>com.google.cloud</groupId>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>spring-cloud-gcp-core</artifactId>
-            <version>5.1.0</version>
+            <version>5.1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,7 +109,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-nio</artifactId>
-            <version>0.127.14</version>
+            <version>0.127.15</version>
             <scope>test</scope>
         </dependency>
 	</dependencies>
