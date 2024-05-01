@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import net.bytebuddy.asm.Advice;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -14,6 +15,8 @@ import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.net.URIBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.core.ServiceConfiguration;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -38,9 +41,13 @@ public class LocalStack extends LocalStackContainer implements Serializable {
 
     public static S3Client getAmazonS3Client() throws URISyntaxException {
         return S3Client.builder()
-                .endpointOverride(new URI(LocalStack.singleton().getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
-                .credentialsProvider(new LocalStack.CrossAwsCredentialsProvider(LocalStack.singleton().getDefaultCredentialsProvider()))
-                .serviceConfiguration((serviceBldr) -> {serviceBldr.pathStyleAccessEnabled(true);})
+                .endpointOverride(LocalStack.singleton().getEndpoint())
+                .credentialsProvider(
+                        StaticCredentialsProvider.create(
+                                AwsBasicCredentials.create(LocalStack.singleton().getAccessKey(), LocalStack.singleton().getSecretKey())
+                        )
+                )
+                .region(Region.of(LocalStack.singleton().getRegion()))
                 .build();
     }
 
