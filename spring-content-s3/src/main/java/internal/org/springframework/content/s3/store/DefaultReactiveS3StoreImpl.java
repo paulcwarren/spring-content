@@ -75,9 +75,8 @@ public class DefaultReactiveS3StoreImpl<S, SID extends Serializable>
         if (!placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class))) {
             throw new IllegalStateException(String.format("Unable to convert %s to an S3ObjectId", contentPropertyInfoType));
         }
-        ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
-                (SID) property.getContentId(entity), path, property);
-        S3ObjectId s3ObjectId = placementService.convert(contentPropertyInfo, S3ObjectId.class);
+        ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity, (SID) property.getContentId(entity), path, property);
+        S3ObjectId s3ObjectId = (S3ObjectId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(S3ObjectId.class));
         return s3ObjectId;
     }
 
