@@ -64,6 +64,14 @@ jobs:
         key: ${{ runner.os }}-maven-${{ github.run_id }}
     - uses: actions/checkout@v2
       with:
+        path: spring-content
+    - name: Re-build spring-content
+      run: |
+        pushd spring-content
+          mvn install -DskipTests=true
+        popd
+    - uses: actions/checkout@v2
+      with:
         repository: paulcwarren/spring-content-examples
         path: spring-content-examples
         ref: refs/heads/main

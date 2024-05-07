@@ -3,6 +3,8 @@ package internal.org.springframework.content.azure.config;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,10 +23,13 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
 import com.azure.spring.autoconfigure.storage.resource.AzureStorageProtocolResolver;
+import org.springframework.core.convert.converter.GenericConverter;
 
 @Configuration
 @Import(AzureStorageProtocolResolver.class)
 public class AzureStorageConfiguration implements InitializingBean {
+
+	private static Log logger = LogFactory.getLog(AzureStorageConfiguration.class);
 
 	@Autowired(required = false)
 	private List<AzureStorageConfigurer> configurers;
@@ -46,10 +51,12 @@ public class AzureStorageConfiguration implements InitializingBean {
 	public static void addDefaultConverters(PlacementService conversion, String bucket) {
 
 		// Serializable -> BlobId
+		logger.info("Adding Serializable->BlobId converter");
 		conversion.addConverter(new BlobIdResolverConverter(bucket));
 
 		// ContentPropertyInfo -> BlobId
-		conversion.addConverter(new Converter<ContentPropertyInfo<Object, Serializable>, BlobId>() {
+		logger.info("Adding ContentPropertyInfo->BlobId converter");
+		Converter converter = new Converter<ContentPropertyInfo<Object, Serializable>, BlobId>() {
 
 			private String defaultBucket = bucket;
 
@@ -73,7 +80,8 @@ public class AzureStorageConfiguration implements InitializingBean {
 				return (key != null) ? new BlobId(strBucket, key.toString()) : null;
 			}
 
-		});
+		};
+		conversion.addConverter(converter);
 	}
 
 	private void addConverters(ConverterRegistry registry) {
@@ -89,5 +97,6 @@ public class AzureStorageConfiguration implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		addDefaultConverters(conversion, bucket);
 		addConverters(conversion);
+		logger.info(conversion.toString());
 	}
 }

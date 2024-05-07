@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -26,8 +26,10 @@ import org.springframework.content.commons.store.*;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.content.commons.utils.Condition;
 import org.springframework.content.commons.utils.PlacementService;
+import org.springframework.content.commons.utils.PlacementServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -38,6 +40,7 @@ import com.azure.storage.blob.BlobServiceClient;
 
 import internal.org.springframework.content.azure.io.AzureBlobResource;
 import internal.org.springframework.content.commons.utils.ContentPropertyInfoTypeDescriptor;
+import org.springframework.util.ClassUtils;
 
 @Transactional
 public class DefaultAzureStorageImpl<S, SID extends Serializable>
@@ -131,8 +134,8 @@ public class DefaultAzureStorageImpl<S, SID extends Serializable>
         BlobId blobId = null;
         TypeDescriptor contentPropertyInfoType = ContentPropertyInfoTypeDescriptor.withGenerics(entity, property);
         if (placementService.canConvert(contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class))) {
-            ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity,
-                    (SID) property.getContentId(entity), propertyPath, property);
+            ContentPropertyInfo<S, SID> contentPropertyInfo = ContentPropertyInfo.of(entity, (SID) property.getContentId(entity), propertyPath, property);
+
             blobId = (BlobId) placementService.convert(contentPropertyInfo, contentPropertyInfoType, TypeDescriptor.valueOf(BlobId.class));
 
             if (blobId != null) {
