@@ -58,7 +58,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <commons-text.version>1.12.0</commons-text.version>
         <jakarta-persistence-api.version>3.1.0</jakarta-persistence-api.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
-        <hibernate-orm.version>6.1.7.Final</hibernate-orm.version>
+        <hibernate-orm.version>6.5.0.Final</hibernate-orm.version>
         <solr-solrj.version>9.6.0</solr-solrj.version>
         <elasticsearch-rest-high-level-client.version>7.17.20</elasticsearch-rest-high-level-client.version>
 
