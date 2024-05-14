@@ -43,7 +43,8 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
 
     @Override
     public boolean canRead(Class clazz, MediaType mediaType) {
-        return PersistentEntityResource.class.equals(clazz) && MediaType.MULTIPART_FORM_DATA.equals(mediaType);
+        return PersistentEntityResource.class.equals(clazz) && mediaType != null
+                && mediaType.includes(MediaType.MULTIPART_FORM_DATA);
     }
 
     @Override
