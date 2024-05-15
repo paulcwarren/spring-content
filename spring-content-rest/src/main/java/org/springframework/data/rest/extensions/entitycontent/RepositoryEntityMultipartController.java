@@ -93,6 +93,8 @@ public class RepositoryEntityMultipartController {
 
         String store = pathSegments[1];
 
+        boolean entitySaved = false;
+
         StoreInfo info = this.stores.getStore(Store.class, StoreUtils.withStorePath(store));
         if (info != null) {
             ContentStoreContentService service = new ContentStoreContentService(restConfig, info, repoInvokerFactory.getInvokerFor(domainType), mappingContext, exportedMappingContext, byteRangeRestRequestHandler);
@@ -104,7 +106,13 @@ public class RepositoryEntityMultipartController {
 
                 headers.setContentLength(file.getSize());
                 service.setContent(req, resp, headers, new InputStreamResourceWithFilename(file.getInputStream(), file.getOriginalFilename()), MediaType.parseMediaType(file.getContentType()), storeResource);
+                entitySaved = true;
             }
+        }
+
+        // if we didn't find store info, or there weren't any files in the request, the entity has not been saved yet
+        if (!entitySaved) {
+            repoInvokerFactory.getInvokerFor(domainType).invokeSave(savedEntity);
         }
 
         Optional<PersistentEntityResource> resource = Optional.ofNullable(assembler.toFullResource(savedEntity));
