@@ -233,6 +233,7 @@ public class ContentEntityRestEndpointsIT {
 					// POST the new content
 					MockHttpServletResponse response = mvc.perform(multipart("/testEntity3s")
 									.file(file)
+									.contentType("multipart/form-data; boundary=c0de8278")
 									.param("name", "foo")
 									.param("hidden", "bar")
 									.param("ying", "yang")
