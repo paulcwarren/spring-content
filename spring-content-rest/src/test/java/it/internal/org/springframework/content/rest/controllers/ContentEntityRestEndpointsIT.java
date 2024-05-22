@@ -325,6 +325,36 @@ public class ContentEntityRestEndpointsIT {
 					assertThat(response.getContentAsString(), is(newContent));
 				});
 			});
+
+			Context("given a a multipart/form POST that doesn't include the content property", () -> {
+				It("should create a new entity with no content and respond with a 201 Created", () -> {
+
+					var testEntity4Id = repo4.save(new TestEntity4()).getId();
+
+					// POST the entity
+					MockHttpServletResponse response = mvc.perform(multipart("/testEntity3s")
+									.param("name", "foo")
+									.param("hidden", "bar")
+									.param("ying", "yang")
+									.param("things", "one", "two")
+									.param("testEntity4", "/testEntity4s/" + testEntity4Id))
+
+							.andExpect(status().isCreated())
+							.andReturn().getResponse();
+
+					String location = response.getHeader("Location");
+
+					Optional<TestEntity3> fetchedEntity = repo3.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+					assertThat(fetchedEntity.get().getName(), is("foo"));
+					assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
+					assertThat(fetchedEntity.get().getYang(), is("yang"));
+					assertThat(fetchedEntity.get().getThings(), hasItems("one", "two"));
+					assertThat(fetchedEntity.get().getTestEntity4(), is(not(nullValue())));
+					assertThat(fetchedEntity.get().getContentId(), is(nullValue()));
+					assertThat(fetchedEntity.get().getLen(), is(nullValue()));
+					assertThat(fetchedEntity.get().getOriginalFileName(), is(nullValue()));
+				});
+			});
 		});
 	}
 
