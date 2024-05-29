@@ -22,6 +22,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.data.rest.core.mapping.ResourceType;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
+import org.springframework.data.rest.webmvc.HttpHeadersPreparer;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
@@ -59,9 +60,10 @@ public class RepositoryEntityMultipartController {
     private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
     private Stores stores;
     private SelfLinkProvider selfLinkProvider;
+    private HttpHeadersPreparer headersPreparer;
 
     @Autowired
-    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer) {
+    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer, HttpHeadersPreparer headersPreparer) {
         this.restConfig = restConfig;
         this.repoInvokerFactory = repoInvokerFactory;
         this.selfLinkProvider = selfLinkProvider;
@@ -69,6 +71,7 @@ public class RepositoryEntityMultipartController {
         this.mappingContext = mappingContext;
         this.exportedMappingContext = exportedMappingContext;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
+        this.headersPreparer = headersPreparer;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -118,10 +121,11 @@ public class RepositoryEntityMultipartController {
         Optional<PersistentEntityResource> resource = Optional.ofNullable(assembler.toFullResource(savedEntity));
         headers.setContentType(new MediaType("application", "hal+json"));
 
+        HttpHeaders respHeaders = headersPreparer.prepareHeaders(resource);
+		// addLocationHeader(respHeaders, assembler, savedEntity);
         String selfLink = selfLinkProvider.createSelfLinkFor(savedEntity).withSelfRel().expand(new Object[0]).getHref();
-        resp.setHeader("Location", UriTemplate.of(selfLink).expand(new Object[0]).toString());
-
-        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, headers, resource);
+        respHeaders.setLocation(UriTemplate.of(selfLink).expand());
+        return ControllerUtils.toResponseEntity(HttpStatus.CREATED, respHeaders, resource);
     }
 
     private static class InternalWebRequest implements NativeWebRequest {
