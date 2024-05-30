@@ -79,6 +79,12 @@ public class ContentEntityRestEndpointsIT {
     @Autowired
     TestEntity9Store store9;
 
+	// mapped content property
+	@Autowired
+	TestEntity11Repository repo11;
+	@Autowired
+	TestEntity11Store store11;
+
 	@Autowired
 	TestStore store;
 
@@ -92,6 +98,7 @@ public class ContentEntityRestEndpointsIT {
 	private TestEntity4 testEntity4;
 	private TestEntity6 testEntity6;
     private TestEntity9 testEntity9;
+	private TestEntity11 testEntity11;
 
 	private Version version;
 	private LastModifiedDate lastModifiedDate;
@@ -316,12 +323,15 @@ public class ContentEntityRestEndpointsIT {
 					Optional<TestEntity9> fetchedEntity = repo9.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
 					assertThat(fetchedEntity.get().getHidden(), is(nullValue()));
 
-					// assert that it now exists
-					response = mvc.perform(get(location)
+					// assert entity now exists
+					mvc.perform(head(location))
+							.andExpect(status().is2xxSuccessful());
+
+					// assert content now exists
+					response = mvc.perform(get(location + "/content")
 									.accept("text/plain"))
 							.andExpect(status().isOk())
 							.andReturn().getResponse();
-
 					assertThat(response.getContentAsString(), is(newContent));
 				});
 			});
@@ -353,6 +363,37 @@ public class ContentEntityRestEndpointsIT {
 					assertThat(fetchedEntity.get().getContentId(), is(nullValue()));
 					assertThat(fetchedEntity.get().getLen(), is(nullValue()));
 					assertThat(fetchedEntity.get().getOriginalFileName(), is(nullValue()));
+				});
+			});
+
+			Context("given a a multipart/form POST to an entity with a mapped content property", () -> {
+				It("should create a new entity and its content and respond with a 201 Created", () -> {
+					// assert content does not exist
+					String newContent = "This is some new content";
+
+					MockMultipartFile file = new MockMultipartFile("package/content", "filename.txt", "text/plain", newContent.getBytes());
+
+					// POST the new content
+					MockHttpServletResponse response = mvc.perform(multipart("/testEntity11s")
+									.file(file))
+							.andExpect(status().isCreated())
+							.andReturn().getResponse();
+
+					String location = response.getHeader("Location");
+
+					Optional<TestEntity11> fetchedEntity = repo11.findById(Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+					assertThat(fetchedEntity.get().get_package().getContentId(), is(not(nullValue())));
+
+					// assert entity now exists
+					mvc.perform(head(location))
+							.andExpect(status().is2xxSuccessful());
+
+					// assert content now exists
+					response = mvc.perform(get(location + "/package/content")
+									.accept("text/plain"))
+							.andExpect(status().isOk())
+							.andReturn().getResponse();
+					assertThat(response.getContentAsString(), is(newContent));
 				});
 			});
 		});

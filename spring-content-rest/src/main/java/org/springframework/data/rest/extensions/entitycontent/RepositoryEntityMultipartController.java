@@ -5,6 +5,7 @@ import internal.org.springframework.content.rest.controllers.BadRequestException
 import internal.org.springframework.content.rest.controllers.MethodNotAllowedException;
 import internal.org.springframework.content.rest.controllers.resolvers.AssociativeStoreResourceResolver;
 import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToExportedContext;
+import internal.org.springframework.content.rest.mappingcontext.ContentPropertyToRequestMappingContext;
 import internal.org.springframework.content.rest.mappings.StoreByteRangeHttpRequestHandler;
 import internal.org.springframework.content.rest.utils.ControllerUtils;
 import internal.org.springframework.content.rest.utils.StoreUtils;
@@ -22,11 +23,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
 import org.springframework.data.rest.core.mapping.ResourceType;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
-import org.springframework.data.rest.webmvc.HttpHeadersPreparer;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
-import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
-import org.springframework.data.rest.webmvc.RepositoryRestController;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.rest.webmvc.*;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.UriTemplate;
@@ -44,9 +41,11 @@ import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.security.Principal;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 @RepositoryRestController
 public class RepositoryEntityMultipartController {
@@ -55,6 +54,7 @@ public class RepositoryEntityMultipartController {
 
     private RestConfiguration restConfig;
     private RepositoryInvokerFactory repoInvokerFactory;
+    private ContentPropertyToRequestMappingContext requestMappingContext;
     private MappingContext mappingContext;
     private ContentPropertyToExportedContext exportedMappingContext;
     private StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler;
@@ -63,9 +63,10 @@ public class RepositoryEntityMultipartController {
     private HttpHeadersPreparer headersPreparer;
 
     @Autowired
-    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer, HttpHeadersPreparer headersPreparer) {
+    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, ContentPropertyToRequestMappingContext requestMappingContext, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer, HttpHeadersPreparer headersPreparer) {
         this.restConfig = restConfig;
         this.repoInvokerFactory = repoInvokerFactory;
+        this.requestMappingContext = requestMappingContext;
         this.selfLinkProvider = selfLinkProvider;
         this.stores = stores;
         this.mappingContext = mappingContext;
@@ -105,7 +106,11 @@ public class RepositoryEntityMultipartController {
             for (String path : files.keySet()) {
                 MultipartFile file = files.get(path).get(0);
 
-                Resource storeResource = new AssociativeStoreResourceResolver(mappingContext).resolve(new InternalWebRequest(req, resp), info, savedEntity, PropertyPath.from(file.getName()));
+                String resolvedPath = file.getName();
+                if (this.requestMappingContext.hasInverseMapping(domainType, file.getName())) {
+                    resolvedPath = this.requestMappingContext.getInverseMappings(domainType).get(file.getName());
+                }
+                Resource storeResource = new AssociativeStoreResourceResolver(mappingContext).resolve(new InternalWebRequest(req, resp), info, savedEntity, PropertyPath.from(resolvedPath));
 
                 headers.setContentLength(file.getSize());
                 service.setContent(req, resp, headers, new InputStreamResourceWithFilename(file.getInputStream(), file.getOriginalFilename()), MediaType.parseMediaType(file.getContentType()), storeResource);
@@ -122,7 +127,6 @@ public class RepositoryEntityMultipartController {
         headers.setContentType(new MediaType("application", "hal+json"));
 
         HttpHeaders respHeaders = headersPreparer.prepareHeaders(resource);
-		// addLocationHeader(respHeaders, assembler, savedEntity);
         String selfLink = selfLinkProvider.createSelfLinkFor(savedEntity).withSelfRel().expand(new Object[0]).getHref();
         respHeaders.setLocation(UriTemplate.of(selfLink).expand());
         return ControllerUtils.toResponseEntity(HttpStatus.CREATED, respHeaders, resource);
