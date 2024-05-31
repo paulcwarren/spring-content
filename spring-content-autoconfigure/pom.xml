@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.github.paulcwarren</groupId>
 		<artifactId>spring-content</artifactId>
-		<version>3.0.10-SNAPSHOT</version>
+		<version>3.0.11-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<dependencies>
@@ -21,25 +21,25 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-commons</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-fs</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-jpa</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-mongo</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-renditions</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 <!--		<dependency>-->
@@ -67,13 +67,13 @@
 		<dependency>
 	      	<groupId>com.github.paulcwarren</groupId>
 	  		<artifactId>spring-content-rest</artifactId>
-	  		<version>3.0.10-SNAPSHOT</version>
+	  		<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
   		</dependency>
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-s3</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 			<exclusions>
 				<exclusion>
@@ -85,7 +85,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-solr</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -107,7 +107,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-content-elasticsearch</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -119,7 +119,7 @@
 		<dependency>
 			<groupId>com.github.paulcwarren</groupId>
 			<artifactId>spring-versions-jpa</artifactId>
-			<version>3.0.10-SNAPSHOT</version>
+			<version>3.0.11-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 
