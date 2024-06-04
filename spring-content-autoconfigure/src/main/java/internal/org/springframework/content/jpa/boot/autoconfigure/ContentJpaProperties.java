@@ -10,6 +10,8 @@ public class ContentJpaProperties {
 
 	private final ContentJpaProperties.Initializer initializer = new ContentJpaProperties.Initializer();
 
+	private int copyBufferSize = 4096;
+
 	public Initializer getInitializer() {
 		return initializer;
 	}
@@ -28,5 +30,13 @@ public class ContentJpaProperties {
 		public void setInitializeSchema(DatabaseInitializationMode initializeSchema) {
 			this.initializeSchema = initializeSchema;
 		}
+	}
+
+	public void setCopyBufferSize(int copyBufferSize) {
+		this.copyBufferSize = copyBufferSize;
+	}
+
+	public int getCopyBufferSize() {
+		return this.copyBufferSize;
 	}
 }

@@ -58,12 +58,14 @@ public class ContentJpaAutoConfigurationTest {
 				contextRunner.withUserConfiguration(TestConfig.class).run((context) -> {
 					Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
 					Assertions.assertThat(context).hasSingleBean(ContentJpaDatabaseInitializer.class);
+					Assertions.assertThat(context).hasBean("copyBufferSize");
 				});
 			});
 			Context("when a custom bean configuration is used", () -> {
 				It("should use the supplied custom bean", () -> {
 					contextRunner.withUserConfiguration(CustomBeanConfig.class).run((context) -> {
 						Assertions.assertThat(context).getBean(ContentJpaDatabaseInitializer.class).isEqualTo(initializer);
+						Assertions.assertThat(context).getBean("copyBufferSize").isEqualTo(16192);
 					});
 				});
 			});
@@ -73,8 +75,8 @@ public class ContentJpaAutoConfigurationTest {
 						Assertions.assertThat(context).hasSingleBean(TestEntityContentRepository.class);
 						Assertions.assertThat(context).hasSingleBean(ContentJpaProperties.class);
 						Assertions.assertThat(context).hasSingleBean(ContentJpaDatabaseInitializer.class);
+						Assertions.assertThat(context).hasBean("copyBufferSize");
 					});
-
 				});
 			});
 		});
@@ -123,6 +125,11 @@ public class ContentJpaAutoConfigurationTest {
 		public ContentJpaDatabaseInitializer initializer() {
 			return initializer;
 		}
+
+		@Bean
+		public Integer copyBufferSize() {
+			return 16192;
+		}
 	}
 
 	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
@@ -133,7 +140,7 @@ public class ContentJpaAutoConfigurationTest {
 	@SpringBootApplication(exclude={JpaVersionsAutoConfiguration.class,SolrAutoConfiguration.class, SolrExtensionAutoConfiguration.class, S3ContentAutoConfiguration.class})
 	@Import(JpaTestConfig.class)
 	@PropertySource("classpath:/custom-jpa.properties")
-	public static class CustomPropertiesConfig extends TestConfig {
+	public static class CustomPropertiesConfig {
 	}
 
 	public interface TestEntityRepository extends JpaRepository<TestEntity, Long> {}
