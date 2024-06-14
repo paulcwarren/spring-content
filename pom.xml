@@ -60,7 +60,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <hibernate.version>5.6.15.Final</hibernate.version>
         <hibernate-orm.version>6.1.7.Final</hibernate-orm.version>
         <solr-solrj.version>9.6.1</solr-solrj.version>
-        <elasticsearch-rest-high-level-client.version>7.17.21</elasticsearch-rest-high-level-client.version>
+        <elasticsearch-rest-high-level-client.version>7.17.22</elasticsearch-rest-high-level-client.version>
 
         <!-- Test dependencies -->
         <test-containers.version>1.17.6</test-containers.version>
