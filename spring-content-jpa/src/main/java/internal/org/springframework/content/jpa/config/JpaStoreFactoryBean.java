@@ -27,6 +27,9 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 	@Autowired(required=false)
 	private PlatformTransactionManager ptm;
 
+	@Autowired(required=false)
+	private Integer copyBufferSize = 4096;
+
 	protected JpaStoreFactoryBean(Class<? extends Store> storeInterface) {
 		super(storeInterface);
 	}
@@ -34,7 +37,7 @@ public class JpaStoreFactoryBean extends AbstractStoreFactoryBean {
 	@Override
 	protected Object getContentStoreImpl() {
 		Assert.notNull(blobResourceLoader, "blobResourceLoader cannot be null");
-		return new DefaultJpaStoreImpl(blobResourceLoader, mappingContext);
+		return new DefaultJpaStoreImpl(blobResourceLoader, mappingContext, copyBufferSize);
 	}
 
 	@Override

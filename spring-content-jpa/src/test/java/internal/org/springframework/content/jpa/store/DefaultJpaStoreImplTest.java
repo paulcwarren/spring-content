@@ -66,7 +66,7 @@ public class DefaultJpaStoreImplTest {
 	{
 		Describe("DefaultJpaStoreImpl", () -> {
 			JustBeforeEach(() -> {
-				store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null));
+				store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null, 8096));
 			});
 
 			Describe("Store", () -> {
@@ -313,7 +313,7 @@ public class DefaultJpaStoreImplTest {
 
         Describe("DefaultJpaStoreImpl jakartaAnnotatedEntity", () -> {
             JustBeforeEach(() -> {
-                store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null));
+                store = spy(new DefaultJpaStoreImpl(blobResourceLoader, null, 8096));
             });
 
             Describe("Store", () -> {

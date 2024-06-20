@@ -47,16 +47,19 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 
 	private static Log logger = LogFactory.getLog(DefaultJpaStoreImpl.class);
 
-	private ResourceLoader loader;
+    private ResourceLoader loader;
 
     private MappingContext mappingContext/* = new MappingContext("/", ".")*/;
 
-	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader, MappingContext mappingContext) {
+    private int copyBufferSize = 4096;
+
+	public DefaultJpaStoreImpl(ResourceLoader blobResourceLoader, MappingContext mappingContext, int copyBufferSize) {
 		this.loader = blobResourceLoader;
 		this.mappingContext = mappingContext;
 		if (this.mappingContext == null) {
 		    this.mappingContext = new MappingContext("/", ".");
 		}
+        this.copyBufferSize = copyBufferSize;
 	}
 
 	@Override
@@ -212,7 +215,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
 		try {
 			if (resource instanceof WritableResource) {
 				os = ((WritableResource) resource).getOutputStream();
-				contentLen = IOUtils.copyLarge(content, os);
+				contentLen = IOUtils.copyLarge(content, os, new byte[this.copyBufferSize]);
 			}
 		}
 		catch (IOException e) {
@@ -284,7 +287,7 @@ public class DefaultJpaStoreImpl<S, SID extends Serializable>
         try {
             if (resource instanceof WritableResource) {
                 os = ((WritableResource) resource).getOutputStream();
-                readLen = IOUtils.copyLarge(content, os);
+                readLen = IOUtils.copyLarge(content, os, new byte[this.copyBufferSize]);
             }
         }
         catch (IOException e) {

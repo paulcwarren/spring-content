@@ -52,6 +52,12 @@ public class JpaContentAutoConfiguration {
 		return new ContentJpaDatabaseInitializer(dataSource, properties);
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	public Integer copyBufferSize() {
+		return properties.getCopyBufferSize();
+	}
+
 	@Configuration
 	@ConditionalOnMissingBean(JpaStoreFactoryBean.class)
 	@Import({ JpaContentAutoConfigureRegistrar.class, JpaStoreConfiguration.class })
