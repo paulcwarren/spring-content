@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.paulcwarren</groupId>
         <artifactId>spring-content</artifactId>
-        <version>3.0.11-SNAPSHOT</version>
+        <version>3.0.12-SNAPSHOT</version>
     </parent>
 
     <artifactId>spring-content-bom</artifactId>
