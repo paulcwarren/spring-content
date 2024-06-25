@@ -76,7 +76,8 @@ runtime context you can contribute a `MultiTenantS3ClientProvider` bean, as foll
 ====
 [source,java]
 ----
-import org.springframework.content.s3.config.MultiTenantS3ClientProvider;@Configuration
+import org.springframework.content.s3.config.MultiTenantS3ClientProvider;
+@Configuration
 @EnableS3Stores
 public static class ApplicationConfig {
 
