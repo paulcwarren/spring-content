@@ -54,8 +54,8 @@ jobs:
       env:
         GITHUB_USERNAME: ${{ secrets.CI_USERNAME }}
         GITHUB_PASSWORD: ${{ secrets.CI_PASSWORD }}
-        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        MAVEN_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
         CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
