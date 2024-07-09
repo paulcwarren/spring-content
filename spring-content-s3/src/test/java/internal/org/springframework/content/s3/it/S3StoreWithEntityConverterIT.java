@@ -231,25 +231,9 @@ public class S3StoreWithEntityConverterIT {
     @Import(InfrastructureConfig.class)
     public static class TestConfig {
 
-//        @Bean
-//        public S3Client client() throws URISyntaxException {
-//            s3ClientSpy = spy(LocalStack.getAmazonS3Client());
-//            return s3ClientSpy;
-//        }
-@Autowired
-private Environment env;
-
         @Bean
         public S3Client client() throws URISyntaxException {
-            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
-            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
-
-            S3Client s3Client = S3Client.builder()
-                    .region(Region.US_WEST_1)
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-
-            s3ClientSpy = spy(s3Client);
+            s3ClientSpy = spy(LocalStack.getAmazonS3Client());
             return s3ClientSpy;
         }
     }
