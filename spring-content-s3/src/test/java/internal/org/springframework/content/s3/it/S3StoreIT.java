@@ -47,7 +47,6 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -71,9 +70,6 @@ public class S3StoreIT {
 
     @Autowired
     private S3Client client;
-
-//    @Autowired
-//    private WebApplicationContext webApplicationContext;
 
     private String resourceLocation;
 
@@ -523,9 +519,6 @@ public class S3StoreIT {
                 Context("when content is deleted and the content id field is shared with entity id", () -> {
 
                     It("should not reset the id field", () -> {
-//                        SharedIdRepository sharedIdRepository = context.getBean(SharedIdRepository.class);
-//                        SharedIdStore sharedIdStore = context.getBean(SharedIdStore.class);
-//
                         SharedIdContentIdEntity sharedIdContentIdEntity = sharedIdRepository.save(new SharedIdContentIdEntity());
 
                         sharedIdContentIdEntity = sharedIdStore.setContent(sharedIdContentIdEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
