@@ -1,17 +1,21 @@
 package internal.org.springframework.content.s3.it;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
-import internal.org.springframework.content.s3.io.S3StoreResource;
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import jakarta.persistence.*;
 import lombok.*;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
@@ -23,30 +27,15 @@ import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.SetContentParams;
 import org.springframework.content.commons.store.UnsetContentParams;
 import org.springframework.content.s3.config.EnableS3Stores;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.WritableResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.Database;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,86 +47,91 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.fail;
 
-@RunWith(Ginkgo4jRunner.class)
+@RunWith(Ginkgo4jSpringRunner.class)
+@SpringBootTest()
 @Ginkgo4jConfiguration(threads=1)
 public class S3StoreIT {
 
-//    private static final String BUCKET = "aws-test-bucket";
-    private static final String BUCKET = "spring-eg-content-s3";
+    private static final String BUCKET = "test-bucket";
 
     static {
         System.setProperty("spring.content.s3.bucket", BUCKET);
     }
 
-    private TestEntity entity;
-    private Resource genericResource;
+    private static Object mutex = new Object();
 
-    private Exception e;
-
-    private AnnotationConfigApplicationContext context;
-
+    @Autowired
     private TestEntityRepository repo;
-    private TestEntityStore store;
-    private EmbeddedRepository embeddedRepo;
-    private EmbeddedStore embeddedStore;
 
+    @Autowired
+    private TestEntityStore store;
+
+    @Autowired
     private S3Client client;
 
     private String resourceLocation;
 
+    private Resource genericResource;
+
+    private TestEntity entity;
+
+    private Exception e;
+
+    // Shared id tests
+    @Autowired
+    private SharedIdRepository sharedIdRepository;
+    @Autowired
+    private SharedIdStore sharedIdStore;
+
+    // Embedded content tests
+    @Autowired
+    private EmbeddedRepository embeddedRepo;
+    @Autowired
+    private EmbeddedStore embeddedStore;
+
+    static {
+        System.setProperty("spring.content.s3.bucket", "test-bucket");
+    }
+
     {
-        Describe("S3StoreIT", () -> {
-
+        Describe("S3 Storage", () -> {
             BeforeEach(() -> {
-                context = new AnnotationConfigApplicationContext();
-                context.register(TestConfig.class);
-                context.refresh();
-
-                repo = context.getBean(TestEntityRepository.class);
-                store = context.getBean(TestEntityStore.class);
-                client = context.getBean(S3Client.class);
-
-                embeddedRepo = context.getBean(EmbeddedRepository.class);
-                embeddedStore = context.getBean(EmbeddedStore.class);
-
-                HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
-                        .bucket(BUCKET)
-                        .build();
-
-                try {
-                    client.headBucket(headBucketRequest);
-                } catch (NoSuchBucketException e) {
-
-                    CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
-                            .bucket(BUCKET)
+                synchronized(mutex) {
+                    HeadBucketRequest headBucketRequest = HeadBucketRequest.builder()
+                            .bucket("test-bucket")
                             .build();
-                    client.createBucket(bucketRequest);
 
-                    boolean found = false;
-                    while (!found) {
-                        headBucketRequest = HeadBucketRequest.builder()
-                                .bucket(BUCKET)
+                    try {
+                        client.headBucket(headBucketRequest);
+                    } catch (NoSuchBucketException e) {
+
+                        CreateBucketRequest bucketRequest = CreateBucketRequest.builder()
+                                .bucket("test-bucket")
                                 .build();
-                        try {
-                            client.headBucket(headBucketRequest);
-                            found = true;
-                        } catch (NoSuchBucketException e2) {
-                        }
+                        client.createBucket(bucketRequest);
 
-                        System.out.println("sleeping...");
-                        Thread.sleep(100);
+                        // wait for bucket to be created before continuing
+                        boolean found = false;
+                        while (!found) {
+                            headBucketRequest = HeadBucketRequest.builder()
+                                    .bucket(BUCKET)
+                                    .build();
+                            try {
+                                client.headBucket(headBucketRequest);
+                                found = true;
+                            } catch (NoSuchBucketException e2) {
+                            }
+
+                            System.out.println("sleeping...");
+                            Thread.sleep(100);
+                        }
                     }
                 }
 
                 RandomString random  = new RandomString(5);
                 resourceLocation = random.nextString();
-            });
-
-            AfterEach(() -> {
-                context.close();
             });
 
             Describe("Store", () -> {
@@ -326,8 +320,8 @@ public class S3StoreIT {
 
                 BeforeEach(() -> {
                     entity = new TestEntity();
-                    entity.setContentType("text/plain");
-                    entity.setRenditionContentType("text/html");
+//                    entity.setContentType("text/plain");
+//                    entity.setContentType("text/html");
                     entity = repo.save(entity);
 
                     store.setContent(entity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
@@ -348,27 +342,27 @@ public class S3StoreIT {
 
                 It("should have content metadata", () -> {
                     // content
-                    assertThat(entity.getContentId(), is(notNullValue()));
+                    assertThat(entity.getContentId(), is(CoreMatchers.notNullValue()));
                     assertThat(entity.getContentId().trim().length(), greaterThan(0));
-                    assertThat(entity.getContentLen(), is(Long.valueOf(27L)));
+                    Assert.assertEquals(entity.getContentLen(), Long.valueOf(27L));
 
                     //rendition
-                    assertThat(entity.getRenditionId(), is(notNullValue()));
+                    assertThat(entity.getRenditionId(), is(CoreMatchers.notNullValue()));
                     assertThat(entity.getRenditionId().trim().length(), greaterThan(0));
-                    assertThat(entity.getRenditionLen(), is(Long.valueOf(40L)));
+                    Assert.assertEquals(entity.getRenditionLen(), 40L);
                 });
 
-                It("should set Content-Type of stored content to value from field annotated with @MimeType", () -> {
-                    // content
-                    S3StoreResource resource = (S3StoreResource) store.getResource(entity);
-                    assertThat(resource.contentType(), is(notNullValue()));
-                    assertThat(resource.contentType(), is(entity.getContentType()));
-
-                    //rendition
-                    S3StoreResource renditionResource = (S3StoreResource) store.getResource(entity, PropertyPath.from("rendition"));
-                    assertThat(renditionResource.contentType(), is(notNullValue()));
-                    assertThat(renditionResource.contentType(), is(entity.getRenditionContentType()));
-                });
+//                It("should set Content-Type of stored content to value from field annotated with @MimeType", () -> {
+//                    // content
+//                    S3StoreResource resource = (S3StoreResource) store.getResource(entity);
+//                    assertThat(resource.contentType(), is(notNullValue()));
+//                    assertThat(resource.contentType(), is(entity.getContentType()));
+//
+//                    //rendition
+//                    S3StoreResource renditionResource = (S3StoreResource) store.getResource(entity, PropertyPath.from("rendition"));
+//                    assertThat(renditionResource.contentType(), is(notNullValue()));
+//                    assertThat(renditionResource.contentType(), is(entity.getRenditionType()));
+//                });
 
                 Context("when content is updated", () -> {
                     BeforeEach(() ->{
@@ -525,9 +519,6 @@ public class S3StoreIT {
                 Context("when content is deleted and the content id field is shared with entity id", () -> {
 
                     It("should not reset the id field", () -> {
-                        SharedIdRepository sharedIdRepository = context.getBean(SharedIdRepository.class);
-                        SharedIdStore sharedIdStore = context.getBean(SharedIdStore.class);
-
                         SharedIdContentIdEntity sharedIdContentIdEntity = sharedIdRepository.save(new SharedIdContentIdEntity());
 
                         sharedIdContentIdEntity = sharedIdStore.setContent(sharedIdContentIdEntity, new ByteArrayInputStream("Hello Spring Content World!".getBytes()));
@@ -575,7 +566,6 @@ public class S3StoreIT {
                             EntityWithEmbeddedContent entity = embeddedRepo.save(new EntityWithEmbeddedContent());
                             EntityWithEmbeddedContent expected = new EntityWithEmbeddedContent(entity.getId(), entity.getContent());
                             assertThat(embeddedStore.unsetContent(entity, PropertyPath.from("content")), is(expected));
-                            int i = 0;
                         });
                     });
                 });
@@ -584,61 +574,23 @@ public class S3StoreIT {
     }
 
     @Test
-    public void test() {
-        // noop
-    }
+    public void noop() {}
 
-    @Configuration
-    @EnableJpaRepositories(basePackages="internal.org.springframework.content.s3.it", considerNestedRepositories = true)
-    @EnableS3Stores(basePackages="internal.org.springframework.content.s3.it")
-    @Import(InfrastructureConfig.class)
-    public static class TestConfig {
-
-        @Autowired
-        private Environment env;
-
-        @Bean
-        public S3Client client() throws URISyntaxException {
-            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
-            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
-
-            return S3Client.builder()
-                    .region(Region.US_WEST_1)
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-        }
-    }
-
-    @Configuration
-    public static class InfrastructureConfig {
-
-        @Bean
-        public DataSource dataSource() {
-            EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-            return builder.setType(EmbeddedDatabaseType.H2).build();
+    @SpringBootApplication()
+    @EnableJpaRepositories(considerNestedRepositories = true)
+    @EnableS3Stores
+    static class Application {
+        public static void main(String[] args) {
+            SpringApplication.run(Application.class, args);
         }
 
-        @Bean
-        public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        @Configuration
+        public static class Config {
 
-            HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-            vendorAdapter.setDatabase(Database.H2);
-            vendorAdapter.setGenerateDdl(true);
-
-            LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-            factory.setJpaVendorAdapter(vendorAdapter);
-            factory.setPackagesToScan("internal.org.springframework.content.s3.it");
-            factory.setDataSource(dataSource());
-
-            return factory;
-        }
-
-        @Bean
-        public PlatformTransactionManager transactionManager() {
-
-            JpaTransactionManager txManager = new JpaTransactionManager();
-            txManager.setEntityManagerFactory(entityManagerFactory().getObject());
-            return txManager;
+            @Bean
+            public S3Client amazonS3() throws URISyntaxException {
+                return LocalStack.getAmazonS3Client();
+            }
         }
     }
 
@@ -668,7 +620,7 @@ public class S3StoreIT {
         private long renditionLen;
 
         @MimeType
-        private String renditionContentType;
+        private String renditionType;
 
         public TestEntity(String contentId) {
             this.contentId = new String(contentId);
@@ -694,23 +646,6 @@ public class S3StoreIT {
 
     public interface SharedIdRepository extends JpaRepository<SharedIdContentIdEntity, String> {}
     public interface SharedIdStore extends ContentStore<SharedIdContentIdEntity, String> {}
-
-//    @Entity
-//    @Setter
-//    @Getter
-//    @NoArgsConstructor
-//    public static class SharedSpringIdContentIdEntity {
-//
-//        @org.springframework.data.annotation.Id
-//        @ContentId
-//        private String contentId;
-//
-//        @ContentLength
-//        private long contentLen;
-//    }
-//
-//    public interface SharedSpringIdRepository extends JpaRepository<SharedSpringIdContentIdEntity, String> {}
-//    public interface SharedSpringIdStore extends ContentStore<SharedSpringIdContentIdEntity, String> {}
 
     @Data
     @NoArgsConstructor

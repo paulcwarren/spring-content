@@ -15,9 +15,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
+import internal.org.springframework.content.s3.it.LocalStack;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -41,7 +40,6 @@ import org.springframework.core.io.Resource;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
 
 import internal.org.springframework.content.s3.io.S3StoreResource;
-import internal.org.springframework.content.s3.it.S3StoreIT;
 import lombok.Data;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
@@ -240,13 +238,7 @@ public class EnableS3StoresTest {
 
         @Bean
         public S3Client client() throws URISyntaxException {
-            AwsCredentials awsCredentials = AwsBasicCredentials.create(env.getProperty("AWS_ACCESS_KEY"), env.getProperty("AWS_SECRET_KEY"));
-            StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(awsCredentials);
-
-            return S3Client.builder()
-                    .region(Region.US_WEST_1)
-                    .credentialsProvider(credentialsProvider)
-                    .build();
+			return LocalStack.getAmazonS3Client();
         }
 	}
 

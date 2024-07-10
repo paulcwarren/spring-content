@@ -35,8 +35,6 @@ jobs:
         # bash <(curl -s https://codecov.io/bash)
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
     - name: Publish JARs
       run: |
@@ -62,8 +60,6 @@ jobs:
         GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
         GPG_PASSPHASE: ${{ secrets.GPG_PASSPHRASE }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
     - name: Publish Docs
       run: |
