@@ -140,7 +140,7 @@ public class AssociativeStoreContentService implements ContentService {
             byteRangeRestRequestHandler.handleRequest(request, response);
         }
         catch (Exception e) {
-            if (isClientAbortException(e)) {
+            if (ContentStoreContentService.isClientAbortException(e)) {
                 // suppress
             } else {
                 logger.error("Unable to handle request", e);
@@ -341,13 +341,6 @@ public class AssociativeStoreContentService implements ContentService {
 
             return true;
         }
-    }
-
-    public static boolean isClientAbortException(Exception e) {
-        if (e.getClass().getSimpleName().equals("ClientAbortException")) {
-            return true;
-        }
-        return false;
     }
 
     private void configureResourceForByteRangeRequest(RangeableResource resource, HttpHeaders headers) {

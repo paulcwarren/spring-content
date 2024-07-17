@@ -506,8 +506,14 @@ public class ContentStoreContentService implements ContentService {
     }
 
     public static boolean isClientAbortException(Exception e) {
+        // prior to Spring Boot 3.2.4
         if (e.getClass().getSimpleName().equals("ClientAbortException")) {
             return true;
+        // Spring Boot >= 3.2.4
+        } else if (e instanceof org.springframework.web.context.request.async.AsyncRequestNotUsableException) {
+            if (e.getCause().getClass().getSimpleName().equals("ClientAbortException")) {
+                return true;
+            }
         }
         return false;
     }
