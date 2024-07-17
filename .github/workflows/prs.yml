@@ -28,12 +28,10 @@ jobs:
       id: build
       run: |
         pushd spring-content
-          mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
+          AWS_REGION=us-west-1 mvn -B -P tests -Dmaven.javadoc.skip=true install --file pom.xml
           project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "spring_content_version=${project_version}" >> $GITHUB_OUTPUT
         popd
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
 
     - name: Save Maven Cache
       id: cache-maven-save
@@ -68,7 +66,5 @@ jobs:
     - name: Validate against Getting Started Guides
       run: |
         pushd spring-content-gettingstarted
-          SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} mvn -B clean install
+          SPRING_CONTENT_VERSION=${{ needs.build.outputs.spring_content_version }} AWS_REGION=us-west-1 mvn -B clean install
         popd        
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
