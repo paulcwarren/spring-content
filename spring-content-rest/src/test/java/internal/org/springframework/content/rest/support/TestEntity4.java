@@ -25,7 +25,7 @@ public class TestEntity4 implements ContentEntity {
 	public @ContentId UUID contentId;
 	public @ContentLength Long len;
 	public @MimeType String mimeType;
-	private @Version Long version;
+	private @Version Long version = 0L;
 	private @CreatedDate Date createdDate;
 	private @LastModifiedDate Date modifiedDate;
 	private @OriginalFileName String originalFileName;

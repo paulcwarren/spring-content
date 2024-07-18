@@ -271,6 +271,70 @@ public class ContentEntityRestEndpointsIT {
 				});
 			});
 
+			Context("given a multipart/form POST to an entity with a non-default initialized @Version property (#Issue 2044)", () -> {
+				Context("with content", () -> {
+					It("should create a new entity and its content and respond with a 201 Created", () -> {
+
+						String newContent = "This is some new content";
+
+						MockMultipartFile file = new MockMultipartFile("content", "filename.txt", "text/plain",
+								newContent.getBytes());
+
+						// POST the entity
+						MockHttpServletResponse response = mvc.perform(multipart("/testEntity4s")
+										.file(file)
+										.param("name", "foo")
+										.param("title", "bar"))
+
+								.andExpect(status().isCreated())
+								.andReturn().getResponse();
+
+						String location = response.getHeader("Location");
+
+						// assert that the entity exists
+						Optional<TestEntity4> fetchedEntity = repo4.findById(
+								Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+						assertThat(fetchedEntity.get().getName(), is("foo"));
+						assertThat(fetchedEntity.get().getTitle(), is("bar"));
+						assertThat(fetchedEntity.get().getContentId(), is(not(nullValue())));
+						assertThat(fetchedEntity.get().getLen(), is(file.getSize()));
+						assertThat(fetchedEntity.get().getOriginalFileName(), is(file.getOriginalFilename()));
+
+						// assert that the content now exists
+						response = mvc.perform(get(location)
+										.accept("text/plain"))
+								.andExpect(status().isOk())
+								.andReturn().getResponse();
+
+						assertThat(response.getContentAsString(), is(newContent));
+					});
+				});
+
+				Context("without content", () -> {
+					It("should create a new entity and respond with a 201 Created", () -> {
+
+						// POST the entity
+						MockHttpServletResponse response = mvc.perform(multipart("/testEntity4s")
+										.param("name", "foo")
+										.param("title", "bar"))
+
+								.andExpect(status().isCreated())
+								.andReturn().getResponse();
+
+						String location = response.getHeader("Location");
+
+						// assert that the entity exists
+						Optional<TestEntity4> fetchedEntity = repo4.findById(
+								Long.valueOf(StringUtils.substringAfterLast(location, "/")));
+						assertThat(fetchedEntity.get().getName(), is("foo"));
+						assertThat(fetchedEntity.get().getTitle(), is("bar"));
+						assertThat(fetchedEntity.get().getContentId(), is(nullValue()));
+						assertThat(fetchedEntity.get().getLen(), is(nullValue()));
+						assertThat(fetchedEntity.get().getOriginalFileName(), is(nullValue()));
+					});
+				});
+			});
+
 			Context("given an entity with a single correlated content property", () -> {
                 BeforeEach(() -> {
                     testEntity9 = repo9.save(new TestEntity9());
@@ -303,7 +367,7 @@ public class ContentEntityRestEndpointsIT {
                 });
             });
 
-			Context("given a a multipart/form POST to an entity with a single correlated content property", () -> {
+			Context("given a multipart/form POST to an entity with a single correlated content property", () -> {
 				It("should create a new entity and its content and respond with a 201 Created", () -> {
 					// assert content does not exist
 					String newContent = "This is some new content";
@@ -336,7 +400,7 @@ public class ContentEntityRestEndpointsIT {
 				});
 			});
 
-			Context("given a a multipart/form POST that doesn't include the content property", () -> {
+			Context("given a multipart/form POST that doesn't include the content property", () -> {
 				It("should create a new entity with no content and respond with a 201 Created", () -> {
 
 					var testEntity4Id = repo4.save(new TestEntity4()).getId();
@@ -366,7 +430,7 @@ public class ContentEntityRestEndpointsIT {
 				});
 			});
 
-			Context("given a a multipart/form POST to an entity with a mapped content property", () -> {
+			Context("given a multipart/form POST to an entity with a mapped content property", () -> {
 				It("should create a new entity and its content and respond with a 201 Created", () -> {
 					// assert content does not exist
 					String newContent = "This is some new content";
