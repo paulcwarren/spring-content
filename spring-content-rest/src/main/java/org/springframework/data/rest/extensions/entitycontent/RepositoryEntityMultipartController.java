@@ -97,7 +97,7 @@ public class RepositoryEntityMultipartController {
 
         String store = pathSegments[1];
 
-        // Save the entity and re-assign the result to savedEntity, so that its @Id property exists
+        // Save the entity and re-assign the result to savedEntity, so that it exists in the repository before content is added to it.
         savedEntity = repoInvokerFactory.getInvokerFor(domainType).invokeSave(savedEntity);
 
         StoreInfo info = this.stores.getStore(Store.class, StoreUtils.withStorePath(store));
