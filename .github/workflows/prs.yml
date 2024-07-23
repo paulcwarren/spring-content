@@ -62,7 +62,6 @@ jobs:
       with:
         repository: paulcwarren/spring-content-gettingstarted
         path: spring-content-gettingstarted
-        ref: refs/heads/feat/content-preservation
     - name: Validate against Getting Started Guides
       run: |
         pushd spring-content-gettingstarted
