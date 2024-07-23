@@ -155,7 +155,7 @@ using Git: <code>git clone https://github.com/paulcwarren/spring-content-getting
             &lt;dependency&gt;
                 &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
                 &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-                &lt;version&gt;3.1.5&lt;/version&gt;
+                &lt;version&gt;3.3.2&lt;/version&gt;
                 &lt;type&gt;pom&lt;/type&gt;
                 &lt;scope&gt;import&lt;/scope&gt;
             &lt;/dependency&gt;
@@ -307,6 +307,7 @@ package gettingstarted;
 
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.repository.ContentStore;
+import org.springframework.content.commons.repository.UnsetContentParams;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -315,7 +316,7 @@ public interface FileContentStore extends ContentStore&lt;File, String&gt; {
 
 	@Override
 	@PreAuthorize("hasRole('ROLE_AUTHOR')")
-	public File unsetContent(File file, PropertyPath propertyPath);
+	public File unsetContent(File file, PropertyPath propertyPath, UnsetContentParams params);
 
 }
 </code></pre>
