@@ -18,6 +18,7 @@
 
   // Use 'postCreateCommand' to run commands after the container is created.
   // "postCreateCommand": "java -version",
+  "postCreateCommand": "apt-get update && apt-get install -y libfreetype6 fontconfig && apt-get clean && rm -rf /var/lib/apt/lists/*"
 
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"
