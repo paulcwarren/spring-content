@@ -38,13 +38,15 @@ requests. If you want to raise an issue, please follow the recommendations below
 You don't need to build from source to use Spring Content (binaries in
 https://repo.maven.apache.org/maven2/), but if you want to try out the latest and
 greatest, Spring Content can be easily built with the
-[maven wrapper](https://github.com/takari/maven-wrapper). You also need JDK 1.8.
+[maven wrapper](https://github.com/takari/maven-wrapper). You also need JDK 17.
 
 ```
-$ AWS_REGION=us-west-1 ./mvnw [-P tests] clean install
+$ [AWS_REGION=us-west-1] ./mvnw [-P tests] clean install
 ```
 
-where the optional `-P tests` invokes the maven build with integration (*IT.java) tests as well as units (default).
+where:
+- AWS_REGION is already set when developer inside our [devcontainer](https://github.com/paulcwarren/spring-content/blob/main/.devcontainer/devcontainer.json).  Give it a go inside a [Codespace](https://github.com/codespaces/new).
+- the optional `-P tests` invokes the maven build with integration (*IT.java) tests as well as units (default).
 
 If you want to build with the regular `mvn` command, you will need
 [Maven v3.2.1 or above](https://maven.apache.org/run-maven/index.html).
@@ -57,7 +59,7 @@ and in particular please fill out the [Contributor's License Agreement](https://
 The reference documentation can be included in the build by specifying the `docs` profile.
 
 ```
-$ AWS_REGION=us-west-1 ./mvnw -P docs clean install 
+$ [AWS_REGION=us-west-1] ./mvnw -P docs clean install 
 ```
 
 TIP: The generated documentation is available from `spring-content/target/generated-docs/refs/dev/`
