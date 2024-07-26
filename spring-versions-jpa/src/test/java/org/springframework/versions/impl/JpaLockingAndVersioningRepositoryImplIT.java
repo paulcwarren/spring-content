@@ -1,16 +1,13 @@
 package org.springframework.versions.impl;
 
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.BeforeEach;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Context;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.Describe;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.It;
-import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.JustBeforeEach;
+import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
@@ -419,22 +416,13 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                     It("should return the version series", () -> {
                         List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
                         assertThat(results.size(), is(2));
-                        assertThat(results, Matchers.hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
+                        assertThat(results, hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
                     });
 
                     It("should return the ordered version series", () -> {
                         List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
                         assertThat(results.size(), is(2));
-                        assertThat(results, Matchers.hasItems(hasProperty("xid", is(e1.getXid())), hasProperty("xid", is(e1v11.getXid()))));
-
-                        // is ordered
-                        {
-                            long lastId = 0;
-                            for (int i=results.size() - 1; i >= 0; i--) {
-                                assertThat(results.get(i).getXid(), is(greaterThan(lastId)));
-                                lastId = results.get(i).getXid();
-                            }
-                        }
+                        assertThat(results, Matchers.contains(hasProperty("xid", is(e1v11.getXid())), hasProperty("xid", is(e1.getXid()))));
                     });
                 });
 
@@ -459,14 +447,14 @@ public class JpaLockingAndVersioningRepositoryImplIT {
 
                     It("should return only the latest version of the entities", () -> {
                         List<TestEntity> results = repo.findAllVersionsLatest((Class<TestEntity>) e1.getClass());
-                        assertThat(results, Matchers.hasItems(
+                        assertThat(results, hasItems(
                                 hasProperty("xid", is(e1v11.getXid())),
                                 hasProperty("xid", is(e2v2.getXid())),
                                 not(hasProperty("xid", is(e3wc.getXid())))
                         ));
 
                         results = repo.findAllVersionsLatest(TestEntity.class);
-                        assertThat(results, Matchers.hasItems(
+                        assertThat(results, hasItems(
                                 hasProperty("xid", is(e1v11.getXid())),
                                 hasProperty("xid", is(e2v2.getXid())),
                                 not(hasProperty("xid", is(e3wc.getXid())))
@@ -859,6 +847,21 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                                 }
                             });
                         });
+                    });
+                });
+
+                Context("Issue #2039", () -> {
+                    BeforeEach(() -> {
+                        setupSecurityContext("some-principal", true);
+
+                        e1 = repo.save(new TestEntity());
+                        e2 = repo.save(new TestEntity());
+                        e3 = repo.save(new TestEntity());
+                    });
+
+                    It("should return the provided entity", () -> {
+                        List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
+                        assertThat(results.size(), is(1));
                     });
                 });
             });
