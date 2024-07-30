@@ -9,7 +9,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -862,6 +861,13 @@ public class JpaLockingAndVersioningRepositoryImplIT {
                     It("should return the provided entity", () -> {
                         List<TestEntity> results = repo.findAllVersions(e1, Sort.by(Order.desc("id")));
                         assertThat(results.size(), is(1));
+                    });
+
+                    It("should delete just the provided entity", () -> {
+                        repo.deleteAllVersions(e1);
+
+                        Optional<TestEntity> fetched = repo.findById(e1.getXid());
+                        assertThat(fetched.isPresent(), is(false));
                     });
                 });
             });

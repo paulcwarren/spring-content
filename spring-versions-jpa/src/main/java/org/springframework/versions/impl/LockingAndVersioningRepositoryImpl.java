@@ -416,6 +416,12 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new LockOwnerException("not lock owner");
         }
 
+        // issue #2039: if no version series has been established yet then delete the entity
+        if (isAncestralRoot(entity)) {
+            this.delete(entity);
+            return;
+        }
+
         String sql = "delete from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
