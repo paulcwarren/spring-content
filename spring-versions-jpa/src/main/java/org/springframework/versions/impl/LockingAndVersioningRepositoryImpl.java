@@ -5,11 +5,7 @@ import static java.lang.String.format;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.persistence.EntityManager;
@@ -24,8 +20,6 @@ import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.utils.BeanUtils;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.support.JpaEntityInformation;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Repository;
@@ -185,7 +179,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         }
 
         S ancestorRoot;
-        if (isAnestralRoot(currentVersion)) {
+        if (isAncestralRoot(currentVersion)) {
             currentVersion = (S)versioner.establishAncestralRoot(currentVersion);
             em.merge(currentVersion);
             ancestorRoot = currentVersion;
@@ -240,7 +234,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         if (!isPrivateWorkingCopy(currentVersion)) {
 
             S ancestorRoot;
-            if (isAnestralRoot(currentVersion)) {
+            if (isAncestralRoot(currentVersion)) {
                 currentVersion = (S) versioner.establishAncestralRoot(currentVersion);
                 ancestorRoot = currentVersion;
             }
@@ -310,6 +304,10 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
 
     @Override
     public <S extends T> List<S> findAllVersions(S entity, Sort sort) {
+
+        if (isAncestralRoot(entity)) {
+            return Collections.singletonList(entity);
+        }
 
         StringBuilder builder = new StringBuilder();
         if (sort.isSorted()) {
@@ -418,6 +416,12 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
             throw new LockOwnerException("not lock owner");
         }
 
+        // issue #2039: if no version series has been established yet then delete the entity
+        if (isAncestralRoot(entity)) {
+            this.delete(entity);
+            return;
+        }
+
         String sql = "delete from ${entityClass} t where t.${ancestorRootId} = " + getAncestralRootId(entity);
 
         StringSubstitutor sub = new StringSubstitutor(getAttributeMap(entity.getClass()));
@@ -435,7 +439,7 @@ public class LockingAndVersioningRepositoryImpl<T, ID extends Serializable> impl
         return isHead;
     }
 
-    protected <S extends T> boolean isAnestralRoot(S entity) {
+    protected <S extends T> boolean isAncestralRoot(S entity) {
         boolean isAncestralRoot = false;
         if (BeanUtils.hasFieldWithAnnotation(entity, AncestorRootId.class)) {
             return BeanUtils.getFieldWithAnnotation(entity, AncestorRootId.class) == null;
