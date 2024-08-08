@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
+import internal.org.springframework.content.rest.support.EventListenerConfig.TestEventListener;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Optional;
@@ -35,7 +37,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-// @Ginkgo4jConfiguration(threads=1)
+@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
 		StoreConfig.class,
@@ -43,7 +45,8 @@ import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 		DelegatingWebMvcConfiguration.class,
 		RepositoryRestMvcConfiguration.class,
 		RestConfiguration.class,
-		HypermediaConfiguration.class
+		HypermediaConfiguration.class,
+		EventListenerConfig.class
 })
 @Transactional
 @ActiveProfiles("store")
@@ -87,6 +90,9 @@ public class ContentEntityRestEndpointsIT {
 
 	@Autowired
 	TestStore store;
+
+	@Autowired
+	TestEventListener eventListener;
 
 	@Autowired
 	private WebApplicationContext context;
@@ -427,6 +433,29 @@ public class ContentEntityRestEndpointsIT {
 					assertThat(fetchedEntity.get().getContentId(), is(nullValue()));
 					assertThat(fetchedEntity.get().getLen(), is(nullValue()));
 					assertThat(fetchedEntity.get().getOriginalFileName(), is(nullValue()));
+				});
+			});
+
+			Context("given a multipart/form POST and an event listener", () -> {
+				BeforeEach(() -> {
+					eventListener.clear();
+				});
+				It("should create a new entity and fire the onBeforeCreate/onAfterCreate events", () -> {
+
+					// POST the entity
+					MockHttpServletResponse response = mvc.perform(multipart("/testEntity3s")
+									.param("name", "foo foo")
+									.param("hidden", "bar bar")
+									.param("ying", "yang")
+									.param("things", "one", "two"))
+
+							.andExpect(status().isCreated())
+							.andReturn().getResponse();
+
+					assertThat(eventListener.getBeforeCreate().size(), is(1));
+					assertThat(eventListener.getAfterCreate().size(), is(1));
+					assertThat(((TestEntity3) eventListener.getBeforeCreate().get(0)).getName(), is("foo foo"));
+					assertThat(((TestEntity3) eventListener.getAfterCreate().get(0)).getName(), is("foo foo"));
 				});
 			});
 
