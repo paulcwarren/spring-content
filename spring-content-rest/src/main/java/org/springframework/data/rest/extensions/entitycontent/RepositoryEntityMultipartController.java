@@ -18,9 +18,12 @@ import org.springframework.content.commons.repository.Store;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.repository.support.RepositoryInvokerFactory;
+import org.springframework.data.rest.core.event.AfterCreateEvent;
+import org.springframework.data.rest.core.event.BeforeCreateEvent;
 import org.springframework.data.rest.core.mapping.ResourceType;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.*;
@@ -61,9 +64,10 @@ public class RepositoryEntityMultipartController {
     private Stores stores;
     private SelfLinkProvider selfLinkProvider;
     private HttpHeadersPreparer headersPreparer;
+    private ApplicationEventPublisher publisher;
 
     @Autowired
-    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, ContentPropertyToRequestMappingContext requestMappingContext, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer, HttpHeadersPreparer headersPreparer) {
+    public RepositoryEntityMultipartController(RestConfiguration restConfig, RepositoryInvokerFactory repoInvokerFactory, ContentPropertyToRequestMappingContext requestMappingContext, SelfLinkProvider selfLinkProvider, Stores stores, MappingContext mappingContext, ContentPropertyToExportedContext exportedMappingContext, StoreByteRangeHttpRequestHandler byteRangeRestRequestHandler, @Qualifier("entityMultipartHttpMessageConverterConfigurer") RepositoryRestConfigurer configurer, HttpHeadersPreparer headersPreparer, ApplicationEventPublisher publisher) {
         this.restConfig = restConfig;
         this.repoInvokerFactory = repoInvokerFactory;
         this.requestMappingContext = requestMappingContext;
@@ -73,6 +77,7 @@ public class RepositoryEntityMultipartController {
         this.exportedMappingContext = exportedMappingContext;
         this.byteRangeRestRequestHandler = byteRangeRestRequestHandler;
         this.headersPreparer = headersPreparer;
+        this.publisher = publisher;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -97,8 +102,13 @@ public class RepositoryEntityMultipartController {
 
         String store = pathSegments[1];
 
+        BeforeCreateEvent beforeCreate = new BeforeCreateEvent(savedEntity);
+        publisher.publishEvent(beforeCreate);
         // Save the entity and re-assign the result to savedEntity, so that it exists in the repository before content is added to it.
         savedEntity = repoInvokerFactory.getInvokerFor(domainType).invokeSave(savedEntity);
+
+        AfterCreateEvent afterCreate = new AfterCreateEvent(savedEntity);
+        publisher.publishEvent(afterCreate);
 
         StoreInfo info = this.stores.getStore(Store.class, StoreUtils.withStorePath(store));
         if (info != null) {
