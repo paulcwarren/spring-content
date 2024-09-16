@@ -463,7 +463,7 @@ public class ContentEntityRestEndpointsIT {
 			});
 
 			Context("given a multipart/form POST but with the wrong content property name", () -> {
-				FIt("should return an error and not make the entity", () -> {
+				It("should return an error and not make the entity", () -> {
 
 					MockMultipartFile file = new MockMultipartFile("oopsDoesntExist", "filename.txt", "text/plain",
 							"foo".getBytes());
