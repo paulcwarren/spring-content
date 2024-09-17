@@ -31,6 +31,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,6 +84,7 @@ public class RepositoryEntityMultipartController {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @ResponseBody
     @PostMapping(value = ENTITY_POST_MAPPING, consumes = "multipart/form-data")
+    @Transactional
     public ResponseEntity<RepresentationModel<?>> createEntityAndContent(RootResourceInformation repoInfo, PersistentEntityResource payload, PersistentEntityResourceAssembler assembler, @PathVariable("repository") String repository, @RequestHeader HttpHeaders headers, MultipartHttpServletRequest req, HttpServletResponse resp)
             throws IOException, MethodNotAllowedException, HttpRequestMethodNotSupportedException {
 

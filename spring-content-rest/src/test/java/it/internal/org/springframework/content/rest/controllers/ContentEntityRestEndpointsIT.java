@@ -4,12 +4,14 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import internal.org.springframework.content.rest.support.EventListenerConfig.TestEventListener;
+import jakarta.servlet.ServletException;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Optional;
@@ -20,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
@@ -456,6 +459,31 @@ public class ContentEntityRestEndpointsIT {
 					assertThat(eventListener.getAfterCreate().size(), is(1));
 					assertThat(((TestEntity3) eventListener.getBeforeCreate().get(0)).getName(), is("foo foo"));
 					assertThat(((TestEntity3) eventListener.getAfterCreate().get(0)).getName(), is("foo foo"));
+				});
+			});
+
+			Context("given a multipart/form POST but with the wrong content property name", () -> {
+				It("should return an error and not make the entity", () -> {
+
+					MockMultipartFile file = new MockMultipartFile("oopsDoesntExist", "filename.txt", "text/plain",
+							"foo".getBytes());
+
+					var before = repo3.count();
+
+					// POST the entity
+					assertThrows(ServletException.class, () ->
+							mvc.perform(multipart("/testEntity3s")
+											.file(file)
+											.param("name", "foo foo")
+											.param("hidden", "bar bar")
+											.param("ying", "yang")
+											.param("things", "one", "two"))
+
+									.andExpect(status().isCreated())
+									.andReturn().getResponse()
+					);
+
+					assertThat(repo3.count(), is(before));
 				});
 			});
 
