@@ -481,6 +481,11 @@ public class ContentEntityRestEndpointsIT {
 					example.setName("of the wind");
 					example.setYang("dynasty");
 					assertThat(repo3.findBy(Example.of(example, ExampleMatcher.matching()), q -> q.count()), is(0L));
+
+					Predicate<? super Object> filter = (entity) -> entity instanceof TestEntity3
+							&& ((TestEntity3) entity).getName().equals("of the wind");
+					assertThat(eventListener.getBeforeCreate().stream().filter(filter).count(), is(1L));
+					assertThat(eventListener.getAfterCreate().stream().filter(filter).count(), is(0L));
 				});
 			});
 
