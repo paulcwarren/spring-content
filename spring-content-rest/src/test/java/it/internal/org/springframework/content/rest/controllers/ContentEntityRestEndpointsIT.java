@@ -17,14 +17,16 @@ import java.nio.charset.Charset;
 import java.util.Optional;
 
 import internal.org.springframework.content.rest.support.*;
+import java.util.function.Predicate;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.content.commons.store.StoreAccessException;
 import org.springframework.content.rest.config.HypermediaConfiguration;
 import org.springframework.content.rest.config.RestConfiguration;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
@@ -40,7 +42,7 @@ import org.springframework.web.servlet.config.annotation.DelegatingWebMvcConfigu
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@Ginkgo4jConfiguration(threads=1)
+//@Ginkgo4jConfiguration(threads=1)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
 		StoreConfig.class,
@@ -440,14 +442,11 @@ public class ContentEntityRestEndpointsIT {
 			});
 
 			Context("given a multipart/form POST and an event listener", () -> {
-				BeforeEach(() -> {
-					eventListener.clear();
-				});
 				It("should create a new entity and fire the onBeforeCreate/onAfterCreate events", () -> {
 
 					// POST the entity
 					MockHttpServletResponse response = mvc.perform(multipart("/testEntity3s")
-									.param("name", "foo foo")
+									.param("name", "of the rose")
 									.param("hidden", "bar bar")
 									.param("ying", "yang")
 									.param("things", "one", "two"))
@@ -455,10 +454,10 @@ public class ContentEntityRestEndpointsIT {
 							.andExpect(status().isCreated())
 							.andReturn().getResponse();
 
-					assertThat(eventListener.getBeforeCreate().size(), is(1));
-					assertThat(eventListener.getAfterCreate().size(), is(1));
-					assertThat(((TestEntity3) eventListener.getBeforeCreate().get(0)).getName(), is("foo foo"));
-					assertThat(((TestEntity3) eventListener.getAfterCreate().get(0)).getName(), is("foo foo"));
+					Predicate<? super Object> filter = (entity) -> entity instanceof TestEntity3
+							&& ((TestEntity3) entity).getName().equals("of the rose");
+					assertThat(eventListener.getBeforeCreate().stream().filter(filter).count(), is(1L));
+					assertThat(eventListener.getAfterCreate().stream().filter(filter).count(), is(1L));
 				});
 			});
 
@@ -468,22 +467,20 @@ public class ContentEntityRestEndpointsIT {
 					MockMultipartFile file = new MockMultipartFile("oopsDoesntExist", "filename.txt", "text/plain",
 							"foo".getBytes());
 
-					var before = repo3.count();
-
 					// POST the entity
 					assertThrows(ServletException.class, () ->
 							mvc.perform(multipart("/testEntity3s")
 											.file(file)
-											.param("name", "foo foo")
-											.param("hidden", "bar bar")
-											.param("ying", "yang")
-											.param("things", "one", "two"))
+											.param("name", "of the wind")
+											.param("ying", "dynasty"))
 
 									.andExpect(status().isCreated())
 									.andReturn().getResponse()
 					);
-
-					assertThat(repo3.count(), is(before));
+					TestEntity3 example = new TestEntity3();
+					example.setName("of the wind");
+					example.setYang("dynasty");
+					assertThat(repo3.findBy(Example.of(example, ExampleMatcher.matching()), q -> q.count()), is(0L));
 				});
 			});
 
