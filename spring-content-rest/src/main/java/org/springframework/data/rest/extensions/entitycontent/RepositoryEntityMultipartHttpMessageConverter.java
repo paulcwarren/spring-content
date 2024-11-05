@@ -1,13 +1,10 @@
 package org.springframework.data.rest.extensions.entitycontent;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.InvalidPropertyException;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -27,24 +24,19 @@ import java.util.*;
 
 public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessageConverter<Object> {
 
-    private HttpMessageConverter converter = null;
+    private final HttpMessageConverter<?> delegate;
 
-    public RepositoryEntityMultipartHttpMessageConverter(List<HttpMessageConverter<?>> messageConverters) {
-        for (HttpMessageConverter converter : messageConverters) {
-            if (converter.canRead(RepresentationModel.class, MediaType.APPLICATION_JSON)) {
-                this.converter = converter;
-                break;
-            }
-        }
-        if (this.converter == null) {
-            throw new IllegalStateException("unable to resolve persistent entity resource message converter");
-        }
+    public RepositoryEntityMultipartHttpMessageConverter(HttpMessageConverter<?> converter) {
+        this.delegate = converter;
     }
 
     @Override
     public boolean canRead(Class clazz, MediaType mediaType) {
-        return PersistentEntityResource.class.equals(clazz) && mediaType != null
-                && mediaType.includes(MediaType.MULTIPART_FORM_DATA);
+        if(mediaType == null || !mediaType.includes(MediaType.MULTIPART_FORM_DATA)) {
+            return false;
+        }
+
+        return delegate.canRead(clazz, MediaType.APPLICATION_JSON);
     }
 
     @Override
@@ -55,11 +47,6 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
     @Override
     public List<MediaType> getSupportedMediaTypes() {
         return Collections.singletonList(MediaType.MULTIPART_FORM_DATA);
-    }
-
-    @Override
-    public List<MediaType> getSupportedMediaTypes(Class clazz) {
-        return HttpMessageConverter.super.getSupportedMediaTypes(clazz);
     }
 
     @Override
@@ -93,7 +80,7 @@ public class RepositoryEntityMultipartHttpMessageConverter implements HttpMessag
         HttpHeaders headers = new HttpHeaders(inputMessage.getHeaders());
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        return this.converter.read(clazz, new HttpInputMessage() {
+        return delegate.read(clazz, new HttpInputMessage() {
             @Override
             public InputStream getBody() throws IOException {
                 ObjectMapper mapper = new ObjectMapper();
