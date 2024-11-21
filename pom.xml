@@ -63,7 +63,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
         <elasticsearch-rest-high-level-client.version>7.17.25</elasticsearch-rest-high-level-client.version>
 
         <!-- Test dependencies -->
-        <test-containers.version>1.17.6</test-containers.version>
+        <test-containers.version>1.20.4</test-containers.version>
         <mockito.version>3.12.4</mockito.version>
 
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
