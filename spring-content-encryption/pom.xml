@@ -27,6 +27,11 @@
             <artifactId>spring-vault-core</artifactId>
             <version>3.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
@@ -54,11 +59,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

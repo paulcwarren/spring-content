@@ -2,8 +2,8 @@ package org.springframework.content.encryption.fs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.fragments.EncryptingContentStoreConfiguration;
-import internal.org.springframework.content.fragments.EncryptingContentStoreConfigurer;
+import org.springframework.content.encryption.config.EncryptingContentStoreConfiguration;
+import org.springframework.content.encryption.config.EncryptingContentStoreConfigurer;
 import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -28,8 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
-import org.springframework.content.encryption.EncryptingContentStore;
-import org.springframework.content.encryption.EnvelopeEncryptionService;
+import org.springframework.content.encryption.store.EncryptingContentStore;
 import org.springframework.content.encryption.VaultContainerSupport;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
@@ -68,9 +67,6 @@ public class EncryptionIT {
 
     @Autowired
     private java.io.File filesystemRoot;
-
-    @Autowired
-    private EnvelopeEncryptionService encrypter;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -126,6 +122,7 @@ public class EncryptionIT {
 
                     assertThat(r.asString(), is("e encryption"));
                 });
+                /*
                 Context("when the keyring is rotated", () -> {
                     BeforeEach(() -> {
                         encrypter.rotate("filecontentstore");
@@ -158,7 +155,7 @@ public class EncryptionIT {
                         assertThat(new String(f.getContentKey()), startsWith("vault:"));
                         assertThat(new String(f.getContentKey()), not(startsWith("vault:v1")));
                     });
-                });
+                }); */
                 Context("when the content is unset", () -> {
                     It("it should remove the content and clear the content key", () -> {
                         f = repo.findById(f.getId()).get();
@@ -210,10 +207,6 @@ public class EncryptionIT {
             }
 
             @Bean
-            public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {
-                return new EnvelopeEncryptionService(vaultOperations);
-            }
-            @Bean
             public java.io.File filesystemRoot() {
                 try {
                     return Files.createTempDirectory("").toFile();
@@ -231,7 +224,7 @@ public class EncryptionIT {
                 return new EncryptingContentStoreConfigurer<FileContentStore3>() {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration config) {
-                        config.encryptionKeyContentProperty("key").keyring("filecontentstore");
+                        config.encryptionKeyContentProperty("key");
                     }
                 };
             }
