@@ -153,7 +153,7 @@ public class EncryptionIT {
                     MockMvcResponse r =
                             given()
                                     .header("accept", "text/plain")
-                                    .header("range", "bytes=16-27")
+                                    .header("range", "bytes=14-27")
                                     .get("/files/" + f.getId() + "/content")
                                     .then()
                                     .statusCode(HttpStatus.SC_PARTIAL_CONTENT)
@@ -161,7 +161,7 @@ public class EncryptionIT {
                                     .contentType(Matchers.startsWith("text/plain"))
                                     .and().extract().response();
 
-                    assertThat(r.asString(), is("e encryption"));
+                    assertThat(r.asString(), is("ide encryption"));
                 });
                 Context("when the keyring is rotated", () -> {
                     BeforeEach(() -> {

@@ -16,7 +16,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 
 import javax.crypto.CipherInputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -267,7 +266,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
 
                 // remove cast and use conversion service
                 unencryptedStream = encrypter.decrypt((byte[]) contentProperty.getCustomProperty(entity, this.encryptionKeyContentProperty), r.getInputStream(), 0, this.keyRing);
-                r = new InputStreamResource(new SkipInputStream(unencryptedStream));
+                r = new InputStreamResource(unencryptedStream);
             } catch (IOException e) {
                 throw new StoreAccessException("error encrypting resource", e);
             }
@@ -282,7 +281,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(propertyPath, "propertyPath not set");
         Assert.notNull(storeDelegate, "store not set");
 
-        Resource r = storeDelegate.getResource(entity, propertyPath, rewriteParamsForCTR(params));
+        Resource r = storeDelegate.getResource(entity, propertyPath, params);
 
         if (r != null) {
             InputStream unencryptedStream = null;
@@ -309,7 +308,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         Assert.notNull(propertyPath, "propertyPath not set");
         Assert.notNull(delegate, "store not set");
 
-        Resource r = delegate.getResource(entity, propertyPath, rewriteParamsForCTR(params));
+        Resource r = delegate.getResource(entity, propertyPath, params);
 
         if (r != null) {
             InputStream unencryptedStream = null;
@@ -328,24 +327,6 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         }
 
         return r;
-    }
-
-    private GetResourceParams rewriteParamsForCTR(GetResourceParams params) {
-        if (params.getRange() == null) {
-            return params;
-        }
-        int begin = Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
-        int blockBegin = begin - (begin % 16);
-        return GetResourceParams.builder().range("bytes=" + blockBegin + "-" + StringUtils.substringAfter(params.getRange(), "-")).build();
-    }
-
-    private org.springframework.content.commons.store.GetResourceParams rewriteParamsForCTR(org.springframework.content.commons.store.GetResourceParams params) {
-        if (params.getRange() == null) {
-            return params;
-        }
-        int begin = Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
-        int blockBegin = begin - (begin % 16);
-        return org.springframework.content.commons.store.GetResourceParams.builder().range("bytes=" + blockBegin + "-" + StringUtils.substringAfter(params.getRange(), "-")).build();
     }
 
     private int getOffset(Resource r, GetResourceParams params) {
@@ -437,41 +418,6 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
                 this.encryptionKeyContentProperty = config.getEncryptionKeyContentProperty();
                 this.keyRing = config.getKeyring();
             }
-        }
-    }
-
-    // CipherInputStream skip does not work.  This wraps a cipherinputstream purely to override the skip with a
-    // working version
-    public class SkipInputStream extends FilterInputStream
-    {
-        private static final int MAX_SKIP_BUFFER_SIZE = 2048;
-
-        protected SkipInputStream (InputStream in)
-        {
-            super(in);
-        }
-
-        public long skip(long n)
-                throws IOException
-        {
-            long remaining = n;
-            int nr;
-
-            if (n <= 0) {
-                return 0;
-            }
-
-            int size = (int)Math.min(MAX_SKIP_BUFFER_SIZE, remaining);
-            byte[] skipBuffer = new byte[size];
-            while (remaining > 0) {
-                nr = in.read(skipBuffer, 0, (int)Math.min(size, remaining));
-                if (nr < 0) {
-                    break;
-                }
-                remaining -= nr;
-            }
-
-            return n - remaining;
         }
     }
 
