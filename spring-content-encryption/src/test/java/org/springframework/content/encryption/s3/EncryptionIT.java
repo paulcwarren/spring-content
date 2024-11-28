@@ -162,6 +162,19 @@ public class EncryptionIT {
                                     .and().extract().response();
 
                     assertThat(r.asString(), is("ide encryption"));
+
+                    r =
+                            given()
+                                    .header("accept", "text/plain")
+                                    .header("range", "bytes=19-27")
+                                    .get("/files/" + f.getId() + "/content")
+                                    .then()
+                                    .statusCode(HttpStatus.SC_PARTIAL_CONTENT)
+                                    .assertThat()
+                                    .contentType(Matchers.startsWith("text/plain"))
+                                    .and().extract().response();
+
+                    assertThat(r.asString(), is("ncryption"));
                 });
                 Context("when the keyring is rotated", () -> {
                     BeforeEach(() -> {

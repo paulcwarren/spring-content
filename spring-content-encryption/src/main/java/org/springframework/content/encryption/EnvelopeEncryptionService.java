@@ -1,5 +1,6 @@
 package org.springframework.content.encryption;
 
+import java.math.BigInteger;
 import org.springframework.data.util.Pair;
 import org.springframework.vault.core.VaultOperations;
 import org.springframework.vault.core.VaultTransitOperations;
@@ -89,11 +90,29 @@ public class EnvelopeEncryptionService {
         byte[] iv = new byte[128 / 8];
         System.arraycopy(nonce, 0, iv, 0, nonce.length);
 
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(iv));
+        int AES_BLOCK_SIZE = 16;
+        long blockOffset = offset - (offset % AES_BLOCK_SIZE);
+        final BigInteger ivBI = new BigInteger(1, iv);
+        final BigInteger ivForOffsetBI = ivBI.add(BigInteger.valueOf(blockOffset / AES_BLOCK_SIZE));
+        final byte[] ivForOffsetBA = ivForOffsetBI.toByteArray();
+        final IvParameterSpec ivForOffset;
+        if (ivForOffsetBA.length >= AES_BLOCK_SIZE) {
+            ivForOffset = new IvParameterSpec(ivForOffsetBA, ivForOffsetBA.length - AES_BLOCK_SIZE, AES_BLOCK_SIZE);
+        } else {
+            final byte[] ivForOffsetBASized = new byte[AES_BLOCK_SIZE];
+            System.arraycopy(ivForOffsetBA, 0, ivForOffsetBASized, AES_BLOCK_SIZE - ivForOffsetBA.length, ivForOffsetBA.length);
+            ivForOffset = new IvParameterSpec(ivForOffsetBASized);
+        }
 
+        // Skip the blocks that we are not going to decrypt.
+        // We advanced the IV manually to compensate for these skipped blocks,
+        // and the stream will be zero-prefixed to compensate on the other side as well.
+        // This saves encryption processing for all blocks that would be discarded anyways
+        is.skipNBytes(blockOffset);
 
-        return new SkippingInputStream(new CipherInputStream(is, cipher)) ;
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivForOffset);
 
+        return new OffsetInputStream(new SkippingInputStream(new CipherInputStream(is, cipher)), blockOffset);
     }
 
     private SecretKeySpec decryptKey(byte[] encryptedKey, String keyName) {
@@ -160,4 +179,64 @@ public class EnvelopeEncryptionService {
         }
     }
 
+    /**
+     * Adds a fixed amount of 0-bytes in front of the delegate {@link InputStream}
+     * <p>
+     *
+     * */
+    private static class OffsetInputStream extends InputStream {
+        private InputStream delegate;
+        private long offsetBytes;
+
+        public OffsetInputStream(InputStream delegate, long offsetBytes) {
+            this.delegate = delegate;
+            this.offsetBytes = offsetBytes;
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            if(n <= 0) {
+                return 0;
+            }
+            if(n <= offsetBytes) {
+                offsetBytes -= n;
+                return n;
+            }
+            if(offsetBytes > 0) {
+                n = n - offsetBytes; // Still skipping so many bytes from the offset
+                try {
+                    return offsetBytes + delegate.skip(n);
+                } finally {
+                    offsetBytes = 0; // Now the whole offset is consumed; skip to the delegate
+                }
+            }
+
+            return delegate.skip(n);
+        }
+
+        @Override
+        public int read() throws IOException {
+            if(offsetBytes > 0) {
+                offsetBytes--;
+                return 0;
+            }
+            return delegate.read();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if(offsetBytes > 0) {
+                return super.read(b, off, len);
+            }
+            return delegate.read(b, off, len);
+        }
+
+        @Override
+        public int available() throws IOException {
+            if(offsetBytes > 0) {
+                return (int)Math.max(offsetBytes, Integer.MAX_VALUE);
+            }
+            return delegate.available();
+        }
+    }
 }
