@@ -329,7 +329,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         return r;
     }
 
-    private int getOffset(Resource r, GetResourceParams params) {
+    private long getOffset(Resource r, GetResourceParams params) {
         int offset = 0;
 
         if (r instanceof RangeableResource == false)
@@ -337,18 +337,18 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements 
         if (params.getRange() == null)
             return offset;
 
-        return Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
+        return Long.parseUnsignedLong(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
     }
 
-    private int getOffset(Resource r, org.springframework.content.commons.store.GetResourceParams params) {
-        int offset = 0;
+    private long getOffset(Resource r, org.springframework.content.commons.store.GetResourceParams params) {
+        long offset = 0;
 
         if (r instanceof RangeableResource == false)
             return offset;
         if (params.getRange() == null)
             return offset;
 
-        return Integer.parseInt(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
+        return Long.parseUnsignedLong(StringUtils.substringBetween(params.getRange(), "bytes=", "-"));
     }
 
     @Override

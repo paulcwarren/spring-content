@@ -84,7 +84,7 @@ public class EnvelopeEncryptionService {
         return KEY_GENERATOR.generateKey();
     }
 
-    private InputStream decryptInputStream(final SecretKeySpec secretKeySpec, byte[] nonce, int offset, InputStream is) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException, InvalidAlgorithmParameterException {
+    private InputStream decryptInputStream(final SecretKeySpec secretKeySpec, byte[] nonce, long offset, InputStream is) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException, InvalidAlgorithmParameterException {
         Cipher cipher = Cipher.getInstance(transformation);
 
         byte[] iv = new byte[128 / 8];
@@ -124,7 +124,7 @@ public class EnvelopeEncryptionService {
         return key;
     }
 
-    public InputStream decrypt(byte[] ecryptedContext, InputStream is, int offset, String keyName) {
+    public InputStream decrypt(byte[] ecryptedContext, InputStream is, long offset, String keyName) {
 
         byte[] key = new byte[105];
         System.arraycopy(ecryptedContext, 0, key, 0, 105);
