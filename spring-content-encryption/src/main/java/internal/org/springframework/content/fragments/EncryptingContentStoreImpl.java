@@ -249,7 +249,7 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements
             }
         }
 
-        cryptoService = config.initializeCryptoService(mappingContext);
+        cryptoService = config.initializeCryptoService(mappingContext, storeInterfaceClass);
     }
 
     private static org.springframework.content.commons.store.UnsetContentParams convertParams(

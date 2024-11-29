@@ -1,7 +1,6 @@
 package org.springframework.content.encryption.s3;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfiguration;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfigurer;
@@ -58,7 +57,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jSpringRunner.class)
-@Ginkgo4jConfiguration(threads = 1)
 @SpringBootTest(classes = EncryptionIT.Application.class, webEnvironment= SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EncryptionIT {
 
@@ -274,7 +272,7 @@ public class EncryptionIT {
             public EncryptingContentStoreConfigurer config() {
                 return new EncryptingContentStoreConfigurer<FileContentStore>() {
                     @Override
-                    public void configure(EncryptingContentStoreConfiguration config) {
+                    public void configure(EncryptingContentStoreConfiguration<FileContentStore> config) {
                         config.encryptionKeyContentProperty("key");
                     }
                 };

@@ -1,7 +1,7 @@
 package internal.org.springframework.content.encryption.keys;
 
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.content.encryption.engine.DataEncryptionEngine.EncryptionParameters;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
 import org.springframework.content.encryption.keys.DataEncryptionKeyEncryptor;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey.UnencryptedSymmetricDataEncryptionKey;

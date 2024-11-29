@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Encrypts and decrypts content streams
  */
-public interface DataEncryptionEngine {
+public interface ContentEncryptionEngine {
 
     /**
      * Creates a new set of encryption parameters for encrypting

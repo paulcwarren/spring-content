@@ -11,12 +11,12 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 import lombok.SneakyThrows;
-import org.springframework.content.encryption.engine.DataEncryptionEngine;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine;
 
 /**
  * Symmetric data encryption engine using AES-CTR encryption mode
  */
-public class AesCtrEncryptionEngine implements DataEncryptionEngine {
+public class AesCtrEncryptionEngine implements ContentEncryptionEngine {
     private final KeyGenerator keyGenerator;
     private static final SecureRandom secureRandom = new SecureRandom();
 

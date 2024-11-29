@@ -1,6 +1,6 @@
 package org.springframework.content.encryption.keys;
 
-import org.springframework.content.encryption.engine.DataEncryptionEngine.EncryptionParameters;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
 
 /**
  * Encryption and decryption of data encryption keys

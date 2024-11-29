@@ -15,9 +15,9 @@ import org.springframework.content.commons.mappingcontext.MappingContext;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.content.commons.store.GetResourceParams;
 import org.springframework.content.commons.store.StoreAccessException;
-import org.springframework.content.encryption.engine.DataEncryptionEngine;
-import org.springframework.content.encryption.engine.DataEncryptionEngine.EncryptionParameters;
-import org.springframework.content.encryption.engine.DataEncryptionEngine.InputStreamRequestParameters;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine.InputStreamRequestParameters;
 import org.springframework.content.encryption.keys.DataEncryptionKeyAccessor;
 import org.springframework.content.encryption.keys.DataEncryptionKeyEncryptor;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
@@ -36,7 +36,7 @@ class ContentCryptoService<S, DEK extends StoredDataEncryptionKey> {
     private final MappingContext mappingContext;
     private final DataEncryptionKeyAccessor<S, DEK> dataEncryptionKeyAccessor;
     private final List<DataEncryptionKeyEncryptor<DEK>> dataEncryptionKeyEncryptors;
-    private final DataEncryptionEngine encryptionEngine;
+    private final ContentEncryptionEngine encryptionEngine;
 
     public S encrypt(S entity, PropertyPath propertyPath, InputStream plainText, BiFunction<S, InputStream, S> contentSetter) {
         Assert.notNull(entity, "entity not set");

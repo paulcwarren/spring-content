@@ -41,7 +41,6 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
-import org.springframework.vault.core.VaultOperations;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.FileInputStream;
@@ -220,10 +219,10 @@ public class EncryptionIT {
             }
 
             @Bean
-            public EncryptingContentStoreConfigurer config() {
+            public EncryptingContentStoreConfigurer<FileContentStore3> config() {
                 return new EncryptingContentStoreConfigurer<FileContentStore3>() {
                     @Override
-                    public void configure(EncryptingContentStoreConfiguration config) {
+                    public void configure(EncryptingContentStoreConfiguration<FileContentStore3> config) {
                         config.encryptionKeyContentProperty("key");
                     }
                 };
