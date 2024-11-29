@@ -19,7 +19,7 @@ import org.springframework.content.encryption.engine.ContentEncryptionEngine;
 import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
 import org.springframework.content.encryption.engine.ContentEncryptionEngine.InputStreamRequestParameters;
 import org.springframework.content.encryption.keys.DataEncryptionKeyAccessor;
-import org.springframework.content.encryption.keys.DataEncryptionKeyEncryptor;
+import org.springframework.content.encryption.keys.DataEncryptionKeyWrapper;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
@@ -35,7 +35,7 @@ class ContentCryptoService<S, DEK extends StoredDataEncryptionKey> {
 
     private final MappingContext mappingContext;
     private final DataEncryptionKeyAccessor<S, DEK> dataEncryptionKeyAccessor;
-    private final List<DataEncryptionKeyEncryptor<DEK>> dataEncryptionKeyEncryptors;
+    private final List<DataEncryptionKeyWrapper<DEK>> dataEncryptionKeyWrappers;
     private final ContentEncryptionEngine encryptionEngine;
 
     public S encrypt(S entity, PropertyPath propertyPath, InputStream plainText, BiFunction<S, InputStream, S> contentSetter) {
@@ -46,9 +46,10 @@ class ContentCryptoService<S, DEK extends StoredDataEncryptionKey> {
         var contentProperty = resolveContentPropertyRequired(entity, propertyPath);
 
         var encryptionParameters = encryptionEngine.createNewParameters();
-        var encryptedDeks = dataEncryptionKeyEncryptors.stream()
-                .map(p -> p.wrapEncryptionKey(encryptionParameters))
+        var encryptedDeks = dataEncryptionKeyWrappers.stream()
+                .map(wrapper -> wrapper.wrapEncryptionKey(encryptionParameters))
                 .toList();
+
         var newEntity = dataEncryptionKeyAccessor.setKeys(entity, contentProperty, encryptedDeks);
         var encryptedStream = encryptionEngine.encrypt(plainText, encryptionParameters);
 
@@ -112,10 +113,10 @@ class ContentCryptoService<S, DEK extends StoredDataEncryptionKey> {
     }
 
     private EncryptionParameters decryptEncryptionParameters(Collection<DEK> encryptedDeks) {
-        for (var dataEncryptionKeyEncryptor : dataEncryptionKeyEncryptors) {
+        for (var wrapper : dataEncryptionKeyWrappers) {
             for (var encryptedDek : encryptedDeks) {
-                if(dataEncryptionKeyEncryptor.supports(encryptedDek)) {
-                    return dataEncryptionKeyEncryptor.unwrapEncryptionKey(encryptedDek);
+                if(wrapper.supports(encryptedDek)) {
+                    return wrapper.unwrapEncryptionKey(encryptedDek);
                 }
             }
         }

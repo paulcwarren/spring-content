@@ -30,8 +30,8 @@ with a content-encryption key, and then encrypting the content-encryption key un
 
 Every time
 content is stored it is first encrypted using the AES-CTR cipher and a randomly generated key.  That
-content-encryption key is then encrypted using Hashicorp's vault and that key is then storied on the domain
-object.  Any user with authorization to decrypt the encryption key can retrieve the content.
+content-encryption key is then (optionally) encrypted using a different key-encryption method and the encrypted content-encryption key
+is then storied on the domain object.  Any user with authorization to decrypt the content-encryption key can retrieve the content.
 
 Spring Content Encryption can be added to your application by adding the dependency:
 
@@ -57,24 +57,17 @@ and then updating your application's configuration, as follows:
 public static class Config {
 
     @Bean
-    public EnvelopeEncryptionService encrypter(VaultOperations vaultOperations) {   (1)
-        return new EnvelopeEncryptionService(vaultOperations);
-    }
-
-    @Bean
-    public EncryptingContentStoreConfigurer config() {                              (2)
+    public EncryptingContentStoreConfigurer<FileContentStore> config() {                              (1)
         return new EncryptingContentStoreConfigurer<FileContentStore>() {
             @Override
-            public void configure(EncryptingContentStoreConfiguration config) {
-                config.keyring("my-app-keyring").encryptionKeyContentProperty("key");
+            public void configure(EncryptingContentStoreConfiguration<FileContentStore> config) {
+                config.encryptionKeyContentProperty("key");
             }
         };
     }
 }
 ----
-1. encrypter contributes the Envelope Encryption Service
-2. The `config` configures the `FileContentStore` with the Hashicorp Vault keyring to use (for encrypting the
-content encryption key) and the property to use to store the encryption key
+1. The `config` configures the encryption for the `FileContentStore` with the property to use to store the encryption key
 ====
 
 Domain objects content properties are then updated with a custom attribute to store the encrypted content-encryption key.
@@ -115,9 +108,53 @@ public interface FileContentStore extends ContentStore<File, UUID>, EncryptingCo
 ----
 ====
 
+=== Content Encryption components
+
+There are 3 separate components that work together to provide content encryption:
+
+1. `ContentEncryptionEngine`: Performs encryption/decryption of the content itself with a content-encryption key
+2. `DataEncryptionKeyWrapper`: Performs wrapping (encryption) and unwrapping (decryption) of the content-encryption key
+3. `DataEncryptionKeyAccessor`: Stores and retrieves the encrypted content-encryption key
+
+All components of the content encryption system can be configured or swapped out with custom implementations to suit your particular needs.
+
+.Spring Content Encryption configuration
+====
+[source,java]
+----
+@EnableFilesystemStores
+public static class Config {
+
+    @Bean
+    VaultDataEncryptionKeyWrapper vaultDataEncryptionKeyWrapper(VaultOperations vault) {
+        return new VaultDataEncryptionKeyWrapper(vault);
+    }
+
+    @Bean
+    public EncryptingContentStoreConfigurer<FileContentStore> config(VaultDataEncryptionKeyWrapper keyWrapper) {
+        return new EncryptingContentStoreConfigurer<FileContentStore>() {
+            @Override
+            public void configure(EncryptingContentStoreConfiguration<FileContentStore> config) {
+                config.encryptionKeyContentProperty("key")                                          (1)
+                    .contentEncryptionMethod(ContentEncryptionMethod.AES_CTR_256)                   (2)
+                    .dataEncryptionKeyWrappers(List.of(keyWrapper))                                 (3)
+                    ;
+            }
+        };
+    }
+}
+----
+1. Configures the `FileContentStore` with the property to use to store the encryption key
+2. Use AES-CTR with 256 bit keys for encrypting content
+3. Use Hashicorp Vault to wrap (encrypt) the content-encryption key
+====
+
 == Byte-Range Support
-Because the default implementation uses AES-CTR cipher even though a Store is encrypted it is still capable of
-serving byte-ranges.  However, type of storage depends on how exactly that happens.
+
+Support for byte-range requests is dependent on the encryption algorithm that is used for content encryption.
+
+The default implementation using AES-CTR is capable of serving byte-ranges.
+However, it depends on the type of backing storage how that happens exactly.
 
 With S3 storage byte-ranges will be forwarded onto S3 for fetching and therefore only the
 byte range need be decrypted before serving.  This is very efficient.

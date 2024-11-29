@@ -6,7 +6,7 @@ import org.springframework.content.encryption.engine.ContentEncryptionEngine.Enc
  * Encryption and decryption of data encryption keys
  * @param <T> format of the encrypted data encryption key
  */
-public interface DataEncryptionKeyEncryptor<T extends StoredDataEncryptionKey> {
+public interface DataEncryptionKeyWrapper<T extends StoredDataEncryptionKey> {
 
     /**
      * Checks if this encryptor can decrypt a certain encrypted key

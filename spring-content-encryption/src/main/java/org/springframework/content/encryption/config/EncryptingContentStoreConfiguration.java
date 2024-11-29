@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.content.encryption.engine.ContentEncryptionEngine;
 import org.springframework.content.encryption.keys.DataEncryptionKeyAccessor;
-import org.springframework.content.encryption.keys.DataEncryptionKeyEncryptor;
+import org.springframework.content.encryption.keys.DataEncryptionKeyWrapper;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
 import org.springframework.core.convert.converter.ConverterRegistry;
 
@@ -31,7 +31,7 @@ public interface EncryptingContentStoreConfiguration<S> {
      *
      * @see #unencryptedDataEncryptionKeys() for disabling data encryption key encryption
      */
-    EncryptingContentStoreConfiguration<S> dataEncryptionKeyEncryptors(List<DataEncryptionKeyEncryptor<?>> encryptors);
+    EncryptingContentStoreConfiguration<S> dataEncryptionKeyWrappers(List<DataEncryptionKeyWrapper<?>> encryptors);
 
     /**
      * Configures the method used for encrypting the content before it is stored
@@ -48,7 +48,7 @@ public interface EncryptingContentStoreConfiguration<S> {
     /**
      * Do not encrypt the data encryption keys when they are persisted to permanent storage
      *
-     * @see #dataEncryptionKeyEncryptors(List) for configuring a general methods to encrypt data encryption keys
+     * @see #dataEncryptionKeyWrappers(List) for configuring a general methods to encrypt data encryption keys
      */
     EncryptingContentStoreConfiguration<S> unencryptedDataEncryptionKeys();
 
