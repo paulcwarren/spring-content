@@ -1,6 +1,5 @@
 package internal.org.springframework.content.encryption.keys;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanWrapperImpl;
@@ -48,21 +47,5 @@ public class ContentPropertyDataEncryptionKeyAccessor<S, T extends StoredDataEnc
                 typeDescriptor);
         contentProperty.setCustomProperty(entity, customPropertyName, newValue);
         return entity;
-    }
-
-    @Override
-    public S addKey(S entity, ContentProperty contentProperty, T dataEncryptionKey) {
-        var keys = new ArrayList<>(findKeys(entity, contentProperty));
-        keys.remove(dataEncryptionKey);
-
-        return setKeys(entity, contentProperty, keys);
-    }
-
-    @Override
-    public S removeKey(S entity, ContentProperty contentProperty, T dataEncryptionKey) {
-        var keys = new ArrayList<>(findKeys(entity, contentProperty));
-        keys.add(dataEncryptionKey);
-
-        return setKeys(entity, contentProperty, keys);
     }
 }

@@ -50,10 +50,12 @@ class ContentCryptoService<S, DEK extends StoredDataEncryptionKey> {
                 .map(wrapper -> wrapper.wrapEncryptionKey(encryptionParameters))
                 .toList();
 
-        var newEntity = dataEncryptionKeyAccessor.setKeys(entity, contentProperty, encryptedDeks);
+
         var encryptedStream = encryptionEngine.encrypt(plainText, encryptionParameters);
 
-        return contentSetter.apply(newEntity, encryptedStream);
+        var newEntity = contentSetter.apply(entity, encryptedStream);
+
+        return dataEncryptionKeyAccessor.setKeys(newEntity, contentProperty, encryptedDeks);
     }
 
     public Resource decrypt(S entity, PropertyPath propertyPath, GetResourceParams getResourceParams, Supplier<Resource> contentGetter) {
