@@ -31,6 +31,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
+import org.springframework.content.encryption.keys.DataEncryptionKeyWrapper;
+import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
+import org.springframework.content.encryption.keys.StoredDataEncryptionKey.EncryptedSymmetricDataEncryptionKey;
 import org.springframework.content.encryption.store.EncryptingContentStore;
 import org.springframework.content.encryption.LocalStack;
 import org.springframework.content.encryption.VaultContainerSupport;
@@ -285,13 +289,34 @@ public class EncryptionIT {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration<FileContentStore> config) {
                         config.encryptionKeyContentProperty("key")
-                                .dataEncryptionKeyWrappers(List.of(new VaultTransitDataEncryptionKeyWrapper(
-                                        vaultTemplate().opsForTransit(),
-                                        "my-key"
-                                )));
+                                .dataEncryptionKeyWrappers(List.of(
+                                        new EncryptingOnlyKeyWrapper(), // A fake wrapper that only supports encrypt operation
+                                        new VaultTransitDataEncryptionKeyWrapper(
+                                                vaultTemplate().opsForTransit(),
+                                                "my-key"
+                                        )
+                                ));
                     }
                 };
             }
+        }
+    }
+
+    private static class EncryptingOnlyKeyWrapper implements DataEncryptionKeyWrapper<EncryptedSymmetricDataEncryptionKey> {
+        @Override
+        public boolean supports(StoredDataEncryptionKey storedDataEncryptionKey) {
+            return false;
+        }
+
+        @Override
+        public EncryptedSymmetricDataEncryptionKey wrapEncryptionKey(EncryptionParameters dataEncryptionParameters) {
+            return new EncryptedSymmetricDataEncryptionKey("drop", "", "", dataEncryptionParameters.getSecretKey().getAlgorithm(), new byte[0], new byte[0]);
+        }
+
+        @Override
+        public EncryptionParameters unwrapEncryptionKey(
+                EncryptedSymmetricDataEncryptionKey encryptedDataEncryptionKey) {
+            throw new IllegalArgumentException("Can not unwrap encryption key");
         }
     }
 
