@@ -45,7 +45,7 @@ public class StoredDataEncryptionKeyGenericConverter implements ConditionalGener
             return typesAssignableTo(targetType)
                     .anyMatch(type -> conversionService.canConvert(sourceType, type));
         } else if(sourceType.isAssignableTo(ENCRYPTED_DEK)) {
-            return typesAssignableTo(targetType)
+            return typesAssignableTo(sourceType)
                     .anyMatch(type -> conversionService.canConvert(type, targetType));
         }
         return false;

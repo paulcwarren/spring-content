@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ByteBufferCodec<D, B> {
+class ByteBufferCodec<D, B> {
     private static final Map<Class<?>, BytesConverter<?>> CONVERTERS = Map.of(
             byte[].class, new BytesConverter<>(
                     b -> b.length,

@@ -1,6 +1,7 @@
 package org.springframework.content.encryption.keys;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +16,7 @@ public sealed interface StoredDataEncryptionKey {
     @RequiredArgsConstructor
     @Getter
     @Builder
+    @EqualsAndHashCode
     final class UnencryptedSymmetricDataEncryptionKey implements StoredDataEncryptionKey {
 
         /**
@@ -39,6 +41,7 @@ public sealed interface StoredDataEncryptionKey {
     @RequiredArgsConstructor
     @Getter
     @Builder
+    @EqualsAndHashCode
     final class EncryptedSymmetricDataEncryptionKey implements StoredDataEncryptionKey {
 
         /**
