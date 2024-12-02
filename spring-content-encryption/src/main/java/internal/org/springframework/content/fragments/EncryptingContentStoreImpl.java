@@ -130,9 +130,9 @@ public class EncryptingContentStoreImpl<S, SID extends Serializable> implements
             throw new StoreAccessException(String.format("Content property %s does not exist", propertyPath.getName()));
         }
 
-        S newEntity = storeDelegate.unsetContent(entity, propertyPath, params);
+        var newEntity = cryptoService.clearKeys(entity, propertyPath);
 
-        return cryptoService.clearKeys(newEntity, propertyPath);
+        return storeDelegate.unsetContent(newEntity, propertyPath, params);
     }
 
     @Override
