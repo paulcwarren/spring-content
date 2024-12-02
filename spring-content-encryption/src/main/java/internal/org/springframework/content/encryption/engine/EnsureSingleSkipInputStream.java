@@ -9,7 +9,7 @@ import java.io.InputStream;
  * <p>
  * This fixes an issue in the {@link javax.crypto.CipherInputStream} where skips can stop short of the requested skip amount
  */
-public class EnsureSingleSkipInputStream extends FilterInputStream {
+class EnsureSingleSkipInputStream extends FilterInputStream {
 
     public EnsureSingleSkipInputStream(InputStream in) {
         super(in);

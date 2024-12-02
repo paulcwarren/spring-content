@@ -6,7 +6,7 @@ import java.io.InputStream;
 /**
  * Skips a certain amount of bytes from the delegate {@link InputStream}
  */
-public class SkippingInputStream extends InputStream {
+class SkippingInputStream extends InputStream {
     private final InputStream delegate;
     private final long skipBytes;
     private boolean hasSkipped;

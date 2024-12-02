@@ -97,24 +97,28 @@ public class AesCtrEncryptionEngine implements ContentEncryptionEngine {
     }
 
     private byte[] adjustIvForOffset(byte[] iv, long offsetBlocks) {
+        // Optimization: no need to adjust the IV when we have no block offset
+        if(offsetBlocks == 0) {
+            return iv;
+        }
+
         // AES-CTR works by having a separate IV for every block.
         // This block IV is built from the initial IV and the block counter.
         var initialIv = new BigInteger(1, iv);
-
-        // Because we're using BigInteger for math here,
-        // the resulting byte array may be longer (when overflowing the IV size)
-        // or shorter (when our IV starts with a bunch of 0)
-        // It needs to be the proper length, and aligned properly
         byte[] bigintBytes = initialIv.add(BigInteger.valueOf(offsetBlocks))
                 .toByteArray();
 
+        // Because we're using BigInteger for math here,
+        // the resulting byte array may be longer (when overflowing the IV size, we should wrap around)
+        // or shorter (when our IV starts with a bunch of 0)
+        // It needs to be the proper length, and aligned properly
         if(bigintBytes.length == AES_BLOCK_SIZE_BYTES) {
             return bigintBytes;
         } else if(bigintBytes.length > AES_BLOCK_SIZE_BYTES) {
             // Byte array is longer, we need to cut a part of the front
             return Arrays.copyOfRange(bigintBytes, bigintBytes.length-IV_SIZE_BYTES, bigintBytes.length);
         } else {
-            // Byte array is sorter, we need to pad the front with 0 bytes
+            // Byte array is shorter, we need to pad the front with 0 bytes
             // Note that a bytes array is initialized to be all-zero by default
             byte[] ivBytes = new byte[IV_SIZE_BYTES];
             System.arraycopy(bigintBytes, 0, ivBytes, IV_SIZE_BYTES-bigintBytes.length, bigintBytes.length);
