@@ -2,6 +2,9 @@ package org.springframework.content.encryption.s3;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
+import internal.org.springframework.content.encryption.keys.ContentPropertyDataEncryptionKeyAccessor;
+import internal.org.springframework.content.encryption.keys.VaultTransitDataEncryptionKeyWrapper;
+import java.util.List;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfiguration;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfigurer;
 import internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAutoConfiguration;
@@ -41,6 +44,7 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
+import org.springframework.vault.core.VaultTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -80,6 +84,9 @@ public class EncryptionIT {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
+    @Autowired
+    private VaultTemplate vaultTemplate;
+
     private File f;
 
 
@@ -106,6 +113,8 @@ public class EncryptionIT {
                                 .build();
                         client.createBucket(bucketRequest);
                     }
+
+                    vaultTemplate.opsForTransit().createKey("my-key");
                 }
 
                 f = repo.save(new File());
@@ -171,15 +180,15 @@ public class EncryptionIT {
 
                     assertThat(r.asString(), is("ncryption"));
                 });
-                /*
                 Context("when the keyring is rotated", () -> {
                     BeforeEach(() -> {
+                        vaultTemplate.opsForTransit().rotate("my-key");
                     });
-                    It("should not change the stored content key", () -> {
+                    /*It("should not change the stored content key", () -> {
                         f = repo.findById(f.getId()).get();
 
                         assertThat(new String(f.getContentKey()), startsWith("vault:v1"));
-                    });
+                    });*/
                     It("should still retrieve content decrypted", () -> {
                         given()
                                 .header("accept", "text/plain")
@@ -190,6 +199,7 @@ public class EncryptionIT {
                                 .contentType(Matchers.startsWith("text/plain"))
                                 .body(Matchers.equalTo("Hello Client-side encryption World!"));
                     });
+                    /*
                     It("should update the content key version when next stored", () -> {
                         given()
                                 .contentType("text/plain")
@@ -203,7 +213,8 @@ public class EncryptionIT {
                         assertThat(new String(f.getContentKey()), startsWith("vault:"));
                         assertThat(new String(f.getContentKey()), not(startsWith("vault:v1")));
                     });
-                });*/
+                     */
+                });
                 Context("when the content is unset", () -> {
                     It("it should remove the content and clear the content key", () -> {
                         f = repo.findById(f.getId()).get();
@@ -273,7 +284,11 @@ public class EncryptionIT {
                 return new EncryptingContentStoreConfigurer<FileContentStore>() {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration<FileContentStore> config) {
-                        config.encryptionKeyContentProperty("key");
+                        config.encryptionKeyContentProperty("key")
+                                .dataEncryptionKeyWrappers(List.of(new VaultTransitDataEncryptionKeyWrapper(
+                                        vaultTemplate().opsForTransit(),
+                                        "my-key"
+                                )));
                     }
                 };
             }

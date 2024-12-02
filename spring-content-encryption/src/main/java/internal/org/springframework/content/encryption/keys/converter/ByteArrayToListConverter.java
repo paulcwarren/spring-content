@@ -38,7 +38,9 @@ public class ByteArrayToListConverter implements ConditionalGenericConverter {
             return null;
         }
 
-        while(bb.hasRemaining()) {
+        int length = bb.getInt();
+
+        for(int i = 0; i < length; i++) {
             var itemSize = bb.getInt();
             var item = new byte[itemSize];
             bb.get(item);

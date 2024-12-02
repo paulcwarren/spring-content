@@ -1,5 +1,6 @@
 package org.springframework.content.encryption.keys;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +14,7 @@ public sealed interface StoredDataEncryptionKey {
      */
     @RequiredArgsConstructor
     @Getter
+    @Builder
     final class UnencryptedSymmetricDataEncryptionKey implements StoredDataEncryptionKey {
 
         /**
@@ -24,6 +26,45 @@ public sealed interface StoredDataEncryptionKey {
          * The symmetric key for data encryption
          */
         private final byte[] keyData;
+
+        /**
+         * The IV for the encryption algorithm
+         */
+        private final byte[] initializationVector;
+    }
+
+    /**
+     * An encrypted symmetric data encryption key
+     */
+    @RequiredArgsConstructor
+    @Getter
+    @Builder
+    final class EncryptedSymmetricDataEncryptionKey implements StoredDataEncryptionKey {
+
+        /**
+         * The encryption algorithm used for key encryption
+         */
+        private final String wrappingAlgorithm;
+
+        /**
+         * The identifier for the wrapping key that was used for key encryption
+         */
+        private final String wrappingKeyId;
+
+        /**
+         * The version of the wrapping key that was used for key encryption
+         */
+        private final String wrappingKeyVersion;
+
+        /**
+         * The encryption algorithm used for data encryption
+         */
+        private final String dataEncryptionAlgorithm;
+
+        /**
+         * The encrypted data encryption key
+         */
+        private final byte[] encryptedKeyData;
 
         /**
          * The IV for the encryption algorithm

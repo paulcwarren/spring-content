@@ -127,7 +127,7 @@ public static class Config {
 
     @Bean
     VaultDataEncryptionKeyWrapper vaultDataEncryptionKeyWrapper(VaultOperations vault) {
-        return new VaultDataEncryptionKeyWrapper(vault);
+        return new VaultDataEncryptionKeyWrapper(vault, "my-key");
     }
 
     @Bean

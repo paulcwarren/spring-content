@@ -13,7 +13,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 
 @RequiredArgsConstructor
-public class EncryptedDataEncryptionKeyGenericConverter implements ConditionalGenericConverter {
+public class StoredDataEncryptionKeyGenericConverter implements ConditionalGenericConverter {
 
     private final ConversionService conversionService;
 

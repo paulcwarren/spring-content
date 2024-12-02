@@ -4,9 +4,10 @@ import internal.org.springframework.content.encryption.engine.AesCtrEncryptionEn
 import internal.org.springframework.content.encryption.keys.ContentPropertyDataEncryptionKeyAccessor;
 import internal.org.springframework.content.encryption.keys.UnencryptedSymmetricDataEncryptionKeyWrapper;
 import internal.org.springframework.content.encryption.keys.converter.ByteArrayToListConverter;
-import internal.org.springframework.content.encryption.keys.converter.EncryptedDataEncryptionKeyGenericConverter;
+import internal.org.springframework.content.encryption.keys.converter.StoredDataEncryptionKeyGenericConverter;
+import internal.org.springframework.content.encryption.keys.converter.EncryptedSymmetricDataEncryptionKeyConverter;
 import internal.org.springframework.content.encryption.keys.converter.ListToByteArrayConverter;
-import internal.org.springframework.content.encryption.keys.converter.UnencryptedSymmetricDataEncryptionKeyConvertor;
+import internal.org.springframework.content.encryption.keys.converter.UnencryptedSymmetricDataEncryptionKeyConverter;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.content.encryption.engine.ContentEncryptionEngine;
 import org.springframework.content.encryption.keys.DataEncryptionKeyAccessor;
 import org.springframework.content.encryption.keys.DataEncryptionKeyWrapper;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
+import org.springframework.content.encryption.keys.StoredDataEncryptionKey.EncryptedSymmetricDataEncryptionKey;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey.UnencryptedSymmetricDataEncryptionKey;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.support.ConfigurableConversionService;
@@ -33,9 +35,13 @@ class EncryptingContentStoreConfigurationImpl<S> implements EncryptingContentSto
     {
         conversionService.addConverter(new ByteArrayToListConverter(conversionService));
         conversionService.addConverter(new ListToByteArrayConverter(conversionService));
-        conversionService.addConverter(new EncryptedDataEncryptionKeyGenericConverter(conversionService));
-        conversionService.addConverter(byte[].class, UnencryptedSymmetricDataEncryptionKey.class, UnencryptedSymmetricDataEncryptionKeyConvertor::convert);
-        conversionService.addConverter(UnencryptedSymmetricDataEncryptionKey.class, byte[].class, UnencryptedSymmetricDataEncryptionKeyConvertor::convert);
+        conversionService.addConverter(new StoredDataEncryptionKeyGenericConverter(conversionService));
+
+        conversionService.addConverter(byte[].class, UnencryptedSymmetricDataEncryptionKey.class, UnencryptedSymmetricDataEncryptionKeyConverter::convert);
+        conversionService.addConverter(UnencryptedSymmetricDataEncryptionKey.class, byte[].class, UnencryptedSymmetricDataEncryptionKeyConverter::convert);
+
+        conversionService.addConverter(byte[].class, EncryptedSymmetricDataEncryptionKey.class, EncryptedSymmetricDataEncryptionKeyConverter::convert);
+        conversionService.addConverter(EncryptedSymmetricDataEncryptionKey.class, byte[].class, EncryptedSymmetricDataEncryptionKeyConverter::convert);
     }
 
     @Override

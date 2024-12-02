@@ -29,7 +29,6 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.encryption.store.EncryptingContentStore;
-import org.springframework.content.encryption.VaultContainerSupport;
 import org.springframework.content.fs.config.EnableFilesystemStores;
 import org.springframework.content.fs.io.FileSystemResourceLoader;
 import org.springframework.content.fs.store.FilesystemContentStore;
@@ -37,10 +36,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.vault.authentication.ClientAuthentication;
-import org.springframework.vault.authentication.TokenAuthentication;
-import org.springframework.vault.client.VaultEndpoint;
-import org.springframework.vault.config.AbstractVaultConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.FileInputStream;
@@ -121,40 +116,6 @@ public class EncryptionIT {
 
                     assertThat(r.asString(), is("e encryption"));
                 });
-                /*
-                Context("when the keyring is rotated", () -> {
-                    BeforeEach(() -> {
-                        encrypter.rotate("filecontentstore");
-                    });
-                    It("should not change the stored content key", () -> {
-                        f = repo.findById(f.getId()).get();
-
-                        assertThat(new String(f.getContentKey()), startsWith("vault:v1"));
-                    });
-                    It("should still retrieve content decrypted", () -> {
-                        given()
-                                .header("accept", "text/plain")
-                                .get("/fsFiles/" + f.getId() + "/content")
-                                .then()
-                                .statusCode(HttpStatus.SC_OK)
-                                .assertThat()
-                                .contentType(Matchers.startsWith("text/plain"))
-                                .body(Matchers.equalTo("Hello Client-side encryption World!"));
-                    });
-                    It("should update the content key version when next stored", () -> {
-                        given()
-                                .contentType("text/plain")
-                                .body("Hello Client-side encryption World!")
-                                .when()
-                                .post("/fsFiles/" + f.getId() + "/content")
-                                .then()
-                                .statusCode(HttpStatus.SC_OK);
-
-                        f = repo.findById(f.getId()).get();
-                        assertThat(new String(f.getContentKey()), startsWith("vault:"));
-                        assertThat(new String(f.getContentKey()), not(startsWith("vault:v1")));
-                    });
-                }); */
                 Context("when the content is unset", () -> {
                     It("it should remove the content and clear the content key", () -> {
                         f = repo.findById(f.getId()).get();
@@ -187,23 +148,7 @@ public class EncryptionIT {
         }
 
         @Configuration
-        public static class Config extends AbstractVaultConfiguration {
-
-            @Override
-            public VaultEndpoint vaultEndpoint() {
-
-                String host = VaultContainerSupport.getVaultContainer().getHost();
-                int port = VaultContainerSupport.getVaultContainer().getMappedPort(8200);
-
-                VaultEndpoint vault = VaultEndpoint.create(host, port);
-                vault.setScheme("http");
-                return vault;
-            }
-
-            @Override
-            public ClientAuthentication clientAuthentication() {
-                return new TokenAuthentication("my-root-token");
-            }
+        public static class Config {
 
             @Bean
             public java.io.File filesystemRoot() {
