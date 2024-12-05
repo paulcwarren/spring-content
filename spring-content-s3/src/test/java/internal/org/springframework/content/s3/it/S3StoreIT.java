@@ -2,8 +2,8 @@ package internal.org.springframework.content.s3.it;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.s3.io.SimpleStorageResource;
 import jakarta.persistence.*;
+import java.util.Arrays;
 import lombok.*;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.IOUtils;
@@ -47,6 +47,7 @@ import static com.github.paulcwarren.ginkgo4j.Ginkgo4jDSL.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(Ginkgo4jSpringRunner.class)
@@ -207,11 +208,13 @@ public class S3StoreIT {
 
                                 ((RangeableResource)genericResource).setRange("bytes=6-19");
 
-                                try (InputStream expected = new ByteArrayInputStream("Spring Content".getBytes())) {
-                                    try (InputStream actual = genericResource.getInputStream()) {
-                                        assertThat(actual, is(instanceOf(SimpleStorageResource.PartialContentInputStream.class)));
-                                        assertThat(IOUtils.toString(expected, "UTF-8"), is(IOUtils.toString(actual, "UTF-8")));
-                                    }
+                                var expectedBytes = "Hello Spring Content World!".getBytes();
+                                Arrays.fill(expectedBytes, 0, 6, (byte) 0); // First 5 bytes are absent
+                                Arrays.fill(expectedBytes, 20, expectedBytes.length, (byte) 0); // Bytes after position 19 are absent
+
+                                try(InputStream actual = genericResource.getInputStream()) {
+                                    var actualBytes = actual.readAllBytes();
+                                    assertArrayEquals(expectedBytes, actualBytes);
                                 }
                             });
                         });

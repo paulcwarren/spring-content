@@ -1,6 +1,6 @@
 package org.springframework.content.encryption;
 
-import org.springframework.beans.factory.InitializingBean;
+import java.math.BigInteger;
 import org.springframework.data.util.Pair;
 import org.springframework.vault.core.VaultOperations;
 import org.springframework.vault.core.VaultTransitOperations;
@@ -11,7 +11,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -85,14 +84,14 @@ public class EnvelopeEncryptionService {
         return KEY_GENERATOR.generateKey();
     }
 
-    private InputStream decryptInputStream(final SecretKeySpec secretKeySpec, byte[] nonce, int offset, InputStream is) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException, InvalidAlgorithmParameterException {
+    private InputStream decryptInputStream(final SecretKeySpec secretKeySpec, byte[] nonce, long offset, InputStream is) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException, InvalidAlgorithmParameterException {
         Cipher cipher = Cipher.getInstance(transformation);
 
         byte[] iv = new byte[128 / 8];
         System.arraycopy(nonce, 0, iv, 0, nonce.length);
 
         int AES_BLOCK_SIZE = 16;
-        int blockOffset = offset - (offset % AES_BLOCK_SIZE);
+        long blockOffset = offset - (offset % AES_BLOCK_SIZE);
         final BigInteger ivBI = new BigInteger(1, iv);
         final BigInteger ivForOffsetBI = ivBI.add(BigInteger.valueOf(blockOffset / AES_BLOCK_SIZE));
         final byte[] ivForOffsetBA = ivForOffsetBI.toByteArray();
@@ -105,19 +104,17 @@ public class EnvelopeEncryptionService {
             ivForOffset = new IvParameterSpec(ivForOffsetBASized);
         }
 
+        // Skip the blocks that we are not going to decrypt.
+        // We advanced the IV manually to compensate for these skipped blocks,
+        // and the stream will be zero-prefixed to compensate on the other side as well.
+        // This saves encryption processing for all blocks that would be discarded anyways
+        is.skipNBytes(blockOffset);
+
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivForOffset);
 
-        CipherInputStream cis = new CipherInputStream(is, cipher);
-
-        InputStream inputStreamToReturn = cis;
-        if (offset == 0) {
-            inputStreamToReturn = new ZeroOffsetSkipInputStream(cis);
-        } else if (offset > 0) {
-            inputStreamToReturn = new OffsetSkipInputStream(cis, offset % AES_BLOCK_SIZE);
-        }
-
-        return inputStreamToReturn;
+        return new OffsetInputStream(new SkippingInputStream(new CipherInputStream(is, cipher)), blockOffset);
     }
+
     private SecretKeySpec decryptKey(byte[] encryptedKey, String keyName) {
         VaultTransitOperations transit = vaultOperations.opsForTransit();
         String decryptedBase64Key = transit.decrypt(keyName, new String(encryptedKey));
@@ -127,7 +124,7 @@ public class EnvelopeEncryptionService {
         return key;
     }
 
-    public InputStream decrypt(byte[] ecryptedContext, InputStream is, int offset, String keyName) {
+    public InputStream decrypt(byte[] ecryptedContext, InputStream is, long offset, String keyName) {
 
         byte[] key = new byte[105];
         System.arraycopy(ecryptedContext, 0, key, 0, 105);
@@ -148,12 +145,12 @@ public class EnvelopeEncryptionService {
     }
 
     // CipherInputStream skip does not work.  This wraps a cipherinputstream purely to override the skip with a
-    // working version.  Used when backend Store has not already primed the input stream.
-    public class ZeroOffsetSkipInputStream extends FilterInputStream
+    // working version.
+    private static class SkippingInputStream extends FilterInputStream
     {
         private static final int MAX_SKIP_BUFFER_SIZE = 2048;
 
-        protected ZeroOffsetSkipInputStream(InputStream in)
+        protected SkippingInputStream(InputStream in)
         {
             super(in);
         }
@@ -182,42 +179,64 @@ public class EnvelopeEncryptionService {
         }
     }
 
-    // This wraps a cipherinputstream purely to override skip
-    //
-    // Used when a backend store has already satisfied a range request (this service will request a range to the nearest block).
-    // Skips then skips bytes between the beginning of the block and the start actual range that the client requested.
-    public class OffsetSkipInputStream extends FilterInputStream
-    {
-        private static final int MAX_SKIP_BUFFER_SIZE = 2048;
-        private final int offset;
+    /**
+     * Adds a fixed amount of 0-bytes in front of the delegate {@link InputStream}
+     * <p>
+     *
+     * */
+    private static class OffsetInputStream extends InputStream {
+        private InputStream delegate;
+        private long offsetBytes;
 
-        protected OffsetSkipInputStream(InputStream in, int offset)
-        {
-            super(in);
-            this.offset = offset;
+        public OffsetInputStream(InputStream delegate, long offsetBytes) {
+            this.delegate = delegate;
+            this.offsetBytes = offsetBytes;
         }
 
-        public long skip(long n)
-                throws IOException
-        {
-            long remaining = offset;
-            int nr;
-
-            if (n <= 0) {
+        @Override
+        public long skip(long n) throws IOException {
+            if(n <= 0) {
                 return 0;
             }
-
-            int size = (int)Math.min(MAX_SKIP_BUFFER_SIZE, remaining);
-            byte[] skipBuffer = new byte[size];
-            while (remaining > 0) {
-                nr = in.read(skipBuffer, 0, (int)Math.min(size, remaining));
-                if (nr < 0) {
-                    break;
+            if(n <= offsetBytes) {
+                offsetBytes -= n;
+                return n;
+            }
+            if(offsetBytes > 0) {
+                n = n - offsetBytes; // Still skipping so many bytes from the offset
+                try {
+                    return offsetBytes + delegate.skip(n);
+                } finally {
+                    offsetBytes = 0; // Now the whole offset is consumed; skip to the delegate
                 }
-                remaining -= nr;
             }
 
-            return n - remaining;
+            return delegate.skip(n);
+        }
+
+        @Override
+        public int read() throws IOException {
+            if(offsetBytes > 0) {
+                offsetBytes--;
+                return 0;
+            }
+            return delegate.read();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if(offsetBytes > 0) {
+                return super.read(b, off, len);
+            }
+            return delegate.read(b, off, len);
+        }
+
+        @Override
+        public int available() throws IOException {
+            if(offsetBytes > 0) {
+                return (int)Math.max(offsetBytes, Integer.MAX_VALUE);
+            }
+            return delegate.available();
         }
     }
 }

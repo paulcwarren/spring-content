@@ -1,7 +1,6 @@
 package internal.org.springframework.content.s3.io;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -136,7 +135,25 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
         }
         if (this.range != null) {
             getObjectRequestBuilder.range(range);
-            return new PartialContentInputStream(this.amazonS3.getObject(getObjectRequestBuilder.build()));
+            var getObjectResponse = this.amazonS3.getObject(getObjectRequestBuilder.build());
+            var sdkResponse = getObjectResponse.response().sdkHttpResponse();
+            switch (sdkResponse.statusCode()) {
+                case 206: // Partial content
+                    var contentRange = getObjectResponse.response().contentRange();
+                    // As per https://www.rfc-editor.org/rfc/rfc9110.html#name-206-partial-content,
+                    // a Content-Range header MUST be present when responding with a single part.
+                    if(contentRange == null) {
+                        throw new IOException("Received HTTP 206, but missing a Content-Range header. Only single-part responses are supported.");
+                    }
+                    return PartialContentInputStream.fromContentRange(
+                            getObjectResponse,
+                            contentRange
+                    );
+                case 200: // OK -> this is a full response
+                    return getObjectResponse;
+                default:
+                    throw new IOException("Unexpected HTTP response code %d %s".formatted(sdkResponse.statusCode(), sdkResponse.statusText().orElse("")));
+            }
         }
         return this.amazonS3.getObject(getObjectRequestBuilder.build());
     }
@@ -444,90 +461,4 @@ public class SimpleStorageResource extends AbstractResource implements WritableR
 
     }
 
-    /**
-     * Create a new partial content input stream wrapper around the given delegate.
-     *
-     * The delegate is expected to be a "prepared" input stream onto a byte-range.  Reading the
-     * input stream return the byte-range only.
-     */
-    public static class PartialContentInputStream extends InputStream {
-
-        private InputStream delegate;
-
-        public PartialContentInputStream(InputStream delegate) {
-            this.delegate = delegate;
-        }
-
-        /**
-         * As this is a wrapper on a prepared input stream if the consumer asks us to skip
-         * just reply that we have.
-         */
-        @Override
-        public long skip(long n)
-                throws IOException {
-            return n;
-        }
-
-        @Override
-        public int hashCode() {
-            return delegate.hashCode();
-        }
-
-        @Override
-        public int read(byte[] b)
-                throws IOException {
-            return delegate.read(b);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return delegate.equals(obj);
-        }
-
-        @Override
-        public int read()
-                throws IOException {
-
-            return delegate.read();
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len)
-                throws IOException {
-            return delegate.read(b, off, len);
-        }
-
-        @Override
-        public String toString() {
-            return delegate.toString();
-        }
-
-        @Override
-        public int available()
-                throws IOException {
-            return delegate.available();
-        }
-
-        @Override
-        public void close()
-                throws IOException {
-            delegate.close();
-        }
-
-        @Override
-        public void mark(int readlimit) {
-            delegate.mark(readlimit);
-        }
-
-        @Override
-        public void reset()
-                throws IOException {
-            delegate.reset();
-        }
-
-        @Override
-        public boolean markSupported() {
-            return delegate.markSupported();
-        }
-    }
 }

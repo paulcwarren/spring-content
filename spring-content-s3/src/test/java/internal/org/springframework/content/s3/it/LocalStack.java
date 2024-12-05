@@ -8,6 +8,7 @@ import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.Serializable;
@@ -31,6 +32,7 @@ public class LocalStack extends LocalStackContainer implements Serializable {
     public static S3Client getAmazonS3Client() throws URISyntaxException {
         return S3Client.builder()
                 .endpointOverride(new URI(Singleton.INSTANCE.getEndpointConfiguration(LocalStackContainer.Service.S3).getServiceEndpoint()))
+                .region(Region.US_EAST_1) // Set a region, so it does not need to be configured externally
                 .credentialsProvider(new CrossAwsCredentialsProvider(Singleton.INSTANCE.getDefaultCredentialsProvider()))
                 .serviceConfiguration((bldr) -> bldr.pathStyleAccessEnabled(true).build())
                 .build();
