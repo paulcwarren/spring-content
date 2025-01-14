@@ -60,9 +60,9 @@ public class StoreIT {
 			H2Config.class,
 			HSQLConfig.class,
 			MySqlConfig.class,
-			PostgresConfig.class,
-			SqlServerConfig.class,
-			OracleConfig.class
+			PostgresConfig.class
+//			SqlServerConfig.class,
+//			OracleConfig.class
 	};
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();

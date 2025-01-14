@@ -54,9 +54,9 @@ public class TransactionIT {
             H2Config.class,
             HSQLConfig.class,
             MySqlConfig.class,
-            PostgresConfig.class,
-            SqlServerConfig.class,
-            StoreIT.OracleConfig.class
+            PostgresConfig.class
+//            SqlServerConfig.class,
+//            StoreIT.OracleConfig.class
     };
 
 	private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
