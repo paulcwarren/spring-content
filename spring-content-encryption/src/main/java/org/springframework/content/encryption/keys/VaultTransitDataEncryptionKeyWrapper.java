@@ -1,12 +1,10 @@
-package internal.org.springframework.content.encryption.keys;
+package org.springframework.content.encryption.keys;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.content.encryption.engine.ContentEncryptionEngine.EncryptionParameters;
-import org.springframework.content.encryption.keys.DataEncryptionKeyWrapper;
-import org.springframework.content.encryption.keys.StoredDataEncryptionKey;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey.EncryptedSymmetricDataEncryptionKey;
 import org.springframework.vault.core.VaultTransitOperations;
 import org.springframework.vault.support.Ciphertext;

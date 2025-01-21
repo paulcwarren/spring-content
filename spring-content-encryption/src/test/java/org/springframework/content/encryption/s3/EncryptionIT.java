@@ -2,8 +2,7 @@ package org.springframework.content.encryption.s3;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jSpringRunner;
-import internal.org.springframework.content.encryption.keys.ContentPropertyDataEncryptionKeyAccessor;
-import internal.org.springframework.content.encryption.keys.VaultTransitDataEncryptionKeyWrapper;
+import org.springframework.content.encryption.keys.VaultTransitDataEncryptionKeyWrapper;
 import java.util.List;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfiguration;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfigurer;
