@@ -60,9 +60,9 @@ jobs:
         key: ${{ runner.os }}-maven-${{ github.run_id }}
     - uses: actions/checkout@v2
       with:
-        repository: vierbergenlars/spring-content-gettingstarted
+        repository: paulcwarren/spring-content-gettingstarted
         path: spring-content-gettingstarted
-        ref: update-encryption-example
+    
     - name: Validate against Getting Started Guides
       run: |
         pushd spring-content-gettingstarted
