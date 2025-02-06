@@ -62,6 +62,7 @@ jobs:
       with:
         repository: paulcwarren/spring-content-gettingstarted
         path: spring-content-gettingstarted
+    
     - name: Validate against Getting Started Guides
       run: |
         pushd spring-content-gettingstarted

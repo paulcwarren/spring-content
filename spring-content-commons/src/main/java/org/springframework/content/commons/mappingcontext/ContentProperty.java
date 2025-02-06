@@ -25,7 +25,7 @@ public class ContentProperty {
     private String originalFileNamePropertyPath;
 
     public Object getCustomProperty(Object entity, String propertyName) {
-        String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
+        String customContentPropertyPath = getCustomPropertyPropertyPath(propertyName);
 
         BeanWrapper wrapper = getBeanWrapperForRead(entity);
         try {
@@ -36,10 +36,14 @@ public class ContentProperty {
     }
 
     public void setCustomProperty(Object entity, String propertyName, Object value) {
-        String customContentPropertyPath = contentPropertyPath + StringUtils.capitalize(propertyName);
+        String customContentPropertyPath = getCustomPropertyPropertyPath(propertyName);
 
         BeanWrapper wrapper = getBeanWrapperForWrite(entity);
         wrapper.setPropertyValue(customContentPropertyPath, value);
+    }
+
+    public String getCustomPropertyPropertyPath(String propertyName) {
+        return contentPropertyPath + StringUtils.capitalize(propertyName);
     }
 
     public Object getContentId(Object entity) {
