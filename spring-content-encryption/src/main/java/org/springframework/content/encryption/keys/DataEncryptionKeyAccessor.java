@@ -19,14 +19,14 @@ public interface DataEncryptionKeyAccessor<S, T extends StoredDataEncryptionKey>
 
     default S addKey(S entity, ContentProperty contentProperty, T dataEncryptionKey) {
         var keys = new ArrayList<>(findKeys(entity, contentProperty));
-        keys.remove(dataEncryptionKey);
+        keys.add(dataEncryptionKey);
 
         return setKeys(entity, contentProperty, keys);
     }
 
     default S removeKey(S entity, ContentProperty contentProperty, T dataEncryptionKey) {
         var keys = new ArrayList<>(findKeys(entity, contentProperty));
-        keys.add(dataEncryptionKey);
+        keys.remove(dataEncryptionKey);
 
         return setKeys(entity, contentProperty, keys);
     }
