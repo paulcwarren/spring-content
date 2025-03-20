@@ -39,6 +39,7 @@ import java.util.Map;
  *     <li><b>fileName</b></li>
  *     <li><b>fileExtension</b></li>
  *     <li><b>size</b></li>
+ *     <li><b>mimeType</b></li>
  *     <li><b>creationTime</b></li>
  *     <li><b>lastModifiedTime</b></li>
  *     <li><b>lastAccessTime</b></li>
