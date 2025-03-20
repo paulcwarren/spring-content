@@ -14,10 +14,10 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
-package internal.org.springframework.content.renditions.boot.autoconfigure;
+package internal.org.springframework.content.metadataextraction.boot.autoconfigure;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.content.renditions.config.MetadataExtractionConfiguration;
+import org.springframework.content.metadataextraction.config.MetadataExtractionConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 

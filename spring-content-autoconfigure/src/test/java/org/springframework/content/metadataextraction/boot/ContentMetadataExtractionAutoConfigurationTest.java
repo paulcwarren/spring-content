@@ -14,7 +14,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
-package org.springframework.content.renditions.boot;
+package org.springframework.content.metadataextraction.boot;
 
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jConfiguration;
 import com.github.paulcwarren.ginkgo4j.Ginkgo4jRunner;
@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.content.commons.renditions.MetadataExtractionService;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
-import org.springframework.content.renditions.metadataextractors.DefaultMetadataExtractor;
+import org.springframework.content.metadataextraction.extractors.DefaultMetadataExtractor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;

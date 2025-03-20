@@ -3,7 +3,7 @@ internal.org.springframework.content.fs.boot.autoconfigure.FilesystemContentAuto
 internal.org.springframework.content.jpa.boot.autoconfigure.JpaContentAutoConfiguration
 internal.org.springframework.content.mongo.boot.autoconfigure.MongoContentAutoConfiguration
 internal.org.springframework.content.renditions.boot.autoconfigure.RenditionsContentAutoConfiguration
-internal.org.springframework.content.renditions.boot.autoconfigure.MetadataExtractionContentAutoConfiguration
+internal.org.springframework.content.metadataextraction.boot.autoconfigure.MetadataExtractionContentAutoConfiguration
 internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration
 internal.org.springframework.content.rest.boot.autoconfigure.HypermediaAutoConfiguration
 internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration
