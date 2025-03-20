@@ -109,9 +109,6 @@ public class RepositoryEntityMultipartController {
         // Save the entity and re-assign the result to savedEntity, so that it exists in the repository before content is added to it.
         savedEntity = repoInvokerFactory.getInvokerFor(domainType).invokeSave(savedEntity);
 
-        AfterCreateEvent afterCreate = new AfterCreateEvent(savedEntity);
-        publisher.publishEvent(afterCreate);
-
         StoreInfo info = this.stores.getStore(Store.class, StoreUtils.withStorePath(store));
         if (info != null) {
             ContentStoreContentService service = new ContentStoreContentService(restConfig, info, repoInvokerFactory.getInvokerFor(domainType), mappingContext, exportedMappingContext, byteRangeRestRequestHandler);
@@ -129,6 +126,9 @@ public class RepositoryEntityMultipartController {
                 service.setContent(req, resp, headers, new InputStreamResourceWithFilename(file.getInputStream(), file.getOriginalFilename()), MediaType.parseMediaType(file.getContentType()), storeResource);
             }
         }
+
+        AfterCreateEvent afterCreate = new AfterCreateEvent(savedEntity);
+        publisher.publishEvent(afterCreate);
 
         Optional<PersistentEntityResource> resource = Optional.ofNullable(assembler.toFullResource(savedEntity));
         headers.setContentType(new MediaType("application", "hal+json"));
