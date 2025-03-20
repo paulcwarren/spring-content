@@ -16,7 +16,7 @@ specific language governing permissions and limitations
 under the License. */
 package org.springframework.content.metadataextraction;
 
-import org.springframework.content.commons.renditions.MetadataExtractor;
+import org.springframework.content.commons.metadataextraction.MetadataExtractor;
 
 /**
  * Signals an error during metadata extraction.

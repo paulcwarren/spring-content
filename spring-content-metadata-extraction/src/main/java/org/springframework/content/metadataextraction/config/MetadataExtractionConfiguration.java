@@ -16,9 +16,9 @@ specific language governing permissions and limitations
 under the License. */
 package org.springframework.content.metadataextraction.config;
 
-import internal.org.springframework.content.commons.renditions.MetadataExtractionServiceImpl;
-import org.springframework.content.commons.renditions.MetadataExtractionService;
-import org.springframework.content.commons.renditions.MetadataExtractor;
+import internal.org.springframework.content.commons.metadataextraction.MetadataExtractionServiceImpl;
+import org.springframework.content.commons.metadataextraction.MetadataExtractionService;
+import org.springframework.content.commons.metadataextraction.MetadataExtractor;
 import org.springframework.content.metadataextraction.extractors.DefaultMetadataExtractor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

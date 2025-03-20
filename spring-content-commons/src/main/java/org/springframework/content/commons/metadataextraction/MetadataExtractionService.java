@@ -14,7 +14,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
-package org.springframework.content.commons.renditions;
+package org.springframework.content.commons.metadataextraction;
 
 import java.io.File;
 import java.util.Map;

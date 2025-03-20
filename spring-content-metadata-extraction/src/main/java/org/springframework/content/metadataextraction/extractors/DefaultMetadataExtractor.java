@@ -19,7 +19,7 @@ package org.springframework.content.metadataextraction.extractors;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.content.commons.renditions.MetadataExtractor;
+import org.springframework.content.commons.metadataextraction.MetadataExtractor;
 import org.springframework.content.metadataextraction.MetadataExtractionException;
 import org.springframework.stereotype.Service;
 

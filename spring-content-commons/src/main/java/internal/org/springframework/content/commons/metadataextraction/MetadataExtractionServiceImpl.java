@@ -14,10 +14,10 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. */
-package internal.org.springframework.content.commons.renditions;
+package internal.org.springframework.content.commons.metadataextraction;
 
-import org.springframework.content.commons.renditions.MetadataExtractionService;
-import org.springframework.content.commons.renditions.MetadataExtractor;
+import org.springframework.content.commons.metadataextraction.MetadataExtractionService;
+import org.springframework.content.commons.metadataextraction.MetadataExtractor;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -24,7 +24,7 @@ import internal.org.springframework.content.solr.boot.autoconfigure.SolrExtensio
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.content.commons.renditions.MetadataExtractionService;
+import org.springframework.content.commons.metadataextraction.MetadataExtractionService;
 import org.springframework.content.commons.renditions.Renderable;
 import org.springframework.content.commons.repository.ContentStore;
 import org.springframework.content.metadataextraction.extractors.DefaultMetadataExtractor;
