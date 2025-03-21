@@ -62,12 +62,11 @@ public class AlfrescoTransformCoreMetadataExtractor implements MetadataExtractor
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public AlfrescoTransformCoreMetadataExtractor(@Value("${alfresco.transform.core.url}") String alfrescoTransformCoreUrl, RestTemplate restTemplate,
-        ObjectMapper objectMapper) {
+    public AlfrescoTransformCoreMetadataExtractor(@Value("${alfresco.transform.core.url}") String alfrescoTransformCoreUrl) {
 
         this.alfrescoTransformCoreUrl = alfrescoTransformCoreUrl;
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
+        this.restTemplate = new RestTemplate();
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override

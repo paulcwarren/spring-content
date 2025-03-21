@@ -23,7 +23,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.content.metadataextraction.MetadataExtractionException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -61,7 +60,7 @@ class AlfrescoTransformCoreMetadataExtractorTest {
         var port = wireMockServer.port();
         WireMock.configureFor(ALFRESCO_TRANSFORM_CORE_HOST, port);
         var baseUrl = String.format("http://%s:%d", ALFRESCO_TRANSFORM_CORE_HOST, port);
-        metadataExtractor = new AlfrescoTransformCoreMetadataExtractor(baseUrl, new RestTemplate(), new com.fasterxml.jackson.databind.ObjectMapper());
+        metadataExtractor = new AlfrescoTransformCoreMetadataExtractor(baseUrl);
     }
 
     @AfterAll
