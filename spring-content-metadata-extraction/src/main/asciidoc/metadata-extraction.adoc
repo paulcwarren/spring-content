@@ -56,6 +56,11 @@ By default, there is only a `DefaultMetadataExtractor` which extracts the follow
 - lastModifiedTime
 - lastAccessTime
 
+== Alfresco Transform Core Metadata Extractor
+
+Spring content metadata extraction modules support the integration with the https://docs.alfresco.com/transform-service/latest/[Alfresco Transform Core] service.
+To use it, simply add the property `alfresco.transform.core.url` with the url of Alfresco Transform Core service.
+
 == Metadata Extraction Extension Point
 
 If you need to create custom Metadata Extractors to meet your specific requirements, you can implement the MetadataExtractor extension point.
@@ -88,4 +93,32 @@ public static class ApplicationConfig {
 1. Implementation of `MetadataExtractor`
 2. Marked as an `@Service`
 3. Ensure the service is scanned by Spring and offered as a bean
+====
+
+== Metadata Extraction Service
+
+As with the renditions module, here too, a bean of type **"MetadataExtractionService"** is available, which automatically provides all instances of
+**MetadataExtractor** and allows to retrieve, in one central location, all the metadata extracted by the various extractors.
+
+.Example of usage of MetadataExtractionService
+====
+[source, java]
+----
+@Service
+public class MyServiceImpl implements MyService {
+
+    private MetadataExtractionService metadataExtractionService;
+
+    public MyServiceImpl(MetadataExtractionService metadataExtractionService) {
+        this.metadataExtractionService = metadataExtractionService; <1>
+    }
+
+    public Map<String, Object> getFileMetadata(File file) {
+        return metadataExtractionService.extractMetadata(file); <2>
+    }
+}
+
+----
+1. Injection of `MetadataExtractionService` in a custom service
+2. Extract file metadata using all instances of `MetadataExtractor` (default, AlfrescoTransformCore if enabled, custom, ...)
 ====
