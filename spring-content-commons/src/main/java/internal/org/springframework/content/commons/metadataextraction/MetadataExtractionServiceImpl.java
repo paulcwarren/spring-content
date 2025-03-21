@@ -16,6 +16,7 @@ specific language governing permissions and limitations
 under the License. */
 package internal.org.springframework.content.commons.metadataextraction;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.content.commons.metadataextraction.MetadataExtractionService;
 import org.springframework.content.commons.metadataextraction.MetadataExtractor;
 
@@ -35,6 +36,7 @@ public class MetadataExtractionServiceImpl implements MetadataExtractionService 
 
     private final List<MetadataExtractor> metadataExtractorList = new ArrayList<>();
 
+    @Autowired(required = false)
     public MetadataExtractionServiceImpl(MetadataExtractor... metadataExtractors) {
 
         Collections.addAll(this.metadataExtractorList, metadataExtractors);
