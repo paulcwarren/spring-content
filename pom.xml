@@ -298,7 +298,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
                     <plugin>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>3.1.1</version>
+                        <version>3.2.0</version>
                         <configuration>
                             <backend>html</backend>
                             <doctype>book</doctype>
