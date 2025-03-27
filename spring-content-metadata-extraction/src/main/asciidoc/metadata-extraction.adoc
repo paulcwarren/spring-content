@@ -1,0 +1,124 @@
+[[renditions]]
+= Metadata Extraction
+
+== Overview
+
+This feature is capable of extracting a specific set of metadata from files and representing it as a map of key-value pairs.
+
+It also provides an extension point for providing your own metadata extractors.
+
+To enable metadata extraction add the `spring-content-metadata-extraction` or `spring-content-metadata-extraction-boot-starter` dependency to your
+project. This enables the default metadata extractor.
+
+== Maven Central Coordinates
+The maven coordinates for this Spring Content library are as follows:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-metadata-extraction</artifactId>
+</dependency>
+```
+
+As it is usual to use several Spring Content libraries together importing the bom is recommended:
+```xml
+<dependency>
+    <groupId>com.github.paulcwarren</groupId>
+    <artifactId>spring-content-bom</artifactId>
+    <version>${spring-content-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+```
+
+== Annotation-based Configuration
+
+.Enabling Spring Content Metadata Extraction with Java Config
+====
+[source,java]
+----
+@Configuration
+@Import(org.springframework.content.metadataextraction.config.MetadataExtractionConfiguration.class) <1>
+public static class ApplicationConfig {
+}
+----
+1. Not required when using `spring-content-metadata-extraction-boot-starter`
+====
+
+== Extractors
+
+By default, there is only a `DefaultMetadataExtractor` which extracts the following metadata from each type of file:
+
+- fileName
+- fileExtension
+- size
+- mimeType
+- creationTime
+- lastModifiedTime
+- lastAccessTime
+
+== Alfresco Transform Core Metadata Extractor
+
+Spring content metadata extraction modules support the integration with the https://docs.alfresco.com/transform-service/latest/[Alfresco Transform Core] service.
+To use it, simply add the property `alfresco.transform.core.url` with the url of Alfresco Transform Core service.
+
+== Metadata Extraction Extension Point
+
+If you need to create custom Metadata Extractors to meet your specific requirements, you can implement the MetadataExtractor extension point.
+This involves implementing the `MetadataExtractor` interface, annotating this implementation as a `@Service`, and ensuring it is registered
+as a bean in your application context at runtime.
+
+.Implementing the MetadataExtractor Extension Point
+====
+[source, java]
+----
+package my.custom.metadata.extractor;
+
+@Service    <2>
+public class CustomMetadataExtractor implements MetadataExtractor { <1>
+
+	@Override
+	public Map<String, Object> extractMetadata(File file) {
+		// your custom code
+		return new HashMap<>();
+	}
+}
+
+...
+
+@Configuration
+@ComponentScan("my.custom.metadata.extractor")         <3>
+public static class ApplicationConfig {
+}
+----
+1. Implementation of `MetadataExtractor`
+2. Marked as an `@Service`
+3. Ensure the service is scanned by Spring and offered as a bean
+====
+
+== Metadata Extraction Service
+
+As with the renditions module, here too, a bean of type **"MetadataExtractionService"** is available, which automatically provides all instances of
+**MetadataExtractor** and allows to retrieve, in one central location, all the metadata extracted by the various extractors.
+
+.Example of usage of MetadataExtractionService
+====
+[source, java]
+----
+@Service
+public class MyServiceImpl implements MyService {
+
+    private MetadataExtractionService metadataExtractionService;
+
+    public MyServiceImpl(MetadataExtractionService metadataExtractionService) {
+        this.metadataExtractionService = metadataExtractionService; <1>
+    }
+
+    public Map<String, Object> getFileMetadata(File file) {
+        return metadataExtractionService.extractMetadata(file); <2>
+    }
+}
+
+----
+1. Injection of `MetadataExtractionService` in a custom service
+2. Extract file metadata using all instances of `MetadataExtractor` (default, AlfrescoTransformCore if enabled, custom, ...)
+====
