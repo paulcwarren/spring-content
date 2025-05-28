@@ -32,9 +32,10 @@ public class GCPStorageConfiguration implements InitializingBean {
 	@Value("${spring.content.gcp.storage.bucket:#{environment.GCP_STORAGE_BUCKET}}")
 	private String bucket;
 
+	private PlacementService conversion = new PlacementServiceImpl();
+
 	@Bean
 	public PlacementService gcpStoragePlacementService() {
-		PlacementService conversion = new PlacementServiceImpl();
 		return conversion;
 	}
 
@@ -82,7 +83,7 @@ public class GCPStorageConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		addDefaultConverters(gcpStoragePlacementService(), bucket);
-		addConverters(gcpStoragePlacementService());
+		addDefaultConverters(conversion, bucket);
+		addConverters(conversion);
 	}
 }
