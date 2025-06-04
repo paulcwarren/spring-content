@@ -244,6 +244,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-legacy</artifactId>
+            <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
