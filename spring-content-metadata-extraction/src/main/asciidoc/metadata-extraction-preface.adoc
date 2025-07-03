@@ -1,0 +1,11 @@
+[[preface]]
+= Preface
+
+[[project]]
+[preface]
+== Project metadata
+
+* Version control - http://github.com/paulcwarren/spring-content/
+* Bugtracker - http://github.com/paulcwarren/spring-content/issues
+* Release repository - https://repo1.maven.org/maven2/
+* Snapshots repository - https://oss.sonatype.org/content/repositories/snapshots
