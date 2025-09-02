@@ -1,0 +1,25 @@
+= Spring Content Metadata Extraction - Reference Documentation
+Paul Warren, Marco Belligoli
+:revnumber: {version}
+:revdate: {localdate}
+:toc:
+:toc-placement!:
+:spring-content-commons-docs: ../../../../spring-content-commons/src/main/asciidoc
+
+(C) 2019-present The original authors.
+
+NOTE: Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+
+toc::[]
+
+:numbered:
+
+include::metadata-extraction-preface.adoc[]
+
+:leveloffset: +1
+include::{spring-content-commons-docs}/content-repositories.adoc[]
+:leveloffset: -1
+
+:leveloffset: +1
+include::metadata-extraction.adoc[]
+:leveloffset: -1

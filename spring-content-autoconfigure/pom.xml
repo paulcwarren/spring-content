@@ -58,6 +58,12 @@
 			<version>3.0.17-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>com.github.paulcwarren</groupId>
+			<artifactId>spring-content-metadata-extraction</artifactId>
+			<version>3.0.17-SNAPSHOT</version>
+			<optional>true</optional>
+		</dependency>
 <!--		<dependency>-->
 <!--			<groupId>com.github.paulcwarren</groupId>-->
 <!--			<artifactId>spring-content-docx4j</artifactId>-->
