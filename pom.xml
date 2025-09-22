@@ -64,7 +64,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
         <!-- Test dependencies -->
         <test-containers.version>1.17.6</test-containers.version>
-        <mockito.version>3.12.4</mockito.version>
+        <mockito.version>5.20.0</mockito.version>
 
         <docs.output.dir>../target/generated-docs/refs/${env.BUILD_TYPE}/</docs.output.dir>
     </properties>
