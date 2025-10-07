@@ -53,8 +53,16 @@ public class SQLServerBlobResource extends AbstractBlobResource {
 			}
 			rs = stmt.executeQuery(sql);
 
-			if (!rs.next())
-				return null;
+			if (!rs.next()) {
+                try {
+                    rs.close();
+                    stmt.close();
+                    DataSourceUtils.releaseConnection(conn, ds);
+                    return null;
+                } catch (SQLException sqle) {
+                    log.error("failed to release database connection while fetching content {}", id, sqle);
+                }
+            }
 			is = rs.getBinaryStream(2);
 		}
 		catch (SQLException e) {
