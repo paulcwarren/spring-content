@@ -50,7 +50,7 @@ Integrates with Spring Data, Spring Data REST and Apache Solr</description>
 
         <spring-content.version>${project.version}</spring-content.version>
         <ginkgo4j-version>1.0.15</ginkgo4j-version>
-        <springboot-version>3.5.0</springboot-version>
+        <springboot-version>3.5.7</springboot-version>
         <spring-cloud.version>2024.0.1</spring-cloud.version>
         <commonsio-version>2.20.0</commonsio-version>
         <commons-lang.version>2.6</commons-lang.version>
