@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>spring-cloud-gcp-core</artifactId>
-            <version>6.2.3</version>
+            <version>7.4.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
