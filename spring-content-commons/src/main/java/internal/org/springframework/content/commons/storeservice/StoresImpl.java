@@ -21,7 +21,7 @@ import org.springframework.content.commons.storeservice.StoreFilter;
 import org.springframework.content.commons.storeservice.StoreInfo;
 import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.util.Assert;
 
 public class StoresImpl implements Stores, InitializingBean {
@@ -50,13 +50,13 @@ public class StoresImpl implements Stores, InitializingBean {
 			if (ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
 				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
-						ClassTypeInformation.from(factory.getStoreInterface()).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments().get(0).getType(),
+						TypeInformation.of(factory.getStoreInterface()).getRequiredSuperTypeInformation(ContentStore.class).getTypeArguments().get(0).getType(),
 						new StoreSupplier(this.factory, beanNameFromFactoryBeanName(name)));
 				storeInfos.add(info);
 			} else if (org.springframework.content.commons.store.ContentStore.class.isAssignableFrom(factory.getStoreInterface())) {
 				StoreInfo info = new StoreInfoImpl(
 						factory.getStoreInterface(),
-						ClassTypeInformation.from(factory.getStoreInterface()).getRequiredSuperTypeInformation(org.springframework.content.commons.store.ContentStore.class).getTypeArguments().get(0).getType(),
+						TypeInformation.of(factory.getStoreInterface()).getRequiredSuperTypeInformation(org.springframework.content.commons.store.ContentStore.class).getTypeArguments().get(0).getType(),
 						new StoreSupplier(this.factory, beanNameFromFactoryBeanName(name)));
 				storeInfos.add(info);
 			}

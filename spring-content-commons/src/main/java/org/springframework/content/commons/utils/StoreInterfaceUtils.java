@@ -4,9 +4,8 @@ import org.springframework.content.commons.store.AssociativeStore;
 import org.springframework.content.commons.store.ContentStore;
 import org.springframework.content.commons.store.ReactiveContentStore;
 import org.springframework.content.commons.store.Store;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Pair;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;
@@ -31,7 +30,7 @@ public final class StoreInterfaceUtils {
         };
         for (Class<?> candidateStoreClass : candidateStoreClasses) {
             try {
-                types = ClassTypeInformation.from(storeClass).getRequiredSuperTypeInformation(candidateStoreClass).getTypeArguments();
+                types = TypeInformation.of(storeClass).getRequiredSuperTypeInformation(candidateStoreClass).getTypeArguments();
                 break;
             } catch (IllegalArgumentException iae) {
             }

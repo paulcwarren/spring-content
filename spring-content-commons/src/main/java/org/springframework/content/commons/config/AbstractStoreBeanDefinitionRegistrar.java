@@ -36,9 +36,8 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.util.Pair;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -254,7 +253,7 @@ public abstract class AbstractStoreBeanDefinitionRegistrar
 
             Method method = ReflectionUtils.findMethod(implClass, "setGenericArguments", Class[].class);
             if (method != null) {
-                List<TypeInformation<?>> types = ClassTypeInformation.from(storeClass).getSuperTypeInformation(ifaceClass).getTypeArguments();
+                List<TypeInformation<?>> types = TypeInformation.of(storeClass).getSuperTypeInformation(ifaceClass).getTypeArguments();
                 List<Class<?>> genericArguments = types.stream().map(TypeInformation::getType).collect(toList());
                 fragmentDefinition.getBeanDefinition().getPropertyValues().add("genericArguments", genericArguments.toArray(new Class[] {}));
             }
