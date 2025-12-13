@@ -1,5 +1,6 @@
 [![Build](https://github.com/paulcwarren/spring-content/workflows/Branch%20Build/badge.svg?branch=1.2.x)](https://github.com/paulcwarren/spring-content/actions?query=workflow%3A%22Branch+Build%22)
 [![codecov](https://codecov.io/gh/paulcwarren/spring-content/branch/1.1.x/graph/badge.svg?token=Q7uPi3zXTB)](https://codecov.io/gh/paulcwarren/spring-content)
+[![libs.tech recommends](https://libs.tech/project/51934971/badge.svg)](https://libs.tech/project/51934971/spring-content)
 [![Join the chat at https://gitter.im/spring-content/Lobby](https://badges.gitter.im/spring-content/Lobby.svg)](https://gitter.im/spring-content/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Spring Content
